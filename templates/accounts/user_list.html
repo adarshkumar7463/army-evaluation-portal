@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+{% block title %}{{ title|default:"Manage Users" }} – Army Portal{% endblock %}
+{% block page_title %}{{ title|default:"Manage Users" }}{% endblock %}
+{% block page_subtitle %}User & Role Administration{% endblock %}
+
+{% block content %}
+
+
+<!-- Action Buttons -->
+<div class="d-flex gap-2 mb-3 flex-wrap">
+  {% if is_user_list %}
+    {% if is_commander %}
+    <a href="{% url 'accounts:create_g_head' %}" class="btn btn-army d-flex align-items-center gap-2">
+      <i class="bi bi-person-badge-fill"></i> Create G Head
+    </a>
+    {% endif %}
+    {% if is_commander or is_g_head %}
+    <a href="{% url 'accounts:create_department' %}" class="btn btn-army-outline d-flex align-items-center gap-2">
+      <i class="bi bi-building"></i> Create Department User
+    </a>
+    {% endif %}
+    <a href="{% url 'accounts:create_trainer' %}" class="btn btn-army-outline d-flex align-items-center gap-2">
+      <i class="bi bi-person-plus-fill"></i> Create Trainer
+    </a>
+  {% elif is_my_team %}
+    <a href="{% url 'accounts:create_my_team_trainer' %}" class="btn btn-army d-flex align-items-center gap-2">
+      <i class="bi bi-person-plus-fill"></i> Create Trainer
+    </a>
+  {% endif %}
+</div>
+
+<!-- Users Table -->
+<div class="army-card">
+  <div class="army-card-header">
+    <h6 class="army-card-title">
+      <i class="bi bi-shield-fill-check text-army"></i> {{ title|default:"System Users" }}
+      <span class="sidebar-badge">{{ paginator.count }}</span>
+    </h6>
+    {% if is_department %}
+    <a href="{% url 'accounts:my_team' %}" class="btn btn-army-outline" style="padding:4px 12px;font-size:12px;">
+      <i class="bi bi-arrow-left"></i> Back
+    </a>
+    {% else %}
+    <a href="{% url 'accounts:user_list' %}" class="btn btn-army-outline" style="padding:4px 12px;font-size:12px;">
+      <i class="bi bi-arrow-left"></i> Back
+    </a>
+    {% endif %}
+  </div>
+  <div style="overflow-x:auto;">
+    <table class="army-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Username</th>
+          <th>Full Name</th>
+          <th>Role</th>
+          <th>Department</th>
+          <th>Service No.</th>
+          <th>Created By</th>
+          <th>Status</th>
+          <th>Joined</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in users %}
+        <tr>
+          <td style="color:#8B9BB4;">{{ forloop.counter0|add:page_obj.start_index }}</td>
+          <td>
+            <div style="font-weight:600;color:#E0E6F0;">{{ u.username }}</div>
+            {% if u.email %}<div style="font-size:11px;color:#8B9BB4;">{{ u.email }}</div>{% endif %}
+          </td>
+          <td>{{ u.get_full_name|default:"—" }}</td>
+          <td>
+            <span class="role-badge" style="background:rgba(27,67,50,0.3);color:
+              {% if u.role == 'g_head' %}#FFC107
+              {% elif 'dept' in u.role %}#42A5F5
+              {% else %}#52B788{% endif %};">
+              {{ u.get_role_display }}
+            </span>
+          </td>
+          <td>{% if u.department %}Dept {{ u.department }}{% else %}—{% endif %}</td>
+          <td style="font-size:12px;color:#8B9BB4;">{{ u.service_number|default:"—" }}</td>
+          <td style="font-size:12px;color:#8B9BB4;">{{ u.created_by.username|default:"—" }}</td>
+          <td>
+            {% if u.is_active %}
+              <span style="color:#4CAF50;font-size:12px;"><i class="bi bi-circle-fill" style="font-size:8px;"></i> Active</span>
+            {% else %}
+              <span style="color:#EF5350;font-size:12px;"><i class="bi bi-circle-fill" style="font-size:8px;"></i> Inactive</span>
+            {% endif %}
+          </td>
+          <td style="font-size:11px;color:#8B9BB4;white-space:nowrap;">{{ u.created_at|date:"d M Y" }}</td>
+          <td>
+            <form method="post" action="{% url 'accounts:toggle_user' u.pk %}" style="display:inline;">
+              {% csrf_token %}
+              <button type="submit" class="btn {% if u.is_active %}btn-army-outline{% else %}btn-army{% endif %}"
+                style="padding:4px 10px;font-size:11px;"
+                onclick="return confirm('{% if u.is_active %}Deactivate{% else %}Activate{% endif %} this user?');">
+                {% if u.is_active %}<i class="bi bi-person-x-fill"></i>{% else %}<i class="bi bi-person-check-fill"></i>{% endif %}
+              </button>
+            </form>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="10">
+            <div class="empty-state">
+              <i class="bi bi-people"></i>
+              <p>No users found.</p>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if is_paginated %}
+  <div style="padding:16px 20px;border-top:1px solid rgba(27,67,50,0.3);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+    <div style="font-size:12px;color:#8B9BB4;">Showing {{ page_obj.start_index }}–{{ page_obj.end_index }} of {{ paginator.count }}</div>
+    <nav>
+      <ul class="pagination pagination-sm mb-0">
+        {% if page_obj.has_previous %}
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}" style="background:rgba(15,22,41,0.8);border-color:rgba(27,67,50,0.4);color:#8B9BB4;">‹</a></li>
+        {% endif %}
+        {% for num in page_obj.paginator.page_range %}
+          {% if page_obj.number == num %}
+          <li class="page-item active"><span class="page-link" style="background:#1B4332;border-color:#1B4332;">{{ num }}</span></li>
+          {% elif num > page_obj.number|add:-2 and num < page_obj.number|add:2 %}
+          <li class="page-item"><a class="page-link" href="?page={{ num }}" style="background:rgba(15,22,41,0.8);border-color:rgba(27,67,50,0.4);color:#8B9BB4;">{{ num }}</a></li>
+          {% endif %}
+        {% endfor %}
+        {% if page_obj.has_next %}
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}" style="background:rgba(15,22,41,0.8);border-color:rgba(27,67,50,0.4);color:#8B9BB4;">›</a></li>
+        {% endif %}
+      </ul>
+    </nav>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

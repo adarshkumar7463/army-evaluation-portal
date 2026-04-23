@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Offline - Army Portal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0F1419 0%, #1a472a 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #e0e0e0;
+        }
+
+        .offline-container {
+            text-align: center;
+            padding: 40px;
+            background: rgba(15, 20, 25, 0.95);
+            border: 1px solid #2a6a3a;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            width: 90%;
+        }
+
+        .offline-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        h1 {
+            font-size: 32px;
+            margin-bottom: 15px;
+            color: #52b788;
+        }
+
+        .status-text {
+            font-size: 16px;
+            color: #a0a0a0;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .offline-features {
+            background: rgba(82, 183, 136, 0.1);
+            border-left: 4px solid #52b788;
+            padding: 20px;
+            margin: 30px 0;
+            text-align: left;
+            border-radius: 6px;
+        }
+
+        .offline-features h3 {
+            color: #52b788;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+
+        .offline-features ul {
+            list-style: none;
+            font-size: 14px;
+        }
+
+        .offline-features li {
+            padding: 6px 0;
+            color: #c0c0c0;
+        }
+
+        .offline-features li:before {
+            content: "✓ ";
+            color: #52b788;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        button, a.button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: #52b788;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #40a86e;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(82, 183, 136, 0.3);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: #52b788;
+            border: 2px solid #52b788;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(82, 183, 136, 0.1);
+        }
+
+        .sync-indicator {
+            margin-top: 20px;
+            padding: 12px;
+            background: rgba(82, 183, 136, 0.05);
+            border-radius: 6px;
+            font-size: 12px;
+            color: #90ee90;
+        }
+
+        .offline-data-info {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(100, 150, 200, 0.1);
+            border-left: 4px solid #4fc3f7;
+            border-radius: 6px;
+            font-size: 13px;
+            color: #b0d4f1;
+        }
+
+        @media (max-width: 600px) {
+            .offline-container {
+                margin: 20px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .offline-icon {
+                font-size: 60px;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            button, a.button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="offline-container">
+        <div class="offline-icon">📡</div>
+        <h1>Offline Mode Active</h1>
+        <p class="status-text">
+            You are currently offline. However, you can still access previously loaded content 
+            and perform actions that will sync when you reconnect.
+        </p>
+
+        <div class="offline-features">
+            <h3>What you can do offline:</h3>
+            <ul>
+                <li>View previously loaded pages and data</li>
+                <li>Submit forms (will sync when online)</li>
+                <li>Browse your cached evaluations</li>
+                <li>Access saved dashboards</li>
+                <li>Read stored reports</li>
+            </ul>
+        </div>
+
+        <div class="offline-data-info">
+            💾 Your data is being saved locally. Changes will automatically sync when you're back online.
+        </div>
+
+        <div class="action-buttons">
+            <button class="btn-primary" onclick="goBack()">← Go Back</button>
+            <a href="/" class="button btn-secondary">🏠 Go Home</a>
+        </div>
+
+        <div class="sync-indicator">
+            🔄 Waiting for connection to sync pending changes...
+        </div>
+    </div>
+
+    <script>
+        function goBack() {
+            if (window.history.length > 1) {
+                window.history.back();
+            } else {
+                window.location.href = '/';
+            }
+        }
+
+        // Check for online status
+        window.addEventListener('online', () => {
+            const indicator = document.querySelector('.sync-indicator');
+            indicator.innerHTML = '✓ Back Online! Syncing your changes...';
+            indicator.style.color = '#52b788';
+            setTimeout(() => {
+                window.location.href = '/';
+            }, 2000);
+        });
+
+        // Try to load cached content
+        window.addEventListener('load', () => {
+            if (navigator.onLine) {
+                window.location.href = '/';
+            }
+        });
+    </script>
+</body>
+</html>

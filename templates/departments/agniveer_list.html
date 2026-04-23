@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+{% block title %}Agniveers – Army Portal{% endblock %}
+{% block page_title %}Agniveers{% endblock %}
+{% block page_subtitle %}Registered Agniveer Personnel{% endblock %}
+
+{% block content %}
+{% if is_g_head %}
+<div class="mb-4 d-flex justify-content-end">
+  <a href="{% url 'departments:agniveer_create' %}" class="btn btn-army d-flex align-items-center gap-2">
+    <i class="bi bi-person-plus-fill"></i> Register New Agniveer
+  </a>
+</div>
+{% endif %}
+
+<!-- ─── Table ─── -->
+<div class="army-card">
+  <div class="army-card-header">
+    <h6 class="army-card-title"><i class="bi bi-table text-army"></i> Agniveer Records
+      <span class="sidebar-badge">{{ paginator.count }}</span>
+    </h6>
+    <div class="d-flex gap-2">
+      <a href="{% url 'reports:export_agniveers_csv' %}" class="btn btn-army-outline" style="padding:4px 12px;font-size:12px;">
+        <i class="bi bi-download"></i> CSV
+      </a>
+    </div>
+  </div>
+  <div style="overflow-x:auto;">
+    <table class="army-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Enrollment No</th>
+          <th>Name</th>
+          <th>Batch</th>
+          <th>Gender</th>
+          {% comment %} <th>Pass/Fail Status</th> {% endcomment %}
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for a in agniveers %}
+        <tr>
+          <td style="color:#8B9BB4;">{{ forloop.counter0|add:page_obj.start_index }}</td>
+          <td>
+            <a href="{% url 'departments:agniveer_detail' a.pk %}" style="color:#52B788;font-weight:600;text-decoration:none;">
+              {{ a.enrollment_number }}
+            </a>
+          </td>
+          <td>
+            <div style="font-weight:500;color:#E0E6F0;">{{ a.get_full_name }}</div>
+            {% if a.phone %}<div style="font-size:11px;color:#8B9BB4;">{{ a.phone }}</div>{% endif %}
+          </td>
+          <td>{{ a.batch }}</td>
+          <td>{{ a.get_gender_display }}</td>
+          {% comment %} <td>
+            {% with pass_status=a.get_pass_status %}
+            {% if pass_status == 'Pass' %}
+              <span class="badge-pass px-2 py-1 rounded" style="font-size:11px;">✓ PASS</span>
+            {% elif pass_status == 'Fail' %}
+              <span class="badge-fail px-2 py-1 rounded" style="font-size:11px;">✗ FAIL</span>
+            {% else %}
+              <span class="badge-pending px-2 py-1 rounded" style="font-size:11px;">PENDING</span>
+            {% endif %}
+            {% endwith %}
+          </td> {% endcomment %}
+          <td>
+            <div class="d-flex gap-1">
+              <a href="{% url 'departments:agniveer_detail' a.pk %}" class="btn btn-army-outline" style="padding:4px 8px;font-size:12px;" title="View">
+                <i class="bi bi-eye"></i>
+              </a>
+              {% if is_commander or is_g_head  %}
+              <a href="{% url 'departments:agniveer_edit' a.pk %}" class="btn btn-army-outline" style="padding:4px 8px;font-size:12px;" title="Edit">
+                <i class="bi bi-pencil"></i>
+              </a>
+              <a href="{% url 'evaluation:report_card' a.pk %}" class="btn btn-gold" style="padding:4px 8px;font-size:12px;" title="Report Card">
+                <i class="bi bi-file-earmark-text"></i>
+              </a>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="9">
+            <div class="empty-state">
+              <i class="bi bi-people"></i>
+              <p>No Agniveers found. {% if is_g_head %}<a href="{% url 'departments:agniveer_create' %}" style="color:#52B788;">Register one now →</a>{% endif %}</p>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  {% if is_paginated %}
+  <div style="padding:16px 20px;border-top:1px solid rgba(27,67,50,0.3);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+    <div style="font-size:12px;color:#8B9BB4;">
+      Showing {{ page_obj.start_index }}–{{ page_obj.end_index }} of {{ paginator.count }} records
+    </div>
+    <nav>
+      <ul class="pagination pagination-sm mb-0">
+        {% if page_obj.has_previous %}
+        <li class="page-item">
+          <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}" style="background:rgba(15,22,41,0.8);border-color:rgba(27,67,50,0.4);color:#8B9BB4;">‹</a>
+        </li>
+        {% endif %}
+        {% for num in page_obj.paginator.page_range %}
+          {% if page_obj.number == num %}
+          <li class="page-item active">
+            <span class="page-link" style="background:#1B4332;border-color:#1B4332;">{{ num }}</span>
+          </li>
+          {% elif num > page_obj.number|add:-3 and num < page_obj.number|add:3 %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ num }}" style="background:rgba(15,22,41,0.8);border-color:rgba(27,67,50,0.4);color:#8B9BB4;">{{ num }}</a>
+          </li>
+          {% endif %}
+        {% endfor %}
+        {% if page_obj.has_next %}
+        <li class="page-item">
+          <a class="page-link" href="?page={{ page_obj.next_page_number }}" style="background:rgba(15,22,41,0.8);border-color:rgba(27,67,50,0.4);color:#8B9BB4;">›</a>
+        </li>
+        {% endif %}
+      </ul>
+    </nav>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

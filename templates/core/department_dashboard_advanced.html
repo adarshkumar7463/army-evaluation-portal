@@ -1,0 +1,452 @@
+{% extends 'base.html' %}
+{% block title %}Department {{ dept }} Dashboard{% endblock %}
+{% block page_title %}Department {{ dept }} Portal{% endblock %}
+{% block page_subtitle %}Training Performance & Analytics{% endblock %}
+
+{% block content %}
+
+
+<!-- Top Stats -->
+<div class="row g-4 mb-4">
+  <div class="col-md-3">
+    <div class="army-card" style="border-left: 4px solid #52B788;">
+      <div class="army-card-body">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <div class="stat-label">Total Agniveers</div>
+            <div class="stat-value">{{ total_agniveers }}</div>
+          </div>
+          <div class="stat-icon" style="background: rgba(82, 183, 136, 0.1); color: #52B788;">
+            <i class="bi bi-people-fill"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-3">
+    <div class="army-card cursor-pointer" style="border-left: 4px solid #4CAF50;" onclick="openAgniveerModal('Passed')">
+      <div class="army-card-body">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <div class="stat-label">Passed ({{ dept }})</div>
+            <div class="stat-value text-success">{{ pass_count }}</div>
+          </div>
+          <div class="stat-icon" style="background: rgba(76, 175, 80, 0.1); color: #4CAF50;">
+            <i class="bi bi-check-circle-fill"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-3">
+    <div class="army-card cursor-pointer" style="border-left: 4px solid #EF5350;" onclick="openAgniveerModal('Failed')">
+      <div class="army-card-body">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <div class="stat-label">Failed ({{ dept }})</div>
+            <div class="stat-value text-danger">{{ fail_count }}</div>
+          </div>
+          <div class="stat-icon" style="background: rgba(239, 83, 80, 0.1); color: #EF5350;">
+            <i class="bi bi-x-circle-fill"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-3">
+    <div class="army-card cursor-pointer" style="border-left: 4px solid #D4A017;" onclick="location.href='{% url 'accounts:my_team' %}'">
+      <div class="army-card-body">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <div class="stat-label">Trainers</div>
+            <div class="stat-value">{{ total_trainers }}</div>
+          </div>
+          <div class="stat-icon" style="background: rgba(212, 160, 23, 0.1); color: #D4A017;">
+            <i class="bi bi-person-badge-fill"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <!-- Overall Distribution Pie -->
+  <div class="col-lg-6">
+    <div class="chart-box">
+      <div class="chart-title"><i class="bi bi-pie-chart-fill"></i> Pass/Fail Distribution</div>
+      <div style="height: 350px; display: flex; align-items: center; justify-content: center;">
+        <canvas id="passFailPieChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Category Slicer -->
+  <div class="col-lg-6">
+    <div class="chart-box">
+      <div class="chart-title"><i class="bi bi-compass"></i> Category Performance (Slicer)</div>
+      <div style="height: 350px; display: flex; align-items: center; justify-content: center;">
+        <canvas id="categorySlicerChart"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Additional Department Graphs -->
+<div class="row g-4 mt-3">
+  <!-- Category Pass Rates Bar Chart -->
+  <div class="col-lg-6">
+    <div class="chart-box">
+      <div class="chart-title"><i class="bi bi-bar-chart-fill"></i> Category Pass Rates</div>
+      <div style="height: 300px; display: flex; align-items: center; justify-content: center;">
+        <canvas id="categoryBarChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Test Type Performance -->
+  <div class="col-lg-6">
+    <div class="chart-box">
+      <div class="chart-title"><i class="bi bi-graph-up"></i> Test Type Performance</div>
+      <div style="height: 300px; display: flex; align-items: center; justify-content: center;">
+        <canvas id="testTypeChart"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Monthly Trend -->
+<div class="row g-4 mt-3">
+  <div class="col-lg-12">
+    <div class="chart-box">
+      <div class="chart-title"><i class="bi bi-calendar-event"></i> Monthly Evaluation Trend</div>
+      <div style="height: 300px; display: flex; align-items: center; justify-content: center;">
+        <canvas id="monthlyTrendChart"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Agniveer List Modal -->
+<div class="modal fade" id="agniveerModal" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content" style="background: #0F1629; border: 1px solid rgba(82, 183, 136, 0.3); color: #E0E6F0;">
+      <div class="modal-header" style="border-bottom: 1px solid rgba(82, 183, 136, 0.2);">
+        <h5 class="modal-title" id="modalTitle" style="font-family: 'Rajdhani', sans-serif; font-weight: 700;">Agniveer List</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="table-responsive">
+          <table class="table table-dark table-hover mb-0">
+            <thead>
+              <tr style="border-bottom: 2px solid #1B4332;">
+                <th>Enrollment No</th>
+                <th>Name</th>
+                <th>Dept Score</th>
+                <th>Percentage</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="modalTableBody">
+              <!-- Content populated by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .chart-box {
+    background: #0F1629;
+    border: 1px solid rgba(27, 67, 50, 0.4);
+    border-radius: 12px;
+    padding: 24px;
+    height: 100%;
+  }
+  .chart-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: #52B788;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .stat-label { font-size: 14px; color: #8B9BB4; margin-bottom: 5px; }
+  .stat-value { font-family: 'Rajdhani', sans-serif; font-size: 28px; font-weight: 700; }
+  .stat-icon { width: 45px; height: 45px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+  .cursor-pointer { cursor: pointer; transition: transform 0.2s; }
+  .cursor-pointer:hover { transform: translateY(-5px); }
+  
+  .table-dark { --bs-table-bg: transparent; }
+  .table-hover tbody tr:hover { background-color: rgba(82, 183, 136, 0.05) !important; }
+</style>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+  // Chart.js Setup
+  Chart.defaults.color = '#8B9BB4';
+  Chart.defaults.borderColor = 'rgba(82, 183, 136, 0.1)';
+  Chart.defaults.font.family = "'Inter', sans-serif";
+
+  // Passed/Failed Pie Chart
+  const pieCtx = document.getElementById('passFailPieChart');
+  new Chart(pieCtx, {
+    type: 'pie',
+    data: {
+      labels: JSON.parse('{{ pie_labels|safe }}'),
+      datasets: [{
+        data: JSON.parse('{{ pie_data|safe }}'),
+        backgroundColor: ['#52B788', '#EF5350'],
+        borderWidth: 0,
+        hoverOffset: 15
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: 'bottom', labels: { padding: 20, usePointStyle: true } }
+      }
+    }
+  });
+
+  // Category Slicer (Polar Area)
+  const slicerCtx = document.getElementById('categorySlicerChart');
+  new Chart(slicerCtx, {
+    type: 'polarArea',
+    data: {
+      labels: JSON.parse('{{ slicer_labels|safe }}'),
+      datasets: [{
+        label: 'Pass Rate %',
+        data: JSON.parse('{{ slicer_data|safe }}'),
+        backgroundColor: [
+          'rgba(82, 183, 136, 0.7)',
+          'rgba(79, 195, 247, 0.7)',
+          'rgba(212, 160, 23, 0.7)',
+          'rgba(156, 39, 176, 0.7)'
+        ],
+        borderWidth: 1,
+        borderColor: '#0F1629'
+      }]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        r: {
+          grid: { color: 'rgba(255, 255, 255, 0.05)' },
+          angleLines: { color: 'rgba(255, 255, 255, 0.05)' },
+          ticks: { backdropColor: 'transparent', color: '#8B9BB4' }
+        }
+      },
+      plugins: {
+        legend: { position: 'bottom', labels: { padding: 20, usePointStyle: true } }
+      }
+    }
+  });
+
+  // Category Bar Chart
+  const catBarCtx = document.getElementById('categoryBarChart');
+  new Chart(catBarCtx, {
+    type: 'bar',
+    data: {
+      labels: JSON.parse('{{ category_bar_labels|safe }}'),
+      datasets: [{
+        label: 'Pass Rate (%)',
+        data: JSON.parse('{{ category_pass_rates|safe }}'),
+        backgroundColor: ['rgba(82, 183, 136, 0.8)', 'rgba(79, 195, 247, 0.8)'],
+        borderColor: ['#52B788', '#4FC3F7'],
+        borderWidth: 2,
+        borderRadius: 6,
+        hoverBackgroundColor: ['#52B788', '#4FC3F7']
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      indexAxis: 'y',
+      scales: {
+        x: {
+          beginAtZero: true,
+          max: 100,
+          grid: { color: 'rgba(255, 255, 255, 0.05)' },
+          ticks: { color: '#8B9BB4' }
+        },
+        y: {
+          grid: { display: false },
+          ticks: { color: '#8B9BB4', font: { weight: 'bold' } }
+        }
+      },
+      plugins: {
+        legend: { display: true, position: 'top' }
+      }
+    }
+  });
+
+  // Test Type Performance
+  const testCtx = document.getElementById('testTypeChart');
+  new Chart(testCtx, {
+    type: 'bar',
+    data: {
+      labels: JSON.parse('{{ test_labels|safe }}'),
+      datasets: [
+        {
+          label: 'Avg Marks',
+          data: JSON.parse('{{ test_avg_marks|safe }}'),
+          backgroundColor: 'rgba(82, 183, 136, 0.7)',
+          borderColor: '#52B788',
+          borderWidth: 2,
+          yAxisID: 'y',
+          borderRadius: 5,
+        },
+        {
+          label: 'Pass Rate (%)',
+          data: JSON.parse('{{ test_pass_rates|safe }}'),
+          backgroundColor: 'rgba(79, 195, 247, 0.7)',
+          borderColor: '#4FC3F7',
+          borderWidth: 2,
+          yAxisID: 'y1',
+          borderRadius: 5,
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      scales: {
+        y: {
+          type: 'linear',
+          display: true,
+          position: 'left',
+          title: { display: true, text: 'Average Marks', color: '#52B788' },
+          ticks: { color: '#8B9BB4' },
+          grid: { color: 'rgba(255, 255, 255, 0.05)' }
+        },
+        y1: {
+          type: 'linear',
+          display: true,
+          position: 'right',
+          title: { display: true, text: 'Pass Rate (%)', color: '#4FC3F7' },
+          ticks: { color: '#8B9BB4' },
+          grid: { drawOnChartArea: false }
+        },
+        x: {
+          ticks: { color: '#8B9BB4' },
+          grid: { color: 'rgba(255, 255, 255, 0.05)' }
+        }
+      },
+      plugins: {
+        legend: { position: 'top', labels: { padding: 15 } }
+      }
+    }
+  });
+
+  // Monthly Trend
+  const monthlyCtx = document.getElementById('monthlyTrendChart');
+  new Chart(monthlyCtx, {
+    type: 'line',
+    data: {
+      labels: JSON.parse('{{ months_labels|safe }}'),
+      datasets: [
+        {
+          label: 'Total Evaluations',
+          data: JSON.parse('{{ month_counts|safe }}'),
+          borderColor: '#52B788',
+          backgroundColor: 'rgba(82, 183, 136, 0.1)',
+          borderWidth: 3,
+          tension: 0.4,
+          fill: true,
+          pointRadius: 6,
+          pointBackgroundColor: '#52B788',
+          pointBorderColor: '#0F1629',
+          pointBorderWidth: 2,
+          yAxisID: 'y'
+        },
+        {
+          label: 'Passed Evaluations',
+          data: JSON.parse('{{ month_pass|safe }}'),
+          borderColor: '#4FC3F7',
+          backgroundColor: 'rgba(79, 195, 247, 0.1)',
+          borderWidth: 3,
+          tension: 0.4,
+          fill: true,
+          pointRadius: 6,
+          pointBackgroundColor: '#4FC3F7',
+          pointBorderColor: '#0F1629',
+          pointBorderWidth: 2,
+          yAxisID: 'y1'
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      scales: {
+        y: {
+          type: 'linear',
+          display: true,
+          position: 'left',
+          title: { display: true, text: 'Total Count', color: '#52B788' },
+          ticks: { color: '#8B9BB4' },
+          grid: { color: 'rgba(255, 255, 255, 0.05)' }
+        },
+        y1: {
+          type: 'linear',
+          display: true,
+          position: 'right',
+          title: { display: true, text: 'Passed Count', color: '#4FC3F7' },
+          ticks: { color: '#8B9BB4' },
+          grid: { drawOnChartArea: false }
+        },
+        x: {
+          ticks: { color: '#8B9BB4' },
+          grid: { color: 'rgba(255, 255, 255, 0.05)' }
+        }
+      },
+      plugins: {
+        legend: { position: 'top', labels: { padding: 15 } }
+      }
+    }
+  });
+
+  // Modal Logic
+  const passedAgniveers = JSON.parse('{{ passed_agniveers|safe }}');
+  const failedAgniveers = JSON.parse('{{ failed_agniveers|safe }}');
+  const modal = new bootstrap.Modal(document.getElementById('agniveerModal'));
+
+  function openAgniveerModal(status) {
+    const list = status === 'Passed' ? passedAgniveers : failedAgniveers;
+    const title = document.getElementById('modalTitle');
+    const tbody = document.getElementById('modalTableBody');
+    
+    title.innerText = `${status} Agniveers (Dept {{ dept }})`;
+    title.style.color = status === 'Passed' ? '#52B788' : '#EF5350';
+    
+    tbody.innerHTML = list.map(a => `
+      <tr>
+        <td><span class="text-army-light">${a.enrollment}</span></td>
+        <td class="fw-bold">${a.name}</td>
+        <td>${a.score}</td>
+        <td><span class="badge ${a.percentage >= 50 ? 'bg-success' : 'bg-danger'} bg-opacity-10 ${a.percentage >= 50 ? 'text-success' : 'text-danger'}">${a.percentage}%</span></td>
+        <td>
+          <a href="/departments/agniveers/${a.id}/" class="btn btn-sm btn-army-outline">
+            <i class="bi bi-eye"></i>
+          </a>
+        </td>
+      </tr>
+    `).join('') || '<tr><td colspan="5" class="text-center">No data available</td></tr>';
+    
+    modal.show();
+  }
+</script>
+{% endblock %}

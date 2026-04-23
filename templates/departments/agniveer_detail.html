@@ -1,0 +1,340 @@
+{% extends 'base.html' %}
+{% block title %}{{ agniveer.get_full_name }} – Army Portal{% endblock %}
+{% block page_title %}Agniveer Profile{% endblock %}
+{% block page_subtitle %}{{ agniveer.enrollment_number }}{% endblock %}
+
+{% block content %}
+<div class="row g-3">
+
+  <!-- Profile Card -->
+  <div class="col-xl-4">
+    <div class="army-card">
+      <div class="army-card-body text-center" style="padding:32px 20px;">
+        {% if agniveer.photo %}
+        <img src="{{ agniveer.photo.url }}" alt="Photo" class="rounded-circle mb-3"
+          style="width:90px;height:90px;object-fit:cover;border:3px solid #1B4332;">
+        {% else %}
+        <div class="mx-auto mb-3"
+          style="width:90px;height:90px;border-radius:50%;background:linear-gradient(135deg,#1B4332,#40916C);display:flex;align-items:center;justify-content:center;font-family:Rajdhani,sans-serif;font-size:32px;font-weight:700;color:white;border:3px solid rgba(82,183,136,0.3);">
+          {{ agniveer.first_name.0|upper }}{{ agniveer.last_name.0|upper }}
+        </div>
+        {% endif %}
+
+        <h5 style="font-family:Rajdhani,sans-serif;font-weight:700;font-size:20px;color:#E0E6F0;margin-bottom:4px;">
+          {{ agniveer.get_full_name }}
+        </h5>
+        <div style="font-size:13px;color:#52B788;margin-bottom:16px;">{{ agniveer.enrollment_number }}</div>
+
+        {% comment %} <div class="d-flex justify-content-center mb-4">
+          {% with ps=agniveer.get_pass_status %}
+          {% if ps == 'Pass' %}
+          <span class="badge-pass px-3 py-2 rounded" style="font-size:14px;font-weight:700;">✓ PASSED</span>
+          {% elif ps == 'Fail' %}
+          <span class="badge-fail px-3 py-2 rounded" style="font-size:14px;font-weight:700;">✗ FAILED</span>
+          {% else %}
+          <span class="badge-pending px-3 py-2 rounded" style="font-size:14px;font-weight:700;">⏳ PENDING</span>
+          {% endif %}
+          {% endwith %}
+        </div> {% endcomment %}
+        <div style="background:rgba(27,67,50,0.15);border-radius:10px;padding:16px;text-align:left;">
+          <div class="d-flex justify-content-between mb-2">
+            <span style="font-size:12px;color:#8B9BB4;">Batch</span>
+            <span style="font-size:13px;font-weight:600;color:#52B788;">{{ agniveer.batch }}</span>
+          </div>
+          <div class="d-flex justify-content-between mb-2">
+            <span style="font-size:12px;color:#8B9BB4;">Gender</span>
+            <span style="font-size:13px;color:#E0E6F0;">{{ agniveer.get_gender_display }}</span>
+          </div>
+          <div class="d-flex justify-content-between mb-2">
+            <span style="font-size:12px;color:#8B9BB4;">Joining Date</span>
+            <span style="font-size:13px;color:#E0E6F0;">{{ agniveer.joining_date|date:"d M Y" }}</span>
+          </div>
+        </div>
+      </div>
+      <div class="army-card-body" style="border-top:1px solid rgba(27,67,50,0.3);padding-top:16px;">
+        <div class="d-flex flex-column gap-2">
+          {% if is_commander or is_g_head or is_department %}
+          <a href="{% url 'evaluation:report_card' agniveer.pk %}"
+            class="btn btn-army w-100 d-flex align-items-center gap-2 justify-content-center">
+            <i class="bi bi-file-earmark-text-fill"></i> View Report Card
+          </a>
+          <a href="{% url 'reports:export_report_card_pdf' agniveer.pk %}"
+            class="btn btn-gold w-100 d-flex align-items-center gap-2 justify-content-center">
+            <i class="bi bi-file-earmark-pdf-fill"></i> Download PDF
+          </a>
+          {% endif %}
+          {% if is_commander or is_g_head  %}
+          <a href="{% url 'departments:agniveer_edit' agniveer.pk %}"
+            class="btn btn-army-outline w-100 d-flex align-items-center gap-2 justify-content-center">
+            <i class="bi bi-pencil-fill"></i> Edit Profile
+          </a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    {% if not request.user.is_trainer %}
+    <!-- Total Score -->
+    <div class="army-card mt-3">
+      <div class="army-card-header">
+        <h6 class="army-card-title"><i class="bi bi-award-fill text-gold"></i> Total Score</h6>
+      </div>
+      <div class="army-card-body text-center" id="scoreCardBody" data-color="{{ score_color }}"
+        data-color-dark="{{ score_color_dark }}">
+        <div style="font-family:Rajdhani,sans-serif;font-size:56px;font-weight:700;margin-bottom:8px;" data-total-score>
+          {{ total_score }}
+        </div>
+        <div style="font-size:14px;color:#8B9BB4;margin-bottom:12px;">out of <span
+            style="font-weight:600;color:#E0E6F0;">{{ max_marks }}</span></div>
+
+        <!-- Progress Bar -->
+        <div style="background:rgba(27,67,50,0.2);border-radius:8px;height:8px;margin-bottom:12px;overflow:hidden;">
+          <div style="height:100%;transition:width 0.3s ease;" data-progress-bar data-width="{{ percentage }}"></div>
+        </div>
+
+        <!-- Percentage -->
+        <div style="font-family:Rajdhani,sans-serif;font-size:28px;font-weight:700;margin-bottom:8px;" data-percentage>
+          {{ percentage }}%
+        </div>
+
+        <div style="font-size:12px;color:#8B9BB4;">Cumulative Performance Score</div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Evaluations -->
+  <div class="col-xl-8">
+    <div class="army-card">
+      <div class="army-card-header">
+        <h6 class="army-card-title"><i class="bi bi-clipboard2-check-fill text-army"></i> Evaluation Sheets</h6>
+      </div>
+      {% if can_evaluate %}
+      <div class="army-card-body">
+        <form method="post" action="{% url 'evaluation:evaluate_agniveer' agniveer.pk %}">
+          {% csrf_token %}
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label">Category</label>
+              <select name="category" id="categorySelect" class="form-control" required>
+                <option value="">Select Category</option>
+                {% for value,label in category_choices %}
+                <option value="{{ value }}">{{ label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Test Type</label>
+              <select name="test_type" id="testTypeSelect" class="form-control" required>
+                <option value="">Select Test Type</option>
+                {% for value,label in test_type_choices %}
+                <option value="{{ value }}"
+                  data-category="{% if value == 'physical' or value == 'weapon' or value == 'field' %}on_field{% else %}trade{% endif %}">
+                  {{ label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-2">
+              <label class="form-label">Marks</label>
+              <input type="number" name="marks" class="form-control" min="0" max="20" placeholder="0-20" required>
+            </div>
+            <div class="col-md-2">
+              <label class="form-label">Action</label>
+              <button type="submit" class="btn btn-army w-100" style="margin-top:0.4rem;">Submit</button>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Remarks</label>
+              <textarea name="remarks" class="form-control" rows="2" placeholder="Optional remarks"></textarea>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="army-card-body" style="border-top:1px solid rgba(27,67,50,0.3);">
+        <div style="font-size:12px;color:#8B9BB4;">Choose category and test type to evaluate this Agniveer. Only your
+          department evaluation is available.</div>
+      </div>
+      <script>
+        (function () {
+          const categorySelect = document.getElementById('categorySelect');
+          const testTypeSelect = document.getElementById('testTypeSelect');
+
+          // Test to category mapping from server
+          const testToCategory = JSON.parse('{{ test_to_category_json|safe }}');
+
+          function updateTestTypeOptions() {
+            const category = categorySelect.value;
+            for (const option of testTypeSelect.options) {
+              if (!option.value) continue;
+              const optionCategory = testToCategory[option.value];
+              option.hidden = category && optionCategory !== category;
+            }
+            if (testTypeSelect.value) {
+              const selected = testTypeSelect.selectedOptions[0];
+              if (selected && selected.hidden) {
+                testTypeSelect.value = '';
+              }
+            }
+          }
+          categorySelect.addEventListener('change', updateTestTypeOptions);
+          updateTestTypeOptions();
+        })();
+      </script>
+      {% endif %}
+      <div style="overflow-x:auto;">
+        <table class="army-table">
+          <thead>
+            <tr>
+              <th>Test Type</th>
+              <th>Category</th>
+              <th>NCO</th>
+              <th>JCO</th>
+              <th>Officer</th>
+              {% if not request.user.is_trainer %}
+              <th>Total</th>
+              <th>Percentage</th>
+              <th style="text-align:center;">Result</th>
+              {% endif %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for ev in evaluations %}
+            <tr>
+              <td><span style="font-weight:600;color:#E0E6F0;">{{ ev.get_test_type_display }}</span></td>
+              <td><span style="font-size:11px;color:#8B9BB4;">{{ ev.get_category_display }}</span></td>
+              
+              <!-- NCO Column -->
+              <td class="marks-cell">
+                {% if request.user.is_trainer %}
+                  {% if request.user.is_nco %}
+                    {{ ev.get_nco_marks }}
+                  {% else %}
+                    {% if ev.get_nco_marks > 0 %}<span style="color:#52B788;">✓</span>{% else %}<span style="color:#8B9BB4;font-size:10px;">Pending</span>{% endif %}
+                  {% endif %}
+                {% else %}
+                  {{ ev.get_nco_marks }}
+                {% endif %}
+              </td>
+
+              <!-- JCO Column -->
+              <td class="marks-cell">
+                {% if request.user.is_trainer %}
+                  {% if request.user.is_jco %}
+                    {{ ev.get_jco_marks }}
+                  {% else %}
+                    {% if ev.get_jco_marks > 0 %}<span style="color:#52B788;">✓</span>{% else %}<span style="color:#8B9BB4;font-size:10px;">Pending</span>{% endif %}
+                  {% endif %}
+                {% else %}
+                  {{ ev.get_jco_marks }}
+                {% endif %}
+              </td>
+
+              <!-- Officer Column -->
+              <td class="marks-cell">
+                {% if request.user.is_trainer %}
+                  {% if request.user.is_officer %}
+                    {{ ev.get_officer_marks }}
+                  {% else %}
+                    {% if ev.get_officer_marks > 0 %}<span style="color:#52B788;">✓</span>{% else %}<span style="color:#8B9BB4;font-size:10px;">Pending</span>{% endif %}
+                  {% endif %}
+                {% else %}
+                  {{ ev.get_officer_marks }}
+                {% endif %}
+              </td>
+
+              {% if not request.user.is_trainer %}
+              <td>
+                <span style="font-family:Rajdhani,sans-serif;font-size:18px;font-weight:700;color:#E0E6F0;">
+                  {{ ev.get_total_marks }}
+                </span>
+                <span style="color:#8B9BB4;font-size:11px;">/60</span>
+              </td>
+              <td style="text-align:center;">{{ ev.get_percentage }}%</td>
+              <td style="text-align:center;">
+                {% if ev.get_total_marks > 0 %}
+                {% if ev.is_pass %}
+                <span class="badge-pass px-2 py-1 rounded" style="font-size:11px;">PASS</span>
+                {% else %}
+                <span class="badge-fail px-2 py-1 rounded" style="font-size:11px;">FAIL</span>
+                {% endif %}
+                {% else %}
+                <span class="badge-pending px-2 py-1 rounded" style="font-size:11px;">Pending</span>
+                {% endif %}
+              </td>
+              {% endif %}
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="10">
+                <div class="empty-state">
+                  <i class="bi bi-clipboard2"></i>
+                  <p>No evaluations yet for this Agniveer.</p>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Real-time total marks calculation
+  function updateTotalMarks() {
+    const scoreCard = document.getElementById('scoreCardBody');
+    if (!scoreCard) return; // Not present for trainers
+    
+    const scoreColor = scoreCard.dataset.color;
+    const scoreColorDark = scoreCard.dataset.color_dark || scoreCard.dataset.colorDark;
+
+    // Get all total marks from evaluation rows (6th column only if not trainer)
+    const marksElements = document.querySelectorAll('tbody tr td:nth-child(6)');
+    let totalMarks = 0;
+
+    marksElements.forEach(element => {
+      const text = element.textContent.trim();
+      const match = text.match(/^(\d+)/);
+      if (match) {
+        totalMarks += parseInt(match[1]);
+      }
+    });
+
+    const maxMarks = Number('{{ max_marks }}');
+    const percentage = (totalMarks / maxMarks * 100).toFixed(1);
+
+    // Update total score display
+    const scoreDisplay = document.querySelector('[data-total-score]');
+    if (scoreDisplay) {
+      scoreDisplay.textContent = totalMarks;
+      scoreDisplay.style.color = scoreColor;
+    }
+
+    // Update percentage display
+    const percentageDisplay = document.querySelector('[data-percentage]');
+    if (percentageDisplay) {
+      percentageDisplay.textContent = percentage + '%';
+      percentageDisplay.style.color = scoreColor;
+    }
+
+    // Update progress bar
+    const progressBar = document.querySelector('[data-progress-bar]');
+    if (progressBar) {
+      const finalWidth = marksElements.length > 0 ? percentage : progressBar.dataset.width;
+      progressBar.style.width = Math.min(finalWidth, 100) + '%';
+      progressBar.style.background = `linear-gradient(90deg, ${scoreColor}, ${scoreColorDark})`;
+    }
+  }
+
+  // Update on page load
+  document.addEventListener('DOMContentLoaded', updateTotalMarks);
+
+  // Watch for table changes
+  const observer = new MutationObserver(updateTotalMarks);
+  const tableBody = document.querySelector('tbody');
+  if (tableBody) {
+    observer.observe(tableBody, { childList: true, subtree: true, characterData: true });
+  }
+</script>
+
+{% endblock %}

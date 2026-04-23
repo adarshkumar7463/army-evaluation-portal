@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}Army Evaluation Portal{% endblock %}</title>
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --army-green: #1B4332;
+      --army-green-light: #2D6A4F;
+      --army-green-mid: #40916C;
+      --army-olive: #52B788;
+      --army-gold: #D4A017;
+      --army-gold-light: #F4C842;
+      --dark-bg: #0A0E1A;
+      --card-bg: #0F1629;
+      --sidebar-bg: #080D18;
+      --sidebar-width: 260px;
+      --navbar-height: 60px;
+      --border-color: rgba(27,67,50,0.3);
+      --text-muted: #8B9BB4;
+      --transition-speed: 0.2s;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--dark-bg);
+      color: #E0E6F0;
+      margin: 0;
+      overflow-x: hidden;
+    }
+
+    /* ─── SCROLLBAR ─── */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: var(--dark-bg); }
+    ::-webkit-scrollbar-thumb { background: var(--army-green-light); border-radius: 10px; }
+
+    /* ─── SIDEBAR ─── */
+    .sidebar {
+      position: fixed;
+      top: 0; left: 0;
+      width: var(--sidebar-width);
+      height: 100vh;
+      background: var(--sidebar-bg);
+      border-right: 1px solid var(--border-color);
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.3s ease;
+      overflow-y: auto;
+    }
+
+    .sidebar-brand {
+      padding: 24px 16px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      text-align: center;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .sidebar-brand-text {
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 700;
+      font-size: 26px;
+      line-height: 1.2;
+      color: #E0E6F0;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    .sidebar-brand-text span {
+      display: block;
+      font-size: 12px;
+      color: var(--army-olive);
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-top: 6px;
+    }
+
+    /* Removed sidebar-user styles as info moved to dashboard */
+
+    .sidebar-user-avatar {
+      width: 38px; height: 38px;
+      background: linear-gradient(135deg, var(--army-green-light), var(--army-green-mid));
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700;
+      font-size: 14px;
+      color: white;
+      flex-shrink: 0;
+    }
+
+    .sidebar-user-info { flex: 1; min-width: 0; }
+    .sidebar-user-name {
+      font-size: 13px; font-weight: 600;
+      color: #E0E6F0;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .sidebar-user-role {
+      font-size: 10px;
+      color: var(--army-olive);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .sidebar-nav { padding: 12px 0; flex: 1; }
+
+    .nav-section-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--text-muted);
+      padding: 14px 20px 8px;
+    }
+
+    .sidebar-link {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 20px;
+      color: #A8B5C8;
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 500;
+      border-left: 4px solid transparent;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+    }
+
+    .sidebar-link:hover {
+      color: var(--army-olive);
+      background: rgba(82, 183, 136, 0.08);
+      padding-left: 28px;
+    }
+
+    .sidebar-link.active {
+      color: var(--army-olive);
+      background: rgba(82, 183, 136, 0.12);
+      border-left-color: var(--army-olive);
+      font-weight: 700;
+    }
+
+    .sidebar-link i { font-size: 20px; width: 24px; text-align: center; }
+
+    /* ─── FIXED SIDEBAR FOOTER ─── */
+    .sidebar-footer {
+      margin-top: auto;
+      border-top: 1px solid var(--border-color);
+      padding: 10px 0;
+    }
+
+    .sidebar-badge {
+      margin-left: auto;
+      background: var(--army-olive);
+      color: var(--dark-bg);
+      font-size: 10px;
+      font-weight: 800;
+      padding: 2px 8px;
+      border-radius: 12px;
+    }
+
+    /* ─── MAIN CONTENT ─── */
+    .main-wrapper {
+      margin-left: var(--sidebar-width);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding: 40px;
+    }
+
+    /* ─── CONTENT ─── */
+    .content-area {
+      flex: 1;
+      animation: fadeIn 0.5s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .page-header {
+      margin-bottom: 40px;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 20px;
+    }
+
+    .page-title {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 44px;
+      font-weight: 700;
+      color: #E0E6F0;
+      margin: 0;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      background: linear-gradient(135deg, #E0E6F0 0%, #8B9BB4 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .page-subtitle {
+      font-size: 14px;
+      color: var(--army-olive);
+      font-weight: 600;
+      margin-top: 8px;
+      letter-spacing: 0.5px;
+    }
+
+    /* ─── CARDS ─── */
+    .army-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .army-card-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .army-card-title {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      color: #E0E6F0;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      letter-spacing: 0.5px;
+    }
+
+    .army-card-body { padding: 20px; }
+
+    /* ─── STAT CARDS ─── */
+    .stat-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--army-green-mid);
+    }
+
+    a .stat-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--army-green);
+      box-shadow: 0 8px 16px rgba(27,67,50,0.2);
+    }
+
+    .stat-click-hint {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 8px;
+      opacity: 0.7;
+      font-style: italic;
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+    }
+
+    .stat-card.green::before { background: linear-gradient(90deg, var(--army-green), var(--army-olive)); }
+    .stat-card.gold::before { background: linear-gradient(90deg, var(--army-gold), var(--army-gold-light)); }
+    .stat-card.blue::before { background: linear-gradient(90deg, #1565C0, #42A5F5); }
+    .stat-card.red::before { background: linear-gradient(90deg, #B71C1C, #EF5350); }
+
+    .stat-icon {
+      width: 48px; height: 48px;
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+      margin-bottom: 12px;
+    }
+
+    .stat-icon.green { background: rgba(27,67,50,0.4); color: var(--army-olive); }
+    .stat-icon.gold { background: rgba(212,160,23,0.2); color: var(--army-gold-light); }
+    .stat-icon.blue { background: rgba(21,101,192,0.2); color: #42A5F5; }
+    .stat-icon.red { background: rgba(183,28,28,0.2); color: #EF5350; }
+
+    .stat-value {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 36px;
+      font-weight: 700;
+      color: #E0E6F0;
+      line-height: 1;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* ─── TABLES ─── */
+    .army-table { width: 100%; border-collapse: collapse; }
+    .army-table th {
+      background: rgba(27,67,50,0.3);
+      color: var(--army-olive);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border-color);
+      white-space: nowrap;
+    }
+    .army-table td {
+      padding: 12px 16px;
+      border-bottom: 1px solid rgba(27,67,50,0.2);
+      font-size: 13px;
+      color: #C5CDE0;
+      vertical-align: middle;
+    }
+    .army-table tbody tr:hover { background: rgba(27,67,50,0.15); }
+    .army-table tbody tr:last-child td { border-bottom: none; }
+
+    /* ─── BADGES ─── */
+    .badge-pass { background: rgba(21,87,36,0.3); color: #4CAF50; border: 1px solid rgba(76,175,80,0.3); }
+    .badge-fail { background: rgba(114,28,36,0.3); color: #EF5350; border: 1px solid rgba(239,83,80,0.3); }
+    .badge-pending { background: rgba(100,100,0,0.3); color: #FFC107; border: 1px solid rgba(255,193,7,0.3); }
+
+    .role-badge {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* ─── FORMS ─── */
+    .form-control, .form-select {
+      background: rgba(15,22,41,0.8) !important;
+      border: 1px solid var(--border-color) !important;
+      color: #E0E6F0 !important;
+      border-radius: 8px !important;
+    }
+    .form-control:focus, .form-select:focus {
+      border-color: var(--army-green-mid) !important;
+      box-shadow: 0 0 0 3px rgba(64,145,108,0.15) !important;
+    }
+    .form-label { color: #8B9BB4; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+
+    /* ─── BUTTONS ─── */
+    .btn-army {
+      background: linear-gradient(135deg, var(--army-green), var(--army-green-light));
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 13px;
+      padding: 8px 18px;
+      transition: all 0.2s;
+    }
+    .btn-army:hover {
+      background: linear-gradient(135deg, var(--army-green-light), var(--army-green-mid));
+      color: white;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(27,67,50,0.4);
+    }
+    .btn-army-outline {
+      background: transparent;
+      color: var(--army-olive);
+      border: 1px solid var(--army-green-mid);
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 13px;
+      padding: 8px 18px;
+      transition: all 0.2s;
+    }
+    .btn-army-outline:hover {
+      background: rgba(27,67,50,0.3);
+      color: var(--army-olive);
+    }
+
+    /* ─── SIDEBAR TOGGLE ─── */
+    .sidebar-toggle {
+      display: none;
+      background: none;
+      border: none;
+      color: #E0E6F0;
+      font-size: 22px;
+      cursor: pointer;
+      padding: 4px;
+    }
+
+    /* ─── MOBILE ─── */
+    @media (max-width: 768px) {
+      .sidebar {
+        transform: translateX(-100%);
+      }
+      .sidebar.show {
+        transform: translateX(0);
+      }
+      .main-wrapper {
+        margin-left: 0;
+      }
+      .sidebar-toggle {
+        display: block;
+      }
+      .sidebar-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.5);
+        z-index: 999;
+      }
+      .sidebar-overlay.show {
+        display: block;
+      }
+    }
+  </style>
+  {% block extra_css %}{% endblock %}
+  <!-- Offline Support -->
+  <link rel="manifest" href="/static/manifest.json" />
+  <link rel="stylesheet" href="/static/css/offline.css" />
+  <!-- Theme Toggle -->
+  <link rel="stylesheet" href="/static/css/theme-toggle.css" />
+  <meta name="theme-color" content="#1a472a" />
+  <meta name="description" content="Army Evaluation Portal with Offline Support" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Army Portal" />
+  <!-- Service Worker Registration Script -->
+  <script>
+    // Register service worker for offline support
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/static/js/service-worker.js')
+          .then(reg => {
+            console.log('Service Worker registered successfully:', reg);
+            // Check for updates periodically
+            setInterval(() => {
+              reg.update().catch(err => console.log('SW update check failed:', err));
+            }, 60000); // Check every minute
+          })
+          .catch(err => {
+            console.log('Service Worker registration failed:', err);
+          });
+      });
+    }
+  </script>
+</head>
+<body>
+
+<!-- Sidebar Overlay (mobile) -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+<!-- ═══ SIDEBAR ═══ -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand text-center">
+    <div class="sidebar-brand-icon mx-auto mb-3" style="width: 60px; height: 60px; font-size: 30px;">⚔️</div>
+    <div class="sidebar-brand-text">
+      Army Evaluation
+      <div style="font-size: 28px; color: var(--army-olive);">PORTAL</div>
+      <span style="margin-top: 8px;">Agniveer Management System</span>
+    </div>
+  </div>
+
+  {% if user.is_authenticated %}
+  <!-- Navigation -->
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Main Menu</div>
+    <a href="{% url 'core:dashboard' %}" class="sidebar-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+      <i class="bi bi-grid-3x3-gap-fill"></i> Dashboard
+    </a>
+
+    <div class="nav-section-label">Agniveers</div>
+    <a href="{% url 'departments:agniveer_list' %}" class="sidebar-link {% if 'agniveer' in request.path and 'search' not in request.path %}active{% endif %}">
+      <i class="bi bi-people-fill"></i> Agniveers
+      {% if total_assigned %}<span class="sidebar-badge">{{ total_assigned }}</span>{% endif %}
+    </a>
+
+    {% if is_g_head %}
+    <a href="{% url 'departments:agniveer_create' %}" class="sidebar-link">
+      <i class="bi bi-person-plus-fill"></i> Register
+    </a>
+    {% endif %}
+
+    {% if is_department %}
+    <a href="{% url 'accounts:my_team' %}" class="sidebar-link {% if 'my-team' in request.path %}active{% endif %}">
+      <i class="bi bi-people-fill"></i> My Team
+    </a>
+    {% endif %}
+
+    {% if not is_trainer %}
+    <div class="nav-section-label">Evaluation</div>
+    <a href="{% url 'evaluation:evaluation_list' %}" class="sidebar-link {% if 'evaluation' in request.path and 'report' not in request.path %}active{% endif %}">
+      <i class="bi bi-clipboard2-check-fill"></i> Evaluations
+    </a>
+    {% endif %}
+
+    {% if is_commander or is_g_head %}
+    <div class="nav-section-label">Admin</div>
+    <a href="{% url 'accounts:user_list' %}" class="sidebar-link {% if 'users' in request.path %}active{% endif %}">
+      <i class="bi bi-shield-fill-check"></i> Manage Users
+    </a>
+    <a href="{% url 'logs:activity_log' %}" class="sidebar-link {% if 'logs' in request.path %}active{% endif %}">
+      <i class="bi bi-journal-text"></i> Logs
+    </a>
+    {% endif %}
+  </nav>
+
+  <!-- Fixed Sidebar Footer -->
+  <div class="sidebar-footer">
+    <a href="{% url 'accounts:logout' %}" class="sidebar-link" style="color:#EF5350;">
+      <i class="bi bi-box-arrow-right"></i> Logout
+    </a>
+    <div style="padding:10px 20px; font-size:20px; color:var(--text-muted); text-align:center;">
+      v1.0 · Secure System
+    </div>
+  </div>
+  {% endif %}
+</aside>
+
+<!-- ═══ MAIN WRAPPER ═══ -->
+<div class="main-wrapper">
+
+  <!-- Page Header -->
+  <div class="page-header d-flex align-items-center justify-content-between w-100">
+    <div class="d-flex align-items-center gap-3">
+      <button class="btn btn-outline-army d-lg-none" onclick="toggleSidebar()">
+        <i class="bi bi-list fs-4"></i>
+      </button>
+      <div>
+        <h1 class="page-title">{% block page_title %}{% endblock %}</h1>
+        <div class="page-subtitle">{% block page_subtitle %}{% endblock %}</div>
+      </div>
+    </div>
+    
+    <div class="d-flex align-items-center gap-3 no-print">
+      <!-- Theme Toggle Button -->
+      <button id="themeToggle" class="theme-toggle" title="Toggle Light/Dark Mode (Ctrl+Shift+T)">
+        <i class="bi bi-sun-fill"></i>
+      </button>
+      
+      {% if user.is_authenticated %}
+      <a href="{% url 'accounts:profile' %}" class="text-decoration-none d-flex align-items-center gap-3" style="color: #E0E6F0; background: rgba(82, 183, 136, 0.1); padding: 8px 20px; border-radius: 12px; border: 1px solid rgba(82, 183, 136, 0.3); transition: all 0.2s;">
+        <div class="text-end">
+          <div style="font-size: 18px; font-weight: 700; font-family: 'Rajdhani', sans-serif; line-height: 1;">{{ user.get_full_name|default:user.username }}</div>
+          <div style="font-size: 11px; color: var(--army-olive); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-top: 2px;">{{ user.get_role_display }}</div>
+        </div>
+        <div style="width: 45px; height: 45px; background: linear-gradient(135deg, var(--army-green), var(--army-green-mid)); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; color: white; border: 1px solid rgba(255,255,255,0.1);">
+          {{ user.first_name.0|upper }}{{ user.last_name.0|upper }}
+        </div>
+      </a>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- ─── MESSAGES ─── -->
+  {% if messages %}
+  <div style="padding:12px 24px 0;">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show d-flex align-items-center gap-2" role="alert">
+      {% if message.tags == 'success' %}<i class="bi bi-check-circle-fill text-success"></i>
+      {% elif message.tags == 'error' or message.tags == 'danger' %}<i class="bi bi-x-circle-fill text-danger"></i>
+      {% elif message.tags == 'warning' %}<i class="bi bi-exclamation-triangle-fill text-warning"></i>
+      {% else %}<i class="bi bi-info-circle-fill text-info"></i>{% endif %}
+      {{ message }}
+      <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- ─── GLOBAL SEARCH ─── -->
+  {% if is_commander or is_g_head %}
+  <div class="row mb-5 no-print">
+    <div class="col-lg-10 mx-auto">
+      <form action="{% url 'core:search' %}" method="GET" class="position-relative">
+        <div class="input-group input-group-lg" style="box-shadow: 0 15px 35px rgba(0,0,0,0.4); border-radius: 15px; overflow: hidden;">
+          <span class="input-group-text border-0" style="background: #1B4332; color: var(--army-olive); padding-left: 25px;">
+            <i class="bi bi-search fs-4"></i>
+          </span>
+          <input type="text" name="q" class="form-control border-0" 
+                 placeholder="Search Agniveer by Army Number / Enrollment..." 
+                 style="background: #1B4332; color: white; height: 65px; font-size: 18px; padding-left: 15px;">
+          <button class="btn btn-army px-5" type="submit" style="font-weight: 700; letter-spacing: 1px; font-family: 'Rajdhani', sans-serif; font-size: 18px;">SEARCH</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ─── CONTENT ─── -->
+  <div class="content-area">
+    {% block content %}{% endblock %}
+  </div>
+
+</div><!-- /main-wrapper -->
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+
+<script>
+  function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    sidebar.classList.toggle('show');
+    overlay.classList.toggle('show');
+  }
+
+  // Auto-dismiss alerts
+  setTimeout(() => {
+    document.querySelectorAll('.alert').forEach(el => {
+      const bsAlert = new bootstrap.Alert(el);
+      bsAlert.close();
+    });
+  }, 5000);
+
+  // Chart.js global defaults
+  Chart.defaults.color = '#8B9BB4';
+  Chart.defaults.borderColor = 'rgba(27,67,50,0.3)';
+  Chart.defaults.font.family = "'Inter', sans-serif";
+</script>
+
+{% block extra_js %}{% endblock %}
+<!-- Theme Toggle and Offline Status -->
+<script src="/static/js/theme-toggle.js"></script>
+<!-- Offline Mode Support -->
+<script src="/static/js/offline-manager.js"></script>
+</body>
+</html>

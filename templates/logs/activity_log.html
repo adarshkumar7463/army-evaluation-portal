@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+{% block title %}Activity Logs – Army Portal{% endblock %}
+{% block page_title %}Activity Logs{% endblock %}
+{% block page_subtitle %}System Activity Monitoring{% endblock %}
+
+{% block content %}
+<!-- Filters -->
+<div class="army-card mb-4">
+  <div class="army-card-header">
+    <h6 class="army-card-title"><i class="bi bi-funnel-fill text-army"></i> Filter Logs</h6>
+    <a href="{% url 'logs:export_logs' %}" class="btn btn-gold" style="padding:4px 12px;font-size:12px;">
+      <i class="bi bi-download"></i> Export CSV
+    </a>
+  </div>
+  <div class="army-card-body">
+    <form method="get" class="row g-2">
+      <div class="col-md-3">
+        <select name="action" class="form-control">
+          <option value="">All Actions</option>
+          {% for k,v in action_choices %}<option value="{{ k }}" {% if request.GET.action == k %}selected{% endif %}>{{ v }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2">
+        <input type="date" name="date_from" class="form-control" value="{{ request.GET.date_from }}" placeholder="From">
+      </div>
+      <div class="col-md-2">
+        <input type="date" name="date_to" class="form-control" value="{{ request.GET.date_to }}" placeholder="To">
+      </div>
+      <div class="col-md-2">
+        <button type="submit" class="btn btn-army w-100"><i class="bi bi-search"></i> Filter</button>
+      </div>
+      <div class="col-md-2">
+        <a href="{% url 'logs:activity_log' %}" class="btn btn-army-outline w-100">Clear</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Log Stats -->
+<div class="row g-3 mb-4">
+  {% for k,v in action_choices %}
+  <div class="col-6 col-md-3 col-xl-auto" style="flex:1;">
+    <div style="background:var(--card-bg);border:1px solid rgba(27,67,50,0.3);border-radius:10px;padding:14px;text-align:center;">
+      <div style="font-family:Rajdhani,sans-serif;font-size:22px;font-weight:700;color:#52B788;">
+        {{ logs|length }}
+      </div>
+      <div style="font-size:11px;color:#8B9BB4;text-transform:uppercase;letter-spacing:0.5px;">{{ v }}</div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- Logs Table -->
+<div class="army-card">
+  <div class="army-card-header">
+    <h6 class="army-card-title">
+      <i class="bi bi-journal-text text-army"></i> Activity Records
+      <span class="sidebar-badge">{{ paginator.count }}</span>
+    </h6>
+  </div>
+  <div style="overflow-x:auto;">
+    <table class="army-table">
+      <thead>
+        <tr>
+          <th>Timestamp</th>
+          <th>User</th>
+          <th>Role</th>
+          <th>Action</th>
+          <th>Description</th>
+          <th>IP Address</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for log in logs %}
+        <tr>
+          <td style="white-space:nowrap;font-size:12px;">
+            <div style="color:#E0E6F0;">{{ log.timestamp|date:"d M Y" }}</div>
+            <div style="color:#8B9BB4;">{{ log.timestamp|date:"H:i:s" }}</div>
+          </td>
+          <td>
+            <div style="font-weight:600;color:#E0E6F0;">{{ log.user.username|default:"System" }}</div>
+            <div style="font-size:11px;color:#8B9BB4;">{{ log.user.get_full_name|default:"" }}</div>
+          </td>
+          <td>
+            <span class="role-badge" style="background:rgba(27,67,50,0.3);color:#52B788;font-size:10px;">
+              {{ log.role|default:"—" }}
+            </span>
+          </td>
+          <td>
+            {% if log.action == 'LOGIN' %}
+              <span style="background:rgba(76,175,80,0.15);color:#4CAF50;padding:3px 8px;border-radius:4px;font-size:11px;font-weight:600;">
+                <i class="bi bi-box-arrow-in-right"></i> LOGIN
+              </span>
+            {% elif log.action == 'LOGOUT' %}
+              <span style="background:rgba(239,83,80,0.15);color:#EF5350;padding:3px 8px;border-radius:4px;font-size:11px;font-weight:600;">
+                <i class="bi bi-box-arrow-right"></i> LOGOUT
+              </span>
+            {% elif log.action == 'CREATE' %}
+              <span style="background:rgba(66,165,245,0.15);color:#42A5F5;padding:3px 8px;border-radius:4px;font-size:11px;font-weight:600;">
+                <i class="bi bi-plus-circle"></i> CREATE
+              </span>
+            {% elif log.action == 'UPDATE' %}
+              <span style="background:rgba(255,193,7,0.15);color:#FFC107;padding:3px 8px;border-radius:4px;font-size:11px;font-weight:600;">
+                <i class="bi bi-pencil"></i> UPDATE
+              </span>
+            {% elif log.action == 'DELETE' %}
+              <span style="background:rgba(183,28,28,0.15);color:#EF5350;padding:3px 8px;border-radius:4px;font-size:11px;font-weight:600;">
+                <i class="bi bi-trash"></i> DELETE
+              </span>
+            {% elif log.action == 'EXPORT' %}
+              <span style="background:rgba(156,39,176,0.15);color:#CE93D8;padding:3px 8px;border-radius:4px;font-size:11px;font-weight:600;">
+                <i class="bi bi-download"></i> EXPORT
+              </span>
+            {% elif log.action == 'EVALUATE' %}
+              <span style="background:rgba(255,152,0,0.15);color:#FFA726;padding:3px 8px;border-radius:4px;font-size:11px;font-weight:600;">
+                <i class="bi bi-clipboard2-check"></i> EVALUATE
+              </span>
+            {% elif log.action == 'LOCK' %}
+              <span style="background:rgba(27,67,50,0.3);color:#52B788;padding:3px 8px;border-radius:4px;font-size:11px;font-weight:600;">
+                <i class="bi bi-lock-fill"></i> LOCK
+              </span>
+            {% else %}
+              <span style="background:rgba(139,155,180,0.15);color:#8B9BB4;padding:3px 8px;border-radius:4px;font-size:11px;font-weight:600;">
+                {{ log.get_action_display }}
+              </span>
+            {% endif %}
+          </td>
+          <td style="font-size:12px;max-width:350px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+            {{ log.description }}
+          </td>
+          <td style="font-size:12px;color:#8B9BB4;white-space:nowrap;">
+            {{ log.ip_address|default:"—" }}
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="6">
+            <div class="empty-state">
+              <i class="bi bi-journal-x"></i>
+              <p>No activity logs found.</p>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if is_paginated %}
+  <div style="padding:16px 20px;border-top:1px solid rgba(27,67,50,0.3);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+    <div style="font-size:12px;color:#8B9BB4;">
+      Showing {{ page_obj.start_index }}–{{ page_obj.end_index }} of {{ paginator.count }} logs
+    </div>
+    <nav>
+      <ul class="pagination pagination-sm mb-0">
+        {% if page_obj.has_previous %}
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}" style="background:rgba(15,22,41,0.8);border-color:rgba(27,67,50,0.4);color:#8B9BB4;">‹</a></li>
+        {% endif %}
+        {% for num in page_obj.paginator.page_range %}
+          {% if page_obj.number == num %}
+          <li class="page-item active"><span class="page-link" style="background:#1B4332;border-color:#1B4332;">{{ num }}</span></li>
+          {% elif num > page_obj.number|add:-2 and num < page_obj.number|add:2 %}
+          <li class="page-item"><a class="page-link" href="?page={{ num }}" style="background:rgba(15,22,41,0.8);border-color:rgba(27,67,50,0.4);color:#8B9BB4;">{{ num }}</a></li>
+          {% endif %}
+        {% endfor %}
+        {% if page_obj.has_next %}
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}" style="background:rgba(15,22,41,0.8);border-color:rgba(27,67,50,0.4);color:#8B9BB4;">›</a></li>
+        {% endif %}
+      </ul>
+    </nav>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

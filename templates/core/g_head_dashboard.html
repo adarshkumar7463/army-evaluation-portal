@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+{% block title %}G Head Dashboard{% endblock %}
+{% block page_title %}G Department Head{% endblock %}
+{% block page_subtitle %}All Departments Overview{% endblock %}
+
+{% block content %}
+<div class="row g-3 mb-4">
+  <div class="col-sm-6 col-xl-3">
+    <div class="stat-card green">
+      <div class="stat-icon green"><i class="bi bi-people-fill"></i></div>
+      <div class="stat-value">{{ total_agniveers }}</div>
+      <div class="stat-label">Total Agniveers</div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-3">
+    <div class="stat-card gold">
+      <div class="stat-icon gold"><i class="bi bi-clipboard2-check-fill"></i></div>
+      <div class="stat-value">{{ total_evaluations }}</div>
+      <div class="stat-label">Evaluations</div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-3">
+    <div class="stat-card blue">
+      <div class="stat-icon blue"><i class="bi bi-check-circle-fill"></i></div>
+      <div class="stat-value">{{ pass_count }}</div>
+      <div class="stat-label">Passed</div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-3">
+    <div class="stat-card red">
+      <div class="stat-icon red"><i class="bi bi-x-circle-fill"></i></div>
+      <div class="stat-value">{{ fail_count }}</div>
+      <div class="stat-label">Failed</div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-xl-7">
+    <div class="army-card">
+      <div class="army-card-header">
+        <h6 class="army-card-title"><i class="bi bi-bar-chart-fill text-army"></i> Department Distribution</h6>
+      </div>
+      <div class="army-card-body">
+        <canvas id="deptChart" height="200"></canvas>
+      </div>
+    </div>
+  </div>
+  <div class="col-xl-5">
+    <div class="army-card">
+      <div class="army-card-header">
+        <h6 class="army-card-title"><i class="bi bi-pie-chart-fill text-army"></i> Pass / Fail</h6>
+      </div>
+      <div class="army-card-body">
+        <canvas id="pieChart" height="200"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Department Cards -->
+<div class="section-divider">Department Summary</div>
+<div class="row g-3">
+  {% for d in dept_data %}
+  <div class="col-sm-6 col-xl-3">
+    <div class="army-card">
+      <div class="army-card-header">
+        <h6 class="army-card-title">{{ d.dept }}</h6>
+        <span class="sidebar-badge">{{ d.count }}</span>
+      </div>
+      <div class="army-card-body">
+        <p style="font-size:13px;color:#8B9BB4;margin:0;">{{ d.count }} Agniveers enrolled</p>
+        <a href="{% url 'departments:agniveer_list' %}?department={{ forloop.counter0|add:'1' }}" class="btn btn-army-outline mt-2 w-100" style="font-size:12px;padding:6px;">
+          View Agniveers
+        </a>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- Quick Actions -->
+<div class="section-divider">Quick Actions</div>
+<div class="row g-3">
+  <div class="col-md-4">
+    <a href="{% url 'accounts:create_department' %}" class="btn btn-army w-100 d-flex align-items-center justify-content-center gap-2">
+      <i class="bi bi-building"></i> Create Department User
+    </a>
+  </div>
+  <div class="col-md-4">
+    <a href="{% url 'reports:export_excel' %}" class="btn btn-gold w-100 d-flex align-items-center justify-content-center gap-2">
+      <i class="bi bi-file-earmark-excel-fill"></i> Download Report
+    </a>
+  </div>
+  <div class="col-md-4">
+    <a href="{% url 'evaluation:evaluation_list' %}" class="btn btn-army-outline w-100 d-flex align-items-center justify-content-center gap-2">
+      <i class="bi bi-clipboard2-check-fill"></i> View Evaluations
+    </a>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+new Chart(document.getElementById('deptChart'), {
+  type: 'bar',
+  data: {
+    labels: {{ dept_labels|safe }},
+    datasets: [{ label: 'Agniveers', data: {{ dept_counts|safe }},
+      backgroundColor: ['rgba(27,67,50,0.7)','rgba(64,145,108,0.7)','rgba(82,183,136,0.7)','rgba(212,160,23,0.7)'],
+      borderRadius: 6 }]
+  },
+  options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
+    scales:{x:{grid:{color:'rgba(27,67,50,0.2)'},ticks:{color:'#8B9BB4'}},y:{grid:{color:'rgba(27,67,50,0.2)'},ticks:{color:'#8B9BB4'},beginAtZero:true}} }
+});
+new Chart(document.getElementById('pieChart'), {
+  type: 'doughnut',
+  data: { labels:['Passed','Failed'], datasets:[{data:[{{ pass_count }},{{ fail_count }}],backgroundColor:['rgba(76,175,80,0.7)','rgba(239,83,80,0.7)'],borderColor:['#4CAF50','#EF5350'],borderWidth:2,hoverOffset:6}] },
+  options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom',labels:{color:'#8B9BB4',font:{size:11}}}}, cutout:'65%' }
+});
+</script>
+{% endblock %}

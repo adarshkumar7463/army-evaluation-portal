@@ -1,0 +1,178 @@
+{% extends 'base.html' %}
+{% block title %}Reports – Army Portal{% endblock %}
+{% block page_title %}Reports & Exports{% endblock %}
+{% block page_subtitle %}Download and export data{% endblock %}
+
+{% block content %}
+<!-- Stats -->
+<div class="row g-0 mb-4">
+  <div class="col-sm-6 col-xl-3">
+    <a href="{% url 'departments:agniveer_list' %}" class="text-decoration-none">
+      <div class="stat-card green h-100">
+        <div class="stat-icon green"><i class="bi bi-people-fill"></i></div>
+        <div class="stat-value">{{ total_agniveers }}</div>
+        <div class="stat-label">Total Agniveers</div>
+        <div class="stat-click-hint">Click to view list</div>
+      </div>
+    </a>
+  </div>
+  <div class="col-sm-6 col-xl-3">
+    <a href="{% url 'accounts:user_list' %}" class="text-decoration-none">
+      <div class="stat-card gold h-100">
+        <div class="stat-icon gold"><i class="bi bi-people-badge-fill"></i></div>
+        <div class="stat-value">{{ total_trainers }}</div>
+        <div class="stat-label">Total Trainers</div>
+        <div class="stat-click-hint">Click to view list</div>
+      </div>
+    </a>
+  </div>
+  <div class="col-sm-6 col-xl-3">
+    <a href="#passed-list" class="text-decoration-none">
+      <div class="stat-card blue h-100">
+        <div class="stat-icon blue"><i class="bi bi-check-circle-fill"></i></div>
+        <div class="stat-value">{{ pass_count }}</div>
+        <div class="stat-label">Passed</div>
+        <div class="stat-click-hint">Click to view list</div>
+      </div>
+    </a>
+  </div>
+  <div class="col-sm-6 col-xl-3">
+    <a href="#failed-list" class="text-decoration-none">
+      <div class="stat-card red h-100">
+        <div class="stat-icon red"><i class="bi bi-x-circle-fill"></i></div>
+        <div class="stat-value">{{ fail_count }}</div>
+        <div class="stat-label">Failed</div>
+        <div class="stat-click-hint">Click to view list</div>
+      </div>
+    </a>
+  </div>
+</div>
+
+<!-- Export Options -->
+<div class="row g-3">
+
+  <!-- Agniveer Reports -->
+  <div class="col-xl-4">
+    <div class="army-card">
+      <div class="army-card-header">
+        <h6 class="army-card-title"><i class="bi bi-people-fill text-army"></i> Agniveer Reports</h6>
+      </div>
+      <div class="army-card-body d-flex flex-column gap-3">
+        <a href="{% url 'reports:export_agniveers_csv' %}" class="btn btn-army d-flex align-items-center gap-2">
+          <i class="bi bi-file-earmark-spreadsheet"></i>
+          <div style="text-align:left;">
+            <div style="font-size:13px;font-weight:600;">Export Agniveers CSV</div>
+            <div style="font-size:11px;opacity:0.7;">Complete list with details</div>
+          </div>
+        </a>
+        <a href="{% url 'departments:agniveer_list' %}" class="btn btn-army-outline d-flex align-items-center gap-2">
+          <i class="bi bi-table"></i>
+          <div style="text-align:left;">
+            <div style="font-size:13px;font-weight:600;">View Agniveer List</div>
+            <div style="font-size:11px;opacity:0.7;">Browse & filter records</div>
+          </div>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Evaluation Reports -->
+  <div class="col-xl-4">
+    <div class="army-card">
+      <div class="army-card-header">
+        <h6 class="army-card-title"><i class="bi bi-clipboard2-check-fill text-army"></i> Evaluation Reports</h6>
+      </div>
+      <div class="army-card-body d-flex flex-column gap-3">
+        <a href="{% url 'reports:export_excel' %}" class="btn btn-gold d-flex align-items-center gap-2">
+          <i class="bi bi-file-earmark-excel-fill"></i>
+          <div style="text-align:left;">
+            <div style="font-size:13px;font-weight:700;">Download Excel Report</div>
+            <div style="font-size:11px;opacity:0.7;">Formatted with colors & styles</div>
+          </div>
+        </a>
+        <a href="{% url 'reports:export_evaluations_csv' %}" class="btn btn-army-outline d-flex align-items-center gap-2">
+          <i class="bi bi-file-earmark-text"></i>
+          <div style="text-align:left;">
+            <div style="font-size:13px;font-weight:600;">Export Evaluations CSV</div>
+            <div style="font-size:11px;opacity:0.7;">All locked evaluation data</div>
+          </div>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Department Reports -->
+  <div class="col-xl-4">
+    <div class="army-card">
+      <div class="army-card-header">
+        <h6 class="army-card-title"><i class="bi bi-building text-army"></i> Department PDF Reports</h6>
+      </div>
+      <div class="army-card-body d-flex flex-column gap-2">
+        {% for dept in 'ABCD' %}
+        <a href="{% url 'reports:export_dept_pdf' dept=dept %}" class="btn btn-army-outline d-flex align-items-center gap-2" style="padding:8px 14px;">
+          <i class="bi bi-file-earmark-pdf-fill" style="color:#EF5350;"></i>
+          <div style="text-align:left;">
+            <div style="font-size:13px;font-weight:600;">Department {{ dept }} Summary PDF</div>
+            <div style="font-size:11px;opacity:0.7;">All Agniveers & scores</div>
+          </div>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Logs Export -->
+  {% if is_commander or is_g_head %}
+  <div class="col-xl-4">
+    <div class="army-card">
+      <div class="army-card-header">
+        <h6 class="army-card-title"><i class="bi bi-journal-text text-army"></i> Audit Reports</h6>
+      </div>
+      <div class="army-card-body d-flex flex-column gap-3">
+        <a href="{% url 'logs:export_logs' %}" class="btn btn-army d-flex align-items-center gap-2">
+          <i class="bi bi-file-earmark-spreadsheet"></i>
+          <div style="text-align:left;">
+            <div style="font-size:13px;font-weight:600;">Export Activity Logs CSV</div>
+            <div style="font-size:11px;opacity:0.7;">Last 1000 activity records</div>
+          </div>
+        </a>
+        <a href="{% url 'logs:activity_log' %}" class="btn btn-army-outline d-flex align-items-center gap-2">
+          <i class="bi bi-eye"></i>
+          <div style="text-align:left;">
+            <div style="font-size:13px;font-weight:600;">View Activity Logs</div>
+            <div style="font-size:11px;opacity:0.7;">Browse & filter logs</div>
+          </div>
+        </a>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if is_commander or is_g_head %}
+  <!-- Individual Report Card -->
+  <div class="col-xl-8">
+    <div class="army-card">
+      <div class="army-card-header">
+        <h6 class="army-card-title"><i class="bi bi-person-badge-fill text-army"></i> Individual Report Card</h6>
+      </div>
+      <div class="army-card-body">
+        <p style="font-size:13px;color:#8B9BB4;margin-bottom:16px;">
+          Search for an Agniveer to download their individual PDF report card.
+        </p>
+        <form method="get" action="{% url 'departments:agniveer_list' %}" class="d-flex gap-2">
+          <input type="text" name="search" class="form-control" placeholder="Enter enrollment number or name..." style="flex:1;">
+          <button type="submit" class="btn btn-army">
+            <i class="bi bi-search"></i> Search
+          </button>
+        </form>
+        <div style="margin-top:16px;padding:12px;background:rgba(27,67,50,0.1);border-radius:8px;font-size:12px;color:#8B9BB4;">
+          <i class="bi bi-lightbulb-fill text-gold me-2"></i>
+          After finding the Agniveer, click their name to view their profile and download individual PDF.
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

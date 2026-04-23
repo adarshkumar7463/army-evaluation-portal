@@ -1,0 +1,686 @@
+{% extends 'base.html' %}
+{% block title %}G Head Dashboard – Army Portal{% endblock %}
+{% block page_title %}G Department Head Dashboard{% endblock %}
+{% block page_subtitle %}Organization-wide Analytics & Insights{% endblock %}
+
+{% block content %}
+
+
+<style>
+  .metric-card {
+    background: linear-gradient(135deg, #1B4332 0%, #0F1419 100%);
+    border-radius: 16px;
+    padding: 24px;
+    color: white;
+    border: 1px solid rgba(82, 183, 136, 0.2);
+    text-align: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  }
+  .metric-card:hover {
+    transform: translateY(-5px);
+    border-color: rgba(82, 183, 136, 0.5);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+  }
+  .metric-value {
+    font-size: 42px;
+    font-weight: 700;
+    font-family: 'Rajdhani', monospace;
+    margin: 8px 0;
+    letter-spacing: 1px;
+    color: #52B788;
+  }
+  .metric-label {
+    font-size: 12px;
+    color: #8B9BB4;
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .chart-box {
+    background: #0F1419;
+    border-radius: 16px;
+    padding: 28px;
+    border: 1px solid rgba(82, 183, 136, 0.15);
+    margin-bottom: 24px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+    height: 100%;
+  }
+  .chart-title {
+    color: #52B788;
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 24px;
+    font-family: 'Rajdhani', sans-serif;
+    letter-spacing: 1.2px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-transform: uppercase;
+  }
+  .dept-btn {
+    padding: 10px 20px;
+    border-radius: 10px;
+    border: 1px solid rgba(82, 183, 136, 0.3);
+    color: #8B9BB4;
+    font-weight: 600;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    font-size: 13px;
+    background: rgba(82, 183, 136, 0.05);
+  }
+  .dept-btn:hover, .dept-btn.active {
+    background: rgba(82, 183, 136, 0.15);
+    border-color: #52B788;
+    color: #52B788;
+    transform: translateY(-2px);
+  }
+</style>
+
+<!-- Key Metrics -->
+<div class="row g-3 mb-4">
+  <div class="col-md-3">
+    <div class="metric-card">
+      <div class="metric-label"><i class="bi bi-people"></i> Total Agniveers</div>
+      <div class="metric-value">{{ total_agniveers }}</div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="metric-card clickable-card" style="background: linear-gradient(135deg, #2D5016 0%, #52B788 100%); cursor: pointer;" onclick="location.href='{% url 'accounts:my_team' %}'">
+      <div class="metric-label"><i class="bi bi-person-badge-fill"></i> Total Trainers</div>
+      <div class="metric-value">{{ total_trainers }}</div>
+      <div style="font-size: 18px; opacity: 0.8; margin-top: 5px;">Click to view list</div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="metric-card clickable-card" style="background: linear-gradient(135deg, #2D5016 0%, #52B788 100%); cursor: pointer;" data-bs-toggle="modal" data-bs-target="#passedModal">
+      <div class="metric-label"><i class="bi bi-check-circle"></i> Passed</div>
+      <div class="metric-value">{{ pass_count }}</div>
+      <div style="font-size: 18px; opacity: 0.8; margin-top: 5px;">Click to view list</div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="metric-card clickable-card" style="background: linear-gradient(135deg, #5D1F1A 0%, #EF5350 100%); cursor: pointer;" data-bs-toggle="modal" data-bs-target="#failedModal">
+      <div class="metric-label"><i class="bi bi-x-circle"></i> Failed</div>
+      <div class="metric-value">{{ fail_count }}</div>
+      <div style="font-size: 18px; opacity: 0.8; margin-top: 5px;">Click to view list</div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal for Passed Agniveers -->
+<div class="modal fade" id="passedModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content border-0" style="background: #0F1419; border: 1px solid #52B788 !important;">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title" style="color: #52B788; font-family: 'Rajdhani', sans-serif; font-weight: 700;">⚔️ PASSED AGNIVEERS</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-4">
+        <div style="max-height: 400px; overflow-y: auto;">
+          <table class="table table-dark table-hover border-0 mb-0">
+            <thead>
+              <tr style="border-bottom: 2px solid #52B788;">
+                <th class="border-0">Enrollment No</th>
+                <th class="border-0">Name</th>
+                <th class="border-0 text-center">Score</th>
+                <th class="border-0 text-center">Percentage</th>
+                <th class="border-0 text-center" style="width: 80px;">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for ag in passed_agniveers %}
+              <tr style="border-bottom: 1px solid rgba(82, 183, 136, 0.2);">
+                <td class="border-0 py-3"><a href="{% url 'departments:agniveer_detail' ag.id %}" style="color: #52B788; font-weight: 600; text-decoration: none;">{{ ag.enrollment }}</a></td>
+                <td class="border-0 py-3">{{ ag.name }}</td>
+                <td class="border-0 py-3 text-center">{{ ag.score }}</td>
+                <td class="border-0 py-3 text-center"><span class="badge-pass px-2 py-1 rounded">{{ ag.percentage }}%</span></td>
+                <td class="border-0 py-3 text-center">
+                  <a href="{% url 'departments:agniveer_detail' ag.id %}" class="btn btn-sm btn-army" style="padding: 4px 8px; font-size: 11px;">
+                    <i class="bi bi-eye-fill"></i> View
+                  </a>
+                </td>
+              </tr>
+              {% empty %}
+              <tr><td colspan="5" class="text-center py-4 border-0">No records found</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal for Failed Agniveers -->
+<div class="modal fade" id="failedModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content border-0" style="background: #0F1419; border: 1px solid #EF5350 !important;">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title" style="color: #EF5350; font-family: 'Rajdhani', sans-serif; font-weight: 700;">⚔️ FAILED AGNIVEERS</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-4">
+        <div style="max-height: 400px; overflow-y: auto;">
+          <table class="table table-dark table-hover border-0 mb-0">
+            <thead>
+              <tr style="border-bottom: 2px solid #EF5350;">
+                <th class="border-0">Enrollment No</th>
+                <th class="border-0">Name</th>
+                <th class="border-0 text-center">Score</th>
+                <th class="border-0 text-center">Percentage</th>
+                <th class="border-0 text-center" style="width: 80px;">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for ag in failed_agniveers %}
+              <tr style="border-bottom: 1px solid rgba(239, 83, 80, 0.2);">
+                <td class="border-0 py-3"><a href="{% url 'departments:agniveer_detail' ag.id %}" style="color: #EF5350; font-weight: 600; text-decoration: none;">{{ ag.enrollment }}</a></td>
+                <td class="border-0 py-3">{{ ag.name }}</td>
+                <td class="border-0 py-3 text-center">{{ ag.score }}</td>
+                <td class="border-0 py-3 text-center"><span class="badge-fail px-2 py-1 rounded">{{ ag.percentage }}%</span></td>
+                <td class="border-0 py-3 text-center">
+                  <a href="{% url 'departments:agniveer_detail' ag.id %}" class="btn btn-sm btn-danger" style="padding: 4px 8px; font-size: 11px; background: #EF5350; border: none;">
+                    <i class="bi bi-eye-fill"></i> View
+                  </a>
+                </td>
+              </tr>
+              {% empty %}
+              <tr><td colspan="5" class="text-center py-4 border-0">No records found</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Department Selection & Pass/Fail Distribution -->
+<div class="row g-4 mb-4">
+  <!-- Department Buttons & Stats -->
+  <div class="col-lg-8">
+    <div class="chart-box">
+      <div class="chart-title"><i class="bi bi-building"></i> Department Evaluation Details</div>
+      <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 25px;">
+        <button type="button" class="btn dept-btn" data-dept="A">
+          <i class="bi bi-building"></i> Department A
+        </button>
+        <button type="button" class="btn dept-btn" data-dept="B">
+          <i class="bi bi-building"></i> Department B
+        </button>
+        <button type="button" class="btn dept-btn" data-dept="C">
+          <i class="bi bi-building"></i> Department C
+        </button>
+        <button type="button" class="btn dept-btn" data-dept="D">
+          <i class="bi bi-building"></i> Department D
+        </button>
+      </div>
+      
+      <!-- Department Details Container -->
+      <div id="deptDetailsContainer">
+        <div style="text-align: center; padding: 50px 20px; color: #8B9BB4;">
+          <i class="bi bi-arrow-left" style="font-size: 28px; margin-bottom: 12px; display: block;"></i>
+          <p style="font-size: 18px; margin: 0;">Select a department to view evaluation details</p>
+        </div>
+      </div>
+
+      <!-- Added Chart Container for Selected Department (Same as Commander) -->
+      <div id="deptCategoryChartContainer" style="display: none; margin-top: 20px; border-top: 1px solid rgba(82, 183, 136, 0.1); padding-top: 20px;">
+        <div style="font-size: 13px; color: #52B788; margin-bottom: 15px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 8px;">
+          <i class="bi bi-bar-chart"></i> Category Performance - <span id="selectedDeptName"></span>
+        </div>
+        <div style="height: 250px;">
+          <canvas id="deptSelectedCategoryChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Pass/Fail 3D Pie Chart -->
+  <div class="col-lg-4">
+    <div class="chart-box">
+      <div class="chart-title"><i class="bi bi-pie-chart"></i> Overall Pass/Fail</div>
+      <div style="height: 350px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+        <div style="width: 280px; height: 280px; position: relative;">
+          <canvas id="passFailChart"></canvas>
+        </div>
+        <div class="mt-4 text-center" style="width: 100%;">
+          <div style="font-size: 12px; color: #8B9BB4; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px;">Distribution</div>
+          <div style="display: flex; justify-content: center; gap: 20px; align-items: center;">
+            <div>
+              <div style="color: #52B788; font-size: 20px; font-weight: 700; font-family: 'Rajdhani';">{{ pass_count }}</div>
+              <div style="color: #8B9BB4; font-size: 11px; margin-top: 4px;">Passed</div>
+            </div>
+            <div style="width: 1px; height: 30px; background: rgba(255,255,255,0.1);"></div>
+            <div>
+              <div style="color: #EF5350; font-size: 20px; font-weight: 700; font-family: 'Rajdhani';">{{ fail_count }}</div>
+              <div style="color: #8B9BB4; font-size: 11px; margin-top: 4px;">Failed</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Test Type Performance by Department (2x2 Grid) -->
+<div class="row g-4 mb-4">
+  <div class="col-lg-6">
+    <div class="chart-box">
+      <div class="chart-title" style="display: flex; align-items: center; gap: 8px;">
+        <span style="background: rgba(76, 175, 80, 0.2); color: #4CAF50; width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 14px;">A</span>
+        <span>Department A - Test Type Performance</span>
+      </div>
+      <canvas id="deptATestTypeChart" style="max-height: 220px;"></canvas>
+    </div>
+  </div>
+  
+  <div class="col-lg-6">
+    <div class="chart-box">
+      <div class="chart-title" style="display: flex; align-items: center; gap: 8px;">
+        <span style="background: rgba(79, 195, 247, 0.2); color: #4FC3F7; width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 14px;">B</span>
+        <span>Department B - Test Type Performance</span>
+      </div>
+      <canvas id="deptBTestTypeChart" style="max-height: 220px;"></canvas>
+    </div>
+  </div>
+  
+  <div class="col-lg-6">
+    <div class="chart-box">
+      <div class="chart-title" style="display: flex; align-items: center; gap: 8px;">
+        <span style="background: rgba(212, 160, 23, 0.2); color: #D4A017; width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 14px;">C</span>
+        <span>Department C - Test Type Performance</span>
+      </div>
+      <canvas id="deptCTestTypeChart" style="max-height: 220px;"></canvas>
+    </div>
+  </div>
+  
+  <div class="col-lg-6">
+    <div class="chart-box">
+      <div class="chart-title" style="display: flex; align-items: center; gap: 8px;">
+        <span style="background: rgba(156, 39, 176, 0.2); color: #9C27B0; width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 14px;">D</span>
+        <span>Department D - Test Type Performance</span>
+      </div>
+      <canvas id="deptDTestTypeChart" style="max-height: 220px;"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- Charts Row -->
+<div class="row g-4 mb-4">
+  <div class="col-lg-7">
+    <div class="chart-box">
+      <div class="chart-title"><i class="bi bi-calendar-event"></i> Monthly Evaluation Trend</div>
+      <canvas id="monthlyChart" style="max-height: 320px;"></canvas>
+    </div>
+  </div>
+  <div class="col-lg-5">
+    <div class="chart-box">
+      <div class="chart-title"><i class="bi bi-grid-3x3-gap"></i> Category Performance</div>
+      <canvas id="categoryChart" style="max-height: 320px;"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- Department Statistics -->
+<div class="row g-3">
+  <div class="col-lg-12">
+    <div class="chart-box">
+      <div class="chart-title"><i class="bi bi-table"></i> Department Statistics</div>
+      <div style="overflow-x: auto;">
+        <table style="width: 100%; color: #E0E6F0; font-size: 13px;">
+          <thead>
+            <tr style="border-bottom: 2px solid #52B788;">
+              <th style="padding: 12px; text-align: left; color: #52B788;">Department</th>
+              <th style="padding: 12px; text-align: center; color: #52B788;">Agniveers</th>
+              <th style="padding: 12px; text-align: center; color: #52B788;">Total Evals</th>
+              <th style="padding: 12px; text-align: center; color: #52B788;"><i class="bi bi-check-circle"></i> Passed</th>
+              <th style="padding: 12px; text-align: center; color: #52B788;"><i class="bi bi-x-circle"></i> Failed</th>
+              <th style="padding: 12px; text-align: center; color: #52B788;">Pass Rate</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for dept, stats in dept_stats.items %}
+            <tr style="border-bottom: 1px solid rgba(82, 183, 136, 0.2);">
+              <td style="padding: 12px;"><strong style="color: #52B788;">Dept {{ dept }}</strong></td>
+              <td style="padding: 12px; text-align: center;">{{ stats.agniveers }}</td>
+              <td style="padding: 12px; text-align: center;">{{ stats.total }}</td>
+              <td style="padding: 12px; text-align: center; color: #52B788;"><strong>{{ stats.passed }}</strong></td>
+              <td style="padding: 12px; text-align: center; color: #EF5350;"><strong>{{ stats.failed }}</strong></td>
+              <td style="padding: 12px; text-align: center; font-weight: 600; color: #4FC3F7;">{{ stats.pass_rate|floatformat:1 }}%</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+<script>
+Chart.defaults.color = '#E0E6F0';
+Chart.defaults.borderColor = 'rgba(82, 183, 136, 0.1)';
+Chart.defaults.font.family = "'Rajdhani', sans-serif";
+
+// 1. Department Button Handler
+const deptData = {
+  'A': {{ dept_stats.A|safe }},
+  'B': {{ dept_stats.B|safe }},
+  'C': {{ dept_stats.C|safe }},
+  'D': {{ dept_stats.D|safe }}
+};
+
+// Function to update department category chart dynamically (Same as Commander)
+let deptCategoryChartInstance = null;
+function updateDeptCategoryChart(dept) {
+  const deptColors = {
+    'A': { bg: 'rgba(76, 175, 80, 0.7)', border: '#4CAF50' },
+    'B': { bg: 'rgba(79, 195, 247, 0.7)', border: '#4FC3F7' },
+    'C': { bg: 'rgba(212, 160, 23, 0.7)', border: '#D4A017' },
+    'D': { bg: 'rgba(156, 39, 176, 0.7)', border: '#9C27B0' }
+  };
+  
+  const deptStats = {{ dept_stats|safe }};
+  const stats = deptStats[dept];
+  
+  const canvas = document.getElementById('deptSelectedCategoryChart');
+  if (!canvas) return;
+  
+  if (deptCategoryChartInstance) {
+    deptCategoryChartInstance.destroy();
+  }
+  
+  const ctx = canvas.getContext('2d');
+  deptCategoryChartInstance = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Total', 'Passed', 'Failed'],
+      datasets: [{
+        label: `Dept ${dept}`,
+        data: [stats.total, stats.passed, stats.failed],
+        backgroundColor: [deptColors[dept].bg, 'rgba(82, 183, 136, 0.7)', 'rgba(239, 83, 80, 0.7)'],
+        borderColor: [deptColors[dept].border, '#52B788', '#EF5350'],
+        borderWidth: 2,
+        borderRadius: 6,
+        hoverBackgroundColor: [deptColors[dept].bg, '#52B788', '#EF5350']
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      indexAxis: 'y',
+      scales: {
+        x: {
+          beginAtZero: true,
+          ticks: { color: '#8B9BB4', font: { size: 11 } },
+          grid: { color: 'rgba(255, 255, 255, 0.05)' }
+        },
+        y: {
+          ticks: { color: '#8B9BB4', font: { size: 12, weight: 'bold' } },
+          grid: { display: false }
+        }
+      },
+      plugins: {
+        legend: { display: false }
+      }
+    }
+  });
+}
+
+document.querySelectorAll('.dept-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    const dept = this.getAttribute('data-dept');
+    const stats = deptData[dept];
+    
+    // Update active button
+    document.querySelectorAll('.dept-btn').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+    
+    // Build stats display
+    const html = `
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 20px;">
+        <div style="background: rgba(82, 183, 136, 0.05); border: 1px solid rgba(82, 183, 136, 0.2); border-radius: 12px; padding: 15px; text-align: center;">
+          <div style="font-size: 11px; color: #8B9BB4; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px;">Total Evaluations</div>
+          <div style="font-size: 28px; font-weight: 700; color: #52B788; font-family: 'Rajdhani';">${stats.total}</div>
+        </div>
+        <div style="background: rgba(82, 183, 136, 0.05); border: 1px solid rgba(82, 183, 136, 0.2); border-radius: 12px; padding: 15px; text-align: center;">
+          <div style="font-size: 11px; color: #8B9BB4; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px;">Passed</div>
+          <div style="font-size: 28px; font-weight: 700; color: #52B788; font-family: 'Rajdhani';">${stats.passed}</div>
+        </div>
+        <div style="background: rgba(239, 83, 80, 0.05); border: 1px solid rgba(239, 83, 80, 0.2); border-radius: 12px; padding: 15px; text-align: center;">
+          <div style="font-size: 11px; color: #8B9BB4; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px;">Failed</div>
+          <div style="font-size: 28px; font-weight: 700; color: #EF5350; font-family: 'Rajdhani';">${stats.failed}</div>
+        </div>
+        <div style="background: rgba(79, 195, 247, 0.05); border: 1px solid rgba(79, 195, 247, 0.2); border-radius: 12px; padding: 15px; text-align: center;">
+          <div style="font-size: 11px; color: #8B9BB4; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px;">Pass Rate</div>
+          <div style="font-size: 28px; font-weight: 700; color: #4FC3F7; font-family: 'Rajdhani';">${stats.pass_rate.toFixed(1)}%</div>
+        </div>
+      </div>
+    `;
+    
+    document.getElementById('deptDetailsContainer').innerHTML = html;
+    
+    // Show category performance chart for this department (Same as Commander)
+    document.getElementById('selectedDeptName').innerText = 'Dept ' + dept;
+    document.getElementById('deptCategoryChartContainer').style.display = 'block';
+    updateDeptCategoryChart(dept);
+  });
+});
+
+// 2. Pass/Fail Pie Chart
+const pfCanvas = document.getElementById('passFailChart');
+if (pfCanvas) {
+  const pfCtx = pfCanvas.getContext('2d');
+  new Chart(pfCtx, {
+  type: 'pie',
+  data: {
+    labels: ['Passed', 'Failed'],
+    datasets: [{
+      data: [Number('{{ pass_count }}'), Number('{{ fail_count }}')],
+      backgroundColor: ['#52B788', '#EF5350'],
+      borderColor: '#0F1419',
+      borderWidth: 2,
+      hoverOffset: 15,
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    layout: {
+      padding: { top: 10, bottom: 10, left: 10, right: 10 }
+    },
+    plugins: {
+      legend: { 
+        display: true, 
+        position: 'bottom',
+        labels: {
+          padding: 20,
+          font: { size: 12 },
+          color: '#8B9BB4'
+        }
+      },
+      tooltip: {
+        backgroundColor: 'rgba(0, 0, 0, 0.9)',
+        padding: 14,
+        titleFont: { size: 15, weight: 'bold' },
+        bodyFont: { size: 13 },
+        borderColor: '#52B788',
+        borderWidth: 1,
+        displayColors: true,
+        cornerRadius: 8,
+        callbacks: {
+          label: function(context) {
+            const label = context.label || '';
+            const value = context.parsed || 0;
+            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+            const percentage = ((value / total) * 100).toFixed(1);
+            return `${label}: ${value} (${percentage}%)`;
+          }
+        }
+      }
+    }
+  }
+});
+}
+
+// 3. Category Performance
+const catCanvas = document.getElementById('categoryChart');
+if (catCanvas) {
+  const catCtx = catCanvas.getContext('2d');
+  new Chart(catCtx, {
+    type: 'bar',
+    data: {
+      labels: JSON.parse('{{ category_labels|safe }}'),
+      datasets: [{
+        label: 'Pass Rate (%)',
+        data: JSON.parse('{{ category_pass_rates|safe }}'),
+        backgroundColor: 'rgba(82, 183, 136, 0.7)',
+        borderColor: '#52B788',
+        borderWidth: 2,
+        borderRadius: 5,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } },
+      scales: { 
+        y: { beginAtZero: true, max: 100, grid: { color: 'rgba(255, 255, 255, 0.05)' } },
+        x: { grid: { color: 'rgba(255, 255, 255, 0.05)' } }
+      }
+    }
+  });
+}
+
+// 4. Monthly Trend
+const monthCanvas = document.getElementById('monthlyChart');
+if (monthCanvas) {
+  const monthCtx = monthCanvas.getContext('2d');
+  new Chart(monthCtx, {
+    type: 'line',
+    data: {
+      labels: JSON.parse('{{ months_labels|safe }}'),
+      datasets: [
+        {
+          label: 'Total Evaluations',
+          data: JSON.parse('{{ month_counts|safe }}'),
+          borderColor: '#4FC3F7',
+          backgroundColor: 'rgba(79, 195, 247, 0.1)',
+          borderWidth: 3,
+          fill: true,
+          tension: 0.4,
+          pointRadius: 4,
+          pointBackgroundColor: '#4FC3F7',
+          pointBorderColor: '#0F1419',
+        },
+        {
+          label: 'Passed',
+          data: JSON.parse('{{ month_pass|safe }}'),
+          borderColor: '#52B788',
+          backgroundColor: 'rgba(82, 183, 136, 0.1)',
+          borderWidth: 3,
+          fill: true,
+          tension: 0.4,
+          pointRadius: 4,
+          pointBackgroundColor: '#52B788',
+          pointBorderColor: '#0F1419',
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { intersect: false, mode: 'index' },
+      plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } },
+      scales: { 
+        y: { beginAtZero: true, grid: { color: 'rgba(255, 255, 255, 0.05)' } },
+        x: { grid: { color: 'rgba(255, 255, 255, 0.05)' } }
+      }
+    }
+  });
+}
+
+// Department-specific test type performance charts
+const deptColors = {
+  'A': { bg: 'rgba(76, 175, 80, 0.7)', border: '#4CAF50' },
+  'B': { bg: 'rgba(79, 195, 247, 0.7)', border: '#4FC3F7' },
+  'C': { bg: 'rgba(212, 160, 23, 0.7)', border: '#D4A017' },
+  'D': { bg: 'rgba(156, 39, 176, 0.7)', border: '#9C27B0' }
+};
+
+const testTypeData = {{ test_type_data|safe }};
+
+['A', 'B', 'C', 'D'].forEach(dept => {
+  const canvasId = `dept${dept}TestTypeChart`;
+  const canvas = document.getElementById(canvasId);
+  if (canvas && testTypeData[dept]) {
+    const data = testTypeData[dept];
+    const ctx = canvas.getContext('2d');
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: data.labels,
+        datasets: [
+          {
+            label: 'Avg Marks',
+            data: data.avg_marks,
+            backgroundColor: deptColors[dept].bg,
+            borderColor: deptColors[dept].border,
+            borderWidth: 2,
+            borderRadius: 6,
+            yAxisID: 'y'
+          },
+          {
+            label: 'Pass Rate (%)',
+            data: data.pass_rates,
+            backgroundColor: 'rgba(79, 195, 247, 0.7)',
+            borderColor: '#4FC3F7',
+            borderWidth: 2,
+            borderRadius: 6,
+            yAxisID: 'y1'
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        scales: {
+          y: {
+            type: 'linear',
+            display: true,
+            position: 'left',
+            title: { display: true, text: 'Avg Marks', font: { size: 11 }, color: deptColors[dept].border },
+            ticks: { color: '#8B9BB4', font: { size: 10 } },
+            grid: { color: 'rgba(255, 255, 255, 0.05)' }
+          },
+          y1: {
+            type: 'linear',
+            display: true,
+            position: 'right',
+            title: { display: true, text: 'Pass Rate (%)', font: { size: 11 }, color: '#4FC3F7' },
+            ticks: { color: '#8B9BB4', font: { size: 10 } },
+            grid: { drawOnChartArea: false }
+          },
+          x: {
+            ticks: { color: '#8B9BB4', font: { size: 10 } },
+            grid: { color: 'rgba(255, 255, 255, 0.05)' }
+          }
+        },
+        plugins: {
+          legend: { display: true, position: 'top', labels: { font: { size: 11 }, boxWidth: 15 } }
+        }
+      }
+    });
+  }
+});
+</script>
+{% endblock %}
+
+{% endblock %}

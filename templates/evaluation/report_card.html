@@ -1,0 +1,607 @@
+{% extends 'base.html' %}
+{% block title %}Report Card – {{ agniveer.get_full_name }}{% endblock %}
+{% block page_title %}Report Card{% endblock %}
+{% block extra_css %}
+<style>
+  .print-only { display: none !important; }
+  @media print {
+    .print-only { display: block !important; }
+    /* Hide non-essential elements */
+    .sidebar, .page-header, .no-print, .btn, .sidebar-overlay, .sidebar-toggle, .alert, form, .input-group {
+      display: none !important;
+    }
+
+    /* Reset layout for print */
+    .main-wrapper {
+      margin-left: 0 !important;
+      padding: 0 !important;
+      background: white !important;
+      color: black !important;
+    }
+
+    .content-area {
+      padding: 0 !important;
+    }
+
+    .army-card {
+      border: 2px solid #1B4332 !important;
+      box-shadow: none !important;
+      background: white !important;
+      color: black !important;
+    }
+
+    /* Professional Print Header */
+    .army-card > div:first-child {
+      background: #1B4332 !important;
+      -webkit-print-color-adjust: exact;
+    }
+
+    /* Highlighting text and borders */
+    .army-table th {
+      background: #f0f0f0 !important;
+      color: #1B4332 !important;
+      border: 1px solid #1B4332 !important;
+      -webkit-print-color-adjust: exact;
+    }
+
+    .army-table td {
+      border: 1px solid #ddd !important;
+      color: black !important;
+    }
+
+    .badge-pass {
+      background: #d4edda !important;
+      color: #155724 !important;
+      border: 1px solid #c3e6cb !important;
+      -webkit-print-color-adjust: exact;
+    }
+
+    .badge-fail {
+      background: #f8d7da !important;
+      color: #721c24 !important;
+      border: 1px solid #f5c6cb !important;
+      -webkit-print-color-adjust: exact;
+    }
+
+    /* Profile Section Print Alignment */
+    .print-profile-label {
+      color: #666 !important;
+      font-size: 10pt !important;
+      text-transform: uppercase;
+      font-weight: 600;
+      margin-bottom: 2pt;
+    }
+
+    .print-profile-value {
+      color: #1B4332 !important;
+      font-size: 14pt !important;
+      font-weight: 700;
+      margin-bottom: 15pt;
+    }
+
+    .marks-cell {
+      font-weight: 700 !important;
+      color: black !important;
+    }
+
+    /* Keep section headers with their tables */
+    .evaluation-section {
+      break-inside: avoid !important;
+      page-break-inside: avoid !important;
+    }
+
+    /* Full Page Border */
+    .print-page-border {
+      display: block !important;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: 15px solid #1B4332 !important;
+      border-image: linear-gradient(to bottom, #1B4332, #2D6A4F) 1;
+      pointer-events: none;
+      z-index: 1000;
+      box-sizing: border-box;
+    }
+
+    /* Watermark */
+    .print-watermark {
+      display: flex !important;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(-45deg);
+      font-size: 80pt;
+      color: rgba(27, 67, 50, 0.05);
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 800;
+      text-transform: uppercase;
+      white-space: nowrap;
+      z-index: -1;
+      pointer-events: none;
+    }
+  }
+</style>
+{% endblock %}
+{% block page_subtitle %}{{ agniveer.enrollment_number }}{% endblock %}
+
+{% block content %}
+<div class="print-page-border print-only"></div>
+<div class="print-watermark print-only">ARMY EVALUATION</div>
+
+<div class="row justify-content-center">
+  <div class="col-xl-10">
+
+    <!-- Action Bar -->
+    <div class="d-flex justify-content-between align-items-center mb-3 no-print">
+      <a href="{% url 'departments:agniveer_detail' agniveer.pk %}" class="btn btn-army-outline">
+        <i class="bi bi-arrow-left"></i> Back
+      </a>
+      <div class="d-flex gap-2">
+        <a href="{% url 'reports:export_report_card_pdf' agniveer.pk %}{% if request.GET.dept %}?dept={{ request.GET.dept }}{% endif %}" class="btn btn-gold d-flex align-items-center gap-2">
+          <i class="bi bi-file-earmark-pdf-fill"></i> Download PDF
+        </a>
+        <button onclick="window.print()" class="btn btn-army-outline d-flex align-items-center gap-2">
+          <i class="bi bi-printer-fill"></i> Print
+        </button>
+      </div>
+    </div>
+
+    
+
+    <!-- Department View Indicator -->
+    {% if is_department_view %}
+    <div style="background:rgba(212,160,23,0.15);border-left:4px solid #D4A017;padding:12px 16px;margin-bottom:16px;border-radius:6px;">
+      <div style="color:#D4A017;font-size:13px;font-weight:600;">
+        <i class="bi bi-info-circle-fill"></i> Department {{ user_department }} Report
+      </div>
+      <div style="color:#8B9BB4;font-size:12px;margin-top:4px;">
+        Showing marks only from Department {{ user_department }} evaluations
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Report Card -->
+    <div class="army-card" id="reportCard">
+      <!-- Header -->
+      <div
+        style="background:linear-gradient(135deg,#1B4332,#2D6A4F);padding:28px 32px;text-align:center;position:relative;">
+        <div style="font-size:32px;margin-bottom:8px;">⚔️</div>
+        <div style="font-family:Rajdhani,sans-serif;font-size:22px;font-weight:700;color:white;letter-spacing:2px;">
+          ARMY EVALUATION PORTAL
+        </div>
+        <div
+          style="font-size:12px;color:rgba(255,255,255,0.7);letter-spacing:3px;text-transform:uppercase;margin-top:4px;">
+          Agniveer Profile & Performance Report
+        </div>
+        <div style="position:absolute;top:20px;right:20px;text-align:right;">
+          {% if overall_pass %}
+          <div style="background:rgba(76,175,80,0.2);border:2px solid #4CAF50;border-radius:10px;padding:8px 16px;">
+            <div style="font-family:Rajdhani,sans-serif;font-size:20px;font-weight:700;color:#4CAF50;">✓ PASS</div>
+            <div style="font-size:11px;color:rgba(255,255,255,0.6);">{{ percentage }}%</div>
+          </div>
+          {% else %}
+          <div style="background:rgba(239,83,80,0.2);border:2px solid #EF5350;border-radius:10px;padding:8px 16px;">
+            <div style="font-family:Rajdhani,sans-serif;font-size:20px;font-weight:700;color:#EF5350;">✗ FAIL</div>
+            <div style="font-size:11px;color:rgba(255,255,255,0.6);">{{ percentage }}%</div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Agniveer Info (SCREEN VIEW) -->
+      <div class="no-print" style="padding:24px 32px;border-bottom:1px solid rgba(27,67,50,0.3);">
+        <div class="row g-3">
+          <div class="col-md-2 text-center">
+            {% if agniveer.photo %}
+            <img src="{{ agniveer.photo.url }}" class="rounded"
+              style="width:80px;height:80px;object-fit:cover;border:2px solid #1B4332;">
+            {% else %}
+            <div
+              style="width:80px;height:80px;border-radius:10px;background:linear-gradient(135deg,#1B4332,#40916C);display:flex;align-items:center;justify-content:center;font-family:Rajdhani,sans-serif;font-size:28px;font-weight:700;color:white;margin:0 auto;">
+              {{ agniveer.first_name.0|upper }}{{ agniveer.last_name.0|upper }}
+            </div>
+            {% endif %}
+          </div>
+          <div class="col-md-10">
+            <div class="row g-3">
+              <div class="col-md-3">
+                <div style="font-size:11px;color:#8B9BB4;text-transform:uppercase;letter-spacing:0.5px;">Name</div>
+                <div style="font-family:Rajdhani,sans-serif;font-size:16px;font-weight:700;color:#E0E6F0;">{{ agniveer.get_full_name }}</div>
+              </div>
+              <div class="col-md-3">
+                <div style="font-size:11px;color:#8B9BB4;text-transform:uppercase;letter-spacing:0.5px;">Enrollment No</div>
+                <div style="font-family:Rajdhani,sans-serif;font-size:16px;font-weight:700;color:#52B788;">{{ agniveer.enrollment_number }}</div>
+              </div>
+              <div class="col-md-3">
+                <div style="font-size:11px;color:#8B9BB4;text-transform:uppercase;letter-spacing:0.5px;">Batch</div>
+                <div style="font-size:14px;font-weight:600;color:#E0E6F0;">{{ agniveer.batch }}</div>
+              </div>
+              <div class="col-md-3">
+                <div style="font-size:11px;color:#8B9BB4;text-transform:uppercase;letter-spacing:0.5px;">Joining Date
+                </div>
+                <div style="font-size:14px;font-weight:600;color:#E0E6F0;">{{ agniveer.joining_date|date:"d M Y" }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Agniveer Info (PRINT ONLY) -->
+      <div class="print-only" style="padding:40px; border-bottom:1px solid rgba(27,67,50,0.3);">
+        <div class="row align-items-center">
+          <!-- Left: Profile Image/Initials -->
+          <div class="col-3 text-center border-end" style="border-color: rgba(27,67,50,0.2) !important;">
+            {% if agniveer.photo %}
+            <img src="{{ agniveer.photo.url }}" class="rounded"
+              style="width:140px; height:140px; object-fit:cover; border:4px solid #1B4332;">
+            {% else %}
+            <div
+              style="width:140px; height:140px; border-radius:15px; background:transparent; display:flex; align-items:center; justify-content:center; font-family:Rajdhani,sans-serif; font-size:64px; font-weight:700; color:#1B4332; margin: 0 auto; border: 1px solid rgba(27, 67, 50, 0.2);">
+              {{ agniveer.first_name.0|upper }}{{ agniveer.last_name.0|upper }}
+            </div>
+            {% endif %}
+          </div>
+          
+          <!-- Right: Profile Details (Horizontal Grid for Print) -->
+          <div class="col-9 ps-5">
+            <div class="row mb-3">
+              <div class="col-6">
+                <div class="print-profile-label">NAME</div>
+                <div class="print-profile-value" style="font-family: 'Rajdhani', sans-serif;">{{ agniveer.get_full_name|upper }}</div>
+              </div>
+              <div class="col-6">
+                <div class="print-profile-label">ENROLLMENT NO</div>
+                <div class="print-profile-value" style="font-family: 'Rajdhani', sans-serif; color: #1B4332 !important;">{{ agniveer.enrollment_number }}</div>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-6">
+                <div class="print-profile-label">BATCH</div>
+                <div class="print-profile-value" style="color: black !important;">{{ agniveer.batch }}</div>
+              </div>
+              <div class="col-6">
+                <div class="print-profile-label">JOINING DATE</div>
+                <div class="print-profile-value" style="color: black !important;">{{ agniveer.joining_date|date:"d M Y" }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Performance Summary & Remarks (Fills the gap on Page 1) -->
+      <div class="print-only" style="padding:24px 40px; border-bottom:1.5pt solid #1B4332; background: rgba(27,67,50,0.02);">
+        <div class="row align-items-start">
+          <!-- Remarks Column -->
+          <div class="col-7">
+            <div style="font-family: 'Rajdhani', sans-serif; font-size: 13px; font-weight: 700; color: #1B4332; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px;">
+              Commander's Remarks / Assessment
+            </div>
+            <div style="border: 1pt dashed #1B4332; padding: 15px; min-height: 140px; font-size: 12px; color: #444; line-height: 1.6; position: relative; overflow: hidden;">
+              Qualitative assessment of character, discipline, and technical proficiency:<br><br><br>
+              
+              <div style="border-bottom: 0.5pt solid rgba(27,67,50,0.3); margin-top: 25px; width: 100%;"></div><br>
+              <div style="border-bottom: 0.5pt solid rgba(27,67,50,0.3); margin-top: 25px; width: 100%;"></div><br>
+              <div style="border-bottom: 0.5pt solid rgba(27,67,50,0.3); margin-top: 25px; width: 100%;"></div><br>
+              <div style="border-bottom: 0.5pt solid rgba(27,67,50,0.3); margin-top: 25px; width: 100%;"></div><br>
+              <div style="border-bottom: 0.5pt solid rgba(27,67,50,0.3); margin-top: 25px; width: 100%;"></div><br>
+              <div style="border-bottom: 0.5pt solid rgba(27,67,50,0.3); margin-top: 25px; width: 100%;"></div><br>
+            </div>
+          </div>
+
+          <!-- Grading Scale Column -->
+          <div class="col-5">
+            <div style="font-family: 'Rajdhani', sans-serif; font-size: 13px; font-weight: 700; color: #1B4332; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; text-align: center; lineheight: 4.2;">
+              Official Grading Scale
+            </div>
+            <table style="width: 100%; border-collapse: collapse; font-size: 10px; text-align: center;">
+              <thead>
+                <tr style="background: #1B4332; color: white;">
+                  <th style="padding: 4px; border: 0.5pt solid white;">PERCENTAGE</th>
+                  <th style="padding: 4px; border: 0.5pt solid white;">GRADE</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="padding: 4px; border: 0.5pt solid #1B4332;">90% - 100%</td>
+                  <td style="padding: 4px; border: 0.5pt solid #1B4332; font-weight: 700;">EXEMPLARY (A)</td>
+                </tr>
+                <tr>
+                  <td style="padding: 4px; border: 0.5pt solid #1B4332;">75% - 89%</td>
+                  <td style="padding: 4px; border: 0.5pt solid #1B4332; font-weight: 700;">VERY GOOD (B)</td>
+                </tr>
+                <tr>
+                  <td style="padding: 4px; border: 0.5pt solid #1B4332;">50% - 74%</td>
+                  <td style="padding: 4px; border: 0.5pt solid #1B4332; font-weight: 700;">SATISFACTORY (C)</td>
+                </tr>
+                <tr style="color: #EF5350;">
+                  <td style="padding: 4px; border: 0.5pt solid #1B4332;">Below 50%</td>
+                  <td style="padding: 4px; border: 0.5pt solid #1B4332; font-weight: 700;">UNSATISFACTORY (F)</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      {% for dept, data in dept_evaluations.items %}
+      <div class="evaluation-section" style="padding:24px 32px;">
+        <div
+          style="font-family:Rajdhani,sans-serif;font-size:16px;font-weight:700;color:#D4A017;margin-bottom:16px;display:flex;align-items:center;justify-content:between;gap:8px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <i class="bi bi-building"></i> DEPARTMENT {{ dept }} EVALUATIONS
+          </div>
+          <div style="font-size:14px;color:#E0E6F0;background:rgba(212,160,23,0.1);padding:4px 12px;border-radius:20px;border:1px solid rgba(212,160,23,0.3);">
+            Score: <span style="color:#D4A017;">{{ data.total_marks }}</span> / {{ data.max_marks }}
+          </div>
+        </div>
+
+        <!-- On Field Training -->
+        {% if data.on_field %}
+        <div style="margin-bottom:24px;">
+          <div
+            style="font-family:Rajdhani,sans-serif;font-size:13px;font-weight:600;color:#52B788;margin-bottom:10px;text-transform:uppercase;letter-spacing:0.5px;">
+            <i class="bi bi-shield-fill"></i> On Field Training
+          </div>
+          <div style="overflow-x:auto;">
+            <table class="army-table">
+              <thead>
+                <tr>
+                  <th>Test Type</th>
+                  <th style="text-align:center;">NCO (20)</th>
+                  <th style="text-align:center;">JCO (20)</th>
+                  <th style="text-align:center;">Officer (20)</th>
+                  <th style="text-align:center;">Total (60)</th>
+                  <th style="text-align:center;">%</th>
+                  <th style="text-align:center;">Result</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for ev in data.on_field %}
+                <tr>
+                  <td style="font-weight:600;color:#E0E6F0;">{{ ev.get_test_type_display }}</td>
+                  <td class="marks-cell">{{ ev.get_nco_marks }}</td>
+                  <td class="marks-cell">{{ ev.get_jco_marks }}</td>
+                  <td class="marks-cell">{{ ev.get_officer_marks }}</td>
+                  <td class="marks-cell" style="font-size:18px;font-weight:700;color:#E0E6F0;">{{ ev.get_total_marks }}
+                  </td>
+                  <td style="text-align:center;font-weight:600;">{{ ev.get_percentage }}%</td>
+                  <td style="text-align:center;">
+                    {% if ev.get_total_marks > 0 %}
+                    {% if ev.is_pass %}
+                    <span class="badge-pass px-2 py-1 rounded" style="font-size:11px;font-weight:600;">✓ PASS</span>
+                    {% else %}
+                    <span class="badge-fail px-2 py-1 rounded" style="font-size:11px;font-weight:600;">✗ FAIL</span>
+                    {% endif %}
+                    {% else %}
+                    <span style="font-size:11px;color:#8B9BB4;font-weight:600;">–</span>
+                    {% endif %}
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- Trade Training -->
+        {% if data.trade %}
+        <div style="margin-bottom:24px;">
+          <div
+            style="font-family:Rajdhani,sans-serif;font-size:13px;font-weight:600;color:#4FC3F7;margin-bottom:10px;text-transform:uppercase;letter-spacing:0.5px;">
+            <i class="bi bi-tools"></i> Basic Trade Training
+          </div>
+          <div style="overflow-x:auto;">
+            <table class="army-table">
+              <thead>
+                <tr>
+                  <th>Test Type</th>
+                  <th style="text-align:center;">NCO (20)</th>
+                  <th style="text-align:center;">JCO (20)</th>
+                  <th style="text-align:center;">Officer (20)</th>
+                  <th style="text-align:center;">Total (60)</th>
+                  <th style="text-align:center;">%</th>
+                  <th style="text-align:center;">Result</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for ev in data.trade %}
+                <tr>
+                  <td style="font-weight:600;color:#E0E6F0;">{{ ev.get_test_type_display }}</td>
+                  <td class="marks-cell">{{ ev.get_nco_marks }}</td>
+                  <td class="marks-cell">{{ ev.get_jco_marks }}</td>
+                  <td class="marks-cell">{{ ev.get_officer_marks }}</td>
+                  <td class="marks-cell" style="font-size:18px;font-weight:700;color:#E0E6F0;">{{ ev.get_total_marks }}
+                  </td>
+                  <td style="text-align:center;font-weight:600;">{{ ev.get_percentage }}%</td>
+                  <td style="text-align:center;">
+                    {% if ev.get_total_marks > 0 %}
+                    {% if ev.is_pass %}
+                    <span class="badge-pass px-2 py-1 rounded" style="font-size:11px;font-weight:600;">✓ PASS</span>
+                    {% else %}
+                    <span class="badge-fail px-2 py-1 rounded" style="font-size:11px;font-weight:600;">✗ FAIL</span>
+                    {% endif %}
+                    {% else %}
+                    <span style="font-size:11px;color:#8B9BB4;font-weight:600;">–</span>
+                    {% endif %}
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+      {% endfor %}
+
+      <!-- Performance Summary Section -->
+      <div style="padding:24px 32px;border-top:2px solid rgba(27,67,50,0.3);">
+        <div
+          style="font-family:Rajdhani,sans-serif;font-size:16px;font-weight:700;color:#D4A017;margin-bottom:20px;display:flex;align-items:center;gap:8px;">
+          <i class="bi bi-pie-chart-fill"></i> OVERALL PERFORMANCE
+        </div>
+
+        <div class="row g-4">
+          <!-- Grand Total Card -->
+          <div class="col-md-6">
+            <div
+              style="background:linear-gradient(135deg,rgba(27,67,50,0.2),rgba(27,67,50,0.1));padding:24px;border-radius:12px;text-align:center;">
+              <div style="font-size:12px;color:#8B9BB4;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;">
+                Total Score</div>
+              <div
+                style="font-family:Rajdhani,sans-serif;font-size:48px;font-weight:700;color:#52B788;margin-bottom:4px;">
+                {{ grand_total }}
+              </div>
+              <div style="font-size:16px;color:#8B9BB4;margin-bottom:12px;">
+                out of <span style="font-weight:700;color:#E0E6F0;">{{ max_total }}</span>
+              </div>
+              <div style="font-size:24px;font-weight:700;color:#4FC3F7;">{{ percentage }}%</div>
+            </div>
+          </div>
+
+          <!-- Pie Chart -->
+          <div class="col-md-6">
+            <div
+              style="background:rgba(15,22,41,0.5);padding:20px;border-radius:12px;display:flex;align-items:center;justify-content:center;">
+              <canvas id="performanceChart" style="max-width:200px;max-height:200px;"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Overall Result -->
+        <div style="margin-top:24px;text-align:center;">
+          {% if overall_pass %}
+          <div
+            style="background:rgba(76,175,80,0.1);border:2px solid #4CAF50;border-radius:12px;padding:20px;display:inline-block;">
+            <div
+              style="font-family:Rajdhani,sans-serif;font-size:32px;font-weight:700;color:#4CAF50;margin-bottom:4px;">
+              ✓ PASSED
+            </div>
+            <div style="font-size:13px;color:#8B9BB4;">Overall evaluation result</div>
+          </div>
+          {% else %}
+          <div
+            style="background:rgba(239,83,80,0.1);border:2px solid #EF5350;border-radius:12px;padding:20px;display:inline-block;">
+            <div
+              style="font-family:Rajdhani,sans-serif;font-size:32px;font-weight:700;color:#EF5350;margin-bottom:4px;">
+              ✗ FAILED
+            </div>
+            <div style="font-size:13px;color:#8B9BB4;">Overall evaluation result</div>
+          </div>
+          {% endif %}
+        </div>
+
+        <!-- Signature Section (PRINT ONLY) -->
+        <div class="print-only" style="margin-top: 60pt; margin-bottom: 20pt;">
+          <div class="row text-center">
+            <div class="col-4">
+              <div style="border-top: 1.5pt solid #1B4332; width: 80%; margin: 0 auto; padding-top: 5pt;">
+                <div style="font-weight: 700; color: #1B4332; font-size: 10pt;">COMMANDING OFFICER</div>
+                <div style="font-size: 8pt; color: #666;">(Signature & Stamp)</div>
+              </div>
+            </div>
+            <div class="col-4">
+              <div style="border-top: 1.5pt solid #1B4332; width: 80%; margin: 0 auto; padding-top: 5pt;">
+                <div style="font-weight: 700; color: #1B4332; font-size: 10pt;">G DEPARTMENT HEAD</div>
+                <div style="font-size: 8pt; color: #666;">(Signature & Stamp)</div>
+              </div>
+            </div>
+            <div class="col-4">
+              <div style="border-top: 1.5pt solid #1B4332; width: 80%; margin: 0 auto; padding-top: 5pt;">
+                <div style="font-weight: 700; color: #1B4332; font-size: 10pt;">DEPARTMENT IN-CHARGE</div>
+                <div style="font-size: 8pt; color: #666;">(Signature & Stamp)</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div
+        style="padding:16px 32px;border-top:1px solid rgba(27,67,50,0.3);text-align:center;font-size:11px;color:#8B9BB4;">
+        Generated by Army Evaluation Portal · {{ request.user.get_full_name }} · Report Date: {% now "d M Y, H:i" %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const ctx = document.getElementById('performanceChart');
+    if (ctx) {
+      const chartPercentage = Number('{{ percentage }}');
+    const remaining = 100 - chartPercentage;
+
+    new Chart(ctx, {
+      type: 'pie',
+      data: {
+        labels: ['Score Achieved', 'Remaining'],
+        datasets: [{
+          data: [chartPercentage, remaining],
+          backgroundColor: [
+            '{% if percentage >= 50 %}#52B788{% else %}#4FC3F7{% endif %}',
+            'rgba(139, 155, 180, 0.2)'
+          ],
+          borderColor: [
+            '{% if percentage >= 50 %}#1B4332{% else %}#2E6F82{% endif %}',
+            'rgba(139, 155, 180, 0.4)'
+          ],
+          borderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: {
+              color: '#E0E6F0',
+              font: {
+                size: 12,
+                weight: 'bold',
+                family: "'Rajdhani', sans-serif"
+              },
+              padding: 16
+            }
+          },
+          tooltip: {
+            backgroundColor: 'rgba(15, 22, 41, 0.95)',
+            titleColor: '#E0E6F0',
+            bodyColor: '#E0E6F0',
+            borderColor: 'rgba(82, 183, 136, 0.5)',
+            borderWidth: 1,
+            callbacks: {
+              label: function (context) {
+                return context.label + ': ' + context.parsed + '%';
+              }
+            }
+          }
+        }
+      }
+    });
+  }
+});
+</script>
+{% endblock %}
+
+
+
+
+
+
+
+
+
+
+
+
+
+

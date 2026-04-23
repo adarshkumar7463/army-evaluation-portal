@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% block title %}Search Agniveer{% endblock %}
+{% block page_title %}Search Agniveer{% endblock %}
+{% block page_subtitle %}Find by Army Number (Enrollment Number){% endblock %}
+
+{% block content %}
+{% if is_commander or is_g_head %}
+<div class="row justify-content-center">
+  <div class="col-xl-6">
+    <div class="army-card">
+      <div class="card-body p-4">
+        <form method="get" class="mb-4">
+          <div class="input-group">
+            <input type="text" name="q" class="form-control form-control-lg" 
+                   placeholder="Enter Army Number (Enrollment Number)" 
+                   value="{{ query }}" required autofocus>
+            <button type="submit" class="btn btn-army">
+              <i class="bi bi-search"></i> Search
+            </button>
+          </div>
+        </form>
+
+        {% if not_found %}
+        <div class="alert alert-warning">
+          <i class="bi bi-exclamation-triangle"></i>
+          No Agniveer found with Army Number: <strong>{{ query }}</strong>
+        </div>
+        {% endif %}
+
+        <div class="text-center text-muted">
+          <small>Enter the exact enrollment number to view the complete profile and report card.</small>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% else %}
+<div class="text-center py-5">
+  <div class="army-card d-inline-block p-5">
+    <i class="bi bi-shield-lock-fill text-danger fs-1 mb-3"></i>
+    <h2 style="font-family:Rajdhani,sans-serif;font-weight:700;">ACCESS DENIED</h2>
+    <p class="text-muted">You do not have permission to access the global search feature.</p>
+    <a href="{% url 'core:dashboard' %}" class="btn btn-army mt-3">Back to Dashboard</a>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
