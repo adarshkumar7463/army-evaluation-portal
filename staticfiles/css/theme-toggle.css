@@ -1,0 +1,329 @@
+/* Light/Dark Theme Toggle Styles */
+
+:root[data-theme="light"] {
+  --dark-bg: #f5f5f5;
+  --card-bg: #ffffff;
+  --sidebar-bg: #fafafa;
+  --border-color: rgba(27, 67, 50, 0.15);
+  --text-muted: #666666;
+  --text-primary: #1a1a1a;
+  --text-secondary: #555555;
+  --sidebar-text: #333333;
+  --input-bg: #ffffff;
+  --input-border: #d0d0d0;
+  --navbar-text: #1a1a1a;
+}
+
+:root[data-theme="dark"] {
+  --dark-bg: #0A0E1A;
+  --card-bg: #0F1629;
+  --sidebar-bg: #080D18;
+  --border-color: rgba(27, 67, 50, 0.3);
+  --text-muted: #8B9BB4;
+  --text-primary: #E0E6F0;
+  --text-secondary: #B0B8C8;
+  --sidebar-text: #E0E6F0;
+  --input-bg: #0F1629;
+  --input-border: rgba(82, 183, 136, 0.3);
+  --navbar-text: #E0E6F0;
+}
+
+/* Theme Toggle Button */
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  border: 1px solid rgba(82, 183, 136, 0.3);
+  background: rgba(82, 183, 136, 0.1);
+  color: var(--army-olive);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 18px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.theme-toggle:hover {
+  background: rgba(82, 183, 136, 0.2);
+  border-color: rgba(82, 183, 136, 0.5);
+  transform: scale(1.05);
+}
+
+.theme-toggle:active {
+  transform: scale(0.95);
+}
+
+.theme-toggle i {
+  transition: transform 0.3s ease;
+}
+
+.theme-toggle:hover i {
+  transform: rotate(20deg);
+}
+
+/* Offline Indicator - Top Right Corner */
+.offline-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.offline-status-badge.online {
+  background: rgba(82, 183, 136, 0.1);
+  border-color: rgba(82, 183, 136, 0.5);
+  color: #52b788;
+}
+
+.offline-status-badge.offline {
+  background: rgba(239, 83, 80, 0.1);
+  border-color: rgba(239, 83, 80, 0.5);
+  color: #ef5350;
+  animation: pulse-offline 2s infinite;
+}
+
+@keyframes pulse-offline {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(239, 83, 80, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(239, 83, 80, 0);
+  }
+}
+
+.offline-status-badge .status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.offline-status-badge.online .status-dot {
+  background: #52b788;
+  box-shadow: 0 0 8px #52b788;
+}
+
+.offline-status-badge.offline .status-dot {
+  background: #ef5350;
+  box-shadow: 0 0 8px #ef5350;
+  animation: pulse-dot 1s infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Light theme adjustments */
+:root[data-theme="light"] .theme-toggle {
+  background: rgba(82, 183, 136, 0.08);
+  color: #1B4332;
+}
+
+:root[data-theme="light"] .theme-toggle:hover {
+  background: rgba(82, 183, 136, 0.15);
+}
+
+/* Light theme body adjustments */
+:root[data-theme="light"] body {
+  background: #f5f5f5;
+  color: #1a1a1a;
+}
+
+:root[data-theme="light"] .sidebar {
+  background: #fafafa;
+  border-right-color: rgba(27, 67, 50, 0.15);
+}
+
+:root[data-theme="light"] .sidebar-brand {
+  border-bottom-color: rgba(27, 67, 50, 0.15);
+}
+
+:root[data-theme="light"] .sidebar-brand-text {
+  color: #1a1a1a;
+}
+
+:root[data-theme="light"] .page-header {
+  background: rgba(255, 255, 255, 0.8);
+  border-bottom-color: rgba(27, 67, 50, 0.15);
+}
+
+:root[data-theme="light"] .page-title {
+  color: #1a1a1a;
+}
+
+:root[data-theme="light"] .page-subtitle {
+  color: #666666;
+}
+
+:root[data-theme="light"] .card {
+  background: #ffffff;
+  border-color: rgba(27, 67, 50, 0.15);
+  color: #1a1a1a;
+}
+
+:root[data-theme="light"] .btn {
+  border-color: rgba(27, 67, 50, 0.2);
+}
+
+:root[data-theme="light"] input,
+:root[data-theme="light"] select,
+:root[data-theme="light"] textarea {
+  background: #ffffff;
+  border-color: rgba(27, 67, 50, 0.15);
+  color: #1a1a1a;
+}
+
+:root[data-theme="light"] input::placeholder,
+:root[data-theme="light"] textarea::placeholder {
+  color: #999999;
+}
+
+:root[data-theme="light"] a {
+  color: #1B4332;
+}
+
+:root[data-theme="light"] a:hover {
+  color: #2D6A4F;
+}
+
+:root[data-theme="light"] .table {
+  color: #1a1a1a;
+  border-color: rgba(27, 67, 50, 0.15);
+}
+
+:root[data-theme="light"] .table thead th {
+  background: rgba(27, 67, 50, 0.1);
+  color: #1B4332;
+  border-color: rgba(27, 67, 50, 0.15);
+}
+
+:root[data-theme="light"] .table tbody tr:hover {
+  background: rgba(82, 183, 136, 0.05);
+}
+
+:root[data-theme="light"] ::-webkit-scrollbar-track {
+  background: #f5f5f5;
+}
+
+:root[data-theme="light"] ::-webkit-scrollbar-thumb {
+  background: rgba(27, 67, 50, 0.3);
+}
+
+:root[data-theme="light"] .alert {
+  background: rgba(27, 67, 50, 0.1);
+  border-color: rgba(27, 67, 50, 0.2);
+  color: #1B4332;
+}
+
+:root[data-theme="light"] .modal-content {
+  background: #ffffff;
+  color: #1a1a1a;
+}
+
+:root[data-theme="light"] .modal-header {
+  border-bottom-color: rgba(27, 67, 50, 0.15);
+}
+
+:root[data-theme="light"] .dropdown-menu {
+  background: #ffffff;
+  border-color: rgba(27, 67, 50, 0.15);
+}
+
+:root[data-theme="light"] .dropdown-item {
+  color: #1a1a1a;
+}
+
+:root[data-theme="light"] .dropdown-item:hover {
+  background: rgba(82, 183, 136, 0.1);
+  color: #1B4332;
+}
+
+/* Transition for smooth theme changes */
+* {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Prevent transition on page load */
+.no-transition * {
+  transition: none !important;
+}
+
+/* Chart colors for light theme */
+:root[data-theme="light"] {
+  --chart-text: #333333;
+  --chart-grid: rgba(27, 67, 50, 0.1);
+}
+
+/* Form validation colors */
+:root[data-theme="light"] .form-control.is-invalid {
+  border-color: #dc3545;
+  background-color: rgba(220, 53, 69, 0.05);
+}
+
+:root[data-theme="light"] .form-control.is-valid {
+  border-color: #52b788;
+  background-color: rgba(82, 183, 136, 0.05);
+}
+
+/* Navbar/Header adjustments for light mode */
+:root[data-theme="light"] .page-header .profile-badge {
+  background: rgba(27, 67, 50, 0.1);
+  border-color: rgba(27, 67, 50, 0.2);
+  color: #1B4332;
+}
+
+/* Status indicator colors remain consistent */
+.offline-status-badge.online {
+  background: rgba(82, 183, 136, 0.1);
+  border-color: rgba(82, 183, 136, 0.5);
+  color: #52b788;
+}
+
+.offline-status-badge.offline {
+  background: rgba(239, 83, 80, 0.1);
+  border-color: rgba(239, 83, 80, 0.5);
+  color: #ef5350;
+}
+
+/* Print styles */
+@media print {
+  .theme-toggle,
+  .offline-status-badge {
+    display: none !important;
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .theme-toggle,
+  .offline-status-badge {
+    width: 38px;
+    height: 38px;
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+
+  .theme-toggle {
+    font-size: 16px;
+  }
+
+  .offline-status-badge {
+    gap: 6px;
+  }
+}
