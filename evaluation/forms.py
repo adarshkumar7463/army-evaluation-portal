@@ -11,7 +11,7 @@ from accounts.models import CustomUser
 
 class EvaluationSheetForm(forms.ModelForm):
     department = forms.ChoiceField(
-        choices=[('A','Department A'),('B','Department B'),('C','Department C'),('D','Department D')],
+        choices=[('A','Battalion'),('B','TTS'),('C','CS'),('D','Clerk')],
         widget=forms.Select(attrs={'class': 'form-control'})
     )
 
@@ -88,6 +88,45 @@ class AgniveerEvaluationForm(forms.Form):
         return cleaned_data
 
 
+class SubEventEvaluationForm(forms.Form):
+    """Form for entering marks for specific sub-events with multiple attempts/columns."""
+    def __init__(self, *args, **kwargs):
+        sub_events = kwargs.pop('sub_events', [])
+        columns = kwargs.pop('columns', ['Marks'])
+        existing_data = kwargs.pop('existing_data', {})
+        super().__init__(*args, **kwargs)
+        
+        self.sub_events = sub_events
+        self.columns = columns
+        
+        for col in columns:
+            col_data = existing_data.get(col, {})
+            for event in sub_events:
+                field_name = f"{col}_{event}"
+                # Map specific max marks based on common battalion standards
+                max_val = 20
+                if '5 KM' in event or '2.4 KM' in event: max_val = 40
+                
+                self.fields[field_name] = forms.IntegerField(
+                    label=f"{col} - {event}",
+                    min_value=0, max_value=max_val,
+                    required=False,
+                    initial=col_data.get(event, ''),
+                    widget=forms.NumberInput(attrs={
+                        'class': 'form-control marks-input text-center',
+                        'min': 0, 'max': max_val,
+                        'data-event': event,
+                        'data-column': col
+                    })
+                )
+        
+        self.fields['remarks'] = forms.CharField(
+            required=False,
+            initial=existing_data.get('remarks', ''),
+            widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'Optional remarks'})
+        )
+
+
 class MarksForm(forms.ModelForm):
     class Meta:
         model = Marks
@@ -126,7 +165,7 @@ class MarksEntryForm(forms.Form):
 
 class EvaluationFilterForm(forms.Form):
     department = forms.ChoiceField(
-        choices=[('', 'All Departments')] + [('A','Dept A'),('B','Dept B'),('C','Dept C'),('D','Dept D')],
+        choices=[('', 'All Departments')] + [('A','Battalion'),('B','TTS'),('C','CS'),('D','Clerk')],
         required=False,
         widget=forms.Select(attrs={'class': 'form-control'})
     )

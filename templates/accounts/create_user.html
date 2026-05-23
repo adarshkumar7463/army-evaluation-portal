@@ -39,7 +39,7 @@
         {% endif %}
       </div>
       <div class="army-card-body">
-        <form method="post">
+        <form method="post" id="userForm" data-role-label="{{ role_label|default:'' }}" data-dept-code="{{ department_code|default:'' }}">
           {% csrf_token %}
 
           <div class="section-divider">Personal Details</div>
@@ -77,12 +77,24 @@
             </div>
           </div>
 
-          {% if form.role %}
-          <div class="section-divider">Role Assignment</div>
+          {% if form.role or form.battalion_unit or form.tts_trade %}
+          <div class="section-divider">Assignment Details</div>
           <div class="row g-3">
-            <div class="col-md-6">
+            {% if form.role %}
+            <div class="col-md-4">
               <label class="form-label">Role *</label>
               {{ form.role }}
+            </div>
+            {% endif %}
+            
+            <div class="col-md-4" id="battalion_container" style="display:none;">
+              <label class="form-label">Battalion Scope</label>
+              {{ form.battalion_unit }}
+            </div>
+            
+            <div class="col-md-4" id="tts_container" style="display:none;">
+              <label class="form-label">TTS Scope</label>
+              {{ form.tts_trade }}
             </div>
           </div>
           {% endif %}
@@ -122,4 +134,48 @@
     </div>
   </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const userForm = document.getElementById('userForm');
+    const roleSelect = document.getElementById('id_role_select') || document.querySelector('[name="role"]');
+    const bnContainer = document.getElementById('battalion_container');
+    const ttsContainer = document.getElementById('tts_container');
+    
+    const roleLabel = userForm.dataset.roleLabel;
+    const deptCode = userForm.dataset.deptCode;
+
+    function updateVisibility() {
+        const role = roleSelect ? roleSelect.value : "";
+        
+        bnContainer.style.display = 'none';
+        ttsContainer.style.display = 'none';
+
+        if (role === 'dept_a' || (roleLabel === 'Trainer' && role.startsWith('trainer_'))) {
+            bnContainer.style.display = 'block';
+        } 
+        
+        if (role === 'dept_b' || (roleLabel === 'Trainer' && role.startsWith('trainer_'))) {
+            ttsContainer.style.display = 'block';
+        }
+        
+        if (deptCode) {
+            if (deptCode === 'A') {
+                bnContainer.style.display = 'block';
+                ttsContainer.style.display = 'none';
+            } else if (deptCode === 'B') {
+                ttsContainer.style.display = 'block';
+                bnContainer.style.display = 'none';
+            }
+        }
+    }
+
+    if (roleSelect) {
+        roleSelect.addEventListener('change', updateVisibility);
+    }
+    updateVisibility();
+});
+</script>
 {% endblock %}

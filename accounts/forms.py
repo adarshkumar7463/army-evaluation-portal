@@ -62,16 +62,28 @@ class CreateDepartmentUserForm(forms.ModelForm):
     confirm_password = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'form-control'}))
 
     DEPT_ROLE_CHOICES = [
-        ('dept_a', 'Department A'),
-        ('dept_b', 'Department B'),
-        ('dept_c', 'Department C'),
-        ('dept_d', 'Department D'),
+        ('dept_a', 'Battalion'),
+        ('dept_b', 'TTS'),
+        ('dept_c', 'CS'),
+        ('dept_d', 'Clerk'),
     ]
-    role = forms.ChoiceField(choices=DEPT_ROLE_CHOICES, widget=forms.Select(attrs={'class': 'form-control'}))
+    role = forms.ChoiceField(choices=DEPT_ROLE_CHOICES, widget=forms.Select(attrs={'class': 'form-control', 'id': 'id_role_select'}))
+    
+    battalion_unit = forms.ChoiceField(
+        choices=[('', 'Battalion Head (All Units)')] + CustomUser.BATTALION_CHOICES,
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-control', 'id': 'id_battalion_select'})
+    )
+    
+    tts_trade = forms.ChoiceField(
+        choices=[('', 'TTS Head (All Trades)')] + CustomUser.TTS_TRADE_CHOICES,
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-control', 'id': 'id_tts_select'})
+    )
 
     class Meta:
         model = CustomUser
-        fields = ['first_name', 'last_name', 'username', 'email', 'service_number', 'rank', 'phone', 'role']
+        fields = ['first_name', 'last_name', 'username', 'email', 'service_number', 'rank', 'phone', 'role', 'battalion_unit', 'tts_trade']
         widgets = {
             'first_name': forms.TextInput(attrs={'class': 'form-control'}),
             'last_name': forms.TextInput(attrs={'class': 'form-control'}),
@@ -94,6 +106,17 @@ class CreateDepartmentUserForm(forms.ModelForm):
         user.role = self.cleaned_data['role']
         dept_map = {'dept_a': 'A', 'dept_b': 'B', 'dept_c': 'C', 'dept_d': 'D'}
         user.department = dept_map.get(user.role)
+        
+        if user.role == 'dept_a':
+            user.battalion_unit = self.cleaned_data.get('battalion_unit')
+            user.tts_trade = None
+        elif user.role == 'dept_b':
+            user.tts_trade = self.cleaned_data.get('tts_trade')
+            user.battalion_unit = None
+        else:
+            user.battalion_unit = None
+            user.tts_trade = None
+            
         if commit:
             user.save()
         return user
@@ -108,11 +131,21 @@ class CreateTrainerForm(forms.ModelForm):
         ('trainer_jco', 'JCO'),
         ('trainer_officer', 'Officer'),
     ]
-    role = forms.ChoiceField(choices=TRAINER_ROLE_CHOICES, widget=forms.Select(attrs={'class': 'form-control'}))
+    battalion_unit = forms.ChoiceField(
+        choices=[('', '--- Select Battalion ---')] + CustomUser.BATTALION_CHOICES,
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-control', 'id': 'id_battalion_select'})
+    )
+    
+    tts_trade = forms.ChoiceField(
+        choices=[('', '--- Select TTS Trade ---')] + CustomUser.TTS_TRADE_CHOICES,
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-control', 'id': 'id_tts_select'})
+    )
 
     class Meta:
         model = CustomUser
-        fields = ['first_name', 'last_name', 'username', 'email', 'service_number', 'rank', 'phone', 'role']
+        fields = ['first_name', 'last_name', 'username', 'email', 'service_number', 'rank', 'phone', 'role', 'battalion_unit', 'tts_trade']
         widgets = {
             'first_name': forms.TextInput(attrs={'class': 'form-control'}),
             'last_name': forms.TextInput(attrs={'class': 'form-control'}),
@@ -133,6 +166,40 @@ class CreateTrainerForm(forms.ModelForm):
         user = super().save(commit=False)
         user.set_password(self.cleaned_data["password"])
         user.role = self.cleaned_data['role']
+        user.battalion_unit = self.cleaned_data.get('battalion_unit')
+        user.tts_trade = self.cleaned_data.get('tts_trade')
+        if commit:
+            user.save()
+        return user
+
+
+class CreateRegistrationOfficeForm(forms.ModelForm):
+    password = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'form-control'}))
+    confirm_password = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'form-control'}))
+
+    class Meta:
+        model = CustomUser
+        fields = ['first_name', 'last_name', 'username', 'email', 'service_number', 'rank', 'phone']
+        widgets = {
+            'first_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'last_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'username': forms.TextInput(attrs={'class': 'form-control'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),
+            'service_number': forms.TextInput(attrs={'class': 'form-control'}),
+            'rank': forms.TextInput(attrs={'class': 'form-control'}),
+            'phone': forms.TextInput(attrs={'class': 'form-control'}),
+        }
+
+    def clean(self):
+        cleaned_data = super().clean()
+        if cleaned_data.get("password") != cleaned_data.get("confirm_password"):
+            raise forms.ValidationError("Passwords do not match.")
+        return cleaned_data
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.set_password(self.cleaned_data["password"])
+        user.role = CustomUser.ROLE_REGISTRATION
         if commit:
             user.save()
         return user

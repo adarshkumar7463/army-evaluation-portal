@@ -14,7 +14,8 @@ from django.db.models import Q
 from .models import CustomUser
 from .forms import (
     ArmyLoginForm, CreateGHeadForm,
-    CreateDepartmentUserForm, CreateTrainerForm, ProfileUpdateForm
+    CreateDepartmentUserForm, CreateTrainerForm, CreateRegistrationOfficeForm,
+    ProfileUpdateForm
 )
 from .mixins import CommanderRequiredMixin, CommanderOrGHeadMixin, CommanderOrDeptMixin
 from logs.utils import log_action
@@ -102,7 +103,7 @@ class UserListView(CommanderOrGHeadMixin, ListView):
         queryset = CustomUser.objects.exclude(role='commander').select_related('created_by')
         if self.request.user.is_g_head:
             queryset = queryset.filter(role__in=['dept_a', 'dept_b', 'dept_c', 'dept_d',
-                                                  'trainer_nco', 'trainer_jco', 'trainer_officer'])
+                                                'trainer_nco', 'trainer_jco', 'trainer_officer'])
         # Filter
         role_filter = self.request.GET.get('role')
         dept_filter = self.request.GET.get('department')
@@ -212,6 +213,8 @@ class CreateTrainerView(CommanderOrDeptMixin, CreateView):
         ctx = super().get_context_data(**kwargs)
         ctx['title'] = 'Create Trainer'
         ctx['role_label'] = 'Trainer'
+        if self.request.user.is_department:
+            ctx['department_code'] = self.request.user.get_department_code()
         return ctx
 
     def form_valid(self, form):
@@ -226,6 +229,26 @@ class CreateTrainerView(CommanderOrDeptMixin, CreateView):
         
         if self.request.user.is_department:
             return redirect('accounts:my_team')
+        return redirect('accounts:user_list')
+
+
+class CreateRegistrationOfficeView(CommanderRequiredMixin, CreateView):
+    model = CustomUser
+    form_class = CreateRegistrationOfficeForm
+    template_name = 'accounts/create_user.html'
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['title'] = 'Create Registration Office'
+        ctx['role_label'] = 'Registration Office'
+        return ctx
+
+    def form_valid(self, form):
+        user = form.save(commit=False)
+        user.created_by = self.request.user
+        user.save()
+        log_action(self.request.user, 'CREATE', f'Created Registration Office: {user.username}', self.request)
+        messages.success(self.request, f"Registration Office user '{user.get_full_name()}' created successfully.")
         return redirect('accounts:user_list')
 
 

@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load custom_filters %}
 {% block title %}Profile – {{ agniveer.get_full_name }}{% endblock %}
 {% block page_title %}Agniveer Profile{% endblock %}
 {% block page_subtitle %}{{ agniveer.enrollment_number }}{% endblock %}
@@ -32,73 +33,77 @@
 
     <!-- Profile Card -->
     <div class="army-card" id="profileCard">
-      <!-- Header -->
-      <div style="background:linear-gradient(135deg,#1B4332,#2D6A4F);padding:28px 32px;text-align:center;position:relative;">
-        <div style="font-size:32px;margin-bottom:8px;">⚔️</div>
-        <div style="font-family:Rajdhani,sans-serif;font-size:22px;font-weight:700;color:white;letter-spacing:2px;">
-          ARMY EVALUATION PORTAL
+      <!-- Header Banner -->
+      <div style="background:linear-gradient(135deg,#1B4332 0%,#2D6A4F 60%,#40916C 100%);padding:18px 24px;display:flex;align-items:center;justify-content:space-between;position:relative;overflow:hidden;">
+        <div style="position:absolute;top:0;right:0;width:200px;height:100%;background:rgba(255,255,255,0.03);clip-path:polygon(30% 0,100% 0,100% 100%,0% 100%);"></div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="font-size:28px;">⚔️</div>
+          <div>
+            <div style="font-family:Rajdhani,sans-serif;font-size:16px;font-weight:700;color:white;letter-spacing:1.5px;line-height:1.2;">ARMY EVALUATION PORTAL</div>
+            <div style="font-size:10px;color:rgba(255,255,255,0.6);letter-spacing:2px;text-transform:uppercase;margin-top:2px;">Agniveer Profile & Performance Report</div>
+          </div>
         </div>
-        <div style="font-size:12px;color:rgba(255,255,255,0.7);letter-spacing:3px;text-transform:uppercase;margin-top:4px;">
-          Agniveer Profile & Performance Report
+        <div style="text-align:right;">
+          <div style="font-family:Rajdhani,sans-serif;font-size:11px;color:rgba(255,255,255,0.5);letter-spacing:1px;text-transform:uppercase;">Enrollment</div>
+          <div style="font-family:Rajdhani,sans-serif;font-size:18px;font-weight:700;color:#52B788;letter-spacing:1px;">{{ agniveer.enrollment_number }}</div>
         </div>
       </div>
 
       <!-- Agniveer Info -->
-      <div style="padding:24px 32px;border-bottom:1px solid rgba(27,67,50,0.3);">
-        <div class="row g-3">
-          <div class="col-md-2 text-center">
+      <div style="padding:20px 24px;border-bottom:1px solid rgba(27,67,50,0.3);background:rgba(15,26,41,0.4);">
+        <div style="display:flex;gap:20px;align-items:flex-start;">
+          <!-- Avatar -->
+          <div style="flex-shrink:0;">
             {% if agniveer.photo %}
-            <img src="{{ agniveer.photo.url }}" class="rounded" style="width:80px;height:80px;object-fit:cover;border:2px solid #1B4332;">
+            <img src="{{ agniveer.photo.url }}" style="width:100px;height:100px;border-radius:12px;object-fit:cover;border:2px solid rgba(82,183,136,0.4);">
             {% else %}
-            <div style="width:80px;height:80px;border-radius:10px;background:linear-gradient(135deg,#1B4332,#40916C);display:flex;align-items:center;justify-content:center;font-family:Rajdhani,sans-serif;font-size:28px;font-weight:700;color:white;margin:0 auto;">
+            <div style="width:100px;height:100px;border-radius:12px;background:linear-gradient(135deg,#1B4332,#40916C);display:flex;align-items:center;justify-content:center;font-family:Rajdhani,sans-serif;font-size:32px;font-weight:700;color:white;border:2px solid rgba(82,183,136,0.3);">
               {{ agniveer.first_name.0|upper }}{{ agniveer.last_name.0|upper }}
             </div>
             {% endif %}
           </div>
-          <div class="col-md-10">
-            <div class="row g-2">
-              <div class="col-lg-3 col-md-4">
-                <div style="font-size:11px;color:#8B9BB4;text-transform:uppercase;letter-spacing:0.5px;">Name</div>
-                <div style="font-family:Rajdhani,sans-serif;font-size:18px;font-weight:700;color:#E0E6F0;">{{ agniveer.get_full_name }}</div>
-              </div>
-              <div class="col-lg-2 col-md-4">
-                <div style="font-size:11px;color:#8B9BB4;text-transform:uppercase;letter-spacing:0.5px;">Enrollment No</div>
-                <div style="font-family:Rajdhani,sans-serif;font-size:16px;font-weight:700;color:#52B788;">{{ agniveer.enrollment_number }}</div>
-              </div>
-              <div class="col-lg-2 col-md-4">
-                <div style="font-size:11px;color:#8B9BB4;text-transform:uppercase;letter-spacing:0.5px;">Batch</div>
-                <div style="font-size:14px;font-weight:600;color:#E0E6F0;">{{ agniveer.batch }}</div>
-              </div>
-              <div class="col-lg-3 col-md-4">
-                <div style="font-size:11px;color:#8B9BB4;text-transform:uppercase;letter-spacing:0.5px;">Date of Birth</div>
-                <div style="font-size:14px;font-weight:600;color:#E0E6F0;">{{ agniveer.date_of_birth|date:"d M Y" }}</div>
-              </div>
-              <div class="col-lg-2 col-md-4">
-                <div style="font-size:11px;color:#8B9BB4;text-transform:uppercase;letter-spacing:0.5px;">Gender</div>
-                <div style="font-size:14px;font-weight:600;color:#E0E6F0;">{{ agniveer.get_gender_display }}</div>
-              </div>
-              <div class="col-lg-3 col-md-4">
-                <div style="font-size:11px;color:#8B9BB4;text-transform:uppercase;letter-spacing:0.5px;">Joining Date</div>
-                <div style="font-size:14px;font-weight:600;color:#E0E6F0;">{{ agniveer.joining_date|date:"d M Y" }}</div>
-              </div>
-              {% if agniveer.phone %}
-              <div class="col-lg-2 col-md-4">
-                <div style="font-size:11px;color:#8B9BB4;text-transform:uppercase;letter-spacing:0.5px;">Phone</div>
-                <div style="font-size:14px;font-weight:600;color:#E0E6F0;">{{ agniveer.phone }}</div>
-              </div>
-              {% endif %}
-              {% if agniveer.email %}
-              <div class="col-lg-3 col-md-4">
-                <div style="font-size:11px;color:#8B9BB4;text-transform:uppercase;letter-spacing:0.5px;">Email</div>
-                <div style="font-size:14px;font-weight:600;color:#E0E6F0;">{{ agniveer.email }}</div>
-              </div>
-              {% endif %}
-              {% if agniveer.address %}
-              <div class="col-lg-12">
-                <div style="font-size:11px;color:#8B9BB4;text-transform:uppercase;letter-spacing:0.5px;">Address</div>
-                <div style="font-size:14px;font-weight:600;color:#E0E6F0;">{{ agniveer.address }}</div>
-              </div>
-              {% endif %}
+
+          <!-- Info Grid -->
+          <div style="flex:1;">
+            <div class="mb-3">
+              <div style="font-size:10px;color:#8B9BB4;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:3px;">Full Name</div>
+              <div style="font-family:Rajdhani,sans-serif;font-size:18px;font-weight:700;color:#E0E6F0;line-height:1.2;">{{ agniveer.get_full_name }}</div>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px 20px;">
+                <div>
+                    <div style="font-size:10px;color:#8B9BB4;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:3px;">Batch</div>
+                    <div style="font-size:14px;font-weight:600;color:#E0E6F0;">{{ agniveer.batch }}</div>
+                </div>
+                <div>
+                    <div style="font-size:10px;color:#8B9BB4;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:3px;">Date of Birth</div>
+                    <div style="font-size:14px;font-weight:600;color:#E0E6F0;">{{ agniveer.date_of_birth|date:"d M Y" }}</div>
+                </div>
+                <div>
+                    <div style="font-size:10px;color:#8B9BB4;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:3px;">Gender</div>
+                    <div style="font-size:14px;font-weight:600;color:#E0E6F0;">{{ agniveer.get_gender_display }}</div>
+                </div>
+                <div>
+                    <div style="font-size:10px;color:#8B9BB4;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:3px;">Joining Date</div>
+                    <div style="font-size:14px;font-weight:600;color:#E0E6F0;">{{ agniveer.joining_date|date:"d M Y" }}</div>
+                </div>
+                {% if agniveer.phone %}
+                <div>
+                    <div style="font-size:10px;color:#8B9BB4;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:3px;">Phone</div>
+                    <div style="font-size:14px;font-weight:600;color:#E0E6F0;">{{ agniveer.phone }}</div>
+                </div>
+                {% endif %}
+                {% if agniveer.email %}
+                <div>
+                    <div style="font-size:10px;color:#8B9BB4;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:3px;">Email</div>
+                    <div style="font-size:14px;font-weight:600;color:#E0E6F0;">{{ agniveer.email }}</div>
+                </div>
+                {% endif %}
+                {% if agniveer.address %}
+                <div style="grid-column:1/-1;">
+                    <div style="font-size:10px;color:#8B9BB4;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:3px;">Address</div>
+                    <div style="font-size:14px;font-weight:600;color:#E0E6F0;">{{ agniveer.address }}</div>
+                </div>
+                {% endif %}
             </div>
           </div>
         </div>
@@ -107,14 +112,14 @@
       <!-- Department Evaluations -->
       {% for dept, data in dept_evaluations.items %}
       <div style="padding:20px 32px;">
-        <div style="font-family:Rajdhani,sans-serif;font-size:18px;font-weight:700;color:#D4A017;margin-bottom:12px;display:flex;align-items:center;gap:8px;">
-          <i class="bi bi-building"></i> DEPARTMENT {{ dept }} EVALUATIONS
+        <div style="font-family:Rajdhani,sans-serif;font-size:14px;font-weight:700;color:#D4A017;margin-bottom:12px;display:flex;align-items:center;gap:8px;">
+          <i class="bi bi-building"></i> {{ dept|department_name|upper }} EVALUATIONS
         </div>
 
         <!-- On Field Training -->
         {% if data.on_field %}
         <div style="margin-bottom:20px;">
-          <div style="font-family:Rajdhani,sans-serif;font-size:14px;font-weight:600;color:#D4A017;margin-bottom:8px;">
+          <div style="font-family:Rajdhani,sans-serif;font-size:12px;font-weight:600;color:#D4A017;margin-bottom:8px;">
             <i class="bi bi-shield-fill"></i> On Field Training
           </div>
           <div style="overflow-x:auto;">
@@ -137,7 +142,7 @@
                   <td class="marks-cell">{{ ev.get_nco_marks }}</td>
                   <td class="marks-cell">{{ ev.get_jco_marks }}</td>
                   <td class="marks-cell">{{ ev.get_officer_marks }}</td>
-                  <td class="marks-cell" style="font-size:20px;color:#E0E6F0;">{{ ev.get_total_marks }}</td>
+                  <td class="marks-cell" style="font-size:12px;color:#E0E6F0;">{{ ev.get_total_marks }}</td>
                   <td style="text-align:center;">{{ ev.get_percentage }}%</td>
                   <td style="text-align:center;">
                     {% if ev.get_total_marks > 0 %}
@@ -161,7 +166,7 @@
         <!-- Trade Training -->
         {% if data.trade %}
         <div style="margin-bottom:20px;">
-          <div style="font-family:Rajdhani,sans-serif;font-size:14px;font-weight:600;color:#42A5F5;margin-bottom:8px;">
+          <div style="font-family:Rajdhani,sans-serif;font-size:12px;font-weight:600;color:#42A5F5;margin-bottom:8px;">
             <i class="bi bi-tools"></i> Basic Trade Training
           </div>
           <div style="overflow-x:auto;">
@@ -184,7 +189,7 @@
                   <td class="marks-cell">{{ ev.get_nco_marks }}</td>
                   <td class="marks-cell">{{ ev.get_jco_marks }}</td>
                   <td class="marks-cell">{{ ev.get_officer_marks }}</td>
-                  <td class="marks-cell" style="font-size:20px;color:#E0E6F0;">{{ ev.get_total_marks }}</td>
+                  <td class="marks-cell" style="font-size:12px;color:#E0E6F0;">{{ ev.get_total_marks }}</td>
                   <td style="text-align:center;">{{ ev.get_percentage }}%</td>
                   <td style="text-align:center;">
                     {% if ev.get_total_marks > 0 %}
@@ -208,9 +213,9 @@
         <!-- Department Total -->
         {% if data.total_locked > 0 %}
         <div style="background:linear-gradient(135deg,rgba(27,67,50,0.2),rgba(27,67,50,0.1));padding:16px 24px;border-radius:8px;margin-top:16px;text-align:center;">
-          <div style="font-size:14px;color:#8B9BB4;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Department {{ dept }} Total</div>
-          <div style="font-family:Rajdhani,sans-serif;font-size:28px;font-weight:700;color:#E0E6F0;">
-            {{ data.total_locked }}<span style="font-size:16px;color:#8B9BB4;">/{{ data.max_total }}</span>
+          <div style="font-size:11px;color:#8B9BB4;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">{{ dept|department_name }} Total</div>
+          <div style="font-family:Rajdhani,sans-serif;font-size:20px;font-weight:700;color:#E0E6F0;">
+            {{ data.total_locked }}<span style="font-size:12px;color:#8B9BB4;">/{{ data.max_total }}</span>
           </div>
           <div style="font-size:12px;font-weight:600;color:#52B788;">
             {{ data.total_locked|floatformat:2 }}%
@@ -222,31 +227,31 @@
 
       <!-- Graphical Representation -->
       <div style="padding:20px 32px;border-top:1px solid rgba(27,67,50,0.3);">
-        <div style="font-family:Rajdhani,sans-serif;font-size:16px;font-weight:700;color:#D4A017;margin-bottom:16px;display:flex;align-items:center;gap:8px;">
+        <div style="font-family:Rajdhani,sans-serif;font-size:14px;font-weight:700;color:#D4A017;margin-bottom:16px;display:flex;align-items:center;gap:8px;">
           <i class="bi bi-bar-chart-line"></i> PERFORMANCE ANALYSIS
         </div>
-        <div style="background:rgba(15,22,41,0.5);border-radius:12px;padding:20px;">
+        <div style="background:rgba(15,22,41,0.5);padding:20px;border-radius:12px;">
           <canvas id="performanceChart" width="400" height="200"></canvas>
         </div>
       </div>
 
       <!-- Grand Total -->
-      <div style="background:linear-gradient(135deg,rgba(27,67,50,0.3),rgba(27,67,50,0.1));padding:24px 32px;border-top:2px solid rgba(27,67,50,0.5);text-align:center;">
+      <div style="background:linear-gradient(135deg,rgba(27,67,50,0.3),rgba(27,67,50,0.1));padding:20px 24px;border-top:2px solid rgba(27,67,50,0.5);text-align:center;">
         <div class="row align-items-center justify-content-center">
           <div class="col-auto text-center">
             <div style="font-size:12px;color:#8B9BB4;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Grand Total</div>
-            <div style="font-family:Rajdhani,sans-serif;font-size:52px;font-weight:700;color:#E0E6F0;line-height:1;">
-              {{ grand_total }}<span style="font-size:24px;color:#8B9BB4;">/{{ max_total }}</span>
+            <div style="font-family:Rajdhani,sans-serif;font-size:32px;font-weight:700;color:#E0E6F0;line-height:1;">
+              {{ grand_total }}<span style="font-size:20px;color:#8B9BB4;">/{{ max_total }}</span>
             </div>
-            <div style="font-size:16px;font-weight:600;color:#52B788;margin-top:4px;">{{ percentage }}% Overall</div>
+            <div style="font-size:14px;font-weight:600;color:#52B788;margin-top:4px;">{{ percentage }}% Overall</div>
           </div>
           <div class="col-auto">
             {% if overall_pass %}
-            <div style="font-family:Rajdhani,sans-serif;font-size:36px;font-weight:700;color:#4CAF50;background:rgba(76,175,80,0.1);border:2px solid rgba(76,175,80,0.4);border-radius:12px;padding:12px 32px;">
+            <div style="font-family:Rajdhani,sans-serif;font-size:18px;font-weight:700;color:#4CAF50;background:rgba(76,175,80,0.1);border:2px solid rgba(76,175,80,0.4);border-radius:10px;padding:8px 24px;">
               ✓ PASSED
             </div>
             {% else %}
-            <div style="font-family:Rajdhani,sans-serif;font-size:36px;font-weight:700;color:#EF5350;background:rgba(239,83,80,0.1);border:2px solid rgba(239,83,80,0.4);border-radius:12px;padding:12px 32px;">
+            <div style="font-family:Rajdhani,sans-serif;font-size:18px;font-weight:700;color:#EF5350;background:rgba(239,83,80,0.1);border:2px solid rgba(239,83,80,0.4);border-radius:10px;padding:8px 24px;">
               ✗ FAILED
             </div>
             {% endif %}

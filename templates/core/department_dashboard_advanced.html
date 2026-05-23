@@ -1,107 +1,314 @@
 {% extends 'base.html' %}
-{% block title %}Department {{ dept }} Dashboard{% endblock %}
-{% block page_title %}Department {{ dept }} Portal{% endblock %}
+{% block title %}{{ dept_name|default:"Department" }} Dashboard{% endblock %}
+{% block page_title %}{{ dept_name|default:"Department" }} Dashboard{% endblock %}
 {% block page_subtitle %}Training Performance & Analytics{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* Metric Cards - Compact (Same as Commander/G-Head) */
+  .metric-card {
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 12px 8px;
+    text-align: center;
+    transition: all 0.3s ease;
+    border: 1px solid var(--border-color);
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .metric-card:hover {
+    transform: translateY(-3px);
+    border-color: var(--army-olive);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+  }
+  
+  .metric-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--army-olive), #4FC3F7);
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+  }
+  
+  .metric-card:hover::before {
+    transform: scaleX(1);
+  }
+  
+  .metric-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 8px;
+    font-size: 18px;
+  }
+  
+  .metric-icon.success {
+    background: rgba(82, 183, 136, 0.15);
+    color: var(--army-olive);
+  }
+  
+  .metric-icon.danger {
+    background: rgba(239, 83, 80, 0.15);
+    color: #EF5350;
+  }
+  
+  .metric-icon.info {
+    background: rgba(79, 195, 247, 0.15);
+    color: #4FC3F7;
+  }
+  
+  .metric-value {
+    font-size: 24px;
+    font-weight: 700;
+    font-family: 'Rajdhani', monospace;
+    line-height: 1.2;
+    margin-bottom: 4px;
+    color: var(--text-primary);
+  }
+  
+  .metric-label {
+    font-size: 9px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+  }
+  
+  .metric-hint {
+    font-size: 8px;
+    color: var(--text-muted);
+    margin-top: 6px;
+    opacity: 0.6;
+  }
+  
+  /* Chart Boxes - Compact */
+  .chart-box {
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 14px;
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+    height: 100%;
+  }
+  
+  .chart-box:hover {
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    border-color: var(--army-olive);
+  }
+  
+  .chart-title {
+    color: var(--army-olive);
+    font-size: 12px;
+    margin-bottom: 12px;
+    font-family: 'Rajdhani', sans-serif;
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .chart-title i {
+    font-size: 14px;
+  }
+  
+  /* Modal Styles */
+  .custom-modal .modal-dialog {
+    max-width: 700px;
+  }
+  
+  .custom-modal .modal-content {
+    background: var(--card-bg);
+    border: 1px solid var(--army-olive);
+    border-radius: 16px;
+  }
+  
+  .custom-modal .modal-header {
+    border-bottom: 1px solid var(--border-color);
+    padding: 12px 20px;
+  }
+  
+  .custom-modal .modal-title {
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+  
+  .custom-modal .modal-body {
+    padding: 0;
+    max-height: 450px;
+    overflow-y: auto;
+  }
+  
+  .btn-download {
+    font-size: 10px;
+    padding: 4px 12px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  
+  .modal-table {
+    width: 100%;
+    margin: 0;
+  }
+  
+  .modal-table th {
+    background: rgba(82, 183, 136, 0.08);
+    padding: 10px 15px;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--army-olive);
+    border-bottom: 1px solid var(--border-color);
+  }
+  
+  .modal-table td {
+    padding: 8px 15px;
+    font-size: 11px;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-primary);
+  }
+  
+  .modal-table tr:last-child td {
+    border-bottom: none;
+  }
+  
+  .modal-table tr:hover td {
+    background: rgba(82, 183, 136, 0.05);
+  }
+  
+  /* Responsive */
+  @media (max-width: 768px) {
+    .metric-value { font-size: 20px; }
+    .metric-icon { width: 32px; height: 32px; font-size: 16px; }
+    .chart-box { padding: 12px; }
+  }
+</style>
+{% endblock %}
 
 {% block content %}
 
-
-<!-- Top Stats -->
-<div class="row g-4 mb-4">
-  <div class="col-md-3">
-    <div class="army-card" style="border-left: 4px solid #52B788;">
-      <div class="army-card-body">
-        <div class="d-flex justify-content-between align-items-center">
-          <div>
-            <div class="stat-label">Total Agniveers</div>
-            <div class="stat-value">{{ total_agniveers }}</div>
-          </div>
-          <div class="stat-icon" style="background: rgba(82, 183, 136, 0.1); color: #52B788;">
-            <i class="bi bi-people-fill"></i>
-          </div>
-        </div>
+<!-- Key Metrics Row - Compact (Same as Commander) -->
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-3">
+    <div class="metric-card" onclick="location.href='{% url 'departments:agniveer_list' %}'">
+      <div class="metric-icon success mx-auto">
+        <i class="bi bi-people-fill"></i>
       </div>
+      <div class="metric-value">{{ total_agniveers|default:0 }}</div>
+      <div class="metric-label">Total Agniveers</div>
+      <div class="metric-hint">Click to view all</div>
     </div>
   </div>
 
-  <div class="col-md-3">
-    <div class="army-card cursor-pointer" style="border-left: 4px solid #4CAF50;" onclick="openAgniveerModal('Passed')">
-      <div class="army-card-body">
-        <div class="d-flex justify-content-between align-items-center">
-          <div>
-            <div class="stat-label">Passed ({{ dept }})</div>
-            <div class="stat-value text-success">{{ pass_count }}</div>
-          </div>
-          <div class="stat-icon" style="background: rgba(76, 175, 80, 0.1); color: #4CAF50;">
-            <i class="bi bi-check-circle-fill"></i>
-          </div>
-        </div>
+  <div class="col-6 col-md-3">
+    <div class="metric-card" onclick="openAgniveerModal('Passed')">
+      <div class="metric-icon success mx-auto">
+        <i class="bi bi-check-circle-fill"></i>
       </div>
+      <div class="metric-value" style="color: var(--army-olive);">{{ pass_count|default:0 }}</div>
+      <div class="metric-label">Passed</div>
+      <div class="metric-hint">Click to view list</div>
     </div>
   </div>
 
-  <div class="col-md-3">
-    <div class="army-card cursor-pointer" style="border-left: 4px solid #EF5350;" onclick="openAgniveerModal('Failed')">
-      <div class="army-card-body">
-        <div class="d-flex justify-content-between align-items-center">
-          <div>
-            <div class="stat-label">Failed ({{ dept }})</div>
-            <div class="stat-value text-danger">{{ fail_count }}</div>
-          </div>
-          <div class="stat-icon" style="background: rgba(239, 83, 80, 0.1); color: #EF5350;">
-            <i class="bi bi-x-circle-fill"></i>
-          </div>
-        </div>
+  <div class="col-6 col-md-3">
+    <div class="metric-card" onclick="openAgniveerModal('Failed')">
+      <div class="metric-icon danger mx-auto">
+        <i class="bi bi-x-circle-fill"></i>
       </div>
+      <div class="metric-value" style="color: #EF5350;">{{ fail_count|default:0 }}</div>
+      <div class="metric-label">Failed</div>
+      <div class="metric-hint">Click to view list</div>
     </div>
   </div>
 
-  <div class="col-md-3">
-    <div class="army-card cursor-pointer" style="border-left: 4px solid #D4A017;" onclick="location.href='{% url 'accounts:my_team' %}'">
-      <div class="army-card-body">
-        <div class="d-flex justify-content-between align-items-center">
-          <div>
-            <div class="stat-label">Trainers</div>
-            <div class="stat-value">{{ total_trainers }}</div>
-          </div>
-          <div class="stat-icon" style="background: rgba(212, 160, 23, 0.1); color: #D4A017;">
-            <i class="bi bi-person-badge-fill"></i>
-          </div>
-        </div>
+  <div class="col-6 col-md-3">
+    <div class="metric-card" onclick="location.href='{% url 'accounts:my_team' %}'">
+      <div class="metric-icon info mx-auto">
+        <i class="bi bi-person-badge-fill"></i>
       </div>
+      <div class="metric-value">{{ total_trainers|default:0 }}</div>
+      <div class="metric-label">Total Trainers</div>
+      <div class="metric-hint">Click to view team</div>
     </div>
   </div>
 </div>
 
-<div class="row g-4">
-  <!-- Overall Distribution Pie -->
+<!-- Charts Row 1 -->
+<div class="row g-4 mb-4">
+  <!-- Overall Pass/Fail Pie Chart -->
   <div class="col-lg-6">
     <div class="chart-box">
-      <div class="chart-title"><i class="bi bi-pie-chart-fill"></i> Pass/Fail Distribution</div>
-      <div style="height: 350px; display: flex; align-items: center; justify-content: center;">
-        <canvas id="passFailPieChart"></canvas>
+      <div class="chart-title">
+        <i class="bi bi-pie-chart"></i> OVERALL PASS/FAIL
+      </div>
+      <div class="overall-stats-wrapper" style="display: flex; flex-direction: column; align-items: center;">
+        <div class="pie-chart-container" style="display: flex; align-items: center; justify-content: center; gap: 30px; flex-wrap: wrap; width: 100%;">
+          <div style="width: 160px; height: 160px;">
+            <canvas id="passFailPieChart"></canvas>
+          </div>
+          <div class="stats-numbers" style="display: flex; flex-direction: column; gap: 10px;">
+            <div class="stat-number-item" style="display: flex; align-items: center; gap: 10px;">
+              <div style="width: 12px; height: 12px; background: #52B788; border-radius: 3px;"></div>
+              <span>Passed</span>
+              <span class="stat-number-value" style="font-weight: 700;">{{ pass_count|default:0 }}</span>
+            </div>
+            <div class="stat-number-item" style="display: flex; align-items: center; gap: 10px;">
+              <div style="width: 12px; height: 12px; background: #EF5350; border-radius: 3px;"></div>
+              <span>Failed</span>
+              <span class="stat-number-value" style="font-weight: 700;">{{ fail_count|default:0 }}</span>
+            </div>
+          </div>
+        </div>
+        <div class="distribution-section" style="text-align: center; margin-top: 15px; padding-top: 10px; border-top: 1px solid var(--border-color); width: 100%;">
+          <div class="distribution-title" style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">DISTRIBUTION</div>
+          <div class="distribution-values" style="display: flex; justify-content: center; gap: 30px;">
+            <div class="distribution-item" style="text-align: center;">
+              <div class="distribution-number" style="font-size: 18px; font-weight: 700; color: var(--army-olive);">{{ pass_count|default:0 }}</div>
+              <div class="distribution-label" style="font-size: 9px; color: var(--text-muted);">Passed</div>
+            </div>
+            <div class="distribution-item" style="text-align: center;">
+              <div class="distribution-number" style="font-size: 18px; font-weight: 700; color: #EF5350;">{{ fail_count|default:0 }}</div>
+              <div class="distribution-label" style="font-size: 9px; color: var(--text-muted);">Failed</div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- Category Slicer -->
+  <!-- Category Performance Polar Chart -->
   <div class="col-lg-6">
     <div class="chart-box">
-      <div class="chart-title"><i class="bi bi-compass"></i> Category Performance (Slicer)</div>
-      <div style="height: 350px; display: flex; align-items: center; justify-content: center;">
+      <div class="chart-title">
+        <i class="bi bi-compass"></i> Category Performance
+      </div>
+      <div style="height: 250px; display: flex; align-items: center; justify-content: center;">
         <canvas id="categorySlicerChart"></canvas>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Additional Department Graphs -->
-<div class="row g-4 mt-3">
+<!-- Charts Row 2 -->
+<div class="row g-4 mb-4">
   <!-- Category Pass Rates Bar Chart -->
   <div class="col-lg-6">
     <div class="chart-box">
-      <div class="chart-title"><i class="bi bi-bar-chart-fill"></i> Category Pass Rates</div>
-      <div style="height: 300px; display: flex; align-items: center; justify-content: center;">
+      <div class="chart-title">
+        <i class="bi bi-bar-chart"></i> Category Pass Rates
+      </div>
+      <div style="height: 200px;">
         <canvas id="categoryBarChart"></canvas>
       </div>
     </div>
@@ -110,20 +317,24 @@
   <!-- Test Type Performance -->
   <div class="col-lg-6">
     <div class="chart-box">
-      <div class="chart-title"><i class="bi bi-graph-up"></i> Test Type Performance</div>
-      <div style="height: 300px; display: flex; align-items: center; justify-content: center;">
+      <div class="chart-title">
+        <i class="bi bi-bar-chart-steps"></i> Test Type Performance
+      </div>
+      <div style="height: 200px;">
         <canvas id="testTypeChart"></canvas>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Monthly Trend -->
-<div class="row g-4 mt-3">
+<!-- Monthly Trend Chart -->
+<div class="row g-4">
   <div class="col-lg-12">
     <div class="chart-box">
-      <div class="chart-title"><i class="bi bi-calendar-event"></i> Monthly Evaluation Trend</div>
-      <div style="height: 300px; display: flex; align-items: center; justify-content: center;">
+      <div class="chart-title">
+        <i class="bi bi-calendar-event"></i> Monthly Evaluation Trend
+      </div>
+      <div style="height: 220px;">
         <canvas id="monthlyTrendChart"></canvas>
       </div>
     </div>
@@ -131,322 +342,342 @@
 </div>
 
 <!-- Agniveer List Modal -->
-<div class="modal fade" id="agniveerModal" tabindex="-1">
-  <div class="modal-dialog modal-lg modal-dialog-centered">
-    <div class="modal-content" style="background: #0F1629; border: 1px solid rgba(82, 183, 136, 0.3); color: #E0E6F0;">
-      <div class="modal-header" style="border-bottom: 1px solid rgba(82, 183, 136, 0.2);">
-        <h5 class="modal-title" id="modalTitle" style="font-family: 'Rajdhani', sans-serif; font-weight: 700;">Agniveer List</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+<div class="modal fade custom-modal" id="agniveerModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalTitle">Agniveer List</h5>
+        <div class="d-flex align-items-center gap-2">
+          <a id="modalDownloadBtn" href="#" class="btn btn-download" style="background: var(--army-green); color: white; border: none;">
+            <i class="bi bi-download"></i> Download All
+          </a>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
       </div>
       <div class="modal-body">
-        <div class="table-responsive">
-          <table class="table table-dark table-hover mb-0">
-            <thead>
-              <tr style="border-bottom: 2px solid #1B4332;">
-                <th>Enrollment No</th>
-                <th>Name</th>
-                <th>Dept Score</th>
-                <th>Percentage</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody id="modalTableBody">
-              <!-- Content populated by JS -->
-            </tbody>
-          </table>
-        </div>
+        <table class="modal-table">
+          <thead>
+            <tr>
+              <th>Enrollment No</th>
+              <th>Name</th>
+              <th>Score</th>
+              <th>Percentage</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="modalTableBody">
+            <!-- Populated by JS -->
+          </tbody>
+        </table>
       </div>
     </div>
   </div>
 </div>
 
-<style>
-  .chart-box {
-    background: #0F1629;
-    border: 1px solid rgba(27, 67, 50, 0.4);
-    border-radius: 12px;
-    padding: 24px;
-    height: 100%;
-  }
-  .chart-title {
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 18px;
-    font-weight: 700;
-    color: #52B788;
-    margin-bottom: 24px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  .stat-label { font-size: 14px; color: #8B9BB4; margin-bottom: 5px; }
-  .stat-value { font-family: 'Rajdhani', sans-serif; font-size: 28px; font-weight: 700; }
-  .stat-icon { width: 45px; height: 45px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
-  .cursor-pointer { cursor: pointer; transition: transform 0.2s; }
-  .cursor-pointer:hover { transform: translateY(-5px); }
-  
-  .table-dark { --bs-table-bg: transparent; }
-  .table-hover tbody tr:hover { background-color: rgba(82, 183, 136, 0.05) !important; }
-</style>
-
-{% endblock %}
-
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
   // Chart.js Setup
-  Chart.defaults.color = '#8B9BB4';
-  Chart.defaults.borderColor = 'rgba(82, 183, 136, 0.1)';
-  Chart.defaults.font.family = "'Inter', sans-serif";
-
+  function updateChartColors() {
+    const isDark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+    Chart.defaults.color = isDark ? '#E0E6F0' : '#1A2C3E';
+    Chart.defaults.borderColor = 'rgba(82, 183, 136, 0.2)';
+  }
+  
   // Passed/Failed Pie Chart
   const pieCtx = document.getElementById('passFailPieChart');
-  new Chart(pieCtx, {
-    type: 'pie',
-    data: {
-      labels: JSON.parse('{{ pie_labels|safe }}'),
-      datasets: [{
-        data: JSON.parse('{{ pie_data|safe }}'),
-        backgroundColor: ['#52B788', '#EF5350'],
-        borderWidth: 0,
-        hoverOffset: 15
-      }]
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: { position: 'bottom', labels: { padding: 20, usePointStyle: true } }
+  if (pieCtx) {
+    new Chart(pieCtx, {
+      type: 'pie',
+      data: {
+        labels: ['Passed', 'Failed'],
+        datasets: [{
+          data: [Number('{{ pass_count|default:0 }}'), Number('{{ fail_count|default:0 }}')],
+          backgroundColor: ['#52B788', '#EF5350'],
+          borderWidth: 0,
+          hoverOffset: 10
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+          legend: { display: false }
+        }
       }
-    }
-  });
+    });
+  }
 
   // Category Slicer (Polar Area)
   const slicerCtx = document.getElementById('categorySlicerChart');
-  new Chart(slicerCtx, {
-    type: 'polarArea',
-    data: {
-      labels: JSON.parse('{{ slicer_labels|safe }}'),
-      datasets: [{
-        label: 'Pass Rate %',
-        data: JSON.parse('{{ slicer_data|safe }}'),
-        backgroundColor: [
-          'rgba(82, 183, 136, 0.7)',
-          'rgba(79, 195, 247, 0.7)',
-          'rgba(212, 160, 23, 0.7)',
-          'rgba(156, 39, 176, 0.7)'
-        ],
-        borderWidth: 1,
-        borderColor: '#0F1629'
-      }]
-    },
-    options: {
-      responsive: true,
-      scales: {
-        r: {
-          grid: { color: 'rgba(255, 255, 255, 0.05)' },
-          angleLines: { color: 'rgba(255, 255, 255, 0.05)' },
-          ticks: { backdropColor: 'transparent', color: '#8B9BB4' }
-        }
+  if (slicerCtx) {
+    const slicerLabels = JSON.parse('{{ slicer_labels|safe|default:"[]" }}');
+    const slicerData = JSON.parse('{{ slicer_data|safe|default:"[0,0,0,0]" }}');
+    const slicerColors = [
+      'rgba(82, 183, 136, 0.7)',
+      'rgba(79, 195, 247, 0.7)',
+      'rgba(212, 160, 23, 0.7)',
+      'rgba(156, 39, 176, 0.7)'
+    ];
+    
+    new Chart(slicerCtx, {
+      type: 'polarArea',
+      data: {
+        labels: slicerLabels.length ? slicerLabels : ['On Field', 'Trade', 'Physical', 'Written'],
+        datasets: [{
+          data: slicerData.length ? slicerData : [0, 0, 0, 0],
+          backgroundColor: slicerColors.slice(0, slicerData.length || 4),
+          borderWidth: 1,
+          borderColor: '#0F1629'
+        }]
       },
-      plugins: {
-        legend: { position: 'bottom', labels: { padding: 20, usePointStyle: true } }
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        scales: {
+          r: {
+            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+            angleLines: { color: 'rgba(255, 255, 255, 0.05)' },
+            ticks: { backdropColor: 'transparent', color: '#8B9BB4', stepSize: 25 }
+          }
+        },
+        plugins: {
+          legend: { position: 'bottom', labels: { padding: 12, usePointStyle: true, font: { size: 10 } } }
+        }
       }
-    }
-  });
+    });
+  }
 
   // Category Bar Chart
   const catBarCtx = document.getElementById('categoryBarChart');
-  new Chart(catBarCtx, {
-    type: 'bar',
-    data: {
-      labels: JSON.parse('{{ category_bar_labels|safe }}'),
-      datasets: [{
-        label: 'Pass Rate (%)',
-        data: JSON.parse('{{ category_pass_rates|safe }}'),
-        backgroundColor: ['rgba(82, 183, 136, 0.8)', 'rgba(79, 195, 247, 0.8)'],
-        borderColor: ['#52B788', '#4FC3F7'],
-        borderWidth: 2,
-        borderRadius: 6,
-        hoverBackgroundColor: ['#52B788', '#4FC3F7']
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      indexAxis: 'y',
-      scales: {
-        x: {
-          beginAtZero: true,
-          max: 100,
-          grid: { color: 'rgba(255, 255, 255, 0.05)' },
-          ticks: { color: '#8B9BB4' }
-        },
-        y: {
-          grid: { display: false },
-          ticks: { color: '#8B9BB4', font: { weight: 'bold' } }
-        }
+  if (catBarCtx) {
+    const barLabels = JSON.parse('{{ category_bar_labels|safe|default:"[]" }}');
+    const barData = JSON.parse('{{ category_pass_rates|safe|default:"[0,0]" }}');
+    
+    new Chart(catBarCtx, {
+      type: 'bar',
+      data: {
+        labels: barLabels.length ? barLabels : ['On Field', 'Trade'],
+        datasets: [{
+          label: 'Pass Rate (%)',
+          data: barData.length ? barData : [0, 0],
+          backgroundColor: ['rgba(82, 183, 136, 0.8)', 'rgba(79, 195, 247, 0.8)'],
+          borderColor: ['#52B788', '#4FC3F7'],
+          borderWidth: 2,
+          borderRadius: 6
+        }]
       },
-      plugins: {
-        legend: { display: true, position: 'top' }
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        indexAxis: 'y',
+        scales: {
+          x: {
+            beginAtZero: true,
+            max: 100,
+            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+            ticks: { color: '#8B9BB4' }
+          },
+          y: {
+            grid: { display: false },
+            ticks: { color: '#8B9BB4', font: { weight: 'bold' } }
+          }
+        },
+        plugins: {
+          legend: { display: false }
+        }
       }
-    }
-  });
+    });
+  }
 
   // Test Type Performance
   const testCtx = document.getElementById('testTypeChart');
-  new Chart(testCtx, {
-    type: 'bar',
-    data: {
-      labels: JSON.parse('{{ test_labels|safe }}'),
-      datasets: [
-        {
-          label: 'Avg Marks',
-          data: JSON.parse('{{ test_avg_marks|safe }}'),
-          backgroundColor: 'rgba(82, 183, 136, 0.7)',
-          borderColor: '#52B788',
-          borderWidth: 2,
-          yAxisID: 'y',
-          borderRadius: 5,
-        },
-        {
-          label: 'Pass Rate (%)',
-          data: JSON.parse('{{ test_pass_rates|safe }}'),
-          backgroundColor: 'rgba(79, 195, 247, 0.7)',
-          borderColor: '#4FC3F7',
-          borderWidth: 2,
-          yAxisID: 'y1',
-          borderRadius: 5,
-        }
-      ]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      interaction: { mode: 'index', intersect: false },
-      scales: {
-        y: {
-          type: 'linear',
-          display: true,
-          position: 'left',
-          title: { display: true, text: 'Average Marks', color: '#52B788' },
-          ticks: { color: '#8B9BB4' },
-          grid: { color: 'rgba(255, 255, 255, 0.05)' }
-        },
-        y1: {
-          type: 'linear',
-          display: true,
-          position: 'right',
-          title: { display: true, text: 'Pass Rate (%)', color: '#4FC3F7' },
-          ticks: { color: '#8B9BB4' },
-          grid: { drawOnChartArea: false }
-        },
-        x: {
-          ticks: { color: '#8B9BB4' },
-          grid: { color: 'rgba(255, 255, 255, 0.05)' }
-        }
+  if (testCtx) {
+    const testLabels = JSON.parse('{{ test_labels|safe|default:"[]" }}');
+    const testAvgMarks = JSON.parse('{{ test_avg_marks|safe|default:"[0,0]" }}');
+    const testPassRates = JSON.parse('{{ test_pass_rates|safe|default:"[0,0]" }}');
+    
+    new Chart(testCtx, {
+      type: 'bar',
+      data: {
+        labels: testLabels.length ? testLabels : ['Test Type 1', 'Test Type 2'],
+        datasets: [
+          {
+            label: 'Avg Marks',
+            data: testAvgMarks.length ? testAvgMarks : [0, 0],
+            backgroundColor: 'rgba(82, 183, 136, 0.7)',
+            borderColor: '#52B788',
+            borderWidth: 2,
+            yAxisID: 'y',
+            borderRadius: 5
+          },
+          {
+            label: 'Pass Rate (%)',
+            data: testPassRates.length ? testPassRates : [0, 0],
+            backgroundColor: 'rgba(79, 195, 247, 0.7)',
+            borderColor: '#4FC3F7',
+            borderWidth: 2,
+            yAxisID: 'y1',
+            borderRadius: 5
+          }
+        ]
       },
-      plugins: {
-        legend: { position: 'top', labels: { padding: 15 } }
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        interaction: { mode: 'index', intersect: false },
+        scales: {
+          y: {
+            beginAtZero: true,
+            title: { display: true, text: 'Avg Marks', color: '#52B788', font: { size: 10 } },
+            ticks: { color: '#8B9BB4' },
+            grid: { color: 'rgba(255, 255, 255, 0.05)' }
+          },
+          y1: {
+            beginAtZero: true,
+            max: 100,
+            position: 'right',
+            title: { display: true, text: 'Pass Rate (%)', color: '#4FC3F7', font: { size: 10 } },
+            ticks: { color: '#8B9BB4' },
+            grid: { drawOnChartArea: false }
+          },
+          x: {
+            ticks: { color: '#8B9BB4' },
+            grid: { color: 'rgba(255, 255, 255, 0.05)' }
+          }
+        },
+        plugins: {
+          legend: { position: 'top', labels: { boxWidth: 10, font: { size: 9 } } }
+        }
       }
-    }
-  });
+    });
+  }
 
   // Monthly Trend
   const monthlyCtx = document.getElementById('monthlyTrendChart');
-  new Chart(monthlyCtx, {
-    type: 'line',
-    data: {
-      labels: JSON.parse('{{ months_labels|safe }}'),
-      datasets: [
-        {
-          label: 'Total Evaluations',
-          data: JSON.parse('{{ month_counts|safe }}'),
-          borderColor: '#52B788',
-          backgroundColor: 'rgba(82, 183, 136, 0.1)',
-          borderWidth: 3,
-          tension: 0.4,
-          fill: true,
-          pointRadius: 6,
-          pointBackgroundColor: '#52B788',
-          pointBorderColor: '#0F1629',
-          pointBorderWidth: 2,
-          yAxisID: 'y'
-        },
-        {
-          label: 'Passed Evaluations',
-          data: JSON.parse('{{ month_pass|safe }}'),
-          borderColor: '#4FC3F7',
-          backgroundColor: 'rgba(79, 195, 247, 0.1)',
-          borderWidth: 3,
-          tension: 0.4,
-          fill: true,
-          pointRadius: 6,
-          pointBackgroundColor: '#4FC3F7',
-          pointBorderColor: '#0F1629',
-          pointBorderWidth: 2,
-          yAxisID: 'y1'
-        }
-      ]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      interaction: { mode: 'index', intersect: false },
-      scales: {
-        y: {
-          type: 'linear',
-          display: true,
-          position: 'left',
-          title: { display: true, text: 'Total Count', color: '#52B788' },
-          ticks: { color: '#8B9BB4' },
-          grid: { color: 'rgba(255, 255, 255, 0.05)' }
-        },
-        y1: {
-          type: 'linear',
-          display: true,
-          position: 'right',
-          title: { display: true, text: 'Passed Count', color: '#4FC3F7' },
-          ticks: { color: '#8B9BB4' },
-          grid: { drawOnChartArea: false }
-        },
-        x: {
-          ticks: { color: '#8B9BB4' },
-          grid: { color: 'rgba(255, 255, 255, 0.05)' }
-        }
+  if (monthlyCtx) {
+    const monthsLabels = JSON.parse('{{ months_labels|safe|default:"[]" }}');
+    const monthCounts = JSON.parse('{{ month_counts|safe|default:"[0,0,0,0,0,0]" }}');
+    const monthPass = JSON.parse('{{ month_pass|safe|default:"[0,0,0,0,0,0]" }}');
+    
+    new Chart(monthlyCtx, {
+      type: 'line',
+      data: {
+        labels: monthsLabels.length ? monthsLabels : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+        datasets: [
+          {
+            label: 'Total Evaluations',
+            data: monthCounts.length ? monthCounts : [0, 0, 0, 0, 0, 0],
+            borderColor: '#52B788',
+            backgroundColor: 'rgba(82, 183, 136, 0.1)',
+            borderWidth: 2,
+            tension: 0.3,
+            fill: true,
+            pointRadius: 4,
+            pointBackgroundColor: '#52B788'
+          },
+          {
+            label: 'Passed',
+            data: monthPass.length ? monthPass : [0, 0, 0, 0, 0, 0],
+            borderColor: '#4FC3F7',
+            backgroundColor: 'rgba(79, 195, 247, 0.1)',
+            borderWidth: 2,
+            tension: 0.3,
+            fill: true,
+            pointRadius: 4,
+            pointBackgroundColor: '#4FC3F7',
+            yAxisID: 'y1'
+          }
+        ]
       },
-      plugins: {
-        legend: { position: 'top', labels: { padding: 15 } }
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        interaction: { mode: 'index', intersect: false },
+        scales: {
+          y: {
+            beginAtZero: true,
+            title: { display: true, text: 'Count', font: { size: 10 } },
+            ticks: { color: '#8B9BB4' },
+            grid: { color: 'rgba(255, 255, 255, 0.05)' }
+          },
+          y1: {
+            beginAtZero: true,
+            position: 'right',
+            title: { display: true, text: 'Passed', font: { size: 10 } },
+            ticks: { color: '#8B9BB4' },
+            grid: { drawOnChartArea: false }
+          },
+          x: {
+            ticks: { color: '#8B9BB4' },
+            grid: { color: 'rgba(255, 255, 255, 0.05)' }
+          }
+        },
+        plugins: {
+          legend: { position: 'top', labels: { boxWidth: 10, font: { size: 9 } } }
+        }
       }
-    }
-  });
+    });
+  }
 
   // Modal Logic
-  const passedAgniveers = JSON.parse('{{ passed_agniveers|safe }}');
-  const failedAgniveers = JSON.parse('{{ failed_agniveers|safe }}');
-  const modal = new bootstrap.Modal(document.getElementById('agniveerModal'));
-
+  const passedAgniveers = JSON.parse('{{ passed_agniveers|safe|default:"[]" }}');
+  const failedAgniveers = JSON.parse('{{ failed_agniveers|safe|default:"[]" }}');
+  let modalInstance = null;
+  
   function openAgniveerModal(status) {
     const list = status === 'Passed' ? passedAgniveers : failedAgniveers;
     const title = document.getElementById('modalTitle');
     const tbody = document.getElementById('modalTableBody');
+    const dlBtn = document.getElementById('modalDownloadBtn');
+    const statusParam = status === 'Passed' ? 'pass' : 'fail';
     
-    title.innerText = `${status} Agniveers (Dept {{ dept }})`;
+    title.innerHTML = `<i class="bi ${status === 'Passed' ? 'bi-trophy-fill' : 'bi-exclamation-triangle-fill'} me-2"></i> ${status} AGNIVEERS`;
     title.style.color = status === 'Passed' ? '#52B788' : '#EF5350';
     
-    tbody.innerHTML = list.map(a => `
-      <tr>
-        <td><span class="text-army-light">${a.enrollment}</span></td>
-        <td class="fw-bold">${a.name}</td>
-        <td>${a.score}</td>
-        <td><span class="badge ${a.percentage >= 50 ? 'bg-success' : 'bg-danger'} bg-opacity-10 ${a.percentage >= 50 ? 'text-success' : 'text-danger'}">${a.percentage}%</span></td>
-        <td>
-          <a href="/departments/agniveers/${a.id}/" class="btn btn-sm btn-army-outline">
-            <i class="bi bi-eye"></i>
-          </a>
-        </td>
-      </tr>
-    `).join('') || '<tr><td colspan="5" class="text-center">No data available</td></tr>';
+    if (status === 'Passed') {
+      dlBtn.style.background = 'var(--army-green)';
+      dlBtn.style.color = 'white';
+      dlBtn.style.border = 'none';
+    } else {
+      dlBtn.style.background = '#2d0000';
+      dlBtn.style.color = '#EF5350';
+      dlBtn.style.border = '1px solid #EF5350';
+    }
+    dlBtn.href = `{% url 'reports:export_dashboard_excel' %}?status=${statusParam}`;
     
-    modal.show();
+    if (list && list.length > 0) {
+      tbody.innerHTML = list.map(a => `
+        <tr>
+          <td><a href="/departments/agniveers/${a.id}/" style="color: ${status === 'Passed' ? '#52B788' : '#EF5350'}; text-decoration: none; font-weight: 600;">${a.enrollment}</a></td>
+          <td>${a.name}</td>
+          <td>${a.score}</td>
+          <td><span class="${a.percentage >= 50 ? 'badge-pass' : 'badge-fail'}" style="padding: 3px 10px; border-radius: 20px; font-size: 10px;">${a.percentage}%</span></td>
+          <td>
+            <a href="/departments/agniveers/${a.id}/" class="btn btn-sm" style="background: ${status === 'Passed' ? 'var(--army-green)' : '#EF5350'}; color: white; border-radius: 6px; padding: 3px 10px; font-size: 10px;">
+              <i class="bi bi-eye"></i> View
+            </a>
+          </td>
+        </tr>
+      `).join('');
+    } else {
+      tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4">No records found</td></tr>';
+    }
+    
+    if (!modalInstance) {
+      const modalEl = document.getElementById('agniveerModal');
+      modalInstance = new bootstrap.Modal(modalEl);
+    }
+    modalInstance.show();
   }
+  
+  // Theme change listener
+  window.addEventListener('themeChanged', function(e) {
+    updateChartColors();
+  });
+  
+  updateChartColors();
 </script>
+{% endblock %}
+
 {% endblock %}

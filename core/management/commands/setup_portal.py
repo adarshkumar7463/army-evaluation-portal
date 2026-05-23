@@ -10,6 +10,14 @@ from datetime import date, timedelta
 import random
 
 
+DEPARTMENT_NAMES = {
+    'A': 'Battalion',
+    'B': 'TTS',
+    'C': 'CS',
+    'D': 'Clerk',
+}
+
+
 class Command(BaseCommand):
     help = 'Setup Army Evaluation Portal with initial data'
 
@@ -75,7 +83,7 @@ class Command(BaseCommand):
             if created:
                 u.set_password('Dept@1234')
                 u.save()
-                self.stdout.write(self.style.SUCCESS(f'✅ Dept {dept}: {uname} / Dept@1234'))
+                self.stdout.write(self.style.SUCCESS(f'✅ {DEPARTMENT_NAMES.get(dept, dept)}: {uname} / Dept@1234'))
             dept_users[dept] = u
 
         # ─── 4. Trainers ───
@@ -194,10 +202,10 @@ class Command(BaseCommand):
         self.stdout.write('='*60)
         self.stdout.write(self.style.SUCCESS('Commander : commander    / Commander@123'))
         self.stdout.write(self.style.SUCCESS('G Head    : ghead        / GHead@123'))
-        self.stdout.write(self.style.SUCCESS('Dept A    : deptA        / Dept@1234'))
-        self.stdout.write(self.style.SUCCESS('Dept B    : deptB        / Dept@1234'))
-        self.stdout.write(self.style.SUCCESS('Dept C    : deptC        / Dept@1234'))
-        self.stdout.write(self.style.SUCCESS('Dept D    : deptD        / Dept@1234'))
+        self.stdout.write(self.style.SUCCESS('Battalion : deptA        / Dept@1234'))
+        self.stdout.write(self.style.SUCCESS('TTS       : deptB        / Dept@1234'))
+        self.stdout.write(self.style.SUCCESS('CS        : deptC        / Dept@1234'))
+        self.stdout.write(self.style.SUCCESS('Clerk     : deptD        / Dept@1234'))
         self.stdout.write(self.style.SUCCESS('NCO-A     : ncoA         / Trainer@123'))
         self.stdout.write(self.style.SUCCESS('JCO-A     : jcoA         / Trainer@123'))
         self.stdout.write(self.style.SUCCESS('Officer-A : officerA     / Trainer@123'))

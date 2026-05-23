@@ -15,7 +15,8 @@ from django.urls import reverse_lazy
 from datetime import date
 
 from .models import EvaluationSheet, Marks
-from .forms import EvaluationSheetForm, MarksForm, EvaluationFilterForm, AgniveerEvaluationForm
+from .result_helpers import build_department_result_row
+from .forms import EvaluationSheetForm, MarksForm, EvaluationFilterForm, AgniveerEvaluationForm, SubEventEvaluationForm
 from departments.models import Agniveer
 from accounts.mixins import AnyStaffMixin, CommanderOrDeptMixin, TrainerMixin
 from logs.utils import log_action
@@ -87,7 +88,7 @@ class EvaluationListView(AnyStaffMixin, ListView):
         
         # Sort departments
         ctx['grouped_evaluations'] = {dept: dept_evaluations[dept] 
-                                      for dept in sorted(dept_evaluations.keys())}
+                                    for dept in sorted(dept_evaluations.keys())}
         ctx['all_departments'] = ['A', 'B', 'C', 'D']
         
         return ctx
@@ -132,78 +133,489 @@ class EvaluationDetailView(AnyStaffMixin, DetailView):
         return ctx
 
 
-class AgniveerEvaluateView(TrainerMixin, View):
+class AgniveerEvaluateView(AnyStaffMixin, View):
     template_name = 'evaluation/agniveer_evaluate.html'
 
     def get_evaluator_type(self, user):
-        if user.is_nco:
-            return 'nco'
-        elif user.is_jco:
-            return 'jco'
-        elif user.is_officer:
-            return 'officer'
-        return None
+        if user.is_nco: return 'nco'
+        elif user.is_jco: return 'jco'
+        elif user.is_officer: return 'officer'
+        return 'admin'
 
     def get(self, request, pk):
-        agniveer = get_object_or_404(Agniveer, pk=pk)
-        department = request.user.get_department_code()
-        form = AgniveerEvaluationForm(department=department)
-        
-        from .constants import DEPT_CONFIG
-        config = DEPT_CONFIG.get(department, DEPT_CONFIG['A'])
-        
-        return render(request, self.template_name, {
-            'agniveer': agniveer,
-            'form': form,
-            'category_choices': config['categories'],
-            'test_type_choices': config['test_types'],
-            'test_to_category': config['test_to_category'],
-        })
+        from django.urls import reverse
+        return redirect(reverse('departments:agniveer_detail', args=[pk]))
 
     def post(self, request, pk):
         agniveer = get_object_or_404(Agniveer, pk=pk)
         department = request.user.get_department_code()
+        active_test = request.POST.get('active_test')
+        
+        from .constants import get_dept_config
+        config = get_dept_config(department, request.user)
+        test_config = config.get('test_config', {}).get(active_test, {})
+        sub_events = test_config.get('sub_events', config.get('sub_events', {}).get(active_test, []))
+        columns = test_config.get('columns', [])
+        
+        # Construct results
+        results = {}
+        total_for_best = 0
+        
+        # ─── DMV Specific Calculations ───
+        if active_test == 'DMV_RESULT':
+            prac_sheet = EvaluationSheet.objects.filter(agniveer=agniveer, test_type='DMV_PRACTICAL', department='B').first()
+            drive_sheet = EvaluationSheet.objects.filter(agniveer=agniveer, test_type='DMV_DRIVING', department='B').first()
+            
+            prac_total = prac_sheet.get_total_marks() if prac_sheet else 0
+            drive_total = drive_sheet.get_total_marks() if drive_sheet else 0
+            
+            try:
+                online_val = int(request.POST.get('Online Test (100)', 0))
+            except (ValueError, TypeError):
+                online_val = 0
+                
+            total_200 = online_val + prac_total + drive_total
+            percentage = (total_200 / 200 * 100) if total_200 else 0
+            
+            # Grading Logic: A(70%+), B(60-70%), C(<60%)
+            if percentage >= 70: grading = 'A'
+            elif percentage >= 60: grading = 'B'
+            else: grading = 'C'
+            
+            converted_40 = (total_200 / 200 * 40) if total_200 else 0
+            
+            results = {
+                'Online Test (100)': online_val,
+                'Practical Test (50)': prac_total,
+                'Driving Test (50)': drive_total,
+                'Total (200)': total_200,
+                '% Age': round(percentage, 2),
+                'Grading': grading,
+                'Convert 40 Marks': round(converted_40, 2)
+            }
+            total_for_best = round(converted_40)
+            evaluator_type = 'admin'
 
-        form = AgniveerEvaluationForm(request.POST, department=department)
-        if not form.is_valid():
-            messages.error(request, "Invalid evaluation details. Please select a valid category and test type for your department.")
-            return redirect('departments:agniveer_detail', pk=agniveer.pk)
+        # ─── OPEM Specific Calculations ───
+        elif active_test == 'OPEM_RESULT':
+            prac_sheet = EvaluationSheet.objects.filter(agniveer=agniveer, test_type='OPEM_PRACTICAL', department='B').first()
+            maint_sheet = EvaluationSheet.objects.filter(agniveer=agniveer, test_type='OPEM_MAINTENANCE', department='B').first()
+            
+            prac_total = prac_sheet.get_total_marks() if prac_sheet else 0
+            maint_total = maint_sheet.get_total_marks() if maint_sheet else 0
+            
+            try:
+                written_val = int(request.POST.get('Written Test (100)', 0))
+            except (ValueError, TypeError):
+                written_val = 0
+                
+            total_200 = written_val + prac_total + maint_total
+            percentage = (total_200 / 200 * 100) if total_200 else 0
+            
+            # Grading Logic: A(70%+), B(60-70%), C(<60%)
+            if percentage >= 70: grading = 'A'
+            elif percentage >= 60: grading = 'B'
+            else: grading = 'C'
+            
+            converted_40 = (total_200 / 200 * 40) if total_200 else 0
+            
+            results = {
+                'Written Test (100)': written_val,
+                'Practical Test (50)': prac_total,
+                'Maintenance Test (50)': maint_total,
+                'Total (200)': total_200,
+                '% Age': round(percentage, 2),
+                'Grading': grading,
+                'Convert 40 Marks': round(converted_40, 2)
+            }
+            total_for_best = round(converted_40)
+            evaluator_type = 'admin'
 
-        category = form.cleaned_data['category']
-        test_type = form.cleaned_data['test_type']
-        marks_value = form.cleaned_data['marks']
-        remarks = form.cleaned_data['remarks']
+        # ─── OTHER Trades Specific Calculations ───
+        elif active_test == 'OTHER_ASSESSMENT':
+            total_marks = 0
+            for sub in sub_events:
+                val = request.POST.get(sub)
+                if val:
+                    try:
+                        total_marks += int(val)
+                    except (ValueError, TypeError):
+                        pass
+            
+            # Convert 74 marks total to 40 scale
+            total_for_best = round((total_marks / 74 * 40)) if total_marks else 0
+            evaluator_type = 'admin'
 
+        elif department == 'C' and active_test == 'CS_RESULT':
+            max_config = config.get('max_marks', {}).get(active_test, {})
+            readonly_events = set(config.get('readonly_events', {}).get(active_test, []))
+            mark_events = [event for event in sub_events if event not in readonly_events]
+
+            results = {'Marks': {}}
+            for event in mark_events:
+                raw_value = request.POST.get(event)
+                try:
+                    value = float(raw_value) if raw_value else 0
+                except (ValueError, TypeError):
+                    value = 0
+
+                max_limit = max_config.get(event, 600)
+                if value > max_limit:
+                    messages.warning(request, f"Value {value} for {event} exceeds max marks {max_limit}. Capped at limit.")
+                    value = max_limit
+                if value < 0:
+                    value = 0
+                results['Marks'][event] = value
+
+            toet_total = results['Marks'].get('TOET-I (25)', 0) + results['Marks'].get('TOET-II (25)', 0)
+            toet_25 = (toet_total / 50) * 25 if toet_total else 0
+            fe_total = results['Marks'].get('FE Online Exam (50)', 0) + results['Marks'].get('FE Prac (20)', 0)
+            br_total = results['Marks'].get('BR Online Exam (40)', 0) + results['Marks'].get('BR Prac (25)', 0)
+            total_160 = toet_25 + fe_total + br_total
+            converted_40 = (total_160 / 160) * 40 if total_160 else 0
+
+            results['Marks']['TOTAL TOET (50)'] = min(toet_total, max_config.get('TOTAL TOET (50)', 50))
+            results['Marks']['25% OF TOET (25)'] = round(min(toet_25, max_config.get('25% OF TOET (25)', 25)), 2)
+            results['Marks']['FE Total (70)'] = min(fe_total, max_config.get('FE Total (70)', 70))
+            results['Marks']['BR Total (65)'] = min(br_total, max_config.get('BR Total (65)', 65))
+            results['Marks']['TOTAL (160)'] = round(min(total_160, max_config.get('TOTAL (160)', 160)), 2)
+            results['Marks']['CONVERTED TO 40'] = round(min(converted_40, max_config.get('CONVERTED TO 40', 40)), 2)
+            total_for_best = round(results['Marks']['CONVERTED TO 40'])
+            evaluator_type = 'admin'
+
+        elif department == 'D' and active_test.startswith('CLK_'):
+            max_config = config.get('max_marks', {}).get(active_test, {})
+            readonly_events = set(config.get('readonly_events', {}).get(active_test, []))
+            mark_events = [event for event in sub_events if event not in readonly_events]
+
+            results = {'Marks': {}}
+            for event in mark_events:
+                raw_value = request.POST.get(event)
+                try:
+                    value = float(raw_value) if raw_value else 0
+                except (ValueError, TypeError):
+                    value = 0
+
+                max_limit = max_config.get(event, 999)
+                if event == 'Typing 20 WPM':
+                    max_limit = max_config.get(event, 200)
+                if value > max_limit:
+                    messages.warning(request, f"Value {value} for {event} exceeds max marks {max_limit}. Capped at limit.")
+                    value = max_limit
+                if value < 0:
+                    value = 0
+                results['Marks'][event] = value
+
+            if active_test == 'CLK_INITIAL':
+                academic = results['Marks'].get('Academic Written (100)', 0)
+                computer = results['Marks'].get('Computer Project Work (25)', 0)
+                
+                academic_conv = round(academic * 0.40, 2)
+                computer_conv = round(computer * 0.40, 2)
+                
+                results['Marks']['Academic Converted (40)'] = academic_conv
+                results['Marks']['Computer Converted (10)'] = computer_conv
+                
+                marks_obtained = academic_conv + computer_conv
+                max_total = 50
+                score_event = 'Marks Obtained (50)'
+                
+                percentage = ((academic + computer) / 125) * 100 if (academic + computer) else 0
+                is_pass_status = 'Pass' if (academic >= 40 and computer >= 10) else 'Fail'
+
+            elif active_test == 'CLK_WEEKLY_1':
+                tech = results['Marks'].get('Tech Written (50)', 0)
+                academic = results['Marks'].get('Academic Written (50)', 0)
+                comp_obj = results['Marks'].get('Computer Obj (25)', 0)
+                comp_prac = results['Marks'].get('Computer Prac (25)', 0)
+                typing = results['Marks'].get('Typing 20 WPM', 0)
+                
+                comp_total = comp_obj + comp_prac
+                results['Marks']['Computer Total (50)'] = comp_total
+                
+                tech_conv = round(tech * 0.40, 2)
+                academic_conv = round(academic * 0.40, 2)
+                comp_total_conv = round(comp_total * 0.40, 2)
+                
+                results['Marks']['Tech Converted (20)'] = tech_conv
+                results['Marks']['Academic Converted (20)'] = academic_conv
+                results['Marks']['Computer Total Converted (20)'] = comp_total_conv
+                
+                raw_total = tech + academic + comp_total
+                marks_obtained = round(raw_total * 0.46, 2)
+                max_total = 69
+                score_event = 'Marks Obtained (69)'
+                
+                percentage = (raw_total / 150) * 100 if raw_total else 0
+                is_pass_status = 'Pass' if (tech >= 20 and academic >= 20 and comp_total >= 20 and typing >= 70) else 'Fail'
+
+            elif active_test == 'CLK_WEEKLY_2':
+                tech_online = results['Marks'].get('Tech Online (115)', 0)
+                tech_proj = results['Marks'].get('Tech Proj HRMS (25)', 0)
+                academic = results['Marks'].get('Academic Online (85)', 0)
+                comp_online = results['Marks'].get('Computer Online (25)', 0)
+                comp_prac = results['Marks'].get('Computer Prac (25)', 0)
+                typing = results['Marks'].get('Typing 20 WPM', 0)
+                
+                comp_total = comp_online + comp_prac
+                results['Marks']['Computer Total (50)'] = comp_total
+                
+                tech_online_conv = round(tech_online * 0.40, 2)
+                tech_proj_conv = round(tech_proj * 0.40, 2)
+                academic_conv = round(academic * 0.40, 2)
+                comp_online_conv = round(comp_online * 0.40, 2)
+                comp_prac_conv = round(comp_prac * 0.40, 2)
+                comp_total_conv = round(comp_total * 0.40, 2)
+                
+                results['Marks']['Tech Online Converted (46)'] = tech_online_conv
+                results['Marks']['Tech Proj Converted (10)'] = tech_proj_conv
+                results['Marks']['Academic Converted (34)'] = academic_conv
+                results['Marks']['Computer Online Converted (10)'] = comp_online_conv
+                results['Marks']['Computer Prac Converted (10)'] = comp_prac_conv
+                results['Marks']['Computer Total Converted (20)'] = comp_total_conv
+                
+                raw_total = tech_online + tech_proj + academic + comp_total
+                marks_obtained = round(raw_total * 0.46, 2)
+                max_total = 126.50
+                score_event = 'Marks Obtained (126.50)'
+                
+                percentage = (raw_total / 275) * 100 if raw_total else 0
+                is_pass_status = 'Pass' if (tech_online >= 46 and tech_proj >= 10 and academic >= 34 and comp_total >= 20 and typing >= 70) else 'Fail'
+
+            else: # CLK_FINAL
+                tech_online = results['Marks'].get('Tech Online (115)', 0)
+                tech_proj = results['Marks'].get('Tech Proj HRMS (25)', 0)
+                academic = results['Marks'].get('Academic Online (85)', 0)
+                comp_online = results['Marks'].get('Computer Online (25)', 0)
+                comp_prac = results['Marks'].get('Computer Prac (25)', 0)
+                extempore = results['Marks'].get('Extempore (25)', 0)
+                typing = results['Marks'].get('Typing 20 WPM', 0)
+                
+                comp_total = comp_online + comp_prac
+                results['Marks']['Computer Total (50)'] = comp_total
+                
+                tech_online_conv = round(tech_online * 0.40, 2)
+                tech_proj_conv = round(tech_proj * 0.40, 2)
+                academic_conv = round(academic * 0.40, 2)
+                comp_online_conv = round(comp_online * 0.40, 2)
+                comp_prac_conv = round(comp_prac * 0.40, 2)
+                comp_total_conv = round(comp_total * 0.40, 2)
+                extempore_conv = round(extempore * 0.40, 2)
+                
+                results['Marks']['Tech Online Converted (46)'] = tech_online_conv
+                results['Marks']['Tech Proj Converted (10)'] = tech_proj_conv
+                results['Marks']['Academic Converted (34)'] = academic_conv
+                results['Marks']['Computer Online Converted (10)'] = comp_online_conv
+                results['Marks']['Computer Prac Converted (10)'] = comp_prac_conv
+                results['Marks']['Computer Total Converted (20)'] = comp_total_conv
+                results['Marks']['Extempore Converted (10)'] = extempore_conv
+                
+                raw_total = tech_online + tech_proj + academic + comp_total + extempore
+                marks_obtained = round(raw_total * 0.40, 2)
+                max_total = 120.00
+                score_event = 'Marks Obtained (120.00)'
+                
+                percentage = (raw_total / 300) * 100 if raw_total else 0
+                is_pass_status = 'Pass' if (tech_online >= 46 and tech_proj >= 10 and academic >= 34 and comp_total >= 20 and extempore >= 10 and typing >= 70) else 'Fail'
+
+            if percentage >= 80:
+                grading = 'A'
+            elif percentage >= 60:
+                grading = 'B'
+            elif percentage >= 46:
+                grading = 'C'
+            else:
+                grading = 'D'
+
+            results['Marks'][score_event] = min(marks_obtained, max_total)
+            results['Marks']['Percentage'] = round(percentage, 2)
+            results['Marks']['Result'] = is_pass_status
+            results['Marks']['Grading'] = grading
+            results['Marks']['Pass/Fail'] = is_pass_status
+
+            total_for_best = round(marks_obtained)
+            evaluator_type = 'admin'
+        
+        # ─── Battalion Screening Calculations ───
+        elif department == 'A' and active_test == 'BN_SCREENING':
+            max_config = config.get('max_marks', {}).get(active_test, {})
+            readonly_events = set(config.get('readonly_events', {}).get(active_test, []))
+            mark_events = [event for event in sub_events if event not in readonly_events]
+
+            results = {'Marks': {}}
+            for event in mark_events:
+                raw_value = request.POST.get(event)
+                try:
+                    value = float(raw_value) if raw_value else 0
+                except (ValueError, TypeError):
+                    value = 0
+
+                max_limit = max_config.get(event, 999)
+                if value > max_limit:
+                    messages.warning(request, f"Value {value} for {event} exceeds max marks {max_limit}. Capped at limit.")
+                    value = max_limit
+                if value < 0:
+                    value = 0
+                results['Marks'][event] = value
+
+            cmk = results['Marks'].get('COMMN MIL KNOWLEDGE (20)', 0)
+            wpn = results['Marks'].get('WPN & EQPT HANDLING (20)', 0)
+            ces = results['Marks'].get('BASIC TAC (40)', 0)
+            ppt = results['Marks'].get('PPT (10)', 0)
+            fire = results['Marks'].get('FIRE (10)', 0)
+            drill = results['Marks'].get('DRILL (20)', 0)
+            bpet = results['Marks'].get('BPET (10)', 0)
+
+            out_cmk = cmk
+            out_ces = ces
+            out_btt = round(ppt + drill + bpet, 2)
+            out_wpn = round(wpn + fire, 2)
+
+            total_120 = out_cmk + out_ces + out_btt + out_wpn
+            round_figure = round(total_120)
+
+            results['Marks']['COMMON MIL KNOWLEDGE (20)'] = out_cmk
+            results['Marks']['BASIC TACTICE (CES) (40)'] = out_ces
+            results['Marks']['TRADE PROFICIENCY (BTT) (40)'] = out_btt
+            results['Marks']['WPN & EQPT HANDLING (20)'] = out_wpn
+            results['Marks']['TOTAL (120)'] = round(total_120, 2)
+            results['Marks']['ROUND FIGURE(120)'] = round_figure
+
+            total_for_best = round_figure
+            evaluator_type = 'admin'
+
+        elif department == 'A':
+            for col in columns:
+                results[col] = {}
+                col_total = 0
+                for event in sub_events:
+                    val = request.POST.get(f"{col}_{event}")
+                    if val:
+                        try:
+                            val = int(val)
+                            results[col][event] = val
+                            col_total += val
+                        except ValueError:
+                            results[col][event] = None
+                    else:
+                        results[col][event] = None
+                results[col]['TOTAL POINT'] = col_total
+                
+                # Firing test conversion (out of 56, converted to 100)
+                if active_test == 'Firing':
+                    converted = round((col_total / 56) * 100) if col_total else 0
+                    results[col]['CONVERTED 100 MKS'] = converted
+                    if converted > total_for_best:
+                        total_for_best = converted
+                # DST max attempt calculation
+                elif active_test == 'DST':
+                    if col_total > total_for_best:
+                        total_for_best = col_total
+                # BFC max attempt calculation
+                elif active_test == 'BFC':
+                    if col_total > total_for_best:
+                        total_for_best = col_total
+                # PPT/BPET max attempt calculation (Event Wise Best total)
+                else:
+                    if 'Best' in col: 
+                        total_for_best = col_total
+            
+            # Fallback for simple single-column tests (e.g. MR_III, PDP, FC_All) without columns defined
+            if not columns:
+                results['Marks'] = {}
+                for event in sub_events:
+                    val = request.POST.get(event)
+                    if val:
+                        try:
+                            results['Marks'][event] = int(val)
+                        except ValueError:
+                            results['Marks'][event] = None
+                    else:
+                        results['Marks'][event] = None
+                
+                if active_test == 'MR_III':
+                    col_total = sum(filter(None, results['Marks'].values()))
+                    converted = round((col_total / 150) * 100) if col_total else 0
+                    results['Marks']['CONVERTED 100 MKS'] = converted
+                    total_for_best = converted
+                elif active_test == 'FC_All':
+                    prac_total = sum(filter(None, [results['Marks'].get('TGT IDEN'), results['Marks'].get('JUDGING DIST'), results['Marks'].get('OBSN TRG')]))
+                    results['Marks']['FC Practical Total'] = prac_total
+                    
+                    attempt1 = results['Marks'].get('FC Online 1st Attempt') or 0
+                    attempt2 = results['Marks'].get('FC Online 2nd Attempt') or 0
+                    best_online = max(attempt1, attempt2)
+                    results['Marks']['FC Online Best Attempt'] = best_online
+                    
+                    camp_trg = results['Marks'].get('CAMP TRG') or 0
+                    
+                    total_for_best = prac_total + best_online + camp_trg
+                else:
+                    total_for_best = sum(filter(None, results['Marks'].values()))
+                
+            evaluator_type = 'admin'
+        else:
+            evaluator_type = self.get_evaluator_type(request.user)
+            # Legacy NCO/JCO/Officer logic fallback
+            results = {}
+            for event in sub_events:
+                val = request.POST.get(event)
+                try:
+                    val_int = int(val) if val else 0
+                    # Max marks validation for DMV
+                    if active_test.startswith('DMV_'):
+                        max_limit = config.get('max_marks', {}).get(active_test, {}).get(event, 999)
+                        if val_int > max_limit:
+                            messages.warning(request, f"Value {val_int} for {event} exceeds max marks {max_limit}. Capped at limit.")
+                            val_int = max_limit
+                    results[event] = val_int
+                except ValueError:
+                    results[event] = 0
+            total_for_best = sum(filter(None, results.values()))
+            
+        remarks = request.POST.get('remarks', '')
+
+        # Get/Create Sheet
+        category = config['test_to_category'].get(active_test, 'assessment')
         sheet, created = EvaluationSheet.objects.get_or_create(
             agniveer=agniveer,
-            category=category,
-            test_type=test_type,
             department=department,
+            test_type=active_test,
             defaults={
+                'category': category,
                 'evaluation_date': date.today(),
                 'created_by': request.user,
-                'remarks': ''
             }
         )
 
         if sheet.is_locked:
-            messages.error(request, "This evaluation sheet is locked and cannot be modified.")
-            return redirect('departments:agniveer_detail', pk=agniveer.pk)
+            messages.error(request, "This sheet is locked.")
+            from django.urls import reverse
+            return redirect(reverse('departments:agniveer_detail', args=[pk]) + f"?test={active_test}")
 
-        marks_obj, created_mark = Marks.objects.update_or_create(
+        # Update JSONField
+        if department == 'A' or active_test == 'DMV_RESULT' or (department == 'C' and active_test == 'CS_RESULT') or (department == 'D' and active_test.startswith('CLK_')):
+            sheet.sub_event_results = results
+        else:
+            if not sheet.sub_event_results:
+                sheet.sub_event_results = {}
+            sheet.sub_event_results[evaluator_type] = results
+        sheet.save()
+
+        # Update/Create Marks
+        Marks.objects.update_or_create(
             evaluation_sheet=sheet,
-            evaluator_type=self.get_evaluator_type(request.user),
+            evaluator_type=evaluator_type,
             defaults={
                 'evaluator': request.user,
-                'marks': marks_value,
+                'marks': total_for_best,
                 'remarks': remarks,
             }
         )
 
-        action = 'created' if created_mark else 'updated'
-        log_action(request.user, 'EVALUATE', f'{request.user.get_role_display()} {action} marks for {agniveer.enrollment_number} - {test_type}: {marks_value}/20', request)
-        messages.success(request, f"Evaluation {action} successfully.")
-        return redirect('departments:agniveer_detail', pk=agniveer.pk)
+        from django.urls import reverse
+        messages.success(request, f"Evaluation for {active_test} saved successfully. Total: {total_for_best}")
+        return redirect(reverse('departments:agniveer_detail', args=[pk]) + f"?test={active_test}")
 
 
 class MarksEntryView(TrainerMixin, View):
@@ -413,7 +825,7 @@ class AgniveerReportCardView(AnyStaffMixin, View):
                     'on_field': dept_evals.filter(category='on_field'),
                     'trade': dept_evals.filter(category='trade'),
                     'total_marks': sum(e.get_total_marks() for e in dept_evals),
-                    'max_marks': get_dept_total_marks(dept),
+                    'max_marks': sum(e.get_max_marks() for e in dept_evals),
                     'total_locked': sum(e.get_total_marks() for e in dept_evals if e.is_locked),
                     'max_total': sum(e.get_max_marks() for e in dept_evals if e.is_locked),
                 }
@@ -429,32 +841,42 @@ class AgniveerReportCardView(AnyStaffMixin, View):
         for dept in departments_to_show:
             if dept in dept_evaluations:
                 data = dept_evaluations[dept]
-                chart_data['departments'].append(f'Dept {dept}')
+                chart_data['departments'].append({'A': 'Battalion', 'B': 'TTS', 'C': 'CS', 'D': 'Clerk'}.get(dept, dept))
                 on_field_total = sum(e.get_total_marks() for e in data['on_field'])
                 trade_total = sum(e.get_total_marks() for e in data['trade'])
                 chart_data['on_field_totals'].append(on_field_total)
                 chart_data['trade_totals'].append(trade_total)
                 chart_data['overall_totals'].append(on_field_total + trade_total)
             else:
-                chart_data['departments'].append(f'Dept {dept}')
+                chart_data['departments'].append({'A': 'Battalion', 'B': 'TTS', 'C': 'CS', 'D': 'Clerk'}.get(dept, dept))
                 chart_data['on_field_totals'].append(0)
                 chart_data['trade_totals'].append(0)
                 chart_data['overall_totals'].append(0)
 
-        grand_total = sum(e.get_total_marks() for e in evaluations)
-        
-        # For department view, use only department's max marks
+        department_result_row = None
+        tts_result_row = None
         if is_department_view:
-            max_total = get_dept_total_marks(user_dept)
+            department_result_row = build_department_result_row(agniveer, list(evaluations), user_dept)
+            grand_total = department_result_row['grand_total']
+            max_total = department_result_row.get('max_total') or 40
+            percentage = department_result_row['percentage']
+            overall_pass = department_result_row['is_pass']
+            if user_dept == 'B':
+                tts_result_row = department_result_row
+            elif user_dept == 'A':
+                battalion_result_row = department_result_row
         else:
-            max_total = get_overall_total_marks()
-            
-        percentage = round((grand_total / max_total * 100), 2) if max_total else 0
-        overall_pass = percentage >= 50
+            grand_total = sum(e.get_total_marks() for e in evaluations)
+            max_total = sum(e.get_max_marks() for e in evaluations)
+            percentage = round((grand_total / max_total * 100), 2) if max_total else 0
+            overall_pass = percentage >= 50
 
         return render(request, self.template_name, {
             'agniveer': agniveer,
             'dept_evaluations': dept_evaluations,
+            'department_result_row': department_result_row,
+            'tts_result_row': tts_result_row,
+            'battalion_result_row': battalion_result_row,
             'chart_data': chart_data,
             'grand_total': grand_total,
             'max_total': max_total,
@@ -462,4 +884,5 @@ class AgniveerReportCardView(AnyStaffMixin, View):
             'overall_pass': overall_pass,
             'is_department_view': is_department_view,
             'user_department': user_dept if is_department_view else None,
+            'user_department_name': {'A': 'Battalion', 'B': 'TTS', 'C': 'CS', 'D': 'Clerk'}.get(user_dept, user_dept) if is_department_view else None,
         })

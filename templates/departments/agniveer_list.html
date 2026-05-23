@@ -1,77 +1,298 @@
 {% extends 'base.html' %}
 {% block title %}Agniveers – Army Portal{% endblock %}
-{% block page_title %}Agniveers{% endblock %}
-{% block page_subtitle %}Registered Agniveer Personnel{% endblock %}
+{% block page_title %}{{ portal_title|default:"Agniveer Dashboard" }}{% endblock %}
+{% block page_subtitle %}{{ portal_subtitle|default:"Registered Agniveer Personnel" }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* Light mode compatibility */
+  [data-bs-theme="light"] .filter-select,
+  [data-bs-theme="light"] .search-input {
+    background: white !important;
+    border-color: #dee2e6 !important;
+    color: #1A2C3E !important;
+  }
+  
+  [data-bs-theme="light"] .filter-select option {
+    background: white;
+    color: #1A2C3E;
+  }
+  
+  [data-bs-theme="light"] .eval-filter-btn {
+    background: #f8f9fa;
+    border-color: #dee2e6;
+    color: #6c757d;
+  }
+  
+  [data-bs-theme="light"] .eval-filter-btn.active {
+    background: rgba(45, 106, 79, 0.1);
+    border-color: #2D6A4F;
+    color: #2D6A4F;
+  }
+  
+  /* Search Bar Styles */
+  .search-wrapper {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 20px;
+  }
+  
+  .filter-select {
+    background: rgba(15, 22, 41, 0.8);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 8px 12px;
+    color: var(--text-primary);
+    font-size: 12px;
+    outline: none;
+    width: 100%;
+    cursor: pointer;
+  }
+  
+  .filter-select:focus {
+    border-color: var(--army-olive);
+  }
+  
+  .search-input {
+    background: rgba(15, 22, 41, 0.8);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 8px 12px 8px 34px;
+    color: var(--text-primary);
+    font-size: 12px;
+    outline: none;
+    width: 100%;
+  }
+  
+  .search-input:focus {
+    border-color: var(--army-olive);
+  }
+  
+  .eval-filter-btn {
+    padding: 6px 14px;
+    font-size: 11px;
+    border-radius: 30px;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    background: rgba(82, 183, 136, 0.05);
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+  }
+  
+  .eval-filter-btn:hover {
+    background: rgba(82, 183, 136, 0.1);
+    border-color: var(--army-olive);
+  }
+  
+  .eval-filter-btn.active {
+    background: rgba(82, 183, 136, 0.15);
+    border-color: var(--army-olive);
+    color: var(--army-olive);
+  }
+  
+  .btn-gold {
+    background: rgba(212, 160, 23, 0.15);
+    border: 1px solid rgba(212, 160, 23, 0.3);
+    color: #D4A017;
+  }
+  
+  .btn-gold:hover {
+    background: rgba(212, 160, 23, 0.25);
+    border-color: #D4A017;
+    color: #D4A017;
+  }
+</style>
+{% endblock %}
 
 {% block content %}
-{% if is_g_head %}
-<div class="mb-4 d-flex justify-content-end">
-  <a href="{% url 'departments:agniveer_create' %}" class="btn btn-army d-flex align-items-center gap-2">
-    <i class="bi bi-person-plus-fill"></i> Register New Agniveer
+
+{% if is_registration_office %}
+<div class="mb-3 d-flex justify-content-end">
+  <a href="{% url 'departments:registration_dashboard' %}" class="btn btn-army d-flex align-items-center gap-2">
+    <i class="bi bi-person-plus-fill"></i> Registration Dashboard
   </a>
+</div>
+{% endif %}
+
+<!-- ─── Advanced Search Bar for Commander/G-Head ONLY ─── -->
+{% if is_commander or is_g_head %}
+<div class="search-wrapper">
+  <form method="get" action="{% url 'departments:agniveer_list' %}" class="row g-3 align-items-end">
+    <div class="col-md-4">
+      <label class="form-label small text-muted mb-1">Search</label>
+      <div class="position-relative">
+        <i class="bi bi-search position-absolute" style="left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 13px; z-index: 2;"></i>
+        <input type="text" name="search" class="search-input" placeholder="Army Number, Enrollment, Name..." value="{{ request.GET.search|default:'' }}">
+      </div>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label small text-muted mb-1">Trade</label>
+      <select name="trade" class="filter-select" onchange="this.form.submit()">
+        <option value="">All Trades</option>
+        <option value="DMV" {% if request.GET.trade == 'DMV' %}selected{% endif %}>DMV</option>
+        <option value="OPEM" {% if request.GET.trade == 'OPEM' %}selected{% endif %}>OPEM</option>
+        <option value="CLK" {% if request.GET.trade == 'CLK' %}selected{% endif %}>Clerk</option>
+        <option value="OTHER" {% if request.GET.trade == 'OTHER' %}selected{% endif %}>Other</option>
+      </select>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label small text-muted mb-1">Battalion Unit</label>
+      <select name="battalion" class="filter-select" onchange="this.form.submit()">
+        <option value="">All Units</option>
+        <option value="1TB" {% if request.GET.battalion == '1TB' %}selected{% endif %}>1TB</option>
+        <option value="2TB" {% if request.GET.battalion == '2TB' %}selected{% endif %}>2TB</option>
+        <option value="3TB" {% if request.GET.battalion == '3TB' %}selected{% endif %}>3TB</option>
+        <option value="4TB" {% if request.GET.battalion == '4TB' %}selected{% endif %}>4TB</option>
+        <option value="5TB" {% if request.GET.battalion == '5TB' %}selected{% endif %}>5TB</option>
+        <option value="STB" {% if request.GET.battalion == 'STB' %}selected{% endif %}>STB</option>
+      </select>
+    </div>
+    <div class="col-md-2">
+      <button type="submit" class="btn btn-army w-100">
+        <i class="bi bi-funnel"></i> Filter
+      </button>
+    </div>
+  </form>
+  {% if request.GET.search or request.GET.trade or request.GET.battalion %}
+  <div class="mt-3">
+    <a href="{% url 'departments:agniveer_list' %}" class="btn btn-sm btn-army-outline">
+      <i class="bi bi-x-circle"></i> Clear Filters
+    </a>
+  </div>
+  {% endif %}
+</div>
+
+<!-- ─── Trainer/Department Search Bar (Simpler) ─── -->
+{% elif is_trainer or is_department %}
+<div class="search-wrapper" style="padding: 12px 16px;">
+  <form method="get" class="row g-2 align-items-end">
+    {% if request.GET.eval_status %}
+      <input type="hidden" name="eval_status" value="{{ request.GET.eval_status }}">
+    {% endif %}
+    
+    {% if tts_trade == 'OTHER' %}
+    <div class="col-md-3">
+      <label class="form-label small text-muted mb-1">Trade</label>
+      <select name="trade" onchange="this.form.submit()" class="filter-select">
+        <option value="">All Technical Trades</option>
+        {% for code, name in technical_trades %}
+          <option value="{{ code }}" {% if trade_filter == code %}selected{% endif %}>{{ name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    {% endif %}
+
+    <div class="col-md-6">
+      <label class="form-label small text-muted mb-1">Search</label>
+      <div class="position-relative">
+        <i class="bi bi-search position-absolute" style="left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 13px;"></i>
+        <input type="text" name="search" value="{{ request.GET.search|default:'' }}" class="search-input" placeholder="Search by Army No. (Enrollment Number)…">
+      </div>
+    </div>
+    <div class="col-md-3">
+      <button type="submit" class="btn btn-army w-100">
+        <i class="bi bi-search"></i> Search
+      </button>
+    </div>
+  </form>
+  {% if request.GET.search or request.GET.trade %}
+  <div class="mt-2">
+    <a href="?{% if request.GET.eval_status %}eval_status={{ request.GET.eval_status }}{% endif %}" class="btn btn-sm btn-army-outline">
+      <i class="bi bi-x-circle"></i> Clear
+    </a>
+  </div>
+  {% endif %}
 </div>
 {% endif %}
 
 <!-- ─── Table ─── -->
 <div class="army-card">
   <div class="army-card-header">
-    <h6 class="army-card-title"><i class="bi bi-table text-army"></i> Agniveer Records
+    <h6 class="army-card-title">
+      <i class="bi bi-table"></i> Agniveer Records
       <span class="sidebar-badge">{{ paginator.count }}</span>
     </h6>
-    <div class="d-flex gap-2">
+    <div class="d-flex gap-2 align-items-center">
+
+      {% if is_department %}
+      <!-- Eval Status Filter -->
+      <div class="d-flex gap-1">
+        <a href="?{% if request.GET.search %}search={{ request.GET.search }}&{% endif %}{% if request.GET.trade %}trade={{ request.GET.trade }}&{% endif %}eval_status="
+          class="eval-filter-btn {% if not eval_filter %}active{% endif %}">
+          All
+        </a>
+        <a href="?{% if request.GET.search %}search={{ request.GET.search }}&{% endif %}{% if request.GET.trade %}trade={{ request.GET.trade }}&{% endif %}eval_status=evaluated"
+          class="eval-filter-btn {% if eval_filter == 'evaluated' %}active{% endif %}">
+          <i class="bi bi-check-circle-fill" style="font-size:10px;"></i> Evaluated
+        </a>
+        <a href="?{% if request.GET.search %}search={{ request.GET.search }}&{% endif %}{% if request.GET.trade %}trade={{ request.GET.trade }}&{% endif %}eval_status=not_evaluated"
+          class="eval-filter-btn {% if eval_filter == 'not_evaluated' %}active{% endif %}">
+          <i class="bi bi-clock-fill" style="font-size:10px;"></i> Pending
+        </a>
+      </div>
+
+      {% else %}
+      <!-- CSV export (non-trainers only) -->
       <a href="{% url 'reports:export_agniveers_csv' %}" class="btn btn-army-outline" style="padding:4px 12px;font-size:12px;">
         <i class="bi bi-download"></i> CSV
       </a>
+      {% endif %}
+
     </div>
   </div>
+
   <div style="overflow-x:auto;">
     <table class="army-table">
       <thead>
         <tr>
           <th>#</th>
           <th>Enrollment No</th>
+          <th>Agniveer No</th>
           <th>Name</th>
-          <th>Batch</th>
-          <th>Gender</th>
-          {% comment %} <th>Pass/Fail Status</th> {% endcomment %}
+          <th>BN DESP</th>
+          <th>Trade</th>
+          {% if is_trainer or is_department %}
+          <th style="text-align:center;">Eval Progress</th>
+          {% endif %}
           <th>Actions</th>
         </tr>
       </thead>
       <tbody>
         {% for a in agniveers %}
         <tr>
-          <td style="color:#8B9BB4;">{{ forloop.counter0|add:page_obj.start_index }}</td>
+          <td style="color: var(--text-muted);">{{ forloop.counter0|add:page_obj.start_index }}</td>
           <td>
-            <a href="{% url 'departments:agniveer_detail' a.pk %}" style="color:#52B788;font-weight:600;text-decoration:none;">
+            <a href="{% url 'departments:agniveer_detail' a.pk %}" style="color: var(--army-olive); font-weight: 600; text-decoration: none;">
               {{ a.enrollment_number }}
             </a>
           </td>
+          <td>{{ a.agniveer_no|default:"—" }}</td>
           <td>
-            <div style="font-weight:500;color:#E0E6F0;">{{ a.get_full_name }}</div>
-            {% if a.phone %}<div style="font-size:11px;color:#8B9BB4;">{{ a.phone }}</div>{% endif %}
+            <div style="font-weight:500; color: var(--text-primary);">{{ a.get_full_name }}</div>
+            {% if a.phone %}<div style="font-size:11px; color: var(--text-muted);">{{ a.phone }}</div>{% endif %}
           </td>
-          <td>{{ a.batch }}</td>
-          <td>{{ a.get_gender_display }}</td>
-          {% comment %} <td>
-            {% with pass_status=a.get_pass_status %}
-            {% if pass_status == 'Pass' %}
-              <span class="badge-pass px-2 py-1 rounded" style="font-size:11px;">✓ PASS</span>
-            {% elif pass_status == 'Fail' %}
-              <span class="badge-fail px-2 py-1 rounded" style="font-size:11px;">✗ FAIL</span>
-            {% else %}
-              <span class="badge-pending px-2 py-1 rounded" style="font-size:11px;">PENDING</span>
-            {% endif %}
-            {% endwith %}
-          </td> {% endcomment %}
+          <td>{{ a.bn_desp|default:"—" }}</td>
+          <td>{{ a.trade|default:"—" }}</td>
+          {% if is_trainer or is_department %}
+          <td style="text-align:center;">
+            <span class="badge {% if a.eval_count == 0 %}bg-secondary{% elif a.is_fully_evaluated %}bg-success{% else %}bg-warning text-dark{% endif %}" style="font-size: 11px;">
+              {{ a.eval_count|default:0 }}/{{ a.eval_total|default:0 }} Evaluated
+            </span>
+          </td>
+          {% endif %}
           <td>
             <div class="d-flex gap-1">
               <a href="{% url 'departments:agniveer_detail' a.pk %}" class="btn btn-army-outline" style="padding:4px 8px;font-size:12px;" title="View">
                 <i class="bi bi-eye"></i>
               </a>
-              {% if is_commander or is_g_head  %}
+              {% if is_commander or is_g_head %}
               <a href="{% url 'departments:agniveer_edit' a.pk %}" class="btn btn-army-outline" style="padding:4px 8px;font-size:12px;" title="Edit">
                 <i class="bi bi-pencil"></i>
               </a>
+              {% endif %}
+              {% if is_commander or is_g_head or is_department %}
               <a href="{% url 'evaluation:report_card' a.pk %}" class="btn btn-gold" style="padding:4px 8px;font-size:12px;" title="Report Card">
                 <i class="bi bi-file-earmark-text"></i>
               </a>
@@ -81,10 +302,10 @@
         </tr>
         {% empty %}
         <tr>
-          <td colspan="9">
-            <div class="empty-state">
-              <i class="bi bi-people"></i>
-              <p>No Agniveers found. {% if is_g_head %}<a href="{% url 'departments:agniveer_create' %}" style="color:#52B788;">Register one now →</a>{% endif %}</p>
+          <td colspan="{% if is_trainer or is_department %}8{% else %}7{% endif %}">
+            <div class="empty-state text-center py-5">
+              <i class="bi bi-people" style="font-size: 40px; opacity: 0.5;"></i>
+              <p class="mt-2" style="color: var(--text-muted);">No Agniveers found. {% if is_registration_office %}<a href="{% url 'departments:registration_dashboard' %}" style="color: var(--army-olive);">Go to Registration Dashboard →</a>{% endif %}</p>
             </div>
           </td>
         </tr>
@@ -95,31 +316,31 @@
 
   <!-- Pagination -->
   {% if is_paginated %}
-  <div style="padding:16px 20px;border-top:1px solid rgba(27,67,50,0.3);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
-    <div style="font-size:12px;color:#8B9BB4;">
+  <div style="padding:16px 20px;border-top:1px solid var(--border-color);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+    <div style="font-size:12px;color: var(--text-muted);">
       Showing {{ page_obj.start_index }}–{{ page_obj.end_index }} of {{ paginator.count }} records
     </div>
     <nav>
       <ul class="pagination pagination-sm mb-0">
         {% if page_obj.has_previous %}
         <li class="page-item">
-          <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}" style="background:rgba(15,22,41,0.8);border-color:rgba(27,67,50,0.4);color:#8B9BB4;">‹</a>
+          <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" style="background:var(--card-bg);border-color:var(--border-color);color: var(--text-muted);">‹</a>
         </li>
         {% endif %}
         {% for num in page_obj.paginator.page_range %}
           {% if page_obj.number == num %}
           <li class="page-item active">
-            <span class="page-link" style="background:#1B4332;border-color:#1B4332;">{{ num }}</span>
+            <span class="page-link" style="background:var(--army-green);border-color:var(--army-green);color:white;">{{ num }}</span>
           </li>
           {% elif num > page_obj.number|add:-3 and num < page_obj.number|add:3 %}
           <li class="page-item">
-            <a class="page-link" href="?page={{ num }}" style="background:rgba(15,22,41,0.8);border-color:rgba(27,67,50,0.4);color:#8B9BB4;">{{ num }}</a>
+            <a class="page-link" href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" style="background:var(--card-bg);border-color:var(--border-color);color: var(--text-muted);">{{ num }}</a>
           </li>
           {% endif %}
         {% endfor %}
         {% if page_obj.has_next %}
         <li class="page-item">
-          <a class="page-link" href="?page={{ page_obj.next_page_number }}" style="background:rgba(15,22,41,0.8);border-color:rgba(27,67,50,0.4);color:#8B9BB4;">›</a>
+          <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" style="background:var(--card-bg);border-color:var(--border-color);color: var(--text-muted);">›</a>
         </li>
         {% endif %}
       </ul>
@@ -128,4 +349,5 @@
   {% endif %}
 
 </div>
+
 {% endblock %}

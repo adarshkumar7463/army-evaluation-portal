@@ -1,17 +1,20 @@
 /* Light/Dark Theme Toggle Styles */
 
 :root[data-theme="light"] {
-  --dark-bg: #f5f5f5;
-  --card-bg: #ffffff;
-  --sidebar-bg: #fafafa;
-  --border-color: rgba(27, 67, 50, 0.15);
-  --text-muted: #666666;
-  --text-primary: #1a1a1a;
-  --text-secondary: #555555;
-  --sidebar-text: #333333;
-  --input-bg: #ffffff;
-  --input-border: #d0d0d0;
-  --navbar-text: #1a1a1a;
+  --dark-bg: #f3f4f6 !important;
+  --card-bg: #ffffff !important;
+  --sidebar-bg: #ffffff !important;
+  --border-color: #e5e7eb !important;
+  --text-muted: #6b7280 !important;
+  --text-primary: #111827 !important;
+  --text-secondary: #374151 !important;
+  --sidebar-text: #1f2937 !important;
+  --input-bg: #ffffff !important;
+  --input-border: #d1d5db !important;
+  --navbar-text: #111827 !important;
+  --army-green-light: #2D6A4F !important;
+  --army-green-mid: #40916C !important;
+  --army-olive: #1B4332 !important;
 }
 
 :root[data-theme="dark"] {
@@ -26,6 +29,9 @@
   --input-bg: #0F1629;
   --input-border: rgba(82, 183, 136, 0.3);
   --navbar-text: #E0E6F0;
+  --army-green-light: #2D6A4F;
+  --army-green-mid: #40916C;
+  --army-olive: #52B788;
 }
 
 /* Theme Toggle Button */
@@ -327,3 +333,155 @@
     gap: 6px;
   }
 }
+
+/* ──────────────────────────────────────────────────────────
+   UNIVERSAL LIGHT MODE Professional UI/UX Overrides
+   ────────────────────────────────────────────────────────── */
+:root[data-theme="light"] [style*="color:#E0E6F0"],
+:root[data-theme="light"] [style*="color: #E0E6F0"],
+:root[data-theme="light"] [style*="color: rgb(224, 230, 240)"] {
+  color: var(--text-primary) !important;
+}
+
+:root[data-theme="light"] [style*="color:#8B9BB4"],
+:root[data-theme="light"] [style*="color: #8B9BB4"],
+:root[data-theme="light"] [style*="color: rgb(139, 155, 180)"] {
+  color: var(--text-muted) !important;
+}
+
+:root[data-theme="light"] [style*="background:rgba(15, 20, 25"],
+:root[data-theme="light"] [style*="background: rgba(15, 20, 25"],
+:root[data-theme="light"] [style*="background:rgba(15,20,25"],
+:root[data-theme="light"] [style*="background: rgba(15,20,25"] {
+  background: var(--card-bg) !important;
+  border-color: var(--border-color) !important;
+}
+
+:root[data-theme="light"] [style*="background:rgba(27, 67, 50"],
+:root[data-theme="light"] [style*="background: rgba(27, 67, 50"],
+:root[data-theme="light"] [style*="background:rgba(27,67,50"],
+:root[data-theme="light"] [style*="background: rgba(27,67,50"] {
+  background: rgba(82, 183, 136, 0.08) !important;
+  border-color: var(--border-color) !important;
+}
+
+:root[data-theme="light"] [style*="border: 1px solid rgba(82, 183, 136"],
+:root[data-theme="light"] [style*="border:1px solid rgba(82,183,136"] {
+  border-color: var(--border-color) !important;
+}
+
+:root[data-theme="light"] .eval-tab-btn {
+  background: #f3f4f6 !important;
+  color: #6b7280 !important;
+  border-color: var(--border-color) !important;
+}
+
+:root[data-theme="light"] .eval-tab-btn.active {
+  background: var(--army-olive) !important;
+  color: #ffffff !important;
+}
+
+/* ──────────────────────────────────────────────────────────
+   COMPACT & CLEAN SINGLE SCREEN EVALUATION DASHBOARD STYLES
+   ────────────────────────────────────────────────────────── */
+.evaluation-workspace {
+  font-size: 11px !important;
+  padding-bottom: 80px !important;
+}
+
+.evaluation-workspace .army-table th {
+  padding: 6px 8px !important;
+  font-size: 10px !important;
+}
+
+.evaluation-workspace .army-table td {
+  padding: 6px 8px !important;
+  font-size: 11px !important;
+}
+
+.evaluation-workspace .marks-input {
+  height: 26px !important;
+  font-size: 11px !important;
+  padding: 2px 4px !important;
+}
+
+.evaluation-workspace .army-card-header {
+  padding: 8px 16px !important;
+}
+
+.evaluation-workspace .army-card-body {
+  padding: 12px 16px !important;
+}
+
+.evaluation-workspace h5, 
+.evaluation-workspace h6 {
+  font-size: 13px !important;
+  margin-bottom: 12px !important;
+}
+
+.eval-tabs {
+  margin-bottom: 12px !important;
+}
+
+.eval-tab-btn {
+  padding: 6px 12px !important;
+  font-size: 11px !important;
+}
+
+/* ──────────────────────────────────────────────────────────
+   PREMIUM STICKY BOTTOM SCORE SUMMARY & ACTIONS
+   ────────────────────────────────────────────────────────── */
+.evaluation-sticky-footer {
+  position: fixed;
+  bottom: 0;
+  left: var(--sidebar-width);
+  width: calc(100% - var(--sidebar-width));
+  background: var(--card-bg) !important;
+  border-top: 2px solid var(--army-olive) !important;
+  padding: 8px 24px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  z-index: 1000 !important;
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.15) !important;
+  margin-top: 0 !important;
+}
+
+@media (max-width: 991px) {
+  .evaluation-sticky-footer {
+    left: 0;
+    width: 100%;
+  }
+}
+
+.compact-score-card {
+  background: rgba(15, 22, 41, 0.4);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 4px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 90px;
+}
+
+:root[data-theme="light"] .compact-score-card {
+  background: #f9fafb !important;
+}
+
+.compact-score-card .card-label {
+  font-size: 8px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
+}
+
+.compact-score-card .card-val {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+}
+

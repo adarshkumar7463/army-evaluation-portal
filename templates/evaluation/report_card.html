@@ -153,11 +153,11 @@
     <!-- Department View Indicator -->
     {% if is_department_view %}
     <div style="background:rgba(212,160,23,0.15);border-left:4px solid #D4A017;padding:12px 16px;margin-bottom:16px;border-radius:6px;">
-      <div style="color:#D4A017;font-size:13px;font-weight:600;">
-        <i class="bi bi-info-circle-fill"></i> Department {{ user_department }} Report
+      <div style="color:#D4A017;font-size:11px;font-weight:600;">
+        <i class="bi bi-info-circle-fill"></i> {{ user_department_name }} Report
       </div>
-      <div style="color:#8B9BB4;font-size:12px;margin-top:4px;">
-        Showing marks only from Department {{ user_department }} evaluations
+      <div style="color:#8B9BB4;font-size:10px;margin-top:4px;">
+        Showing marks only from {{ user_department_name }} evaluations
       </div>
     </div>
     {% endif %}
@@ -166,65 +166,56 @@
     <div class="army-card" id="reportCard">
       <!-- Header -->
       <div
-        style="background:linear-gradient(135deg,#1B4332,#2D6A4F);padding:28px 32px;text-align:center;position:relative;">
-        <div style="font-size:32px;margin-bottom:8px;">⚔️</div>
-        <div style="font-family:Rajdhani,sans-serif;font-size:22px;font-weight:700;color:white;letter-spacing:2px;">
+        style="background:linear-gradient(135deg,#1B4332,#2D6A4F);padding:20px 24px;text-align:center;position:relative;">
+        <div style="font-size:24px;margin-bottom:8px;">⚔️</div>
+        <div style="font-family:Rajdhani,sans-serif;font-size:14px;font-weight:700;color:white;letter-spacing:1.2px;">
           ARMY EVALUATION PORTAL
         </div>
         <div
-          style="font-size:12px;color:rgba(255,255,255,0.7);letter-spacing:3px;text-transform:uppercase;margin-top:4px;">
+          style="font-size:10px;color:rgba(255,255,255,0.7);letter-spacing:2px;text-transform:uppercase;margin-top:4px;">
           Agniveer Profile & Performance Report
         </div>
         <div style="position:absolute;top:20px;right:20px;text-align:right;">
           {% if overall_pass %}
-          <div style="background:rgba(76,175,80,0.2);border:2px solid #4CAF50;border-radius:10px;padding:8px 16px;">
-            <div style="font-family:Rajdhani,sans-serif;font-size:20px;font-weight:700;color:#4CAF50;">✓ PASS</div>
-            <div style="font-size:11px;color:rgba(255,255,255,0.6);">{{ percentage }}%</div>
+          <div style="background:rgba(76,175,80,0.2);border:2px solid #4CAF50;border-radius:10px;padding:6px 12px;">
+            <div style="font-family:Rajdhani,sans-serif;font-size:12px;font-weight:700;color:#4CAF50;">✓ PASS</div>
+            <div style="font-size:10px;color:rgba(255,255,255,0.6);">{{ percentage }}%</div>
           </div>
           {% else %}
-          <div style="background:rgba(239,83,80,0.2);border:2px solid #EF5350;border-radius:10px;padding:8px 16px;">
-            <div style="font-family:Rajdhani,sans-serif;font-size:20px;font-weight:700;color:#EF5350;">✗ FAIL</div>
-            <div style="font-size:11px;color:rgba(255,255,255,0.6);">{{ percentage }}%</div>
+          <div style="background:rgba(239,83,80,0.2);border:2px solid #EF5350;border-radius:10px;padding:6px 12px;">
+            <div style="font-family:Rajdhani,sans-serif;font-size:12px;font-weight:700;color:#EF5350;">✗ FAIL</div>
+            <div style="font-size:10px;color:rgba(255,255,255,0.6);">{{ percentage }}%</div>
           </div>
           {% endif %}
         </div>
       </div>
 
-      <!-- Agniveer Info (SCREEN VIEW) -->
-      <div class="no-print" style="padding:24px 32px;border-bottom:1px solid rgba(27,67,50,0.3);">
+      <!-- Fixed Agniveer Info -->
+      <div style="padding:16px 24px;border-bottom:1px solid rgba(27,67,50,0.3);">
         <div class="row g-3">
-          <div class="col-md-2 text-center">
-            {% if agniveer.photo %}
-            <img src="{{ agniveer.photo.url }}" class="rounded"
-              style="width:80px;height:80px;object-fit:cover;border:2px solid #1B4332;">
-            {% else %}
-            <div
-              style="width:80px;height:80px;border-radius:10px;background:linear-gradient(135deg,#1B4332,#40916C);display:flex;align-items:center;justify-content:center;font-family:Rajdhani,sans-serif;font-size:28px;font-weight:700;color:white;margin:0 auto;">
-              {{ agniveer.first_name.0|upper }}{{ agniveer.last_name.0|upper }}
-            </div>
-            {% endif %}
+          <div class="col-md-2">
+            <div style="font-size:11px;color:#8B9BB4;text-transform:uppercase;letter-spacing:0.5px;">Name</div>
+            <div style="font-family:Rajdhani,sans-serif;font-size:13px;font-weight:700;color:#E0E6F0;">{{ agniveer.get_full_name }}</div>
           </div>
-          <div class="col-md-10">
-            <div class="row g-3">
-              <div class="col-md-3">
-                <div style="font-size:11px;color:#8B9BB4;text-transform:uppercase;letter-spacing:0.5px;">Name</div>
-                <div style="font-family:Rajdhani,sans-serif;font-size:16px;font-weight:700;color:#E0E6F0;">{{ agniveer.get_full_name }}</div>
-              </div>
-              <div class="col-md-3">
-                <div style="font-size:11px;color:#8B9BB4;text-transform:uppercase;letter-spacing:0.5px;">Enrollment No</div>
-                <div style="font-family:Rajdhani,sans-serif;font-size:16px;font-weight:700;color:#52B788;">{{ agniveer.enrollment_number }}</div>
-              </div>
-              <div class="col-md-3">
-                <div style="font-size:11px;color:#8B9BB4;text-transform:uppercase;letter-spacing:0.5px;">Batch</div>
-                <div style="font-size:14px;font-weight:600;color:#E0E6F0;">{{ agniveer.batch }}</div>
-              </div>
-              <div class="col-md-3">
-                <div style="font-size:11px;color:#8B9BB4;text-transform:uppercase;letter-spacing:0.5px;">Joining Date
-                </div>
-                <div style="font-size:14px;font-weight:600;color:#E0E6F0;">{{ agniveer.joining_date|date:"d M Y" }}
-                </div>
-              </div>
-            </div>
+          <div class="col-md-2">
+            <div style="font-size:11px;color:#8B9BB4;text-transform:uppercase;letter-spacing:0.5px;">Rank</div>
+            <div style="font-family:Rajdhani,sans-serif;font-size:13px;font-weight:700;color:#E0E6F0;">{{ department_result_row.rank|default:"—" }}</div>
+          </div>
+          <div class="col-md-2">
+            <div style="font-size:11px;color:#8B9BB4;text-transform:uppercase;letter-spacing:0.5px;">Army No</div>
+            <div style="font-family:Rajdhani,sans-serif;font-size:13px;font-weight:700;color:#52B788;">{% if department_result_row %}{{ department_result_row.army_no }}{% else %}{{ agniveer.agniveer_no|default:agniveer.enrollment_number }}{% endif %}</div>
+          </div>
+          <div class="col-md-2">
+            <div style="font-size:11px;color:#8B9BB4;text-transform:uppercase;letter-spacing:0.5px;">Trade</div>
+            <div style="font-family:Rajdhani,sans-serif;font-size:13px;font-weight:700;color:#E0E6F0;">{{ agniveer.trade|default:"—" }}</div>
+          </div>
+          <div class="col-md-2">
+            <div style="font-size:11px;color:#8B9BB4;text-transform:uppercase;letter-spacing:0.5px;">Unit</div>
+            <div style="font-family:Rajdhani,sans-serif;font-size:13px;font-weight:700;color:#E0E6F0;">{{ agniveer.bn_desp|default:"—" }}</div>
+          </div>
+          <div class="col-md-2">
+            <div style="font-size:11px;color:#8B9BB4;text-transform:uppercase;letter-spacing:0.5px;">Enrollment No</div>
+            <div style="font-family:Rajdhani,sans-serif;font-size:13px;font-weight:700;color:#52B788;">{{ agniveer.enrollment_number }}</div>
           </div>
         </div>
       </div>
@@ -294,7 +285,7 @@
 
           <!-- Grading Scale Column -->
           <div class="col-5">
-            <div style="font-family: 'Rajdhani', sans-serif; font-size: 13px; font-weight: 700; color: #1B4332; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; text-align: center; lineheight: 4.2;">
+            <div style="font-family: 'Rajdhani', sans-serif; font-size: 13px; font-weight: 700; color: #1B4332; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; text-align: center;">
               Official Grading Scale
             </div>
             <table style="width: 100%; border-collapse: collapse; font-size: 10px; text-align: center;">
@@ -304,7 +295,7 @@
                   <th style="padding: 4px; border: 0.5pt solid white;">GRADE</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody >
                 <tr>
                   <td style="padding: 4px; border: 0.5pt solid #1B4332;">90% - 100%</td>
                   <td style="padding: 4px; border: 0.5pt solid #1B4332; font-weight: 700;">EXEMPLARY (A)</td>
@@ -326,14 +317,65 @@
           </div>
         </div>
       </div>
-      {% for dept, data in dept_evaluations.items %}
-      <div class="evaluation-section" style="padding:24px 32px;">
+      {% if tts_result_row %}
+      <div class="evaluation-section" style="padding:16px 24px;">
         <div
-          style="font-family:Rajdhani,sans-serif;font-size:16px;font-weight:700;color:#D4A017;margin-bottom:16px;display:flex;align-items:center;justify-content:between;gap:8px;">
+          style="font-family:Rajdhani,sans-serif;font-size:14px;font-weight:700;color:#D4A017;margin-bottom:16px;display:flex;align-items:center;gap:8px;">
+          <i class="bi bi-table"></i> TTS FINAL RESULT
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="army-table">
+            <thead>
+              <tr>
+                <th>S. No.</th>
+                <th>Army No</th>
+                <th>Rank</th>
+                <th>Trade</th>
+                <th>Name</th>
+                <th>Unit</th>
+                <th style="text-align:center;">Online Test-100</th>
+                <th style="text-align:center;">Convert in 20 Mks</th>
+                <th style="text-align:center;">JOB-40</th>
+                <th style="text-align:center;">Convert in 10 Mks</th>
+                <th style="text-align:center;">Practical-60</th>
+                <th style="text-align:center;">Convert in 10 Mks</th>
+                <th style="text-align:center;">Grand Total-40</th>
+                <th style="text-align:center;">%</th>
+                <th style="text-align:center;">Grading</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>1</td>
+                <td>{{ tts_result_row.army_no }}</td>
+                <td>{{ tts_result_row.rank|default:"—" }}</td>
+                <td>{{ tts_result_row.trade }}</td>
+                <td style="font-weight:600;color:#E0E6F0;">{{ tts_result_row.name }}</td>
+                <td>{{ tts_result_row.unit|default:"—" }}</td>
+                <td class="marks-cell">{{ tts_result_row.online|floatformat:2 }}</td>
+                <td class="marks-cell">{{ tts_result_row.online_conv|floatformat:2 }}</td>
+                <td class="marks-cell">{{ tts_result_row.job|floatformat:2 }}</td>
+                <td class="marks-cell">{{ tts_result_row.job_conv|floatformat:2 }}</td>
+                <td class="marks-cell">{{ tts_result_row.practical|floatformat:2 }}</td>
+                <td class="marks-cell">{{ tts_result_row.practical_conv|floatformat:2 }}</td>
+                <td class="marks-cell" style="font-size:16px;font-weight:700;color:#52B788;">{{ tts_result_row.grand_total|floatformat:2 }}</td>
+                <td style="text-align:center;font-weight:600;">{{ tts_result_row.percentage|floatformat:2 }}</td>
+                <td style="text-align:center;font-weight:700;">{{ tts_result_row.grading }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {% endif %}
+      {% if not tts_result_row %}
+      {% for dept, data in dept_evaluations.items %}
+      <div class="evaluation-section" style="padding:16px 24px;">
+        <div
+          style="font-family:Rajdhani,sans-serif;font-size:14px;font-weight:700;color:#D4A017;margin-bottom:16px;display:flex;align-items:center;justify-content:between;gap:8px;">
           <div style="display:flex;align-items:center;gap:8px;">
             <i class="bi bi-building"></i> DEPARTMENT {{ dept }} EVALUATIONS
           </div>
-          <div style="font-size:14px;color:#E0E6F0;background:rgba(212,160,23,0.1);padding:4px 12px;border-radius:20px;border:1px solid rgba(212,160,23,0.3);">
+          <div style="font-size:12px;color:#E0E6F0;background:rgba(212,160,23,0.1);padding:4px 12px;border-radius:20px;border:1px solid rgba(212,160,23,0.3);">
             Score: <span style="color:#D4A017;">{{ data.total_marks }}</span> / {{ data.max_marks }}
           </div>
         </div>
@@ -342,7 +384,7 @@
         {% if data.on_field %}
         <div style="margin-bottom:24px;">
           <div
-            style="font-family:Rajdhani,sans-serif;font-size:13px;font-weight:600;color:#52B788;margin-bottom:10px;text-transform:uppercase;letter-spacing:0.5px;">
+            style="font-family:Rajdhani,sans-serif;font-size:11px;font-weight:600;color:#52B788;margin-bottom:10px;text-transform:uppercase;letter-spacing:0.5px;">
             <i class="bi bi-shield-fill"></i> On Field Training
           </div>
           <div style="overflow-x:auto;">
@@ -391,7 +433,7 @@
         {% if data.trade %}
         <div style="margin-bottom:24px;">
           <div
-            style="font-family:Rajdhani,sans-serif;font-size:13px;font-weight:600;color:#4FC3F7;margin-bottom:10px;text-transform:uppercase;letter-spacing:0.5px;">
+            style="font-family:Rajdhani,sans-serif;font-size:11px;font-weight:600;color:#4FC3F7;margin-bottom:10px;text-transform:uppercase;letter-spacing:0.5px;">
             <i class="bi bi-tools"></i> Basic Trade Training
           </div>
           <div style="overflow-x:auto;">
@@ -414,7 +456,7 @@
                   <td class="marks-cell">{{ ev.get_nco_marks }}</td>
                   <td class="marks-cell">{{ ev.get_jco_marks }}</td>
                   <td class="marks-cell">{{ ev.get_officer_marks }}</td>
-                  <td class="marks-cell" style="font-size:18px;font-weight:700;color:#E0E6F0;">{{ ev.get_total_marks }}
+                  <td class="marks-cell" style="font-size:14px;font-weight:700;color:#E0E6F0;">{{ ev.get_total_marks }}
                   </td>
                   <td style="text-align:center;font-weight:600;">{{ ev.get_percentage }}%</td>
                   <td style="text-align:center;">
@@ -437,11 +479,12 @@
         {% endif %}
       </div>
       {% endfor %}
+      {% endif %}
 
       <!-- Performance Summary Section -->
-      <div style="padding:24px 32px;border-top:2px solid rgba(27,67,50,0.3);">
+      <div style="padding:20px 24px;border-top:2px solid rgba(27,67,50,0.3);">
         <div
-          style="font-family:Rajdhani,sans-serif;font-size:16px;font-weight:700;color:#D4A017;margin-bottom:20px;display:flex;align-items:center;gap:8px;">
+          style="font-family:Rajdhani,sans-serif;font-size:14px;font-weight:700;color:#D4A017;margin-bottom:20px;display:flex;align-items:center;gap:8px;">
           <i class="bi bi-pie-chart-fill"></i> OVERALL PERFORMANCE
         </div>
 
@@ -450,13 +493,13 @@
           <div class="col-md-6">
             <div
               style="background:linear-gradient(135deg,rgba(27,67,50,0.2),rgba(27,67,50,0.1));padding:24px;border-radius:12px;text-align:center;">
-              <div style="font-size:12px;color:#8B9BB4;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;">
+              <div style="font-size:10px;color:#8B9BB4;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;">
                 Total Score</div>
               <div
-                style="font-family:Rajdhani,sans-serif;font-size:48px;font-weight:700;color:#52B788;margin-bottom:4px;">
+                style="font-family:Rajdhani,sans-serif;font-size:36px;font-weight:700;color:#52B788;margin-bottom:4px;">
                 {{ grand_total }}
               </div>
-              <div style="font-size:16px;color:#8B9BB4;margin-bottom:12px;">
+              <div style="font-size:14px;color:#8B9BB4;margin-bottom:12px;">
                 out of <span style="font-weight:700;color:#E0E6F0;">{{ max_total }}</span>
               </div>
               <div style="font-size:24px;font-weight:700;color:#4FC3F7;">{{ percentage }}%</div>
@@ -467,7 +510,7 @@
           <div class="col-md-6">
             <div
               style="background:rgba(15,22,41,0.5);padding:20px;border-radius:12px;display:flex;align-items:center;justify-content:center;">
-              <canvas id="performanceChart" style="max-width:200px;max-height:200px;"></canvas>
+              <canvas id="performanceChart" style="max-width:160px;max-height:160px;"></canvas>
             </div>
           </div>
         </div>
@@ -478,19 +521,19 @@
           <div
             style="background:rgba(76,175,80,0.1);border:2px solid #4CAF50;border-radius:12px;padding:20px;display:inline-block;">
             <div
-              style="font-family:Rajdhani,sans-serif;font-size:32px;font-weight:700;color:#4CAF50;margin-bottom:4px;">
+              style="font-family:Rajdhani,sans-serif;font-size:24px;font-weight:700;color:#4CAF50;margin-bottom:4px;">
               ✓ PASSED
             </div>
-            <div style="font-size:13px;color:#8B9BB4;">Overall evaluation result</div>
+            <div style="font-size:11px;color:#8B9BB4;">Overall evaluation result</div>
           </div>
           {% else %}
           <div
             style="background:rgba(239,83,80,0.1);border:2px solid #EF5350;border-radius:12px;padding:20px;display:inline-block;">
             <div
-              style="font-family:Rajdhani,sans-serif;font-size:32px;font-weight:700;color:#EF5350;margin-bottom:4px;">
+              style="font-family:Rajdhani,sans-serif;font-size:24px;font-weight:700;color:#EF5350;margin-bottom:4px;">
               ✗ FAILED
             </div>
-            <div style="font-size:13px;color:#8B9BB4;">Overall evaluation result</div>
+            <div style="font-size:11px;color:#8B9BB4;">Overall evaluation result</div>
           </div>
           {% endif %}
         </div>

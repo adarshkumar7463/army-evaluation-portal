@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% comment %} {% comment %} {% comment %} {% extends 'base.html' %}
 {% block title %}{{ title }} – Army Portal{% endblock %}
 {% block page_title %}{{ title }}{% endblock %}
 {% block page_subtitle %}Agniveer Registration System{% endblock %}
@@ -68,7 +68,7 @@
               <label class="form-label">Department *</label>
               {{ form.department }}
             </div> {% endcomment %}
-            <div class="col-md-3">
+            {% comment %} <div class="col-md-3">
               <label class="form-label">Batch *</label>
               {{ form.batch }}
             </div>
@@ -95,4 +95,4 @@
     </div>
   </div>
 </div>
-{% endblock %}
+{% endblock %} {% endcomment %} {% endcomment %} {% endcomment %} {% endcomment %}

@@ -15,6 +15,10 @@ from accounts.models import CustomUser
 from departments.models import Agniveer
 from evaluation.models import EvaluationSheet, Marks
 from logs.models import ActivityLog
+from evaluation.result_helpers import build_department_result_row
+
+
+DEPARTMENT_NAMES = {'A': 'Battalion', 'B': 'TTS', 'C': 'CS', 'D': 'Clerk'}
 
 
 class DashboardView(LoginRequiredMixin, View):
@@ -31,6 +35,8 @@ class DashboardView(LoginRequiredMixin, View):
             return DepartmentDashboard().get(request)
         elif user.is_trainer:
             return TrainerDashboard().get(request)
+        elif user.is_registration_office:
+            return redirect('departments:registration_dashboard')
         return render(request, 'core/dashboard.html', {})
 
 
@@ -56,16 +62,18 @@ class CommanderDashboard(LoginRequiredMixin, View):
         all_agniveers_qs = Agniveer.objects.prefetch_related('evaluations__marks')
         for agniveer in all_agniveers_qs:
             total_marks = 0
+            max_marks = 0
             valid_sheets = [s for s in agniveer.evaluations.all() if s.id in sheets_with_marks_ids or s.is_locked]
             for sheet in valid_sheets:
                 total_marks += sheet.get_total_marks()
+                max_marks += sheet.get_max_marks()
             
-            if overall_max_marks > 0:
-                percentage = (total_marks / overall_max_marks) * 100
+            if max_marks > 0:
+                percentage = (total_marks / max_marks) * 100
                 info = {
                     'name': agniveer.get_full_name(),
                     'enrollment': agniveer.enrollment_number,
-                    'score': f"{total_marks}/{overall_max_marks}",
+                    'score': f"{total_marks}/{max_marks}",
                     'percentage': round(percentage, 1),
                     'id': agniveer.pk
                 }
@@ -93,7 +101,7 @@ class CommanderDashboard(LoginRequiredMixin, View):
                 'total': dept_sheets.count(),
                 'pass_rate': (dept_pass / max(dept_sheets.count(), 1)) * 100
             }
-            dept_charts['labels'].append(f'Dept {dept}')
+            dept_charts['labels'].append(DEPARTMENT_NAMES.get(dept, dept))
             dept_charts['passed'].append(dept_pass)
             dept_charts['failed'].append(dept_fail)
 
@@ -229,16 +237,18 @@ class GHeadDashboard(LoginRequiredMixin, View):
         all_agniveers_qs = Agniveer.objects.prefetch_related('evaluations__marks')
         for agniveer in all_agniveers_qs:
             total_marks = 0
+            max_marks = 0
             valid_sheets = [s for s in agniveer.evaluations.all() if s.id in sheets_with_marks_ids or s.is_locked]
             for sheet in valid_sheets:
                 total_marks += sheet.get_total_marks()
+                max_marks += sheet.get_max_marks()
             
-            if overall_max_marks > 0:
-                percentage = (total_marks / overall_max_marks) * 100
+            if max_marks > 0:
+                percentage = (total_marks / max_marks) * 100
                 info = {
                     'name': agniveer.get_full_name(),
                     'enrollment': agniveer.enrollment_number,
-                    'score': f"{total_marks}/{overall_max_marks}",
+                    'score': f"{total_marks}/{max_marks}",
                     'percentage': round(percentage, 1),
                     'id': agniveer.pk
                 }
@@ -269,7 +279,7 @@ class GHeadDashboard(LoginRequiredMixin, View):
                 'pass_rate': (dept_pass / max(dept_sheets.count(), 1)) * 100,
                 'agniveers': total_agniveers
             }
-            dept_labels.append(f'Dept {dept}')
+            dept_labels.append(DEPARTMENT_NAMES.get(dept, dept))
             dept_passed.append(dept_pass)
             dept_failed.append(dept_fail)
 
@@ -364,40 +374,73 @@ class GHeadDashboard(LoginRequiredMixin, View):
 
 class DepartmentDashboard(LoginRequiredMixin, View):
     def get(self, request):
-        dept = request.user.get_department_code()
+        user = request.user
+        dept = user.get_department_code()
         agniveers = Agniveer.objects.all()
         trainers = CustomUser.objects.filter(
             role__in=['trainer_nco', 'trainer_jco', 'trainer_officer'],
             department=dept
         )
 
+        if user.is_battalion:
+            if user.battalion_unit:
+                agniveers = agniveers.filter(bn_desp=user.battalion_unit)
+                trainers = trainers.filter(battalion_unit=user.battalion_unit)
+            else:
+                battalion_units = [choice[0] for choice in CustomUser.BATTALION_CHOICES]
+                agniveers = agniveers.filter(bn_desp__in=battalion_units)
+        elif dept == 'B' and user.tts_trade:
+            trainers = trainers.filter(tts_trade=user.tts_trade)
+            if user.tts_trade == 'DMV':
+                agniveers = agniveers.filter(trade='DMV')
+            elif user.tts_trade == 'OPEM':
+                agniveers = agniveers.filter(trade='OPEM')
+            elif user.tts_trade == 'OTHER':
+                agniveers = agniveers.exclude(trade__in=['DMV', 'OPEM'])
+
         # Get department-specific config
-        from evaluation.constants import DEPT_CONFIG, get_dept_total_marks
+        from evaluation.constants import DEPT_CONFIG
         config = DEPT_CONFIG.get(dept, DEPT_CONFIG['A'])
-        dept_max_marks = get_dept_total_marks(dept)
         
         # Include all sheets with marks (not just locked ones)
         sheets_with_marks_ids = Marks.objects.values_list('evaluation_sheet_id', flat=True).distinct()
         all_dept_sheets = EvaluationSheet.objects.filter(
             department=dept
         ).filter(Q(is_locked=True) | Q(id__in=sheets_with_marks_ids)).prefetch_related('marks')
+
+        if user.is_battalion:
+            if user.battalion_unit:
+                all_dept_sheets = all_dept_sheets.filter(agniveer__bn_desp=user.battalion_unit)
+            else:
+                battalion_units = [choice[0] for choice in CustomUser.BATTALION_CHOICES]
+                all_dept_sheets = all_dept_sheets.filter(agniveer__bn_desp__in=battalion_units)
+        elif dept == 'B' and user.tts_trade:
+            if user.tts_trade == 'DMV':
+                all_dept_sheets = all_dept_sheets.filter(agniveer__trade='DMV')
+            elif user.tts_trade == 'OPEM':
+                all_dept_sheets = all_dept_sheets.filter(agniveer__trade='OPEM')
+            elif user.tts_trade == 'OTHER':
+                all_dept_sheets = all_dept_sheets.exclude(agniveer__trade__in=['DMV', 'OPEM'])
         
         # Pass/Fail logic at Agniveer level for THIS department
         passed_agniveers = []
         failed_agniveers = []
         
-        all_agniveers = Agniveer.objects.prefetch_related('evaluations__marks')
+        all_agniveers = agniveers.prefetch_related('evaluations__marks')
         for agniveer in all_agniveers:
             dept_evals = all_dept_sheets.filter(agniveer=agniveer)
-            total_score = sum(e.get_total_marks() for e in dept_evals)
-            
-            if dept_max_marks > 0:
-                percentage = (total_score / dept_max_marks) * 100
+            result_row = build_department_result_row(agniveer, list(dept_evals), dept)
+            raw_score = result_row.get('grand_total', 0) or 0
+            raw_max = result_row.get('max_total') or 40
+            score_40 = round((raw_score / raw_max) * 40, 2) if raw_max else 0
+
+            if raw_max > 0:
+                percentage = round((score_40 / 40) * 100, 1)
                 info = {
                     'name': agniveer.get_full_name(),
                     'enrollment': agniveer.enrollment_number,
-                    'score': f"{total_score}/{dept_max_marks}",
-                    'percentage': round(percentage, 1),
+                    'score': f"{score_40:g}/40",
+                    'percentage': percentage,
                     'id': agniveer.pk
                 }
                 if percentage >= 50:
@@ -469,8 +512,16 @@ class DepartmentDashboard(LoginRequiredMixin, View):
             month_counts.append(sheets_count)
             month_pass.append(sheets_pass)
 
+        dept_name = config.get('name', f'Department {dept}')
+        if user.is_battalion and user.battalion_unit:
+            dept_name = f"{user.battalion_unit} {dept_name}"
+        elif dept == 'B' and user.tts_trade:
+            tts_names = {'DMV': 'DMV', 'OPEM': 'OPEM', 'OTHER': 'Other Trades'}
+            dept_name = f"TTS {tts_names.get(user.tts_trade, user.tts_trade)}"
+
         context = {
             'dept': dept,
+            'dept_name': dept_name,
             'total_agniveers': all_agniveers.count(),
             'total_trainers': trainers.count(),
             'completion_rate': round(completion_rate, 1),
@@ -556,14 +607,14 @@ class AgniveerSearchView(LoginRequiredMixin, View):
             for dept in ['A', 'B', 'C', 'D']:
                 if dept in dept_evaluations:
                     data = dept_evaluations[dept]
-                    chart_data['departments'].append(f'Dept {dept}')
+                    chart_data['departments'].append(DEPARTMENT_NAMES.get(dept, dept))
                     on_field_total = sum(e.get_total_marks() for e in data['on_field'] if e.is_locked)
                     trade_total = sum(e.get_total_marks() for e in data['trade'] if e.is_locked)
                     chart_data['on_field_totals'].append(on_field_total)
                     chart_data['trade_totals'].append(trade_total)
                     chart_data['overall_totals'].append(on_field_total + trade_total)
                 else:
-                    chart_data['departments'].append(f'Dept {dept}')
+                    chart_data['departments'].append(DEPARTMENT_NAMES.get(dept, dept))
                     chart_data['on_field_totals'].append(0)
                     chart_data['trade_totals'].append(0)
                     chart_data['overall_totals'].append(0)

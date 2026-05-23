@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load custom_filters %}
 {% block title %}My Profile – Army Portal{% endblock %}
 {% block page_title %}My Profile{% endblock %}
 {% block page_subtitle %}Account Settings{% endblock %}
@@ -40,7 +41,7 @@
         {% endif %}
         {% if user.department %}
         <div style="font-size:13px;color:#8B9BB4;">
-          <i class="bi bi-building me-2 text-army"></i>Department {{ user.department }}
+          <i class="bi bi-building me-2 text-army"></i>{{ user.department|department_name }}
         </div>
         {% endif %}
       </div>

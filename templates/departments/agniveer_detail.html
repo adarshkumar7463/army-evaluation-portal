@@ -1,26 +1,110 @@
 {% extends 'base.html' %}
+{% load custom_filters %}
 {% block title %}{{ agniveer.get_full_name }} – Army Portal{% endblock %}
-{% block page_title %}Agniveer Profile{% endblock %}
-{% block page_subtitle %}{{ agniveer.enrollment_number }}{% endblock %}
+{% block page_title %}{% endblock %}
+{% block page_subtitle %}{% endblock %}
+{% block header_extra %}{% endblock %}
 
 {% block content %}
+<style>
+  .agniveer-profile-sidebar {
+    display: none;
+  }
+
+  .page-header {
+    display: none !important;
+  }
+
+  .main-wrapper {
+    padding-top: 15px !important;
+  }
+
+  .evaluation-workspace {
+    width: 100%;
+    height: calc(100vh - 30px) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+  }
+
+  .evaluation-workspace .army-card {
+    border-radius: 8px;
+    flex: 1 1 auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+    height: 100% !important;
+  }
+
+  .eval-tabs {
+    flex-shrink: 0;
+  }
+
+  .tab-content {
+    flex: 1 1 auto !important;
+    overflow-y: auto !important;
+    padding: 10px !important;
+    background: rgba(15, 20, 25, 0.8) !important;
+    border: 1px solid rgba(82, 183, 136, 0.2) !important;
+    border-top: none !important;
+    border-radius: 0 0 12px 12px !important;
+    padding-bottom: 70px !important;
+  }
+
+  .evaluation-workspace .eval-tab-btn {
+    min-width: 120px;
+    padding: 6px 10px !important;
+    font-size: 11px !important;
+  }
+
+  .evaluation-workspace .army-table th {
+    padding: 4px 6px !important;
+    font-size: 10px !important;
+    letter-spacing: 0.5px !important;
+  }
+
+  .evaluation-workspace .army-table td {
+    padding: 4px 6px !important;
+    font-size: 11px !important;
+    vertical-align: middle;
+  }
+
+  .evaluation-workspace input[type="number"],
+  .evaluation-workspace input[type="text"] {
+    width: 50px !important;
+    height: 24px !important;
+    font-size: 11px !important;
+    padding: 2px 4px !important;
+    border-radius: 4px !important;
+    text-align: center !important;
+  }
+
+  .evaluation-workspace textarea {
+    font-size: 11px !important;
+    padding: 4px 6px !important;
+  }
+
+  .evaluation-workspace input[type="text"][name="remarks"] {
+    width: 100% !important;
+  }
+</style>
 <div class="row g-3">
 
   <!-- Profile Card -->
-  <div class="col-xl-4">
+  <div class="col-xl-4 agniveer-profile-sidebar">
     <div class="army-card">
       <div class="army-card-body text-center" style="padding:32px 20px;">
         {% if agniveer.photo %}
         <img src="{{ agniveer.photo.url }}" alt="Photo" class="rounded-circle mb-3"
-          style="width:90px;height:90px;object-fit:cover;border:3px solid #1B4332;">
+          style="width:80px;height:80px;object-fit:cover;border:3px solid #1B4332;">
         {% else %}
-        <div class="mx-auto mb-3"
-          style="width:90px;height:90px;border-radius:50%;background:linear-gradient(135deg,#1B4332,#40916C);display:flex;align-items:center;justify-content:center;font-family:Rajdhani,sans-serif;font-size:32px;font-weight:700;color:white;border:3px solid rgba(82,183,136,0.3);">
+        <div class="rounded-circle mb-3 mx-auto"
+          style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#1B4332,#40916C);display:flex;align-items:center;justify-content:center;font-family:Rajdhani,sans-serif;font-size:24px;font-weight:700;color:white;border:3px solid rgba(82,183,136,0.3);">
           {{ agniveer.first_name.0|upper }}{{ agniveer.last_name.0|upper }}
         </div>
         {% endif %}
 
-        <h5 style="font-family:Rajdhani,sans-serif;font-weight:700;font-size:20px;color:#E0E6F0;margin-bottom:4px;">
+        <h5 style="font-family:Rajdhani,sans-serif;font-weight:700;font-size:16px;color:#E0E6F0;margin-bottom:4px;">
           {{ agniveer.get_full_name }}
         </h5>
         <div style="font-size:13px;color:#52B788;margin-bottom:16px;">{{ agniveer.enrollment_number }}</div>
@@ -63,7 +147,7 @@
             <i class="bi bi-file-earmark-pdf-fill"></i> Download PDF
           </a>
           {% endif %}
-          {% if is_commander or is_g_head  %}
+          {% if is_commander or is_g_head %}
           <a href="{% url 'departments:agniveer_edit' agniveer.pk %}"
             class="btn btn-army-outline w-100 d-flex align-items-center gap-2 justify-content-center">
             <i class="bi bi-pencil-fill"></i> Edit Profile
@@ -81,7 +165,7 @@
       </div>
       <div class="army-card-body text-center" id="scoreCardBody" data-color="{{ score_color }}"
         data-color-dark="{{ score_color_dark }}">
-        <div style="font-family:Rajdhani,sans-serif;font-size:56px;font-weight:700;margin-bottom:8px;" data-total-score>
+        <div style="font-family:Rajdhani,sans-serif;font-size:32px;font-weight:700;margin-bottom:8px;" data-total-score>
           {{ total_score }}
         </div>
         <div style="font-size:14px;color:#8B9BB4;margin-bottom:12px;">out of <span
@@ -93,7 +177,7 @@
         </div>
 
         <!-- Percentage -->
-        <div style="font-family:Rajdhani,sans-serif;font-size:28px;font-weight:700;margin-bottom:8px;" data-percentage>
+        <div style="font-family:Rajdhani,sans-serif;font-size:20px;font-weight:700;margin-bottom:8px;" data-percentage>
           {{ percentage }}%
         </div>
 
@@ -103,238 +187,2264 @@
     {% endif %}
   </div>
 
+
+
+
+
   <!-- Evaluations -->
-  <div class="col-xl-8">
+  <div class="col-12 evaluation-workspace">
     <div class="army-card">
-      <div class="army-card-header">
-        <h6 class="army-card-title"><i class="bi bi-clipboard2-check-fill text-army"></i> Evaluation Sheets</h6>
-      </div>
-      {% if can_evaluate %}
-      <div class="army-card-body">
-        <form method="post" action="{% url 'evaluation:evaluate_agniveer' agniveer.pk %}">
-          {% csrf_token %}
-          <div class="row g-3">
-            <div class="col-md-4">
-              <label class="form-label">Category</label>
-              <select name="category" id="categorySelect" class="form-control" required>
-                <option value="">Select Category</option>
-                {% for value,label in category_choices %}
-                <option value="{{ value }}">{{ label }}</option>
-                {% endfor %}
-              </select>
-            </div>
-            <div class="col-md-4">
-              <label class="form-label">Test Type</label>
-              <select name="test_type" id="testTypeSelect" class="form-control" required>
-                <option value="">Select Test Type</option>
-                {% for value,label in test_type_choices %}
-                <option value="{{ value }}"
-                  data-category="{% if value == 'physical' or value == 'weapon' or value == 'field' %}on_field{% else %}trade{% endif %}">
-                  {{ label }}</option>
-                {% endfor %}
-              </select>
-            </div>
-            <div class="col-md-2">
-              <label class="form-label">Marks</label>
-              <input type="number" name="marks" class="form-control" min="0" max="20" placeholder="0-20" required>
-            </div>
-            <div class="col-md-2">
-              <label class="form-label">Action</label>
-              <button type="submit" class="btn btn-army w-100" style="margin-top:0.4rem;">Submit</button>
-            </div>
-            <div class="col-12">
-              <label class="form-label">Remarks</label>
-              <textarea name="remarks" class="form-control" rows="2" placeholder="Optional remarks"></textarea>
-            </div>
+      <div class="army-card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <h6 class="army-card-title mb-0"><i class="bi bi-clipboard2-check-fill text-army"></i> Evaluation Sheets</h6>
+        <div class="d-flex align-items-center gap-3">
+          <div class="agniveer-header-no py-1 px-3 rounded"
+            style="background: rgba(82, 183, 136, 0.1); border: 1px solid rgba(82, 183, 136, 0.3); color: #52B788; font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px;">
+            <i class="bi bi-person-badge"></i> {{ agniveer.agniveer_no }} | {{ agniveer.get_full_name }}
           </div>
-        </form>
+          <!-- Theme Toggle inside Evaluation Sheet -->
+          <button id="themeToggleSheet" title="Toggle Light/Dark Mode"
+            style="background: rgba(82, 183, 136, 0.1); border: 1px solid rgba(82, 183, 136, 0.3); width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #52B788; transition: all 0.2s; cursor: pointer;"
+            onclick="document.getElementById('themeToggle').click()">
+            <i class="bi bi-sun-fill" style="font-size: 14px;"></i>
+          </button>
+        </div>
       </div>
-      <div class="army-card-body" style="border-top:1px solid rgba(27,67,50,0.3);">
-        <div style="font-size:12px;color:#8B9BB4;">Choose category and test type to evaluate this Agniveer. Only your
-          department evaluation is available.</div>
+
+      <!-- Result Sheets Tabs -->
+      <div class="eval-tabs mt-3"
+        style="border-bottom: 1px solid rgba(82, 183, 136, 0.2); overflow-x: auto; display: flex; gap: 8px;">
+        {% for code, name in test_type_choices %}
+        <button class="eval-tab-btn {% if forloop.first %}active{% endif %}" onclick="showTab('{{ code }}')"
+          style="padding: 10px 15px; border: 1px solid rgba(82, 183, 136, 0.2); border-bottom: none; border-radius: 8px 8px 0 0; background: rgba(15, 20, 25, 0.6); color: #8B9BB4; font-family: 'Rajdhani', sans-serif; font-weight: 600; white-space: nowrap; transition: all 0.3s ease;">
+          {{ name }}
+        </button>
+        {% endfor %}
       </div>
-      <script>
-        (function () {
-          const categorySelect = document.getElementById('categorySelect');
-          const testTypeSelect = document.getElementById('testTypeSelect');
 
-          // Test to category mapping from server
-          const testToCategory = JSON.parse('{{ test_to_category_json|safe }}');
+      <div class="tab-content"
+        style="background: rgba(15, 20, 25, 0.8); border: 1px solid rgba(82, 183, 136, 0.2); border-top: none; border-radius: 0 0 12px 12px; padding: 20px;">
+        {% for code, name in test_type_choices %}
+        <div id="tab-{{ code }}" class="test-tab-pane"
+          style="display: {% if forloop.first %}block{% else %}none{% endif %};">
 
-          function updateTestTypeOptions() {
-            const category = categorySelect.value;
-            for (const option of testTypeSelect.options) {
-              if (!option.value) continue;
-              const optionCategory = testToCategory[option.value];
-              option.hidden = category && optionCategory !== category;
-            }
-            if (testTypeSelect.value) {
-              const selected = testTypeSelect.selectedOptions[0];
-              if (selected && selected.hidden) {
-                testTypeSelect.value = '';
-              }
-            }
-          }
-          categorySelect.addEventListener('change', updateTestTypeOptions);
-          updateTestTypeOptions();
-        })();
-      </script>
-      {% endif %}
-      <div style="overflow-x:auto;">
-        <table class="army-table">
-          <thead>
-            <tr>
-              <th>Test Type</th>
-              <th>Category</th>
-              <th>NCO</th>
-              <th>JCO</th>
-              <th>Officer</th>
-              {% if not request.user.is_trainer %}
-              <th>Total</th>
-              <th>Percentage</th>
-              <th style="text-align:center;">Result</th>
-              {% endif %}
-            </tr>
-          </thead>
-          <tbody>
-            {% for ev in evaluations %}
-            <tr>
-              <td><span style="font-weight:600;color:#E0E6F0;">{{ ev.get_test_type_display }}</span></td>
-              <td><span style="font-size:11px;color:#8B9BB4;">{{ ev.get_category_display }}</span></td>
-              
-              <!-- NCO Column -->
-              <td class="marks-cell">
-                {% if request.user.is_trainer %}
-                  {% if request.user.is_nco %}
-                    {{ ev.get_nco_marks }}
-                  {% else %}
-                    {% if ev.get_nco_marks > 0 %}<span style="color:#52B788;">✓</span>{% else %}<span style="color:#8B9BB4;font-size:10px;">Pending</span>{% endif %}
-                  {% endif %}
-                {% else %}
-                  {{ ev.get_nco_marks }}
-                {% endif %}
-              </td>
+          {% with t_config=dept_config.test_config|get_item:code %}
+          {% with current_sheet=evaluations|get_eval_sheet:code %}
 
-              <!-- JCO Column -->
-              <td class="marks-cell">
-                {% if request.user.is_trainer %}
-                  {% if request.user.is_jco %}
-                    {{ ev.get_jco_marks }}
-                  {% else %}
-                    {% if ev.get_jco_marks > 0 %}<span style="color:#52B788;">✓</span>{% else %}<span style="color:#8B9BB4;font-size:10px;">Pending</span>{% endif %}
-                  {% endif %}
-                {% else %}
-                  {{ ev.get_jco_marks }}
-                {% endif %}
-              </td>
+          {% if 'CLK_' in code %}
+          {# Beautiful custom Clerk tabs! #}
+          <h5
+            style="color: #D4A017; margin-bottom: 24px; font-family: 'Rajdhani', sans-serif; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">
+            <i class="bi bi-person-workspace me-2"></i> {{ name }} Evaluation Workspace
+          </h5>
 
-              <!-- Officer Column -->
-              <td class="marks-cell">
-                {% if request.user.is_trainer %}
-                  {% if request.user.is_officer %}
-                    {{ ev.get_officer_marks }}
-                  {% else %}
-                    {% if ev.get_officer_marks > 0 %}<span style="color:#52B788;">✓</span>{% else %}<span style="color:#8B9BB4;font-size:10px;">Pending</span>{% endif %}
-                  {% endif %}
-                {% else %}
-                  {{ ev.get_officer_marks }}
-                {% endif %}
-              </td>
+          {% if can_evaluate %}
+          <form id="form-{{ code }}" method="post" action="{% url 'evaluation:evaluate_agniveer' agniveer.pk %}">
+            {% csrf_token %}
+            <input type="hidden" name="active_test" value="{{ code }}">
+            {% endif %}
 
-              {% if not request.user.is_trainer %}
-              <td>
-                <span style="font-family:Rajdhani,sans-serif;font-size:18px;font-weight:700;color:#E0E6F0;">
-                  {{ ev.get_total_marks }}
-                </span>
-                <span style="color:#8B9BB4;font-size:11px;">/60</span>
-              </td>
-              <td style="text-align:center;">{{ ev.get_percentage }}%</td>
-              <td style="text-align:center;">
-                {% if ev.get_total_marks > 0 %}
-                {% if ev.is_pass %}
-                <span class="badge-pass px-2 py-1 rounded" style="font-size:11px;">PASS</span>
-                {% else %}
-                <span class="badge-fail px-2 py-1 rounded" style="font-size:11px;">FAIL</span>
-                {% endif %}
-                {% else %}
-                <span class="badge-pending px-2 py-1 rounded" style="font-size:11px;">Pending</span>
-                {% endif %}
-              </td>
-              {% endif %}
-            </tr>
-            {% empty %}
-            <tr>
-              <td colspan="10">
-                <div class="empty-state">
-                  <i class="bi bi-clipboard2"></i>
-                  <p>No evaluations yet for this Agniveer.</p>
+            {% if code == 'CLK_INITIAL' %}
+            <div class="row g-3">
+              <!-- Academic Column -->
+              <div class="col-md-6">
+                <div class="army-card h-100"
+                  style="background: rgba(27,67,50,0.1); border: 1px solid rgba(82,183,136,0.3); border-radius: 12px; transition: all 0.3s ease; box-shadow: 0 4px 20px rgba(0,0,0,0.2);">
+                  <div class="army-card-header"
+                    style="background: rgba(82,183,136,0.15); border-bottom: 1px solid rgba(82,183,136,0.2);">
+                    <h6 class="army-card-title"
+                      style="color: #52B788; font-family: 'Rajdhani', sans-serif; font-weight: 700; letter-spacing: 0.5px;">
+                      <i class="bi bi-journal-text me-2"></i> Academic Section
+                    </h6>
+                  </div>
+                  <div class="army-card-body" style="padding: 24px;">
+                    <div class="mb-3">
+                      <label class="form-label" style="font-weight: 600; color: #E0E6F0; font-size: 13px;">Academic
+                        Written (Max 100)</label>
+                      {% if can_evaluate %}
+                      <input type="number" id="input_initial_academic" name="Academic Written (100)"
+                        value="{{ current_sheet.sub_event_results.Marks|get_item:'Academic Written (100)'|default_if_none:'' }}"
+                        class="form-control text-center"
+                        style="background: rgba(15,20,25,0.8); color: #E0E6F0; border: 1px solid rgba(82,183,136,0.4); height: 42px; font-size: 16px; border-radius: 8px; font-weight: 600;"
+                        min="0" max="100" step="0.01" oninput="calculateInitialLive()">
+                      {% else %}
+                      <div
+                        style="background: rgba(15,20,25,0.6); padding: 10px; border-radius: 6px; text-align: center; font-weight: 700; color: #52B788; font-size: 18px;">
+                        {{ current_sheet.sub_event_results.Marks|get_item:'Academic Written (100)'|default:"—" }}
+                      </div>
+                      {% endif %}
+                    </div>
+                    <div
+                      style="background: rgba(82,183,136,0.1); border-radius: 8px; padding: 12px; text-align: center; border: 1px dashed rgba(82,183,136,0.3);">
+                      <div style="font-size: 11px; color: #8B9BB4; text-transform: uppercase;">Converted Weightage (40%)
+                      </div>
+                      <div
+                        style="font-family: 'Rajdhani', sans-serif; font-size: 24px; font-weight: 700; color: #52B788; margin-top: 4px;">
+                        <span id="initial_academic_conv">{% if current_sheet %}{{ current_sheet.sub_event_results.Marks|get_item:'Academic Converted (40)' }}{% else %}0.00{% endif %}</span> / 40
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+              </div>
+
+              <!-- Computer Column -->
+              <div class="col-md-6">
+                <div class="army-card h-100"
+                  style="background: rgba(27,67,50,0.1); border: 1px solid rgba(82,183,136,0.3); border-radius: 12px; transition: all 0.3s ease; box-shadow: 0 4px 20px rgba(0,0,0,0.2);">
+                  <div class="army-card-header"
+                    style="background: rgba(82,183,136,0.15); border-bottom: 1px solid rgba(82,183,136,0.2);">
+                    <h6 class="army-card-title"
+                      style="color: #52B788; font-family: 'Rajdhani', sans-serif; font-weight: 700; letter-spacing: 0.5px;">
+                      <i class="bi bi-laptop me-2"></i> Computer Section
+                    </h6>
+                  </div>
+                  <div class="army-card-body" style="padding: 24px;">
+                    <div class="mb-3">
+                      <label class="form-label" style="font-weight: 600; color: #E0E6F0; font-size: 13px;">Computer
+                        Project Work (Max 25)</label>
+                      {% if can_evaluate %}
+                      <input type="number" id="input_initial_computer" name="Computer Project Work (25)"
+                        value="{{ current_sheet.sub_event_results.Marks|get_item:'Computer Project Work (25)'|default_if_none:'' }}"
+                        class="form-control text-center"
+                        style="background: rgba(15,20,25,0.8); color: #E0E6F0; border: 1px solid rgba(82,183,136,0.4); height: 42px; font-size: 16px; border-radius: 8px; font-weight: 600;"
+                        min="0" max="25" step="0.01" oninput="calculateInitialLive()">
+                      {% else %}
+                      <div
+                        style="background: rgba(15,20,25,0.6); padding: 10px; border-radius: 6px; text-align: center; font-weight: 700; color: #52B788; font-size: 18px;">
+                        {{ current_sheet.sub_event_results.Marks|get_item:'Computer Project Work (25)'|default:"—" }}
+                      </div>
+                      {% endif %}
+                    </div>
+                    <div
+                      style="background: rgba(82,183,136,0.1); border-radius: 8px; padding: 12px; text-align: center; border: 1px dashed rgba(82,183,136,0.3);">
+                      <div style="font-size: 11px; color: #8B9BB4; text-transform: uppercase;">Converted Weightage (40%)
+                      </div>
+                      <div
+                        style="font-family: 'Rajdhani', sans-serif; font-size: 24px; font-weight: 700; color: #52B788; margin-top: 4px;">
+                        <span id="initial_computer_conv">{% if current_sheet %}{{ current_sheet.sub_event_results.Marks|get_item:'Computer Converted (10)' }}{% else %}0.00{% endif %}</span> / 10
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {% elif code == 'CLK_WEEKLY_1' %}
+            <div class="row g-3">
+              <!-- Tech Section Card -->
+              <div class="col-md-6 col-lg-3">
+                <div class="army-card h-100"
+                  style="background: rgba(27,67,50,0.1); border: 1px solid rgba(82,183,136,0.3); border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+                  <div class="army-card-header"
+                    style="background: rgba(82,183,136,0.15); border-bottom: 1px solid rgba(82,183,136,0.2);">
+                    <h6 class="army-card-title"
+                      style="color: #52B788; font-family: 'Rajdhani', sans-serif; font-weight: 700;"><i
+                        class="bi bi-shield-fill-check me-2"></i> Tech Section</h6>
+                  </div>
+                  <div class="army-card-body" style="padding: 16px;">
+                    <div class="mb-3">
+                      <label class="form-label" style="font-weight: 600; color: #E0E6F0; font-size: 12px;">Tech Written
+                        (Max 50)</label>
+                      {% if can_evaluate %}
+                      <input type="number" id="input_w1_tech" name="Tech Written (50)"
+                        value="{{ current_sheet.sub_event_results.Marks|get_item:'Tech Written (50)'|default_if_none:'' }}"
+                        class="form-control text-center"
+                        style="background: rgba(15,20,25,0.8); color: #E0E6F0; border: 1px solid rgba(82,183,136,0.4); height: 38px; border-radius: 6px; font-weight: 600;"
+                        min="0" max="50" step="0.01" oninput="calculateW1Live()">
+                      {% else %}
+                      <div
+                        style="background: rgba(15,20,25,0.6); padding: 8px; border-radius: 6px; text-align: center; font-weight: 700; color: #52B788;">
+                        {{ current_sheet.sub_event_results.Marks|get_item:'Tech Written (50)'|default:"—" }}
+                      </div>
+                      {% endif %}
+                    </div>
+                    <div
+                      style="background: rgba(82,183,136,0.1); border-radius: 6px; padding: 10px; text-align: center; border: 1px dashed rgba(82,183,136,0.2);">
+                      <div style="font-size: 10px; color: #8B9BB4; text-transform: uppercase;">Converted (40%)</div>
+                      <div
+                        style="font-family: 'Rajdhani', sans-serif; font-size: 18px; font-weight: 700; color: #52B788; margin-top: 2px;">
+                        <span id="w1_tech_conv">{% if current_sheet %}{{ current_sheet.sub_event_results.Marks|get_item:'Tech Converted (20)' }}{% else %}0.00{% endif %}</span> / 20
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Academic Section Card -->
+              <div class="col-md-6 col-lg-3">
+                <div class="army-card h-100"
+                  style="background: rgba(27,67,50,0.1); border: 1px solid rgba(82,183,136,0.3); border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+                  <div class="army-card-header"
+                    style="background: rgba(82,183,136,0.15); border-bottom: 1px solid rgba(82,183,136,0.2);">
+                    <h6 class="army-card-title"
+                      style="color: #52B788; font-family: 'Rajdhani', sans-serif; font-weight: 700;"><i
+                        class="bi bi-book-half me-2"></i> Academic Section</h6>
+                  </div>
+                  <div class="army-card-body" style="padding: 16px;">
+                    <div class="mb-3">
+                      <label class="form-label" style="font-weight: 600; color: #E0E6F0; font-size: 12px;">Academic
+                        Written (Max 50)</label>
+                      {% if can_evaluate %}
+                      <input type="number" id="input_w1_academic" name="Academic Written (50)"
+                        value="{{ current_sheet.sub_event_results.Marks|get_item:'Academic Written (50)'|default_if_none:'' }}"
+                        class="form-control text-center"
+                        style="background: rgba(15,20,25,0.8); color: #E0E6F0; border: 1px solid rgba(82,183,136,0.4); height: 38px; border-radius: 6px; font-weight: 600;"
+                        min="0" max="50" step="0.01" oninput="calculateW1Live()">
+                      {% else %}
+                      <div
+                        style="background: rgba(15,20,25,0.6); padding: 8px; border-radius: 6px; text-align: center; font-weight: 700; color: #52B788;">
+                        {{ current_sheet.sub_event_results.Marks|get_item:'Academic Written (50)'|default:"—" }}
+                      </div>
+                      {% endif %}
+                    </div>
+                    <div
+                      style="background: rgba(82,183,136,0.1); border-radius: 6px; padding: 10px; text-align: center; border: 1px dashed rgba(82,183,136,0.2);">
+                      <div style="font-size: 10px; color: #8B9BB4; text-transform: uppercase;">Converted (40%)</div>
+                      <div
+                        style="font-family: 'Rajdhani', sans-serif; font-size: 18px; font-weight: 700; color: #52B788; margin-top: 2px;">
+                        <span id="w1_academic_conv">{% if current_sheet %}{{ current_sheet.sub_event_results.Marks|get_item:'Academic Converted (20)' }}{% else %}0.00{% endif %}</span> / 20
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Computer Section Card -->
+              <div class="col-md-6 col-lg-3">
+                <div class="army-card h-100"
+                  style="background: rgba(27,67,50,0.1); border: 1px solid rgba(82,183,136,0.3); border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+                  <div class="army-card-header"
+                    style="background: rgba(82,183,136,0.15); border-bottom: 1px solid rgba(82,183,136,0.2);">
+                    <h6 class="army-card-title"
+                      style="color: #52B788; font-family: 'Rajdhani', sans-serif; font-weight: 700;"><i
+                        class="bi bi-cpu me-2"></i> Computer Section</h6>
+                  </div>
+                  <div class="army-card-body" style="padding: 16px;">
+                    <div class="mb-2">
+                      <label class="form-label" style="font-weight: 600; color: #E0E6F0; font-size: 11px;">Computer Obj
+                        (Max 25)</label>
+                      {% if can_evaluate %}
+                      <input type="number" id="input_w1_comp_obj" name="Computer Obj (25)"
+                        value="{{ current_sheet.sub_event_results.Marks|get_item:'Computer Obj (25)'|default_if_none:'' }}"
+                        class="form-control text-center"
+                        style="background: rgba(15,20,25,0.8); color: #E0E6F0; border: 1px solid rgba(82,183,136,0.4); height: 32px; border-radius: 6px;"
+                        min="0" max="25" step="0.01" oninput="calculateW1Live()">
+                      {% else %}
+                      <div
+                        style="background: rgba(15,20,25,0.6); padding: 4px; border-radius: 6px; text-align: center; font-weight: 600; color: #E0E6F0; font-size: 13px;">
+                        {{ current_sheet.sub_event_results.Marks|get_item:'Computer Obj (25)'|default:"—" }}
+                      </div>
+                      {% endif %}
+                    </div>
+                    <div class="mb-2">
+                      <label class="form-label" style="font-weight: 600; color: #E0E6F0; font-size: 11px;">Computer Prac
+                        (Max 25)</label>
+                      {% if can_evaluate %}
+                      <input type="number" id="input_w1_comp_prac" name="Computer Prac (25)"
+                        value="{{ current_sheet.sub_event_results.Marks|get_item:'Computer Prac (25)'|default_if_none:'' }}"
+                        class="form-control text-center"
+                        style="background: rgba(15,20,25,0.8); color: #E0E6F0; border: 1px solid rgba(82,183,136,0.4); height: 32px; border-radius: 6px;"
+                        min="0" max="25" step="0.01" oninput="calculateW1Live()">
+                      {% else %}
+                      <div
+                        style="background: rgba(15,20,25,0.6); padding: 4px; border-radius: 6px; text-align: center; font-weight: 600; color: #E0E6F0; font-size: 13px;">
+                        {{ current_sheet.sub_event_results.Marks|get_item:'Computer Prac (25)'|default:"—" }}
+                      </div>
+                      {% endif %}
+                    </div>
+                    <div
+                      style="background: rgba(82,183,136,0.1); border-radius: 6px; padding: 6px 10px; text-align: center; border: 1px dashed rgba(82,183,136,0.2);">
+                      <div style="font-size: 10px; color: #8B9BB4; text-transform: uppercase;">Converted Total (40%)
+                      </div>
+                      <div
+                        style="font-family: 'Rajdhani', sans-serif; font-size: 18px; font-weight: 700; color: #52B788; margin-top: 1px;">
+                        <span id="w1_comp_total_conv">{% if current_sheet %}{{ current_sheet.sub_event_results.Marks|get_item:'Computer Total Converted (20)' }}{% else %}0.00{% endif %}</span> / 20
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Typing Section Card -->
+              <div class="col-md-6 col-lg-3">
+                <div class="army-card h-100"
+                  style="background: rgba(27,67,50,0.1); border: 1px solid rgba(82,183,136,0.3); border-radius: 12px; box-shadow: 0 4px 15 rgba(0,0,0,0.2);">
+                  <div class="army-card-header"
+                    style="background: rgba(82,183,136,0.15); border-bottom: 1px solid rgba(82,183,136,0.2);">
+                    <h6 class="army-card-title"
+                      style="color: #52B788; font-family: 'Rajdhani', sans-serif; font-weight: 700;"><i
+                        class="bi bi-keyboard me-2"></i> Typing Section</h6>
+                  </div>
+                  <div class="army-card-body" style="padding: 16px;">
+                    <div class="mb-3">
+                      <label class="form-label" style="font-weight: 600; color: #E0E6F0; font-size: 12px;">Typing 20 WPM
+                        (Max 200)</label>
+                      {% if can_evaluate %}
+                      <input type="number" id="input_w1_typing" name="Typing 20 WPM"
+                        value="{{ current_sheet.sub_event_results.Marks|get_item:'Typing 20 WPM'|default_if_none:'' }}"
+                        class="form-control text-center"
+                        style="background: rgba(15,20,25,0.8); color: #E0E6F0; border: 1px solid rgba(82,183,136,0.4); height: 38px; border-radius: 6px; font-weight: 600;"
+                        min="0" max="200" step="0.01" oninput="calculateW1Live()">
+                      {% else %}
+                      <div
+                        style="background: rgba(15,20,25,0.6); padding: 8px; border-radius: 6px; text-align: center; font-weight: 700; color: #52B788;">
+                        {{ current_sheet.sub_event_results.Marks|get_item:'Typing 20 WPM'|default:"—" }}
+                      </div>
+                      {% endif %}
+                    </div>
+                    <div
+                      style="background: rgba(255,255,255,0.05); border-radius: 6px; padding: 12px; text-align: center; font-size: 11px; color: #8B9BB4;">
+                      Typing is evaluated raw and not scaled under the 40% conversions.
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {% elif code == 'CLK_WEEKLY_2' %}
+            <div class="row g-3">
+              <!-- Tech Section Card -->
+              <div class="col-md-6 col-lg-3">
+                <div class="army-card h-100"
+                  style="background: rgba(27,67,50,0.1); border: 1px solid rgba(82,183,136,0.3); border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+                  <div class="army-card-header"
+                    style="background: rgba(82,183,136,0.15); border-bottom: 1px solid rgba(82,183,136,0.2);">
+                    <h6 class="army-card-title"
+                      style="color: #52B788; font-family: 'Rajdhani', sans-serif; font-weight: 700;"><i
+                        class="bi bi-shield-fill-check me-2"></i> Tech Section</h6>
+                  </div>
+                  <div class="army-card-body" style="padding: 16px;">
+                    <div class="mb-2">
+                      <label class="form-label" style="font-weight: 600; color: #E0E6F0; font-size: 11px;">Tech Online
+                        (Max 115)</label>
+                      {% if can_evaluate %}
+                      <input type="number" id="input_w2_tech_online" name="Tech Online (115)"
+                        value="{{ current_sheet.sub_event_results.Marks|get_item:'Tech Online (115)'|default_if_none:'' }}"
+                        class="form-control text-center"
+                        style="background: rgba(15,20,25,0.8); color: #E0E6F0; border: 1px solid rgba(82,183,136,0.4); height: 32px; border-radius: 6px;"
+                        min="0" max="115" step="0.01" oninput="calculateW2Live()">
+                      {% else %}
+                      <div
+                        style="background: rgba(15,20,25,0.6); padding: 4px; border-radius: 6px; text-align: center; font-weight: 600; color: #E0E6F0; font-size: 13px;">
+                        {{ current_sheet.sub_event_results.Marks|get_item:'Tech Online (115)'|default:"—" }}
+                      </div>
+                      {% endif %}
+                    </div>
+                    <div class="mb-2">
+                      <label class="form-label" style="font-weight: 600; color: #E0E6F0; font-size: 11px;">Tech Proj
+                        HRMS (Max 25)</label>
+                      {% if can_evaluate %}
+                      <input type="number" id="input_w2_tech_proj" name="Tech Proj HRMS (25)"
+                        value="{{ current_sheet.sub_event_results.Marks|get_item:'Tech Proj HRMS (25)'|default_if_none:'' }}"
+                        class="form-control text-center"
+                        style="background: rgba(15,20,25,0.8); color: #E0E6F0; border: 1px solid rgba(82,183,136,0.4); height: 32px; border-radius: 6px;"
+                        min="0" max="25" step="0.01" oninput="calculateW2Live()">
+                      {% else %}
+                      <div
+                        style="background: rgba(15,20,25,0.6); padding: 4px; border-radius: 6px; text-align: center; font-weight: 600; color: #E0E6F0; font-size: 13px;">
+                        {{ current_sheet.sub_event_results.Marks|get_item:'Tech Proj HRMS (25)'|default:"—" }}
+                      </div>
+                      {% endif %}
+                    </div>
+                    <div
+                      style="background: rgba(82,183,136,0.1); border-radius: 6px; padding: 6px 10px; text-align: left; border: 1px dashed rgba(82,183,136,0.2); font-size: 11px;">
+                      <div class="d-flex justify-content-between">
+                        <span style="color: #8B9BB4;">Online (46):</span>
+                        <span style="font-weight:700; color: #52B788;" id="w2_tech_online_conv">{% if current_sheet %}{{ current_sheet.sub_event_results.Marks|get_item:'Tech Online Converted (46)' }}{% else %}0.00{% endif %}</span>
+                      </div>
+                      <div class="d-flex justify-content-between mt-1">
+                        <span style="color: #8B9BB4;">Proj (10):</span>
+                        <span style="font-weight:700; color: #52B788;" id="w2_tech_proj_conv">{% if current_sheet %}{{ current_sheet.sub_event_results.Marks|get_item:'Tech Proj Converted (10)' }}{% else %}0.00{% endif %}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Academic Section Card -->
+              <div class="col-md-6 col-lg-3">
+                <div class="army-card h-100"
+                  style="background: rgba(27,67,50,0.1); border: 1px solid rgba(82,183,136,0.3); border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+                  <div class="army-card-header"
+                    style="background: rgba(82,183,136,0.15); border-bottom: 1px solid rgba(82,183,136,0.2);">
+                    <h6 class="army-card-title"
+                      style="color: #52B788; font-family: 'Rajdhani', sans-serif; font-weight: 700;"><i
+                        class="bi bi-book-half me-2"></i> Academic Section</h6>
+                  </div>
+                  <div class="army-card-body" style="padding: 16px;">
+                    <div class="mb-3">
+                      <label class="form-label" style="font-weight: 600; color: #E0E6F0; font-size: 12px;">Academic
+                        Online (Max 85)</label>
+                      {% if can_evaluate %}
+                      <input type="number" id="input_w2_academic" name="Academic Online (85)"
+                        value="{{ current_sheet.sub_event_results.Marks|get_item:'Academic Online (85)'|default_if_none:'' }}"
+                        class="form-control text-center"
+                        style="background: rgba(15,20,25,0.8); color: #E0E6F0; border: 1px solid rgba(82,183,136,0.4); height: 38px; border-radius: 6px; font-weight: 600;"
+                        min="0" max="85" step="0.01" oninput="calculateW2Live()">
+                      {% else %}
+                      <div
+                        style="background: rgba(15,20,25,0.6); padding: 8px; border-radius: 6px; text-align: center; font-weight: 700; color: #52B788;">
+                        {{ current_sheet.sub_event_results.Marks|get_item:'Academic Online (85)'|default:"—" }}
+                      </div>
+                      {% endif %}
+                    </div>
+                    <div
+                      style="background: rgba(82,183,136,0.1); border-radius: 6px; padding: 10px; text-align: center; border: 1px dashed rgba(82,183,136,0.2);">
+                      <div style="font-size: 10px; color: #8B9BB4; text-transform: uppercase;">Converted (34)</div>
+                      <div
+                        style="font-family: 'Rajdhani', sans-serif; font-size: 18px; font-weight: 700; color: #52B788; margin-top: 2px;">
+                        <span id="w2_academic_conv">{% if current_sheet %}{{ current_sheet.sub_event_results.Marks|get_item:'Academic Converted (34)' }}{% else %}0.00{% endif %}</span> / 34
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Computer Section Card -->
+              <div class="col-md-6 col-lg-3">
+                <div class="army-card h-100"
+                  style="background: rgba(27,67,50,0.1); border: 1px solid rgba(82,183,136,0.3); border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+                  <div class="army-card-header"
+                    style="background: rgba(82,183,136,0.15); border-bottom: 1px solid rgba(82,183,136,0.2);">
+                    <h6 class="army-card-title"
+                      style="color: #52B788; font-family: 'Rajdhani', sans-serif; font-weight: 700;"><i
+                        class="bi bi-cpu me-2"></i> Computer Section</h6>
+                  </div>
+                  <div class="army-card-body" style="padding: 16px;">
+                    <div class="mb-2">
+                      <label class="form-label" style="font-weight: 600; color: #E0E6F0; font-size: 11px;">Computer
+                        Online (Max 25)</label>
+                      {% if can_evaluate %}
+                      <input type="number" id="input_w2_comp_online" name="Computer Online (25)"
+                        value="{{ current_sheet.sub_event_results.Marks|get_item:'Computer Online (25)'|default_if_none:'' }}"
+                        class="form-control text-center"
+                        style="background: rgba(15,20,25,0.8); color: #E0E6F0; border: 1px solid rgba(82,183,136,0.4); height: 32px; border-radius: 6px;"
+                        min="0" max="25" step="0.01" oninput="calculateW2Live()">
+                      {% else %}
+                      <div
+                        style="background: rgba(15,20,25,0.6); padding: 4px; border-radius: 6px; text-align: center; font-weight: 600; color: #E0E6F0; font-size: 13px;">
+                        {{ current_sheet.sub_event_results.Marks|get_item:'Computer Online (25)'|default:"—" }}
+                      </div>
+                      {% endif %}
+                    </div>
+                    <div class="mb-2">
+                      <label class="form-label" style="font-weight: 600; color: #E0E6F0; font-size: 11px;">Computer Prac
+                        (Max 25)</label>
+                      {% if can_evaluate %}
+                      <input type="number" id="input_w2_comp_prac" name="Computer Prac (25)"
+                        value="{{ current_sheet.sub_event_results.Marks|get_item:'Computer Prac (25)'|default_if_none:'' }}"
+                        class="form-control text-center"
+                        style="background: rgba(15,20,25,0.8); color: #E0E6F0; border: 1px solid rgba(82,183,136,0.4); height: 32px; border-radius: 6px;"
+                        min="0" max="25" step="0.01" oninput="calculateW2Live()">
+                      {% else %}
+                      <div
+                        style="background: rgba(15,20,25,0.6); padding: 4px; border-radius: 6px; text-align: center; font-weight: 600; color: #E0E6F0; font-size: 13px;">
+                        {{ current_sheet.sub_event_results.Marks|get_item:'Computer Prac (25)'|default:"—" }}
+                      </div>
+                      {% endif %}
+                    </div>
+                    <div
+                      style="background: rgba(82,183,136,0.1); border-radius: 6px; padding: 6px 10px; text-align: left; border: 1px dashed rgba(82,183,136,0.2); font-size: 11px;">
+                      <div class="d-flex justify-content-between">
+                        <span style="color: #8B9BB4;">Online (10):</span>
+                        <span style="font-weight:700; color: #52B788;" id="w2_comp_online_conv">{% if current_sheet %}{{ current_sheet.sub_event_results.Marks|get_item:'Computer Online Converted (10)' }}{% else %}0.00{% endif %}</span>
+                      </div>
+                      <div class="d-flex justify-content-between mt-1">
+                        <span style="color: #8B9BB4;">Prac (10):</span>
+                        <span style="font-weight:700; color: #52B788;" id="w2_comp_prac_conv">{% if current_sheet %}{{ current_sheet.sub_event_results.Marks|get_item:'Computer Prac Converted (10)' }}{% else %}0.00{% endif %}</span>
+                      </div>
+                      <div class="d-flex justify-content-between mt-1 border-top border-secondary pt-1">
+                        <span style="font-weight: 600; color: #E0E6F0;">Total (20):</span>
+                        <span style="font-weight:700; color: #52B788;" id="w2_comp_total_conv">{% if current_sheet %}{{ current_sheet.sub_event_results.Marks|get_item:'Computer Total Converted (20)' }}{% else %}0.00{% endif %}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Typing Section Card -->
+              <div class="col-md-6 col-lg-3">
+                <div class="army-card h-100"
+                  style="background: rgba(27,67,50,0.1); border: 1px solid rgba(82,183,136,0.3); border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+                  <div class="army-card-header"
+                    style="background: rgba(82,183,136,0.15); border-bottom: 1px solid rgba(82,183,136,0.2);">
+                    <h6 class="army-card-title"
+                      style="color: #52B788; font-family: 'Rajdhani', sans-serif; font-weight: 700;"><i
+                        class="bi bi-keyboard me-2"></i> Typing Section</h6>
+                  </div>
+                  <div class="army-card-body" style="padding: 16px;">
+                    <div class="mb-3">
+                      <label class="form-label" style="font-weight: 600; color: #E0E6F0; font-size: 12px;">Typing 20 WPM
+                        (Max 200)</label>
+                      {% if can_evaluate %}
+                      <input type="number" id="input_w2_typing" name="Typing 20 WPM"
+                        value="{{ current_sheet.sub_event_results.Marks|get_item:'Typing 20 WPM'|default_if_none:'' }}"
+                        class="form-control text-center"
+                        style="background: rgba(15,20,25,0.8); color: #E0E6F0; border: 1px solid rgba(82,183,136,0.4); height: 38px; border-radius: 6px; font-weight: 600;"
+                        min="0" max="200" step="0.01" oninput="calculateW2Live()">
+                      {% else %}
+                      <div
+                        style="background: rgba(15,20,25,0.6); padding: 8px; border-radius: 6px; text-align: center; font-weight: 700; color: #52B788;">
+                        {{ current_sheet.sub_event_results.Marks|get_item:'Typing 20 WPM'|default:"—" }}
+                      </div>
+                      {% endif %}
+                    </div>
+                    <div
+                      style="background: rgba(255,255,255,0.05); border-radius: 6px; padding: 12px; text-align: center; font-size: 11px; color: #8B9BB4;">
+                      Typing is evaluated raw and not scaled under the 46% weightage.
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {% elif code == 'CLK_FINAL' %}
+            <div class="row g-3">
+              <!-- Tech Section Card -->
+              <div class="col-md-6 col-lg-3">
+                <div class="army-card h-100"
+                  style="background: rgba(27,67,50,0.1); border: 1px solid rgba(82,183,136,0.3); border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+                  <div class="army-card-header"
+                    style="background: rgba(82,183,136,0.15); border-bottom: 1px solid rgba(82,183,136,0.2);">
+                    <h6 class="army-card-title"
+                      style="color: #52B788; font-family: 'Rajdhani', sans-serif; font-weight: 700;"><i
+                        class="bi bi-shield-fill-check me-2"></i> Tech Section</h6>
+                  </div>
+                  <div class="army-card-body" style="padding: 16px;">
+                    <div class="mb-2">
+                      <label class="form-label" style="font-weight: 600; color: #E0E6F0; font-size: 11px;">Tech Online
+                        (Max 115)</label>
+                      {% if can_evaluate %}
+                      <input type="number" id="input_f_tech_online" name="Tech Online (115)"
+                        value="{{ current_sheet.sub_event_results.Marks|get_item:'Tech Online (115)'|default_if_none:'' }}"
+                        class="form-control text-center"
+                        style="background: rgba(15,20,25,0.8); color: #E0E6F0; border: 1px solid rgba(82,183,136,0.4); height: 32px; border-radius: 6px;"
+                        min="0" max="115" step="0.01" oninput="calculateFLive()">
+                      {% else %}
+                      <div
+                        style="background: rgba(15,20,25,0.6); padding: 4px; border-radius: 6px; text-align: center; font-weight: 600; color: #E0E6F0; font-size: 13px;">
+                        {{ current_sheet.sub_event_results.Marks|get_item:'Tech Online (115)'|default:"—" }}
+                      </div>
+                      {% endif %}
+                    </div>
+                    <div class="mb-2">
+                      <label class="form-label" style="font-weight: 600; color: #E0E6F0; font-size: 11px;">Tech Proj
+                        HRMS (Max 25)</label>
+                      {% if can_evaluate %}
+                      <input type="number" id="input_f_tech_proj" name="Tech Proj HRMS (25)"
+                        value="{{ current_sheet.sub_event_results.Marks|get_item:'Tech Proj HRMS (25)'|default_if_none:'' }}"
+                        class="form-control text-center"
+                        style="background: rgba(15,20,25,0.8); color: #E0E6F0; border: 1px solid rgba(82,183,136,0.4); height: 32px; border-radius: 6px;"
+                        min="0" max="25" step="0.01" oninput="calculateFLive()">
+                      {% else %}
+                      <div
+                        style="background: rgba(15,20,25,0.6); padding: 4px; border-radius: 6px; text-align: center; font-weight: 600; color: #E0E6F0; font-size: 13px;">
+                        {{ current_sheet.sub_event_results.Marks|get_item:'Tech Proj HRMS (25)'|default:"—" }}
+                      </div>
+                      {% endif %}
+                    </div>
+                    <div
+                      style="background: rgba(82,183,136,0.1); border-radius: 6px; padding: 6px 10px; text-align: left; border: 1px dashed rgba(82,183,136,0.2); font-size: 11px;">
+                      <div class="d-flex justify-content-between">
+                        <span style="color: #8B9BB4;">Online (46):</span>
+                        <span style="font-weight:700; color: #52B788;" id="f_tech_online_conv">{% if current_sheet %}{{ current_sheet.sub_event_results.Marks|get_item:'Tech Online Converted (46)' }}{% else %}0.00{% endif %}</span>
+                      </div>
+                      <div class="d-flex justify-content-between mt-1">
+                        <span style="color: #8B9BB4;">Proj (10):</span>
+                        <span style="font-weight:700; color: #52B788;" id="f_tech_proj_conv">{% if current_sheet %}{{ current_sheet.sub_event_results.Marks|get_item:'Tech Proj Converted (10)' }}{% else %}0.00{% endif %}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Academic Section Card -->
+              <div class="col-md-6 col-lg-2" style="flex: 1 1 16%;">
+                <div class="army-card h-100"
+                  style="background: rgba(27,67,50,0.1); border: 1px solid rgba(82,183,136,0.3); border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+                  <div class="army-card-header"
+                    style="background: rgba(82,183,136,0.15); border-bottom: 1px solid rgba(82,183,136,0.2);">
+                    <h6 class="army-card-title"
+                      style="color: #52B788; font-family: 'Rajdhani', sans-serif; font-weight: 700;"><i
+                        class="bi bi-book-half me-2"></i> Academic</h6>
+                  </div>
+                  <div class="army-card-body" style="padding: 16px;">
+                    <div class="mb-3">
+                      <label class="form-label" style="font-weight: 600; color: #E0E6F0; font-size: 12px;">Online (Max
+                        85)</label>
+                      {% if can_evaluate %}
+                      <input type="number" id="input_f_academic" name="Academic Online (85)"
+                        value="{{ current_sheet.sub_event_results.Marks|get_item:'Academic Online (85)'|default_if_none:'' }}"
+                        class="form-control text-center"
+                        style="background: rgba(15,20,25,0.8); color: #E0E6F0; border: 1px solid rgba(82,183,136,0.4); height: 38px; border-radius: 6px; font-weight: 600;"
+                        min="0" max="85" step="0.01" oninput="calculateFLive()">
+                      {% else %}
+                      <div
+                        style="background: rgba(15,20,25,0.6); padding: 8px; border-radius: 6px; text-align: center; font-weight: 700; color: #52B788;">
+                        {{ current_sheet.sub_event_results.Marks|get_item:'Academic Online (85)'|default:"—" }}
+                      </div>
+                      {% endif %}
+                    </div>
+                    <div
+                      style="background: rgba(82,183,136,0.1); border-radius: 6px; padding: 10px; text-align: center; border: 1px dashed rgba(82,183,136,0.2);">
+                      <div style="font-size: 10px; color: #8B9BB4; text-transform: uppercase;">Converted (34)</div>
+                      <div
+                        style="font-family: 'Rajdhani', sans-serif; font-size: 18px; font-weight: 700; color: #52B788; margin-top: 2px;">
+                        <span id="f_academic_conv">{% if current_sheet %}{{ current_sheet.sub_event_results.Marks|get_item:'Academic Converted (34)' }}{% else %}0.00{% endif %}</span> / 34
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Computer Section Card -->
+              <div class="col-md-6 col-lg-3">
+                <div class="army-card h-100"
+                  style="background: rgba(27,67,50,0.1); border: 1px solid rgba(82,183,136,0.3); border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+                  <div class="army-card-header"
+                    style="background: rgba(82,183,136,0.15); border-bottom: 1px solid rgba(82,183,136,0.2);">
+                    <h6 class="army-card-title"
+                      style="color: #52B788; font-family: 'Rajdhani', sans-serif; font-weight: 700;"><i
+                        class="bi bi-cpu me-2"></i> Computer Section</h6>
+                  </div>
+                  <div class="army-card-body" style="padding: 16px;">
+                    <div class="mb-2">
+                      <label class="form-label" style="font-weight: 600; color: #E0E6F0; font-size: 11px;">Computer
+                        Online (Max 25)</label>
+                      {% if can_evaluate %}
+                      <input type="number" id="input_f_comp_online" name="Computer Online (25)"
+                        value="{{ current_sheet.sub_event_results.Marks|get_item:'Computer Online (25)'|default_if_none:'' }}"
+                        class="form-control text-center"
+                        style="background: rgba(15,20,25,0.8); color: #E0E6F0; border: 1px solid rgba(82,183,136,0.4); height: 32px; border-radius: 6px;"
+                        min="0" max="25" step="0.01" oninput="calculateFLive()">
+                      {% else %}
+                      <div
+                        style="background: rgba(15,20,25,0.6); padding: 4px; border-radius: 6px; text-align: center; font-weight: 600; color: #E0E6F0; font-size: 13px;">
+                        {{ current_sheet.sub_event_results.Marks|get_item:'Computer Online (25)'|default:"—" }}
+                      </div>
+                      {% endif %}
+                    </div>
+                    <div class="mb-2">
+                      <label class="form-label" style="font-weight: 600; color: #E0E6F0; font-size: 11px;">Computer Prac
+                        (Max 25)</label>
+                      {% if can_evaluate %}
+                      <input type="number" id="input_f_comp_prac" name="Computer Prac (25)"
+                        value="{{ current_sheet.sub_event_results.Marks|get_item:'Computer Prac (25)'|default_if_none:'' }}"
+                        class="form-control text-center"
+                        style="background: rgba(15,20,25,0.8); color: #E0E6F0; border: 1px solid rgba(82,183,136,0.4); height: 32px; border-radius: 6px;"
+                        min="0" max="25" step="0.01" oninput="calculateFLive()">
+                      {% else %}
+                      <div
+                        style="background: rgba(15,20,25,0.6); padding: 4px; border-radius: 6px; text-align: center; font-weight: 600; color: #E0E6F0; font-size: 13px;">
+                        {{ current_sheet.sub_event_results.Marks|get_item:'Computer Prac (25)'|default:"—" }}
+                      </div>
+                      {% endif %}
+                    </div>
+                    <div
+                      style="background: rgba(82,183,136,0.1); border-radius: 6px; padding: 6px 10px; text-align: left; border: 1px dashed rgba(82,183,136,0.2); font-size: 11px;">
+                      <div class="d-flex justify-content-between">
+                        <span style="color: #8B9BB4;">Online (10):</span>
+                        <span style="font-weight:700; color: #52B788;" id="f_comp_online_conv">{% if current_sheet %}{{ current_sheet.sub_event_results.Marks|get_item:'Computer Online Converted (10)' }}{% else %}0.00{% endif %}</span>
+                      </div>
+                      <div class="d-flex justify-content-between mt-1">
+                        <span style="color: #8B9BB4;">Prac (10):</span>
+                        <span style="font-weight:700; color: #52B788;" id="f_comp_prac_conv">{% if current_sheet %}{{ current_sheet.sub_event_results.Marks|get_item:'Computer Prac Converted (10)' }}{% else %}0.00{% endif %}</span>
+                      </div>
+                      <div class="d-flex justify-content-between mt-1 border-top border-secondary pt-1">
+                        <span style="font-weight: 600; color: #E0E6F0;">Total (20):</span>
+                        <span style="font-weight:700; color: #52B788;" id="f_comp_total_conv">{% if current_sheet %}{{ current_sheet.sub_event_results.Marks|get_item:'Computer Total Converted (20)' }}{% else %}0.00{% endif %}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Extempore Section Card -->
+              <div class="col-md-6 col-lg-2" style="flex: 1 1 16%;">
+                <div class="army-card h-100"
+                  style="background: rgba(27,67,50,0.1); border: 1px solid rgba(82,183,136,0.3); border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+                  <div class="army-card-header"
+                    style="background: rgba(82,183,136,0.15); border-bottom: 1px solid rgba(82,183,136,0.2);">
+                    <h6 class="army-card-title"
+                      style="color: #52B788; font-family: 'Rajdhani', sans-serif; font-weight: 700;"><i
+                        class="bi bi-mic me-2"></i> Extempore</h6>
+                  </div>
+                  <div class="army-card-body" style="padding: 16px;">
+                    <div class="mb-3">
+                      <label class="form-label" style="font-weight: 600; color: #E0E6F0; font-size: 12px;">Extempore
+                        (Max 25)</label>
+                      {% if can_evaluate %}
+                      <input type="number" id="input_f_extempore" name="Extempore (25)"
+                        value="{{ current_sheet.sub_event_results.Marks|get_item:'Extempore (25)'|default_if_none:'' }}"
+                        class="form-control text-center"
+                        style="background: rgba(15,20,25,0.8); color: #E0E6F0; border: 1px solid rgba(82,183,136,0.4); height: 38px; border-radius: 6px; font-weight: 600;"
+                        min="0" max="25" step="0.01" oninput="calculateFLive()">
+                      {% else %}
+                      <div
+                        style="background: rgba(15,20,25,0.6); padding: 8px; border-radius: 6px; text-align: center; font-weight: 700; color: #52B788;">
+                        {{ current_sheet.sub_event_results.Marks|get_item:'Extempore (25)'|default:"—" }}
+                      </div>
+                      {% endif %}
+                    </div>
+                    <div
+                      style="background: rgba(82,183,136,0.1); border-radius: 6px; padding: 10px; text-align: center; border: 1px dashed rgba(82,183,136,0.2);">
+                      <div style="font-size: 10px; color: #8B9BB4; text-transform: uppercase;">Converted (10)</div>
+                      <div
+                        style="font-family: 'Rajdhani', sans-serif; font-size: 18px; font-weight: 700; color: #52B788; margin-top: 2px;">
+                        <span id="f_extempore_conv">{% if current_sheet %}{{ current_sheet.sub_event_results.Marks|get_item:'Extempore Converted (10)' }}{% else %}0.00{% endif %}</span> / 10
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Typing Section Card -->
+              <div class="col-md-6 col-lg-2" style="flex: 1 1 16%;">
+                <div class="army-card h-100"
+                  style="background: rgba(27,67,50,0.1); border: 1px solid rgba(82,183,136,0.3); border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+                  <div class="army-card-header"
+                    style="background: rgba(82,183,136,0.15); border-bottom: 1px solid rgba(82,183,136,0.2);">
+                    <h6 class="army-card-title"
+                      style="color: #52B788; font-family: 'Rajdhani', sans-serif; font-weight: 700;"><i
+                        class="bi bi-keyboard me-2"></i> Typing</h6>
+                  </div>
+                  <div class="army-card-body" style="padding: 16px;">
+                    <div class="mb-3">
+                      <label class="form-label" style="font-weight: 600; color: #E0E6F0; font-size: 12px;">Typing (Max
+                        200)</label>
+                      {% if can_evaluate %}
+                      <input type="number" id="input_f_typing" name="Typing 20 WPM"
+                        value="{{ current_sheet.sub_event_results.Marks|get_item:'Typing 20 WPM'|default_if_none:'' }}"
+                        class="form-control text-center"
+                        style="background: rgba(15,20,25,0.8); color: #E0E6F0; border: 1px solid rgba(82,183,136,0.4); height: 38px; border-radius: 6px; font-weight: 600;"
+                        min="0" max="200" step="0.01" oninput="calculateFLive()">
+                      {% else %}
+                      <div
+                        style="background: rgba(15,20,25,0.6); padding: 8px; border-radius: 6px; text-align: center; font-weight: 700; color: #52B788;">
+                        {{ current_sheet.sub_event_results.Marks|get_item:'Typing 20 WPM'|default:"—" }}
+                      </div>
+                      {% endif %}
+                    </div>
+                    <div
+                      style="background: rgba(255,255,255,0.05); border-radius: 6px; padding: 6px; text-align: center; font-size: 10px; color: #8B9BB4;">
+                      Typing is evaluated raw and not scaled under 40%.
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            {% endif %}
+
+            {% if can_evaluate %}
+          </form>
+          {% endif %}
+
+          <!-- Sticky Bottom Summary Panel for Clerk Workspace -->
+          <div class="evaluation-sticky-footer no-print">
+            <div class="d-flex align-items-center gap-2">
+              <div class="compact-score-card">
+                <span class="card-label">Marks Obtained</span>
+                <span class="card-val text-success">
+                  <span id="live_total_obtained">{% if current_sheet %}{{ current_sheet.get_total_marks|floatformat:2 }}{% else %}0.00{% endif %}</span>
+                  <span style="font-size: 9px; color: var(--text-muted);">/{% if code == 'CLK_INITIAL' %}50{% elif code == 'CLK_WEEKLY_1' %}69{% elif code == 'CLK_WEEKLY_2' %}126.50{% else %}120.00{% endif %}</span>
+                </span>
+              </div>
+              <div class="compact-score-card">
+                <span class="card-label">Overall Percentage</span>
+                <span class="card-val text-info">
+                  <span id="live_percentage">{% if current_sheet %}{{ current_sheet.get_percentage|floatformat:2 }}{% else %}0.00{% endif %}</span>%
+                </span>
+              </div>
+              <div class="compact-score-card">
+                <span class="card-label">Performance Grade</span>
+                <span class="card-val" id="live_grade" style="color: var(--text-primary);">
+                  {% if current_sheet %}{{ current_sheet.sub_event_results.Marks.Grading|default:"—" }}{% else %}—{% endif %}
+                </span>
+              </div>
+              <div class="compact-score-card">
+                <span class="card-label">Evaluation Status</span>
+                <span class="card-val" id="live_status">
+                  {% if current_sheet %}
+                  {% if current_sheet.is_pass %}
+                  <span style="color: #52B788;">✓ PASS</span>
+                  {% else %}
+                  <span style="color: #EF5350;">✗ FAIL</span>
+                  {% endif %}
+                  {% else %}
+                  <span style="color: #8B9BB4;">PENDING</span>
+                  {% endif %}
+                </span>
+              </div>
+            </div>
+
+            {% if can_evaluate %}
+            <div>
+              <button type="submit" form="form-{{ code }}" class="btn btn-army px-4 py-2"
+                style="font-weight:700; font-family:'Rajdhani',sans-serif; letter-spacing:1px; font-size:12px;">
+                <i class="bi bi-cloud-arrow-up-fill me-2"></i> Save Marks
+              </button>
+            </div>
+            {% endif %}
+          </div>
+
+          {% else %}
+          {# Standard dynamic tabs for Battalion, TTS, CS, etc. #}
+          <h6 style="color: #52B788; margin-bottom: 20px; font-family: 'Rajdhani', sans-serif;">{{ name }} Detailed
+            Results</h6>
+
+          {% if can_evaluate %}
+          <form id="form-{{ code }}" method="post" action="{% url 'evaluation:evaluate_agniveer' agniveer.pk %}">
+            {% csrf_token %}
+            <input type="hidden" name="active_test" value="{{ code }}">
+            {% endif %}
+
+            {% if code == 'Firing' %}
+            <!-- Firing 2-Column Split Layout -->
+            <div class="row g-3">
+              <div class="col-md-6">
+                <h6
+                  style="color: #52B788; text-transform: uppercase; font-size: 14px; text-align: center; letter-spacing: 2px;">
+                  DAY FIRE</h6>
+                <div class="table-responsive">
+                  <table class="army-table">
+                    <thead>
+                      <tr>
+                        <th>Event / Sub-Event</th>
+                        <th style="text-align:center; font-size:12px;">1st Attempt</th>
+                        <th style="text-align:center; font-size:12px;">2nd Attempt</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for sub in dept_config.sub_events|get_item:code|slice:":5" %}
+                      <tr>
+                        <td style="font-weight: 600; color: #E0E6F0; font-size:13px; white-space:nowrap;">{{ sub }}</td>
+                        {% for col in t_config.columns %}
+                        <td style="text-align:center; font-family: 'Rajdhani', sans-serif;">
+                          {% with val=current_sheet.sub_event_results|get_item:col|get_item:sub %}
+                          {% if can_evaluate %}
+                          <input type="number" name="{{ col }}_{{ sub }}"
+                            value="{% if val is not None %}{{ val }}{% else %}{% if col == '1st Attempt' %}{{ current_sheet.sub_event_results|get_item:'nco'|get_item:sub|default_if_none:'' }}{% elif col == '2nd Attempt' %}{{ current_sheet.sub_event_results|get_item:'jco'|get_item:sub|default_if_none:'' }}{% endif %}{% endif %}"
+                            class="form-control marks-input text-center mx-auto"
+                            style="background: rgba(15,20,25,0.6); color: #E0E6F0; border: 1px solid rgba(82,183,136,0.3); width: 60px; height: 30px; padding: 2px 5px; font-size: 14px; border-radius: 4px;"
+                            min="0" max="8" step="0.01" placeholder="0-8" title="Maximum marks: 8"
+                            oninput="if(this.value && parseInt(this.value) > parseInt(this.max)) this.value = this.max;">
+                          {% else %}
+                          {% if val is not None %}{{ val }}{% else %}{% if col == '1st Attempt' %}{{ current_sheet.sub_event_results|get_item:'nco'|get_item:sub|default:"—" }}{% elif col == '2nd Attempt' %}{{ current_sheet.sub_event_results|get_item:'jco'|get_item:sub|default:"—" }}{% endif %}{% endif %}
+                          {% endif %}
+                          {% endwith %}
+                         </td>
+                        {% endfor %}
+                       </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div class="col-md-6">
+                <h6
+                  style="color: #52B788; text-transform: uppercase; font-size: 14px; text-align: center; letter-spacing: 2px;">
+                  NIGHT FIRE</h6>
+                <div class="table-responsive">
+                  <table class="army-table">
+                    <thead>
+                      <tr>
+                        <th>Event / Sub-Event</th>
+                        <th style="text-align:center; font-size:12px;">1st Attempt</th>
+                        <th style="text-align:center; font-size:12px;">2nd Attempt</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for sub in dept_config.sub_events|get_item:code|slice:"5:" %}
+                      <tr>
+                        <td style="font-weight: 600; color: #E0E6F0; font-size:13px; white-space:nowrap;">{{ sub }}</td>
+                        {% for col in t_config.columns %}
+                        <td style="text-align:center; font-family: 'Rajdhani', sans-serif;">
+                          {% with val=current_sheet.sub_event_results|get_item:col|get_item:sub %}
+                          {% if can_evaluate %}
+                          <input type="number" name="{{ col }}_{{ sub }}"
+                            value="{% if val is not None %}{{ val }}{% else %}{% if col == '1st Attempt' %}{{ current_sheet.sub_event_results|get_item:'nco'|get_item:sub|default_if_none:'' }}{% elif col == '2nd Attempt' %}{{ current_sheet.sub_event_results|get_item:'jco'|get_item:sub|default_if_none:'' }}{% endif %}{% endif %}"
+                            class="form-control marks-input text-center mx-auto"
+                            style="background: rgba(15,20,25,0.6); color: #E0E6F0; border: 1px solid rgba(82,183,136,0.3); width: 60px; height: 30px; padding: 2px 5px; font-size: 14px; border-radius: 4px;"
+                            min="0" max="8" step="0.01" placeholder="0-8" title="Maximum marks: 8"
+                            oninput="if(this.value && parseInt(this.value) > parseInt(this.max)) this.value = this.max;">
+                          {% else %}
+                          {% if val is not None %}{{ val }}{% else %}{% if col == '1st Attempt' %}{{ current_sheet.sub_event_results|get_item:'nco'|get_item:sub|default:"—" }}{% elif col == '2nd Attempt' %}{{ current_sheet.sub_event_results|get_item:'jco'|get_item:sub|default:"—" }}{% endif %}{% endif %}
+                          {% endif %}
+                          {% endwith %}
+                         </td>
+                        {% endfor %}
+                       </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <!-- Firing Totals -->
+            <div class="table-responsive mt-3">
+              <table class="army-table">
+                <tbody>
+                  <tr style="background: rgba(82, 183, 136, 0.05);">
+                    <td style="font-weight: 700; color: #52B788; font-size:13px; width: 30%;">TOTAL</td>
+                    {% for col in t_config.columns %}
+                    <td
+                      style="text-align:center; font-weight: 700; color: #52B788; font-family: 'Rajdhani', sans-serif;">
+                      {% if current_sheet %}
+                      {% with total=current_sheet.sub_event_results|get_item:col|get_item:'TOTAL POINT' %}
+                      {% if total is not None %}{{ total }}{% else %}{% if col == '1st Attempt' %}{{ current_sheet.get_nco_marks }}{% elif col == '2nd Attempt' %}{{ current_sheet.get_jco_marks }}{% else %}—{% endif %}{% endif %}
+                      {% endwith %}
+                      {% else %}—{% endif %}
+                     </td>
+                    {% endfor %}
+                  </tr>
+                  <tr style="background: rgba(82, 183, 136, 0.1);">
+                    <td style="font-weight: 800; color: #52B788; font-size:13px; width: 30%;">CONVERTED (100) MKS</td>
+                    {% for col in t_config.columns %}
+                    <td
+                      style="text-align:center; font-weight: 800; color: #52B788; font-family: 'Rajdhani', sans-serif;"
+                      data-converted-col="{{ col }}">
+                      {% if current_sheet %}
+                      {% with conv=current_sheet.sub_event_results|get_item:col|get_item:'CONVERTED 100 MKS' %}
+                      {% if conv is not None %}{{ conv }}{% else %}—{% endif %}
+                      {% endwith %}
+                      {% else %}—{% endif %}
+                     </td>
+                    {% endfor %}
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            {% elif code == 'BN_SCREENING' %}
+            <div class="row g-3">
+              <!-- Screening Board Card -->
+              <div class="col-md-4">
+                <div class="army-card h-100" style="background: rgba(27,67,50,0.1); border: 1px solid rgba(82,183,136,0.3); border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+                  <div class="army-card-header" style="background: rgba(82,183,136,0.15); border-bottom: 1px solid rgba(82,183,136,0.2);">
+                    <h6 class="army-card-title" style="color: #52B788; font-family: 'Rajdhani', sans-serif; font-weight: 700;">SCREENING BOARD (80)</h6>
+                  </div>
+                  <div class="army-card-body" style="padding: 16px;">
+                    <!-- Input fields -->
+                    <div class="mb-3">
+                      <label class="form-label" style="font-weight: 600; color: #E0E6F0; font-size: 11px;">COMMN MIL KNOWLEDGE (20)</label>
+                      {% if can_evaluate %}
+                      <input type="number" name="COMMN MIL KNOWLEDGE (20)" id="bn_in_cmk"
+                        value="{% with stored=current_sheet.sub_event_results.Marks|get_item:'COMMN MIL KNOWLEDGE (20)' %}{% if stored is not None %}{{ stored }}{% else %}{{ current_sheet.sub_event_results|get_item:'COMMN MIL KNOWLEDGE (20)'|default_if_none:'' }}{% endif %}{% endwith %}"
+                        class="form-control text-center bn-input"
+                        style="background: rgba(15,20,25,0.8); color: #E0E6F0; border: 1px solid rgba(82,183,136,0.4); height: 32px; border-radius: 6px;"
+                        min="0" max="20" step="0.01" oninput="if(this.value && parseFloat(this.value) > parseFloat(this.max)) this.value = this.max; calculateBNScreeningLive();">
+                      {% else %}
+                      <div style="background: rgba(15,20,25,0.6); padding: 4px; border-radius: 6px; text-align: center; font-weight: 600; color: #E0E6F0; font-size: 13px;">
+                        {{ current_sheet.sub_event_results.Marks|get_item:'COMMN MIL KNOWLEDGE (20)'|default:"—" }}
+                      </div>
+                      {% endif %}
+                    </div>
+                    <div class="mb-3">
+                      <label class="form-label" style="font-weight: 600; color: #E0E6F0; font-size: 11px;">WPN & EQPT HANDLING (20)</label>
+                      {% if can_evaluate %}
+                      <input type="number" name="WPN & EQPT HANDLING (20)" id="bn_in_wpn"
+                        value="{% with stored=current_sheet.sub_event_results.Marks|get_item:'WPN & EQPT HANDLING (20)' %}{% if stored is not None %}{{ stored }}{% else %}{{ current_sheet.sub_event_results|get_item:'WPN & EQPT HANDLING (20)'|default_if_none:'' }}{% endif %}{% endwith %}"
+                        class="form-control text-center bn-input"
+                        style="background: rgba(15,20,25,0.8); color: #E0E6F0; border: 1px solid rgba(82,183,136,0.4); height: 32px; border-radius: 6px;"
+                        min="0" max="20" step="0.01" oninput="if(this.value && parseFloat(this.value) > parseFloat(this.max)) this.value = this.max; calculateBNScreeningLive();">
+                      {% else %}
+                      <div style="background: rgba(15,20,25,0.6); padding: 4px; border-radius: 6px; text-align: center; font-weight: 600; color: #E0E6F0; font-size: 13px;">
+                        {{ current_sheet.sub_event_results.Marks|get_item:'WPN & EQPT HANDLING (20)'|default:"—" }}
+                      </div>
+                      {% endif %}
+                    </div>
+                    <div class="mb-3">
+                      <label class="form-label" style="font-weight: 600; color: #E0E6F0; font-size: 11px;">BASIC TAC (40)</label>
+                      {% if can_evaluate %}
+                      <input type="number" name="BASIC TAC (40)" id="bn_in_tac"
+                        value="{% with stored=current_sheet.sub_event_results.Marks|get_item:'BASIC TAC (40)' %}{% if stored is not None %}{{ stored }}{% else %}{{ current_sheet.sub_event_results|get_item:'BASIC TAC (40)'|default_if_none:'' }}{% endif %}{% endwith %}"
+                        class="form-control text-center bn-input"
+                        style="background: rgba(15,20,25,0.8); color: #E0E6F0; border: 1px solid rgba(82,183,136,0.4); height: 32px; border-radius: 6px;"
+                        min="0" max="40" step="0.01" oninput="if(this.value && parseFloat(this.value) > parseFloat(this.max)) this.value = this.max; calculateBNScreeningLive();">
+                      {% else %}
+                      <div style="background: rgba(15,20,25,0.6); padding: 4px; border-radius: 6px; text-align: center; font-weight: 600; color: #E0E6F0; font-size: 13px;">
+                        {{ current_sheet.sub_event_results.Marks|get_item:'BASIC TAC (40)'|default:"—" }}
+                      </div>
+                      {% endif %}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Physical Board Card -->
+              <div class="col-md-4">
+                <div class="army-card h-100" style="background: rgba(27,67,50,0.1); border: 1px solid rgba(82,183,136,0.3); border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+                  <div class="army-card-header" style="background: rgba(82,183,136,0.15); border-bottom: 1px solid rgba(82,183,136,0.2);">
+                    <h6 class="army-card-title" style="color: #52B788; font-family: 'Rajdhani', sans-serif; font-weight: 700;">PHYSICAL BOARD (50)</h6>
+                  </div>
+                  <div class="army-card-body" style="padding: 16px;">
+                    <div class="mb-3">
+                      <label class="form-label" style="font-weight: 600; color: #E0E6F0; font-size: 11px;">PPT (10)</label>
+                      {% if can_evaluate %}
+                      <input type="number" name="PPT (10)" id="bn_in_ppt"
+                        value="{% with stored=current_sheet.sub_event_results.Marks|get_item:'PPT (10)' %}{% if stored is not None %}{{ stored }}{% else %}{{ current_sheet.sub_event_results|get_item:'PPT (10)'|default_if_none:'' }}{% endif %}{% endwith %}"
+                        class="form-control text-center bn-input"
+                        style="background: rgba(15,20,25,0.8); color: #E0E6F0; border: 1px solid rgba(82,183,136,0.4); height: 32px; border-radius: 6px;"
+                        min="0" max="10" step="0.01" oninput="if(this.value && parseFloat(this.value) > parseFloat(this.max)) this.value = this.max; calculateBNScreeningLive();">
+                      {% else %}
+                      <div style="background: rgba(15,20,25,0.6); padding: 4px; border-radius: 6px; text-align: center; font-weight: 600; color: #E0E6F0; font-size: 13px;">
+                        {{ current_sheet.sub_event_results.Marks|get_item:'PPT (10)'|default:"—" }}
+                      </div>
+                      {% endif %}
+                    </div>
+                    <div class="mb-3">
+                      <label class="form-label" style="font-weight: 600; color: #E0E6F0; font-size: 11px;">FIRE (10)</label>
+                      {% if can_evaluate %}
+                      <input type="number" name="FIRE (10)" id="bn_in_fire"
+                        value="{% with stored=current_sheet.sub_event_results.Marks|get_item:'FIRE (10)' %}{% if stored is not None %}{{ stored }}{% else %}{{ current_sheet.sub_event_results|get_item:'FIRE (10)'|default_if_none:'' }}{% endif %}{% endwith %}"
+                        class="form-control text-center bn-input"
+                        style="background: rgba(15,20,25,0.8); color: #E0E6F0; border: 1px solid rgba(82,183,136,0.4); height: 32px; border-radius: 6px;"
+                        min="0" max="10" step="0.01" oninput="if(this.value && parseFloat(this.value) > parseFloat(this.max)) this.value = this.max; calculateBNScreeningLive();">
+                      {% else %}
+                      <div style="background: rgba(15,20,25,0.6); padding: 4px; border-radius: 6px; text-align: center; font-weight: 600; color: #E0E6F0; font-size: 13px;">
+                        {{ current_sheet.sub_event_results.Marks|get_item:'FIRE (10)'|default:"—" }}
+                      </div>
+                      {% endif %}
+                    </div>
+                    <div class="mb-3">
+                      <label class="form-label" style="font-weight: 600; color: #E0E6F0; font-size: 11px;">DRILL (20)</label>
+                      {% if can_evaluate %}
+                      <input type="number" name="DRILL (20)" id="bn_in_drill"
+                        value="{% with stored=current_sheet.sub_event_results.Marks|get_item:'DRILL (20)' %}{% if stored is not None %}{{ stored }}{% else %}{{ current_sheet.sub_event_results|get_item:'DRILL (20)'|default_if_none:'' }}{% endif %}{% endwith %}"
+                        class="form-control text-center bn-input"
+                        style="background: rgba(15,20,25,0.8); color: #E0E6F0; border: 1px solid rgba(82,183,136,0.4); height: 32px; border-radius: 6px;"
+                        min="0" max="20" step="0.01" oninput="if(this.value && parseFloat(this.value) > parseFloat(this.max)) this.value = this.max; calculateBNScreeningLive();">
+                      {% else %}
+                      <div style="background: rgba(15,20,25,0.6); padding: 4px; border-radius: 6px; text-align: center; font-weight: 600; color: #E0E6F0; font-size: 13px;">
+                        {{ current_sheet.sub_event_results.Marks|get_item:'DRILL (20)'|default:"—" }}
+                      </div>
+                      {% endif %}
+                    </div>
+                    <div class="mb-3">
+                      <label class="form-label" style="font-weight: 600; color: #E0E6F0; font-size: 11px;">BPET (10)</label>
+                      {% if can_evaluate %}
+                      <input type="number" name="BPET (10)" id="bn_in_bpet"
+                        value="{% with stored=current_sheet.sub_event_results.Marks|get_item:'BPET (10)' %}{% if stored is not None %}{{ stored }}{% else %}{{ current_sheet.sub_event_results|get_item:'BPET (10)'|default_if_none:'' }}{% endif %}{% endwith %}"
+                        class="form-control text-center bn-input"
+                        style="background: rgba(15,20,25,0.8); color: #E0E6F0; border: 1px solid rgba(82,183,136,0.4); height: 32px; border-radius: 6px;"
+                        min="0" max="10" step="0.01" oninput="if(this.value && parseFloat(this.value) > parseFloat(this.max)) this.value = this.max; calculateBNScreeningLive();">
+                      {% else %}
+                      <div style="background: rgba(15,20,25,0.6); padding: 4px; border-radius: 6px; text-align: center; font-weight: 600; color: #E0E6F0; font-size: 13px;">
+                        {{ current_sheet.sub_event_results.Marks|get_item:'BPET (10)'|default:"—" }}
+                      </div>
+                      {% endif %}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Output Board Card -->
+              <div class="col-md-4">
+                <div class="army-card h-100" style="background: rgba(82,183,136,0.05); border: 1px solid rgba(82,183,136,0.3); border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+                  <div class="army-card-header" style="background: rgba(82,183,136,0.2); border-bottom: 1px solid rgba(82,183,136,0.2);">
+                    <h6 class="army-card-title" style="color: #52B788; font-family: 'Rajdhani', sans-serif; font-weight: 700;">AV MERIT LIST 7TH BATCH</h6>
+                  </div>
+                  <div class="army-card-body" style="padding: 16px;">
+                    <!-- The calculated fields -->
+                    <div class="mb-2 d-flex justify-content-between align-items-center" style="border-bottom: 1px dashed rgba(82,183,136,0.2); padding-bottom: 8px;">
+                      <span style="color: #8B9BB4; font-size: 11px; font-weight: 600;">COMMON MIL KNOWLEDGE (20)</span>
+                      <span style="font-weight:700; color: #52B788; font-family: 'Rajdhani', sans-serif;" id="bn_out_cmk">{% if current_sheet %}{{ current_sheet.sub_event_results.Marks|get_item:'COMMON MIL KNOWLEDGE (20)'|default:"0" }}{% else %}0{% endif %}</span>
+                    </div>
+                    <div class="mb-2 d-flex justify-content-between align-items-center" style="border-bottom: 1px dashed rgba(82,183,136,0.2); padding-bottom: 8px;">
+                      <span style="color: #8B9BB4; font-size: 11px; font-weight: 600;">BASIC TACTICE (CES) (40)</span>
+                      <span style="font-weight:700; color: #52B788; font-family: 'Rajdhani', sans-serif;" id="bn_out_ces">{% if current_sheet %}{{ current_sheet.sub_event_results.Marks|get_item:'BASIC TACTICE (CES) (40)'|default:"0" }}{% else %}0{% endif %}</span>
+                    </div>
+                    <div class="mb-2 d-flex justify-content-between align-items-center" style="border-bottom: 1px dashed rgba(82,183,136,0.2); padding-bottom: 8px;">
+                      <span style="color: #8B9BB4; font-size: 11px; font-weight: 600;">TRADE PROFICIENCY (BTT) (40)</span>
+                      <span style="font-weight:700; color: #52B788; font-family: 'Rajdhani', sans-serif;" id="bn_out_btt">{% if current_sheet %}{{ current_sheet.sub_event_results.Marks|get_item:'TRADE PROFICIENCY (BTT) (40)'|default:"0" }}{% else %}0{% endif %}</span>
+                    </div>
+                    <div class="mb-2 d-flex justify-content-between align-items-center" style="border-bottom: 1px dashed rgba(82,183,136,0.2); padding-bottom: 8px;">
+                      <span style="color: #8B9BB4; font-size: 11px; font-weight: 600;">WPN & EQPT HANDLING (20)</span>
+                      <span style="font-weight:700; color: #52B788; font-family: 'Rajdhani', sans-serif;" id="bn_out_wpn">{% if current_sheet %}{{ current_sheet.sub_event_results.Marks|get_item:'WPN & EQPT HANDLING (20)'|default:"0" }}{% else %}0{% endif %}</span>
+                    </div>
+                    <div class="mb-2 d-flex justify-content-between align-items-center" style="background: rgba(82,183,136,0.1); padding: 8px; border-radius: 6px;">
+                      <span style="color: #52B788; font-size: 12px; font-weight: 700;">TOTAL (120)</span>
+                      <span style="font-weight:800; color: #E0E6F0; font-family: 'Rajdhani', sans-serif; font-size: 14px;" id="bn_out_tot">{% if current_sheet %}{{ current_sheet.sub_event_results.Marks|get_item:'TOTAL (120)'|default:"0" }}{% else %}0{% endif %}</span>
+                    </div>
+                    <div class="mb-0 d-flex justify-content-between align-items-center" style="background: rgba(82,183,136,0.15); padding: 8px; border-radius: 6px;">
+                      <span style="color: #52B788; font-size: 12px; font-weight: 700;">ROUND FIGURE(120)</span>
+                      <span style="font-weight:800; color: #E0E6F0; font-family: 'Rajdhani', sans-serif; font-size: 14px;" id="bn_out_round">{% if current_sheet %}{{ current_sheet.sub_event_results.Marks|get_item:'ROUND FIGURE(120)'|default:"0" }}{% else %}0{% endif %}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {% else %}
+
+            <div class="table-responsive">
+              <table class="army-table">
+                <thead>
+                  <tr>
+                    <th>Event / Sub-Event</th>
+                    {% if t_config.columns %}
+                    {% for col in t_config.columns %}
+                    <th style="text-align:center; font-size:12px;">{{ col }}</th>
+                    {% endfor %}
+                    {% else %}
+                    <th style="text-align:center;">Marks</th>
+                    {% endif %}
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for sub in dept_config.sub_events|get_item:code %}
+                  {# Group Headers for FC_All and OPEM #}
+                  {% if code == 'FC_All' %}
+                  {% if forloop.counter0 == 0 %}
+                  <tr style="background: rgba(82, 183, 136, 0.15);">
+                    <td colspan="100%"
+                      style="font-weight: 700; color: #52B788; text-transform: uppercase; font-size: 14px; text-align: center; letter-spacing: 2px;">
+                      FC PRACTICAL</td>
+                  </tr>
+                  {% elif forloop.counter0 == 3 %}
+                  <tr style="background: rgba(82, 183, 136, 0.05);">
+                    <td style="font-weight: 700; color: #52B788; font-size:13px;">FC PRACTICAL TOTAL</td>
+                    <td
+                      style="text-align:center; font-weight: 700; color: #52B788; font-family: 'Rajdhani', sans-serif;"
+                      id="fc-practical-total">
+                      {% if current_sheet %}{{ current_sheet.sub_event_results.Marks|get_item:'FC Practical Total'|default:"—" }}{% else %}—{% endif %}
+                     </td>
+                  </tr>
+                  <tr style="background: rgba(82, 183, 136, 0.15);">
+                    <td colspan="100%"
+                      style="font-weight: 700; color: #52B788; text-transform: uppercase; font-size: 14px; text-align: center; letter-spacing: 2px;">
+                      FC ONLINE</td>
+                  </tr>
+                  {% elif forloop.counter0 == 6 %}
+                  <tr style="background: rgba(82, 183, 136, 0.15);">
+                    <td colspan="100%"
+                      style="font-weight: 700; color: #52B788; text-transform: uppercase; font-size: 14px; text-align: center; letter-spacing: 2px;">
+                      CAMP TRG</td>
+                  </tr>
+                  {% endif %}
+                  {% elif code == 'OPEM_ASSESSMENT' %}
+                  {% if forloop.counter0 == 0 %}
+                  <tr style="background: rgba(82, 183, 136, 0.15);">
+                    <td colspan="100%"
+                      style="font-weight: 700; color: #52B788; text-align: center; font-size: 12px; letter-spacing: 1px;">
+                      TRG JCO - Handling of trade eqpt (15)</td>
+                  </tr>
+                  {% elif forloop.counter0 == 2 %}
+                  <tr style="background: rgba(82, 183, 136, 0.15);">
+                    <td colspan="100%"
+                      style="font-weight: 700; color: #52B788; text-align: center; font-size: 12px; letter-spacing: 1px;">
+                      TRG JCO - Initiative & Drive (08)</td>
+                  </tr>
+                  {% elif forloop.counter0 == 5 %}
+                  <tr style="background: rgba(82, 183, 136, 0.15);">
+                    <td colspan="100%"
+                      style="font-weight: 700; color: #52B788; text-align: center; font-size: 12px; letter-spacing: 1px;">
+                      MTO - Op dply & uses of trade eqpt (12)</td>
+                  </tr>
+                  {% elif forloop.counter0 == 8 %}
+                  <tr style="background: rgba(82, 183, 136, 0.15);">
+                    <td colspan="100%"
+                      style="font-weight: 700; color: #52B788; text-align: center; font-size: 12px; letter-spacing: 1px;">
+                      MTO - Adaptability (07)</td>
+                  </tr>
+                  {% elif forloop.counter0 == 10 %}
+                  <tr style="background: rgba(82, 183, 136, 0.15);">
+                    <td colspan="100%"
+                      style="font-weight: 700; color: #52B788; text-align: center; font-size: 12px; letter-spacing: 1px;">
+                      DEDICATION OF ORG (06)</td>
+                  </tr>
+                  {% elif forloop.counter0 == 11 %}
+                  <tr style="background: rgba(82, 183, 136, 0.15);">
+                    <td colspan="100%"
+                      style="font-weight: 700; color: #52B788; text-align: center; font-size: 12px; letter-spacing: 1px;">
+                      CIMT - Spl achievement (08)</td>
+                  </tr>
+                  {% elif forloop.counter0 == 13 %}
+                  <tr style="background: rgba(82, 183, 136, 0.15);">
+                    <td colspan="100%"
+                      style="font-weight: 700; color: #52B788; text-align: center; font-size: 12px; letter-spacing: 1px;">
+                      CIMT - Motivation & courge (07)</td>
+                  </tr>
+                  {% elif forloop.counter0 == 15 %}
+                  <tr style="background: rgba(82, 183, 136, 0.15);">
+                    <td colspan="100%"
+                      style="font-weight: 700; color: #52B788; text-align: center; font-size: 12px; letter-spacing: 1px;">
+                      CIMT - Dependability (08)</td>
+                  </tr>
+                  {% endif %}
+                  {% elif code == 'OPEM_PRACTICAL' %}
+                  {% if forloop.counter0 == 0 %}
+                  <tr style="background: rgba(82, 183, 136, 0.15);">
+                    <td colspan="100%"
+                      style="font-weight: 700; color: #52B788; text-align: center; font-size: 12px; letter-spacing: 1px;">
+                      DOZER (20 MARKS)</td>
+                  </tr>
+                  {% elif forloop.counter0 == 3 %}
+                  <tr style="background: rgba(82, 183, 136, 0.15);">
+                    <td colspan="100%"
+                      style="font-weight: 700; color: #52B788; text-align: center; font-size: 12px; letter-spacing: 1px;">
+                      TATA HITACHI (10 MARKS)</td>
+                  </tr>
+                  {% elif forloop.counter0 == 6 %}
+                  <tr style="background: rgba(82, 183, 136, 0.15);">
+                    <td colspan="100%"
+                      style="font-weight: 700; color: #52B788; text-align: center; font-size: 12px; letter-spacing: 1px;">
+                      SSL (10 MARKS)</td>
+                  </tr>
+                  {% elif forloop.counter0 == 9 %}
+                  <tr style="background: rgba(82, 183, 136, 0.15);">
+                    <td colspan="100%"
+                      style="font-weight: 700; color: #52B788; text-align: center; font-size: 12px; letter-spacing: 1px;">
+                      JCB (10 MARKS)</td>
+                  </tr>
+                  {% endif %}
+                  {% elif code == 'OTHER_ASSESSMENT' %}
+                  {% if forloop.counter0 == 0 %}
+                  <tr style="background: rgba(82, 183, 136, 0.15);">
+                    <td colspan="100%"
+                      style="font-weight: 700; color: #52B788; text-align: center; font-size: 12px; letter-spacing: 1px;">
+                      GP JCO - Handling of Trade Eqpt (18)</td>
+                  </tr>
+                  {% elif forloop.counter0 == 4 %}
+                  <tr style="background: rgba(82, 183, 136, 0.15);">
+                    <td colspan="100%"
+                      style="font-weight: 700; color: #52B788; text-align: center; font-size: 12px; letter-spacing: 1px;">
+                      GP JCO - Initiative & Drive (08)</td>
+                  </tr>
+                  {% elif forloop.counter0 == 6 %}
+                  <tr style="background: rgba(82, 183, 136, 0.15);">
+                    <td colspan="100%"
+                      style="font-weight: 700; color: #52B788; text-align: center; font-size: 12px; letter-spacing: 1px;">
+                      MTO - Op Dply and uses of Trade Eqpt (12)</td>
+                  </tr>
+                  {% elif forloop.counter0 == 10 %}
+                  <tr style="background: rgba(82, 183, 136, 0.15);">
+                    <td colspan="100%"
+                      style="font-weight: 700; color: #52B788; text-align: center; font-size: 12px; letter-spacing: 1px;">
+                      MTO - Adaptability (07)</td>
+                  </tr>
+                  {% elif forloop.counter0 == 12 %}
+                  <tr style="background: rgba(82, 183, 136, 0.15);">
+                    <td colspan="100%"
+                      style="font-weight: 700; color: #52B788; text-align: center; font-size: 12px; letter-spacing: 1px;">
+                      DEDICATION TO ORG (06)</td>
+                  </tr>
+                  {% elif forloop.counter0 == 13 %}
+                  <tr style="background: rgba(82, 183, 136, 0.15);">
+                    <td colspan="100%"
+                      style="font-weight: 700; color: #52B788; text-align: center; font-size: 12px; letter-spacing: 1px;">
+                      CIW - Spl Achievements (08)</td>
+                  </tr>
+                  {% elif forloop.counter0 == 14 %}
+                  <tr style="background: rgba(82, 183, 136, 0.15);">
+                    <td colspan="100%"
+                      style="font-weight: 700; color: #52B788; text-align: center; font-size: 12px; letter-spacing: 1px;">
+                      CIW - Motivation & Courage (07)</td>
+                  </tr>
+                  {% elif forloop.counter0 == 16 %}
+                  <tr style="background: rgba(82, 183, 136, 0.15);">
+                    <td colspan="100%"
+                      style="font-weight: 700; color: #52B788; text-align: center; font-size: 12px; letter-spacing: 1px;">
+                      CIW - Dependability (08)</td>
+                  </tr>
+                  {% endif %}
+                  {% elif code == 'CS_RESULT' %}
+                  {% if forloop.counter0 == 0 %}
+                  <tr style="background: rgba(82, 183, 136, 0.15);">
+                    <td colspan="100%"
+                      style="font-weight: 700; color: #52B788; text-align: center; font-size: 13px; letter-spacing: 1px;">
+                      TOET</td>
+                  </tr>
+                  {% elif forloop.counter0 == 4 %}
+                  <tr style="background: rgba(82, 183, 136, 0.15);">
+                    <td colspan="100%"
+                      style="font-weight: 700; color: #52B788; text-align: center; font-size: 13px; letter-spacing: 1px;">
+                      FE</td>
+                  </tr>
+                  {% elif forloop.counter0 == 7 %}
+                  <tr style="background: rgba(82, 183, 136, 0.15);">
+                    <td colspan="100%"
+                      style="font-weight: 700; color: #52B788; text-align: center; font-size: 13px; letter-spacing: 1px;">
+                      BR</td>
+                  </tr>
+                  {% elif forloop.counter0 == 10 %}
+                  <tr style="background: rgba(82, 183, 136, 0.15);">
+                    <td colspan="100%"
+                      style="font-weight: 700; color: #52B788; text-align: center; font-size: 13px; letter-spacing: 1px;">
+                      FINAL RESULT</td>
+                  </tr>
+                  {% endif %}
+                  {% endif %}
+
+                  <tr>
+                    <td style="font-weight: 600; color: #E0E6F0; font-size:13px; white-space:nowrap;">{{ sub }}</td>
+                    {% if t_config.columns %}
+                    {% for col in t_config.columns %}
+                    <td style="text-align:center; font-family: 'Rajdhani', sans-serif;">
+                      {% with val=current_sheet.sub_event_results|get_item:col|get_item:sub %}
+                      {% if can_evaluate and 'TOTAL POINT' not in sub %}
+                      {% if code == 'DST' and sub == 'DST W/O Arm' and col != '1st Attempt' %}
+                      <div
+                        style="width: 60px; height: 30px; margin: 0 auto; background: rgba(255,255,255,0.05); border-radius: 4px; display:flex; align-items:center; justify-content:center; color: #8B9BB4;">
+                        —</div>
+                      {% elif code == 'DST' and sub == 'DST with Arm' and col == '1st Attempt' %}
+                      <div
+                        style="width: 60px; height: 30px; margin: 0 auto; background: rgba(255,255,255,0.05); border-radius: 4px; display:flex; align-items:center; justify-content:center; color: #8B9BB4;">
+                        —</div>
+                      {% else %}
+                      <input type="number" name="{{ col }}_{{ sub }}"
+                        value="{% if val is not None %}{{ val }}{% else %}{% if col == '1st Attempt' %}{{ current_sheet.sub_event_results|get_item:'nco'|get_item:sub|default_if_none:'' }}{% elif col == '2nd Attempt' %}{{ current_sheet.sub_event_results|get_item:'jco'|get_item:sub|default_if_none:'' }}{% elif col == '3rd Attempt' %}{{ current_sheet.sub_event_results|get_item:'officer'|get_item:sub|default_if_none:'' }}{% endif %}{% endif %}"
+                        class="form-control marks-input text-center mx-auto"
+                        style="background: rgba(15,20,25,0.6); color: #E0E6F0; border: 1px solid rgba(82,183,136,0.3); width: 60px; height: 30px; padding: 2px 5px; font-size: 14px; border-radius: 4px;"
+                        min="0"
+                        max="{% with m=dept_config.max_marks|get_item:code|get_item:sub %}{% if m %}{{ m }}{% else %}{% if code == 'Firing' %}8{% elif code == 'DST' %}{% if 'Arm' in sub %}60{% else %}20{% endif %}{% elif code == 'BFC' %}{% if 'Theory' in sub %}100{% else %}20{% endif %}{% else %}40{% endif %}{% endif %}{% endwith %}"
+                        step="0.01"
+                        placeholder="0-{% with m=dept_config.max_marks|get_item:code|get_item:sub %}{% if m %}{{ m }}{% else %}{% if code == 'Firing' %}8{% elif code == 'DST' %}{% if 'Arm' in sub %}60{% else %}20{% endif %}{% elif code == 'BFC' %}{% if 'Theory' in sub %}100{% else %}20{% endif %}{% else %}40{% endif %}{% endif %}{% endwith %}"
+                        title="Maximum marks: {% with m=dept_config.max_marks|get_item:code|get_item:sub %}{% if m %}{{ m }}{% else %}{% if code == 'Firing' %}8{% elif code == 'DST' %}{% if 'Arm' in sub %}60{% else %}20{% endif %}{% elif code == 'BFC' %}{% if 'Theory' in sub %}100{% else %}20{% endif %}{% else %}40{% endif %}{% endif %}{% endwith %}"
+                        oninput="if(this.value && parseInt(this.value) > parseInt(this.max)) this.value = this.max;">
+                      {% endif %}
+                      {% else %}
+                      {% if code == 'DST' and sub == 'DST W/O Arm' and col != '1st Attempt' %}—
+                      {% elif code == 'DST' and sub == 'DST with Arm' and col == '1st Attempt' %}—
+                      {% else %}
+                      {% if val is not None %}
+                      {{ val }}
+                      {% else %}
+                      {% if col == '1st Attempt' %}{{ current_sheet.sub_event_results|get_item:'nco'|get_item:sub|default:"—" }}
+                      {% elif col == '2nd Attempt' %}{{ current_sheet.sub_event_results|get_item:'jco'|get_item:sub|default:"—" }}
+                      {% elif col == '3rd Attempt' %}{{ current_sheet.sub_event_results|get_item:'officer'|get_item:sub|default:"—" }}
+                      {% else %}—{% endif %}
+                      {% endif %}
+                      {% endif %}
+                      {% endif %}
+                      {% endwith %}
+                     </td>
+                    {% endfor %}
+                    {% else %}
+                    <td style="text-align:center; font-family: 'Rajdhani', sans-serif;">
+                      {% if can_evaluate %}
+                      <input type="number" name="{{ sub }}"
+                        value="{% with stored=current_sheet.sub_event_results.Marks|get_item:sub %}{% if stored is not None %}{{ stored }}{% else %}{{ current_sheet.sub_event_results|get_item:sub|default_if_none:'' }}{% endif %}{% endwith %}"
+                        class="form-control marks-input text-center mx-auto"
+                        style="background: rgba(15,20,25,0.6); color: #E0E6F0; border: 1px solid rgba(82,183,136,0.3); width: 60px; height: 30px; padding: 2px 5px; font-size: 14px; border-radius: 4px;"
+                        min="0"
+                        max="{% with m=dept_config.max_marks|get_item:code|get_item:sub %}{% if m %}{{ m }}{% else %}{% if code == 'MR_III' %}{% if sub == 'Outdoor Test' %}50{% elif sub == 'Indoor Test Written' %}90{% else %}10{% endif %}{% elif code == 'PDP' %}50{% elif code == 'FC_All' %}{% if 'Attempt' in sub %}40{% else %}10{% endif %}{% else %}40{% endif %}{% endif %}{% endwith %}"
+                        step="0.01"
+                        placeholder="0-{% with m=dept_config.max_marks|get_item:code|get_item:sub %}{% if m %}{{ m }}{% else %}{% if code == 'MR_III' %}{% if sub == 'Outdoor Test' %}50{% elif sub == 'Indoor Test Written' %}90{% else %}10{% endif %}{% elif code == 'PDP' %}50{% elif code == 'FC_All' %}{% if 'Attempt' in sub %}40{% else %}10{% endif %}{% else %}40{% endif %}{% endif %}{% endwith %}"
+                        title="Maximum marks: {% with m=dept_config.max_marks|get_item:code|get_item:sub %}{% if m %}{{ m }}{% else %}{% if code == 'MR_III' %}{% if sub == 'Outdoor Test' %}50{% elif sub == 'Indoor Test Written' %}90{% else %}10{% endif %}{% elif code == 'PDP' %}50{% elif code == 'FC_All' %}{% if 'Attempt' in sub %}40{% else %}10{% endif %}{% else %}40{% endif %}{% endif %}{% endwith %}"
+                        {% if code == 'DMV_RESULT' and sub != 'Online Test (100)' %}readonly{% elif code == 'OPEM_RESULT' and sub != 'Written Test (100)' %}readonly{% elif code == 'CS_RESULT' and sub == 'TOTAL TOET (50)' %}readonly{% elif code == 'CS_RESULT' and sub == '25% OF TOET (25)' %}readonly{% elif code == 'CS_RESULT' and sub == 'FE Total (70)' %}readonly{% elif code == 'CS_RESULT' and sub == 'BR Total (65)' %}readonly{% elif code == 'CS_RESULT' and sub == 'TOTAL (160)' %}readonly{% elif code == 'CS_RESULT' and sub == 'CONVERTED TO 40' %}readonly{% elif code == 'BN_SCREENING' and 'COMMON MIL KNOWLEDGE (20)' == sub or 'BASIC TACTICE (CES) (40)' == sub or 'TRADE PROFICIENCY (BTT) (40)' == sub or 'WPN & EQPT HANDLING (20)' == sub or 'TOTAL (120)' == sub or 'ROUND FIGURE(120)' == sub %}readonly{% endif %}
+                        oninput="if(this.value && parseInt(this.value) > parseInt(this.max)) this.value = this.max;">
+                      {% else %}
+                      {% if current_sheet %}
+                      {% with val=current_sheet.sub_event_results.Marks|get_item:sub %}
+                      {% if val is not None %}{{ val }}{% else %}{{ current_sheet.sub_event_results|get_item:'nco'|get_item:sub|default:"—" }}{% endif %}
+                      {% endwith %}
+                      {% else %}
+                      —
+                      {% endif %}
+                      {% endif %}
+                     </td>
+                    {% endif %}
+                   </tr>
+                  {% empty %}
+                  <tr>
+                    <td style="font-weight: 600; color: #E0E6F0;">Performance Score</td>
+                    <td style="text-align:center; font-family: 'Rajdhani', sans-serif;">
+                      {% if current_sheet %}{{ current_sheet.get_total_marks|default:"—" }}{% else %}—{% endif %}
+                     </td>
+                   </tr>
+                  {% endfor %}
+                  <tr style="background: rgba(82, 183, 136, 0.05);">
+                    <td style="font-weight: 700; color: #52B788; font-size:13px;">TOTAL</td>
+                    {% if t_config.columns %}
+                    {% for col in t_config.columns %}
+                    <td
+                      style="text-align:center; font-weight: 700; color: #52B788; font-family: 'Rajdhani', sans-serif;">
+                      {% if current_sheet %}
+                      {% with total=current_sheet.sub_event_results|get_item:col|get_item:'TOTAL POINT' %}
+                      {% if total is not None %}
+                      {{ total }}
+                      {% else %}
+                      {% if col == '1st Attempt' %}{{ current_sheet.get_nco_marks }}
+                      {% elif col == '2nd Attempt' %}{{ current_sheet.get_jco_marks }}
+                      {% elif col == '3rd Attempt' %}{{ current_sheet.get_officer_marks }}
+                      {% else %}—{% endif %}
+                      {% endif %}
+                      {% endwith %}
+                      {% else %}
+                      —
+                      {% endif %}
+                     </td>
+                    {% endfor %}
+                    {% else %}
+                    <td
+                      style="text-align:center; font-weight: 700; color: #52B788; font-family: 'Rajdhani', sans-serif;">
+                      {% if current_sheet %}{{ current_sheet.get_total_marks }}{% else %}—{% endif %}
+                     </td>
+                    {% endif %}
+                  </tr>
+
+                  {% if code == 'MR_III' %}
+                  <tr style="background: rgba(82, 183, 136, 0.1);">
+                    <td style="font-weight: 800; color: #52B788; font-size:13px;">CONVERTED (100) MKS</td>
+                    <td
+                      style="text-align:center; font-weight: 800; color: #52B788; font-family: 'Rajdhani', sans-serif;"
+                      data-converted-mriii="true">
+                      {% if current_sheet %}{{ current_sheet.sub_event_results.Marks|get_item:'CONVERTED 100 MKS'|default:"—" }}{% else %}—{% endif %}
+                     </td>
+                  </tr>
+                  <tr>
+                    <td style="font-weight: 600; color: #E0E6F0; font-size:13px;">REMARKS</td>
+                    <td style="text-align:center;">
+                      <input type="text" name="remarks"
+                        value="{{ current_sheet.marks.first.remarks|default_if_none:'' }}"
+                        class="form-control text-center mx-auto"
+                        style="background: rgba(15,20,25,0.6); color: #E0E6F0; border: 1px solid rgba(82,183,136,0.3); width: 100%; height: 30px; padding: 2px 5px; font-size: 14px; border-radius: 4px;">
+                     </td>
+                  </tr>
+                  {% elif code == 'BFC' %}
+                  <tr style="background: rgba(82, 183, 136, 0.1);">
+                    <td style="font-weight: 800; color: #52B788; font-size:13px;">PASS / FAIL</td>
+                    {% if t_config.columns %}
+                    {% for col in t_config.columns %}
+                    <td style="text-align:center; font-weight: 800; font-family: 'Rajdhani', sans-serif;"
+                      data-passfail-col="{{ col }}">
+                      {% if current_sheet %}
+                      {% with total=current_sheet.sub_event_results|get_item:col|get_item:'TOTAL POINT' %}
+                      {% if total is not None %}
+                      {% if total >= 120 %}<span style="color: #52B788;">PASS</span>{% else %}<span
+                        style="color: #EF5350;">FAIL</span>{% endif %}
+                      {% else %}—{% endif %}
+                      {% endwith %}
+                      {% else %}—{% endif %}
+                     </td>
+                    {% endfor %}
+                    {% endif %}
+                  </tr>
+                  {% elif code == 'PDP' %}
+                  <tr>
+                    <td style="font-weight: 600; color: #E0E6F0; font-size:13px;">REMARKS</td>
+                    <td style="text-align:center;">
+                      <input type="text" name="remarks"
+                        value="{{ current_sheet.marks.first.remarks|default_if_none:'' }}"
+                        class="form-control text-center mx-auto"
+                        style="background: rgba(15,20,25,0.6); color: #E0E6F0; border: 1px solid rgba(82,183,136,0.3); width: 100%; height: 30px; padding: 2px 5px; font-size: 14px; border-radius: 4px;">
+                     </td>
+                  </tr>
+                  {% endif %}
+                </tbody>
+              </table>
+            </div>
+            {% endif %}
+
+            {% if can_evaluate %}
+            {% if code == 'CS_RESULT' %}
+            <div class="mt-3">
+              <label class="form-label" style="font-weight: 600; color: #52B788;">Remarks</label>
+              <textarea name="remarks" class="form-control" rows="2" placeholder="Optional remarks"
+                style="background: rgba(15,20,25,0.6); color: #E0E6F0; border: 1px solid rgba(82,183,136,0.3); border-radius: 8px;">{{ current_sheet.marks.first.remarks|default_if_none:'' }}</textarea>
+            </div>
+            {% endif %}
+          </form>
+          {% endif %}
+
+          <!-- Sticky Bottom Summary Panel for Standard Dynamic Tabs -->
+          <div class="evaluation-sticky-footer no-print">
+            <div class="d-flex align-items-center gap-2">
+              <div class="compact-score-card">
+                <span class="card-label">Total Best Score</span>
+                <span class="card-val text-success" id="score-{{ code }}">
+                  {% if current_sheet %}{{ current_sheet.get_total_marks }}{% else %}—{% endif %}
+                </span>
+              </div>
+              <div class="compact-score-card">
+                <span class="card-label">Overall Percentage</span>
+                <span class="card-val text-info" id="perc-{{ code }}">
+                  {% if current_sheet %}{{ current_sheet.get_percentage }}%{% else %}—{% endif %}
+                </span>
+              </div>
+              <div class="compact-score-card">
+                <span class="card-label">Result Status</span>
+                <span class="card-val" id="status-{{ code }}"
+                  style="color: {% if current_sheet %}{% if current_sheet.is_pass %}#52B788{% else %}#EF5350{% endif %}{% else %}#8B9BB4{% endif %};">
+                  {% if current_sheet %}
+                  {% if current_sheet.is_pass %}✓ PASS{% else %}✗ FAIL{% endif %}
+                  {% else %}
+                  PENDING
+                  {% endif %}
+                </span>
+              </div>
+            </div>
+
+            {% if can_evaluate %}
+            <div>
+              <button type="submit" form="form-{{ code }}" class="btn btn-army px-4 py-2"
+                style="font-weight:600; font-family:'Rajdhani',sans-serif; letter-spacing:1px; font-size:12px;">
+                <i class="bi bi-save me-2"></i> Save Marks
+              </button>
+            </div>
+            {% endif %}
+          </div>
+          {% endif %}
+
+          {% endwith %}
+          {% endwith %}
+        </div>
+        {% endfor %}
       </div>
     </div>
   </div>
 </div>
 
 <script>
-  // Real-time total marks calculation
-  function updateTotalMarks() {
-    const scoreCard = document.getElementById('scoreCardBody');
-    if (!scoreCard) return; // Not present for trainers
-    
-    const scoreColor = scoreCard.dataset.color;
-    const scoreColorDark = scoreCard.dataset.color_dark || scoreCard.dataset.colorDark;
-
-    // Get all total marks from evaluation rows (6th column only if not trainer)
-    const marksElements = document.querySelectorAll('tbody tr td:nth-child(6)');
-    let totalMarks = 0;
-
-    marksElements.forEach(element => {
-      const text = element.textContent.trim();
-      const match = text.match(/^(\d+)/);
-      if (match) {
-        totalMarks += parseInt(match[1]);
-      }
+  function showTab(testCode) {
+    // Hide all tabs
+    document.querySelectorAll('.test-tab-pane').forEach(el => el.style.display = 'none');
+    // Deactivate all buttons
+    document.querySelectorAll('.eval-tab-btn').forEach(el => {
+      el.classList.remove('active');
+      el.style.background = 'rgba(15, 20, 25, 0.6)';
+      el.style.color = '#8B9BB4';
     });
 
-    const maxMarks = Number('{{ max_marks }}');
-    const percentage = (totalMarks / maxMarks * 100).toFixed(1);
+    // Show active tab
+    const activeTab = document.getElementById('tab-' + testCode);
+    if (activeTab) activeTab.style.display = 'block';
 
-    // Update total score display
-    const scoreDisplay = document.querySelector('[data-total-score]');
-    if (scoreDisplay) {
-      scoreDisplay.textContent = totalMarks;
-      scoreDisplay.style.color = scoreColor;
-    }
-
-    // Update percentage display
-    const percentageDisplay = document.querySelector('[data-percentage]');
-    if (percentageDisplay) {
-      percentageDisplay.textContent = percentage + '%';
-      percentageDisplay.style.color = scoreColor;
-    }
-
-    // Update progress bar
-    const progressBar = document.querySelector('[data-progress-bar]');
-    if (progressBar) {
-      const finalWidth = marksElements.length > 0 ? percentage : progressBar.dataset.width;
-      progressBar.style.width = Math.min(finalWidth, 100) + '%';
-      progressBar.style.background = `linear-gradient(90deg, ${scoreColor}, ${scoreColorDark})`;
+    // Activate button
+    const btn = Array.from(document.querySelectorAll('.eval-tab-btn')).find(el => el.textContent.trim() === testCode);
+    if (btn) {
+      btn.classList.add('active');
+      btn.style.background = '#1B4332';
+      btn.style.color = '#52B788';
     }
   }
 
-  // Update on page load
-  document.addEventListener('DOMContentLoaded', updateTotalMarks);
+  // Initial style for active tab
+  document.addEventListener('DOMContentLoaded', () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const testParam = urlParams.get('test');
 
-  // Watch for table changes
-  const observer = new MutationObserver(updateTotalMarks);
-  const tableBody = document.querySelector('tbody');
-  if (tableBody) {
-    observer.observe(tableBody, { childList: true, subtree: true, characterData: true });
-  }
+    if (testParam) {
+      showTab(testParam);
+    } else {
+      const activeBtn = document.querySelector('.eval-tab-btn.active');
+      if (activeBtn) {
+        activeBtn.style.background = '#1B4332';
+        activeBtn.style.color = '#52B788';
+      }
+    }
+
+    
+    // Auto-calculation logic
+    const tables = document.querySelectorAll('.army-table');
+    tables.forEach(table => {
+      const inputs = table.querySelectorAll('.marks-input');
+      inputs.forEach(input => {
+        // If the input is Event Wise Best or FC Online Best Attempt, make it readonly
+        if (input.name.startsWith('Event Wise Best') || input.name === 'FC Online Best Attempt') {
+          input.readOnly = true;
+          input.style.backgroundColor = 'rgba(82, 183, 136, 0.1)';
+        }
+
+        input.addEventListener('input', (e) => {
+          const row = e.target.closest('tr');
+          calculateRowBest(row);
+
+          if (input.name.includes('_')) {
+            calculateColumnTotal(table, input.name.split('_')[0]);
+            calculateColumnTotal(table, 'Event Wise Best');
+          } else {
+            calculateSingleColumnTotal(table);
+          }
+
+          // Re-trigger all specific tab calculations globally on any input
+          calculateFCAll();
+          calculateDMVResult();
+          calculateOPEMResult();
+          calculateOtherResult();
+          if (document.getElementById('tab-CS_RESULT')) calculateCSResult();
+
+          if (e.target.closest('[id^="tab-CLK_"]')) {
+            calculateClerkResult(e.target.closest('.test-tab-pane').id.replace('tab-', ''));
+          }
+
+          // Calculate Battalion test dynamic updates
+          const tabId = e.target.closest('.test-tab-pane')?.id;
+          if (tabId) {
+            const code = tabId.replace('tab-', '');
+            calculateBattalionResult(code);
+          }
+        });
+      });
+
+      // Initial Calculation on Load
+      const rows = table.querySelectorAll('tbody tr:not(:last-child)');
+      rows.forEach(row => calculateRowBest(row));
+
+      const headers = Array.from(table.querySelectorAll('thead th')).map(th => th.textContent.trim());
+      headers.forEach(h => {
+        if (h && h !== 'Event Wise Best') calculateColumnTotal(table, h);
+      });
+      calculateColumnTotal(table, 'Event Wise Best');
+      calculateSingleColumnTotal(table);
+      calculateFCAll();
+      calculateDMVResult();
+      calculateOPEMResult();
+      calculateOtherResult();
+      calculateCSResult();
+    });
+    ['CLK_INITIAL', 'CLK_WEEKLY_1', 'CLK_WEEKLY_2', 'CLK_FINAL'].forEach(calculateClerkResult);
+    ['PPT', 'BPET', 'Firing', 'DST', 'MR_III', 'BFC', 'PDP', 'FC_All'].forEach(calculateBattalionResult);
+    // ... (previous functions calculateRowBest, calculateFCAll, calculateDMVResult, calculateOPEMResult)
+
+    function calculateOtherResult() {
+      const writtenInput = document.querySelector('input[name="Written Test (100)"]');
+      if (!writtenInput || !document.getElementById('tab-OTHER_RESULT')) return;
+
+      let pracTotal = 0;
+      let maintTotal = 0;
+
+      const pracTab = document.getElementById('tab-OTHER_PRACTICAL');
+      if (pracTab) {
+        const totalRow = Array.from(pracTab.querySelectorAll('tr')).find(r => r.textContent.includes('TOTAL'));
+        if (totalRow) pracTotal = parseInt(totalRow.cells[1].textContent) || 0;
+      }
+
+      const maintTab = document.getElementById('tab-OTHER_MAINTENANCE');
+      if (maintTab) {
+        const totalRow = Array.from(maintTab.querySelectorAll('tr')).find(r => r.textContent.includes('TOTAL'));
+        if (totalRow) maintTotal = parseInt(totalRow.cells[1].textContent) || 0;
+      }
+
+      const writtenVal = parseInt(writtenInput.value) || 0;
+      const total200 = writtenVal + pracTotal + maintTotal;
+      const percentage = (total200 / 200 * 100);
+      const converted40 = (total200 / 200 * 40);
+
+      const resultTab = document.getElementById('tab-OTHER_RESULT');
+      if (resultTab) {
+        const rows = Array.from(resultTab.querySelectorAll('tbody tr'));
+
+        const pracRow = rows.find(r => r.textContent.includes('Practical Test (50)'));
+        if (pracRow) pracRow.cells[1].textContent = pracTotal;
+
+        const maintRow = rows.find(r => r.textContent.includes('Maintenance Test (50)'));
+        if (maintRow) maintRow.cells[1].textContent = maintTotal;
+
+        const totalRow = rows.find(r => r.textContent.includes('Total (200)'));
+        if (totalRow) totalRow.cells[1].textContent = total200;
+
+        const percRow = rows.find(r => r.textContent.includes('% Age'));
+        if (percRow) percRow.cells[1].textContent = percentage.toFixed(2) + '%';
+
+        const convertRow = rows.find(r => r.textContent.includes('Convert 40 Marks'));
+        if (convertRow) convertRow.cells[1].textContent = converted40.toFixed(2);
+
+        const gradingRow = rows.find(r => r.textContent.includes('Grading'));
+        let grade = 'C';
+        if (gradingRow) {
+          if (percentage >= 70) grade = 'A';
+          else if (percentage >= 60) grade = 'B';
+          gradingRow.cells[1].textContent = grade;
+        }
+
+        // Update summary cards
+        const summaryTotal = resultTab.querySelector('.p-3.rounded div[style*="font-size: 20px"]');
+        if (summaryTotal) summaryTotal.textContent = Math.round(converted40);
+
+        const summaryPerc = resultTab.querySelectorAll('.p-3.rounded div[style*="font-size: 20px"]')[1];
+        if (summaryPerc) summaryPerc.textContent = percentage.toFixed(1) + '%';
+
+        const summaryStatus = resultTab.querySelectorAll('.p-3.rounded div[style*="font-size: 20px"]')[2];
+        if (summaryStatus) {
+          if (percentage >= 50) {
+            summaryStatus.textContent = '✓ PASS';
+            summaryStatus.style.color = '#52B788';
+          } else {
+            summaryStatus.textContent = '✗ FAIL';
+            summaryStatus.style.color = '#EF5350';
+          }
+        }
+      }
+    }
+
+    function getInputByName(name) {
+      return document.querySelector(`input[name="${CSS.escape(name)}"]`);
+    }
+
+    function calculateCSResult() {
+      const resultTab = document.getElementById('tab-CS_RESULT');
+      if (!resultTab) return;
+
+      const toetOne = parseFloat(getInputByName('TOET-I (25)')?.value) || 0;
+      const toetTwo = parseFloat(getInputByName('TOET-II (25)')?.value) || 0;
+      const feOnline = parseFloat(getInputByName('FE Online Exam (50)')?.value) || 0;
+      const fePrac = parseFloat(getInputByName('FE Prac (20)')?.value) || 0;
+      const brOnline = parseFloat(getInputByName('BR Online Exam (40)')?.value) || 0;
+      const brPrac = parseFloat(getInputByName('BR Prac (25)')?.value) || 0;
+
+      const toetTotal = toetOne + toetTwo;
+      const toet25 = (toetTotal / 50) * 25;
+      const feTotal = feOnline + fePrac;
+      const brTotal = brOnline + brPrac;
+      const total160 = toet25 + feTotal + brTotal;
+      const converted40 = (total160 / 160) * 40;
+      const grandTotal = converted40;
+
+      const toetTotalInput = getInputByName('TOTAL TOET (50)');
+      if (toetTotalInput) toetTotalInput.value = toetTotal || '';
+
+      const toet25Input = getInputByName('25% OF TOET (25)');
+      if (toet25Input) toet25Input.value = toet25 ? toet25.toFixed(2) : '';
+
+      const feTotalInput = getInputByName('FE Total (70)');
+      if (feTotalInput) feTotalInput.value = feTotal || '';
+
+      const brTotalInput = getInputByName('BR Total (65)');
+      if (brTotalInput) brTotalInput.value = brTotal || '';
+
+      const totalInput = getInputByName('TOTAL (160)');
+      if (totalInput) totalInput.value = total160 ? total160.toFixed(2) : '';
+
+      const convertedInput = getInputByName('CONVERTED TO 40');
+      if (convertedInput) convertedInput.value = converted40 ? converted40.toFixed(2) : '';
+
+      const totalRow = Array.from(resultTab.querySelectorAll('tbody tr'))
+        .find(row => row.cells[0] && row.cells[0].textContent.trim() === 'TOTAL');
+      if (totalRow && totalRow.cells[1]) {
+        totalRow.cells[1].textContent = grandTotal || '—';
+        totalRow.cells[1].style.color = '#52B788';
+        totalRow.cells[1].textContent = converted40 ? converted40.toFixed(2) : '—';
+        totalRow.cells[1].style.fontWeight = '700';
+      }
+    }
+
+    function calculateBattalionResult(testCode) {
+      const tab = document.getElementById('tab-' + testCode);
+      if (!tab) return;
+
+      let totalScore = 0;
+      let percentage = 0;
+      let maxMarks = 100;
+      let isPass = false;
+
+      if (testCode === 'PPT') {
+        maxMarks = 120;
+        const bestInputs = Array.from(tab.querySelectorAll('input[name^="Event Wise Best"]'));
+        bestInputs.forEach(inp => totalScore += (parseInt(inp.value) || 0));
+        percentage = (totalScore / maxMarks) * 100;
+        isPass = percentage >= 50;
+
+      } else if (testCode === 'BPET') {
+        maxMarks = 100;
+        const bestInputs = Array.from(tab.querySelectorAll('input[name^="Event Wise Best"]'));
+        bestInputs.forEach(inp => totalScore += (parseInt(inp.value) || 0));
+        percentage = (totalScore / maxMarks) * 100;
+        isPass = percentage >= 50;
+
+      } else if (testCode === 'Firing') {
+        maxMarks = 100;
+        const colTotals = [];
+        const rows = Array.from(tab.querySelectorAll('tbody tr'));
+        const convertedRow = rows.find(r => r.cells[0] && r.cells[0].textContent.includes('CONVERTED'));
+        if (convertedRow) {
+          const conv1 = parseInt(convertedRow.querySelector('td[data-converted-col="1st Attempt"]')?.textContent) || 0;
+          const conv2 = parseInt(convertedRow.querySelector('td[data-converted-col="2nd Attempt"]')?.textContent) || 0;
+          colTotals.push(conv1, conv2);
+        }
+        totalScore = colTotals.length ? Math.max(...colTotals) : 0;
+        percentage = totalScore;
+        isPass = percentage >= 50;
+
+      } else if (testCode === 'DST') {
+        maxMarks = 100;
+        const colTotals = [];
+        ['1st Attempt', '2nd Attempt', '3rd Attempt'].forEach(col => {
+          const inputs = Array.from(tab.querySelectorAll(`input[name^="${col}_"]`));
+          let sum = 0;
+          inputs.forEach(inp => sum += (parseInt(inp.value) || 0));
+          colTotals.push(sum);
+        });
+        totalScore = colTotals.length ? Math.max(...colTotals) : 0;
+        percentage = totalScore; // since max is 100
+        isPass = percentage >= 50;
+
+      } else if (testCode === 'MR_III') {
+        maxMarks = 100;
+        const inputs = Array.from(tab.querySelectorAll('input.marks-input'));
+        let sum = 0;
+        inputs.forEach(inp => sum += (parseInt(inp.value) || 0));
+        totalScore = Math.round((sum / 150) * 100) || 0;
+        percentage = totalScore;
+        isPass = percentage >= 50;
+
+      } else if (testCode === 'BFC') {
+        maxMarks = 240;
+        const colTotals = [];
+        ['1st Attempt', '2nd Attempt'].forEach(col => {
+          const inputs = Array.from(tab.querySelectorAll(`input[name^="${col}_"]`));
+          let sum = 0;
+          inputs.forEach(inp => sum += (parseInt(inp.value) || 0));
+          colTotals.push(sum);
+
+          // Update BFC Pass/Fail labels dynamically
+          const pfCell = tab.querySelector(`td[data-passfail-col="${col}"]`);
+          if (pfCell) {
+            pfCell.innerHTML = (sum >= 120) ? '<span style="color: #52B788;">PASS</span>' : '<span style="color: #EF5350;">FAIL</span>';
+          }
+        });
+        totalScore = colTotals.length ? Math.max(...colTotals) : 0;
+        percentage = (totalScore / maxMarks) * 100;
+        isPass = totalScore >= 120;
+
+      } else if (testCode === 'PDP') {
+        maxMarks = 50;
+        totalScore = parseInt(tab.querySelector('input[name="PDP Test"]')?.value) || 0;
+        percentage = (totalScore / maxMarks) * 100;
+        isPass = percentage >= 50;
+
+      } else if (testCode === 'FC_All') {
+        maxMarks = 100;
+        const prac = parseInt(document.getElementById('fc-practical-total')?.textContent) || 0;
+        const camp = parseInt(tab.querySelector('input[name="CAMP TRG"]')?.value) || 0;
+        const bestOnline = parseInt(tab.querySelector('input[name="FC Online Best Attempt"]')?.value) || 0;
+        totalScore = prac + camp + bestOnline;
+        percentage = totalScore;
+        isPass = percentage >= 50;
+      }
+
+      // Update the sticky bottom footer dynamically
+      const scoreEl = document.getElementById(`score-${testCode}`);
+      const percEl = document.getElementById(`perc-${testCode}`);
+      const statusEl = document.getElementById(`status-${testCode}`);
+
+      if (scoreEl) scoreEl.textContent = Math.round(totalScore);
+      if (percEl) percEl.textContent = percentage.toFixed(2) + '%';
+      if (statusEl) {
+        if (isPass) {
+          statusEl.innerHTML = '✓ PASS';
+          statusEl.style.color = '#52B788';
+        } else {
+          statusEl.innerHTML = '✗ FAIL';
+          statusEl.style.color = '#EF5350';
+        }
+      }
+    }
+
+    function setInputValue(name, value, decimals = 0) {
+      const input = getInputByName(name);
+      if (!input) return;
+      if (!value) {
+        input.value = '';
+        return;
+      }
+      input.value = decimals ? value.toFixed(decimals) : Math.round(value);
+    }
+
+    function getGrade(percentage) {
+      if (percentage >= 80) return 'A';
+      if (percentage >= 60) return 'B';
+      if (percentage >= 46) return 'C';
+      return 'D';
+    }
+
+    function calculateClerkResult(testCode) {
+      const tab = document.getElementById('tab-' + testCode);
+      if (!tab) return;
+
+      const value = (name) => parseFloat(tab.querySelector(`input[name="${CSS.escape(name)}"]`)?.value) || 0;
+
+      const setSpanText = (selector, val, decimals = 2) => {
+        const span = tab.querySelector(selector);
+        if (span) span.textContent = val !== undefined ? val.toFixed(decimals) : '0.00';
+      };
+
+      let marksObtained = 0;
+      let maxTotal = 0;
+      let percentage = 0;
+      let isPass = false;
+      let grade = 'D';
+
+      if (testCode === 'CLK_INITIAL') {
+        const academic = value('Academic Written (100)');
+        const computer = value('Computer Project Work (25)');
+
+        const academicConv = academic * 0.40;
+        const computerConv = computer * 0.40;
+
+        setSpanText('#initial_academic_conv', academicConv, 2);
+        setSpanText('#initial_computer_conv', computerConv, 2);
+
+        marksObtained = academicConv + computerConv;
+        maxTotal = 50;
+
+        percentage = (academic + computer) ? ((academic + computer) / 125) * 100 : 0;
+        isPass = (academic >= 40 && computer >= 10);
+        grade = getGrade(percentage);
+
+      } else if (testCode === 'CLK_WEEKLY_1') {
+        const tech = value('Tech Written (50)');
+        const academic = value('Academic Written (50)');
+        const compObj = value('Computer Obj (25)');
+        const compPrac = value('Computer Prac (25)');
+        const typing = value('Typing 20 WPM');
+
+        const compTotal = compObj + compPrac;
+        const compTotalInput = tab.querySelector('input[name="Computer Total (50)"]');
+        if (compTotalInput) compTotalInput.value = compTotal || '';
+
+        const techConv = tech * 0.40;
+        const academicConv = academic * 0.40;
+        const compTotalConv = compTotal * 0.40;
+
+        setSpanText('#w1_tech_conv', techConv, 2);
+        setSpanText('#w1_academic_conv', academicConv, 2);
+        setSpanText('#w1_comp_total_conv', compTotalConv, 2);
+
+        const rawTotal = tech + academic + compTotal;
+        marksObtained = rawTotal * 0.46;
+        maxTotal = 69;
+
+        percentage = rawTotal ? (rawTotal / 150) * 100 : 0;
+        isPass = (tech >= 20 && academic >= 20 && compTotal >= 20 && typing >= 70);
+        grade = getGrade(percentage);
+
+      } else if (testCode === 'CLK_WEEKLY_2') {
+        const techOnline = value('Tech Online (115)');
+        const techProj = value('Tech Proj HRMS (25)');
+        const academic = value('Academic Online (85)');
+        const compOnline = value('Computer Online (25)');
+        const compPrac = value('Computer Prac (25)');
+        const typing = value('Typing 20 WPM');
+
+        const compTotal = compOnline + compPrac;
+        const compTotalInput = tab.querySelector('input[name="Computer Total (50)"]');
+        if (compTotalInput) compTotalInput.value = compTotal || '';
+
+        const techOnlineConv = techOnline * 0.40;
+        const techProjConv = techProj * 0.40;
+        const academicConv = academic * 0.40;
+        const compOnlineConv = compOnline * 0.40;
+        const compPracConv = compPrac * 0.40;
+        const compTotalConv = compTotal * 0.40;
+
+        setSpanText('#w2_tech_online_conv', techOnlineConv, 2);
+        setSpanText('#w2_tech_proj_conv', techProjConv, 2);
+        setSpanText('#w2_academic_conv', academicConv, 2);
+        setSpanText('#w2_comp_online_conv', compOnlineConv, 2);
+        setSpanText('#w2_comp_prac_conv', compPracConv, 2);
+        setSpanText('#w2_comp_total_conv', compTotalConv, 2);
+
+        const rawTotal = techOnline + techProj + academic + compTotal;
+        marksObtained = rawTotal * 0.46;
+        maxTotal = 126.50;
+
+        percentage = rawTotal ? (rawTotal / 275) * 100 : 0;
+        isPass = (techOnline >= 46 && techProj >= 10 && academic >= 34 && compTotal >= 20 && typing >= 70);
+        grade = getGrade(percentage);
+
+      } else if (testCode === 'CLK_FINAL') {
+        const techOnline = value('Tech Online (115)');
+        const techProj = value('Tech Proj HRMS (25)');
+        const academic = value('Academic Online (85)');
+        const compOnline = value('Computer Online (25)');
+        const compPrac = value('Computer Prac (25)');
+        const extempore = value('Extempore (25)');
+        const typing = value('Typing 20 WPM');
+
+        const compTotal = compOnline + compPrac;
+        const compTotalInput = tab.querySelector('input[name="Computer Total (50)"]');
+        if (compTotalInput) compTotalInput.value = compTotal || '';
+
+        const techOnlineConv = techOnline * 0.40;
+        const techProjConv = techProj * 0.40;
+        const academicConv = academic * 0.40;
+        const compOnlineConv = compOnline * 0.40;
+        const compPracConv = compPrac * 0.40;
+        const compTotalConv = compTotal * 0.40;
+        const extemporeConv = extempore * 0.40;
+
+        setSpanText('#f_tech_online_conv', techOnlineConv, 2);
+        setSpanText('#f_tech_proj_conv', techProjConv, 2);
+        setSpanText('#f_academic_conv', academicConv, 2);
+        setSpanText('#f_comp_online_conv', compOnlineConv, 2);
+        setSpanText('#f_comp_prac_conv', compPracConv, 2);
+        setSpanText('#f_comp_total_conv', compTotalConv, 2);
+        setSpanText('#f_extempore_conv', extemporeConv, 2);
+
+        const rawTotal = techOnline + techProj + academic + compTotal + extempore;
+        marksObtained = rawTotal * 0.40;
+        maxTotal = 120.00;
+
+        percentage = rawTotal ? (rawTotal / 300) * 100 : 0;
+        isPass = (techOnline >= 46 && techProj >= 10 && academic >= 34 && compTotal >= 20 && extempore >= 10 && typing >= 70);
+        grade = getGrade(percentage);
+      }
+
+      const summaryTotalObtained = tab.querySelector('#live_total_obtained');
+      if (summaryTotalObtained) summaryTotalObtained.textContent = marksObtained.toFixed(2);
+
+      const summaryPercentage = tab.querySelector('#live_percentage');
+      if (summaryPercentage) summaryPercentage.textContent = percentage.toFixed(2);
+
+      const summaryGrade = tab.querySelector('#live_grade');
+      if (summaryGrade) summaryGrade.textContent = grade;
+
+      const summaryStatus = tab.querySelector('#live_status');
+      if (summaryStatus) {
+        summaryStatus.innerHTML = isPass ? '<span style="color: #52B788;">✓ PASS</span>' : '<span style="color: #EF5350;">✗ FAIL</span>';
+      }
+    }
+
+    window.calculateInitialLive = function () { calculateClerkResult('CLK_INITIAL'); };
+    window.calculateW1Live = function () { calculateClerkResult('CLK_WEEKLY_1'); };
+    window.calculateW2Live = function () { calculateClerkResult('CLK_WEEKLY_2'); };
+    window.calculateFLive = function () { calculateClerkResult('CLK_FINAL'); };
+
+    function calculateRowBest(row) {
+      const attempts = Array.from(row.querySelectorAll('input[name^="1st Attempt"], input[name^="2nd Attempt"], input[name^="3rd Attempt"]'));
+      const bestInput = row.querySelector('input[name^="Event Wise Best"]');
+
+      if (bestInput && attempts.length > 0) {
+        let max = 0;
+        let hasValue = false;
+        attempts.forEach(input => {
+          const val = parseInt(input.value);
+          if (!isNaN(val)) {
+            hasValue = true;
+            if (val > max) max = val;
+          }
+        });
+        if (hasValue) {
+          bestInput.value = max;
+        } else {
+          bestInput.value = '';
+        }
+      }
+    }
+
+    function calculateFCAll() {
+      const tgtIden = parseInt(document.querySelector('input[name="TGT IDEN"]')?.value) || 0;
+      const judgingDist = parseInt(document.querySelector('input[name="JUDGING DIST"]')?.value) || 0;
+      const obsnTrg = parseInt(document.querySelector('input[name="OBSN TRG"]')?.value) || 0;
+
+      const pracTotal = tgtIden + judgingDist + obsnTrg;
+      const pracTotalCell = document.getElementById('fc-practical-total');
+      if (pracTotalCell) pracTotalCell.textContent = pracTotal;
+
+      const attempt1 = parseInt(document.querySelector('input[name="FC Online 1st Attempt"]')?.value) || 0;
+      const attempt2 = parseInt(document.querySelector('input[name="FC Online 2nd Attempt"]')?.value) || 0;
+      const bestOnlineInput = document.querySelector('input[name="FC Online Best Attempt"]');
+      if (bestOnlineInput) {
+        const maxVal = Math.max(attempt1, attempt2);
+        bestOnlineInput.value = (maxVal > 0) ? maxVal : '';
+      }
+    }
+
+    function calculateDMVResult() {
+      const onlineInput = document.querySelector('input[name="Online Test (100)"]');
+      if (!onlineInput) return;
+
+      // Find totals from other tabs
+      let pracTotal = 0;
+      let driveTotal = 0;
+
+      // Practical Total
+      const pracTab = document.getElementById('tab-DMV_PRACTICAL');
+      if (pracTab) {
+        const totalRow = Array.from(pracTab.querySelectorAll('tr')).find(r => r.textContent.includes('TOTAL'));
+        if (totalRow) pracTotal = parseInt(totalRow.cells[1].textContent) || 0;
+      }
+
+      // Driving Total
+      const driveTab = document.getElementById('tab-DMV_DRIVING');
+      if (driveTab) {
+        const totalRow = Array.from(driveTab.querySelectorAll('tr')).find(r => r.textContent.includes('TOTAL'));
+        if (totalRow) driveTotal = parseInt(totalRow.cells[1].textContent) || 0;
+      }
+
+      const onlineVal = parseInt(onlineInput.value) || 0;
+      const total200 = onlineVal + pracTotal + driveTotal;
+      const percentage = (total200 / 200 * 100);
+      const converted40 = (total200 / 200 * 40);
+
+      // Update Result UI (if viewing Result tab)
+      const resultTab = document.getElementById('tab-DMV_RESULT');
+      if (resultTab) {
+        const rows = Array.from(resultTab.querySelectorAll('tbody tr'));
+
+        const pracRow = rows.find(r => r.textContent.includes('Practical Test (50)'));
+        if (pracRow) pracRow.cells[1].textContent = pracTotal;
+
+        const driveRow = rows.find(r => r.textContent.includes('Driving Test (50)'));
+        if (driveRow) driveRow.cells[1].textContent = driveTotal;
+
+        const totalRow = rows.find(r => r.textContent.includes('Total (200)'));
+        if (totalRow) totalRow.cells[1].textContent = total200;
+
+        const percRow = rows.find(r => r.textContent.includes('% Age'));
+        if (percRow) percRow.cells[1].textContent = percentage.toFixed(2) + '%';
+
+        const convertRow = rows.find(r => r.textContent.includes('Convert 40 Marks'));
+        if (convertRow) convertRow.cells[1].textContent = converted40.toFixed(2);
+
+        const gradingRow = rows.find(r => r.textContent.includes('Grading'));
+        let grade = 'C';
+        if (gradingRow) {
+          if (percentage >= 70) grade = 'A';
+          else if (percentage >= 60) grade = 'B';
+          gradingRow.cells[1].textContent = grade;
+        }
+
+        // Update Summary Cards at the bottom of the tab
+        const summaryTotal = resultTab.querySelector('.p-3.rounded div[style*="font-size: 20px"]');
+        if (summaryTotal) summaryTotal.textContent = Math.round(converted40);
+
+        const summaryPerc = resultTab.querySelectorAll('.p-3.rounded div[style*="font-size: 20px"]')[1];
+        if (summaryPerc) summaryPerc.textContent = percentage.toFixed(1) + '%';
+
+        const summaryStatus = resultTab.querySelectorAll('.p-3.rounded div[style*="font-size: 20px"]')[2];
+        if (summaryStatus) {
+          if (percentage >= 50) {
+            summaryStatus.textContent = '✓ PASS';
+            summaryStatus.style.color = '#52B788';
+          } else {
+            summaryStatus.textContent = '✗ FAIL';
+            summaryStatus.style.color = '#EF5350';
+          }
+        }
+      }
+    }
+
+    function calculateOPEMResult() {
+      const writtenInput = document.querySelector('input[name="Written Test (100)"]');
+      if (!writtenInput) return;
+
+      let pracTotal = 0;
+      let maintTotal = 0;
+
+      const pracTab = document.getElementById('tab-OPEM_PRACTICAL');
+      if (pracTab) {
+        const totalRow = Array.from(pracTab.querySelectorAll('tr')).find(r => r.textContent.includes('TOTAL'));
+        if (totalRow) pracTotal = parseInt(totalRow.cells[1].textContent) || 0;
+      }
+
+      const maintTab = document.getElementById('tab-OPEM_MAINTENANCE');
+      if (maintTab) {
+        const totalRow = Array.from(maintTab.querySelectorAll('tr')).find(r => r.textContent.includes('TOTAL'));
+        if (totalRow) maintTotal = parseInt(totalRow.cells[1].textContent) || 0;
+      }
+
+      const writtenVal = parseInt(writtenInput.value) || 0;
+      const total200 = writtenVal + pracTotal + maintTotal;
+      const percentage = (total200 / 200 * 100);
+      const converted40 = (total200 / 200 * 40);
+
+      const resultTab = document.getElementById('tab-OPEM_RESULT');
+      if (resultTab) {
+        const rows = Array.from(resultTab.querySelectorAll('tbody tr'));
+
+        const pracRow = rows.find(r => r.textContent.includes('Practical Test (50)'));
+        if (pracRow) pracRow.cells[1].textContent = pracTotal;
+
+        const maintRow = rows.find(r => r.textContent.includes('Maintenance Test (50)'));
+        if (maintRow) maintRow.cells[1].textContent = maintTotal;
+
+        const totalRow = rows.find(r => r.textContent.includes('Total (200)'));
+        if (totalRow) totalRow.cells[1].textContent = total200;
+
+        const percRow = rows.find(r => r.textContent.includes('% Age'));
+        if (percRow) percRow.cells[1].textContent = percentage.toFixed(2) + '%';
+
+        const convertRow = rows.find(r => r.textContent.includes('Convert 40 Marks'));
+        if (convertRow) convertRow.cells[1].textContent = converted40.toFixed(2);
+
+        const gradingRow = rows.find(r => r.textContent.includes('Grading'));
+        let grade = 'C';
+        if (gradingRow) {
+          if (percentage >= 70) grade = 'A';
+          else if (percentage >= 60) grade = 'B';
+          gradingRow.cells[1].textContent = grade;
+        }
+
+        // Update summary cards
+        const summaryTotal = resultTab.querySelector('.p-3.rounded div[style*="font-size: 20px"]');
+        if (summaryTotal) summaryTotal.textContent = Math.round(converted40);
+
+        const summaryPerc = resultTab.querySelectorAll('.p-3.rounded div[style*="font-size: 20px"]')[1];
+        if (summaryPerc) summaryPerc.textContent = percentage.toFixed(1) + '%';
+
+        const summaryStatus = resultTab.querySelectorAll('.p-3.rounded div[style*="font-size: 20px"]')[2];
+        if (summaryStatus) {
+          if (percentage >= 50) {
+            summaryStatus.textContent = '✓ PASS';
+            summaryStatus.style.color = '#52B788';
+          } else {
+            summaryStatus.textContent = '✗ FAIL';
+            summaryStatus.style.color = '#EF5350';
+          }
+        }
+      }
+    }
+
+    function calculateColumnTotal(table, columnName) {
+      const inputs = table.querySelectorAll(`input[name^="${columnName}_"]`);
+      if (inputs.length === 0) return;
+
+      let total = 0;
+      inputs.forEach(input => {
+        total += parseInt(input.value) || 0;
+      });
+
+      // Find the total cell for this column
+      const headerCells = Array.from(table.querySelectorAll('thead th'));
+      const colIndex = headerCells.findIndex(th => th.textContent.trim() === columnName);
+
+      if (colIndex !== -1) {
+        const rows = Array.from(table.querySelectorAll('tbody tr'));
+        const totalRow = rows.find(r => r.cells[0] && r.cells[0].textContent.trim() === 'TOTAL');
+        if (totalRow) {
+          const totalCell = totalRow.cells[colIndex];
+          if (totalCell) {
+            totalCell.textContent = total;
+            totalCell.style.color = '#52B788';
+            totalCell.style.fontWeight = '700';
+          }
+        }
+
+        // Firing Converted Logic
+        const convertedRow = rows.find(r => r.cells[0] && r.cells[0].textContent.includes('CONVERTED'));
+        if (convertedRow) {
+          const convertedCell = convertedRow.querySelector(`td[data-converted-col="${columnName}"]`);
+          if (convertedCell) {
+            const convertedVal = Math.round((total / 56) * 100);
+            convertedCell.textContent = convertedVal || 0;
+          }
+        }
+      }
+    }
+
+    function calculateSingleColumnTotal(table) {
+      const inputs = Array.from(table.querySelectorAll('input:not([readonly])')).filter(i => !i.name.includes('_'));
+      if (inputs.length === 0) return;
+
+      let total = 0;
+      inputs.forEach(input => {
+        total += parseFloat(input.value) || 0;
+      });
+
+      const rows = Array.from(table.querySelectorAll('tbody tr'));
+      
+      const totalRow = rows.find(r => r.cells[0] && r.cells[0].textContent.trim() === 'TOTAL');
+      if (totalRow && totalRow.cells[1]) {
+        totalRow.cells[1].textContent = total;
+        totalRow.cells[1].style.color = '#52B788';
+        totalRow.cells[1].style.fontWeight = '700';
+      }
+    }
+  });
 </script>
 
 {% endblock %}

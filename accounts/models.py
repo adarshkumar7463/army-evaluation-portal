@@ -23,28 +23,52 @@ class CustomUser(AbstractUser):
     ROLE_TRAINER_NCO = 'trainer_nco'
     ROLE_TRAINER_JCO = 'trainer_jco'
     ROLE_TRAINER_OFFICER = 'trainer_officer'
+    ROLE_REGISTRATION = 'registration'
+
+    BATTALION_1TB = '1TB'
+    BATTALION_2TB = '2TB'
+    BATTALION_STB = 'STB'
+
+    BATTALION_CHOICES = [
+        (BATTALION_1TB, '1st Battalion (1TB)'),
+        (BATTALION_2TB, '2nd Battalion (2TB)'),
+        (BATTALION_STB, 'Special Training Battalion (STB)'),
+    ]
+
+    TTS_TRADE_DMV = 'DMV'
+    TTS_TRADE_OPEM = 'OPEM'
+    TTS_TRADE_OTHER = 'OTHER'
+
+    TTS_TRADE_CHOICES = [
+        (TTS_TRADE_DMV, 'DMV'),
+        (TTS_TRADE_OPEM, 'OPEM'),
+        (TTS_TRADE_OTHER, 'Other Trades'),
+    ]
 
     ROLE_CHOICES = [
         (ROLE_COMMANDER, 'Commander'),
         (ROLE_G_HEAD, 'G Department Head'),
-        (ROLE_DEPT_A, 'Department A'),
-        (ROLE_DEPT_B, 'Department B'),
-        (ROLE_DEPT_C, 'Department C'),
-        (ROLE_DEPT_D, 'Department D'),
+        (ROLE_DEPT_A, 'Battalion'),
+        (ROLE_DEPT_B, 'TTS'),
+        (ROLE_DEPT_C, 'CS'),
+        (ROLE_DEPT_D, 'Clerk'),
         (ROLE_TRAINER_NCO, 'Trainer - NCO'),
         (ROLE_TRAINER_JCO, 'Trainer - JCO'),
         (ROLE_TRAINER_OFFICER, 'Trainer - Officer'),
+        (ROLE_REGISTRATION, 'Registration Office'),
     ]
 
     DEPARTMENT_CHOICES = [
-        ('A', 'Department A'),
-        ('B', 'Department B'),
-        ('C', 'Department C'),
-        ('D', 'Department D'),
+        ('A', 'Battalion'),
+        ('B', 'TTS'),
+        ('C', 'CS'),
+        ('D', 'Clerk'),
     ]
 
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default=ROLE_TRAINER_NCO)
     department = models.CharField(max_length=1, choices=DEPARTMENT_CHOICES, blank=True, null=True)
+    battalion_unit = models.CharField(max_length=10, choices=BATTALION_CHOICES, blank=True, null=True)
+    tts_trade = models.CharField(max_length=10, choices=TTS_TRADE_CHOICES, blank=True, null=True)
     phone = models.CharField(max_length=15, blank=True, null=True)
     service_number = models.CharField(max_length=30, unique=True, blank=True, null=True)
     rank = models.CharField(max_length=50, blank=True, null=True)
@@ -94,6 +118,14 @@ class CustomUser(AbstractUser):
     @property
     def is_officer(self):
         return self.role == self.ROLE_TRAINER_OFFICER
+
+    @property
+    def is_registration_office(self):
+        return self.role == self.ROLE_REGISTRATION
+
+    @property
+    def is_battalion(self):
+        return self.get_department_code() == 'A'
 
     @property
     def can_view_all(self):

@@ -50,5 +50,11 @@ class AnyStaffMixin(RoleRequiredMixin):
     allowed_roles = [
         'commander', 'g_head',
         'dept_a', 'dept_b', 'dept_c', 'dept_d',
-        'trainer_nco', 'trainer_jco', 'trainer_officer'
+        'trainer_nco', 'trainer_jco', 'trainer_officer',
+        'registration'
     ]
+
+class RegistrationOfficeMixin(RoleRequiredMixin):
+    """Only Registration Office can access."""
+    allowed_roles = ['registration']
+

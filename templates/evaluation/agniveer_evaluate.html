@@ -1,0 +1,186 @@
+{% comment %} {% extends 'base.html' %}
+{% load custom_filters %}
+{% block title %}Evaluate {{ agniveer.get_full_name }} – Battalion Portal{% endblock %}
+
+{% block page_title %}{% endblock %}
+{% block page_subtitle %}{% endblock %}
+{% block header_extra %}
+<div class="agniveer-header-no py-1 px-3 rounded" style="background: rgba(82, 183, 136, 0.1); border: 1px solid rgba(82, 183, 136, 0.3); color: #52B788; font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 13px; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px;">
+  <i class="bi bi-person-badge"></i> {{ agniveer.enrollment_number }}
+</div>
+{% endblock %}
+
+{% block content %}
+<style>
+    .eval-tabs {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 24px;
+        overflow-x: auto;
+        padding-bottom: 8px;
+        border-bottom: 1px solid rgba(82, 183, 136, 0.2);
+    }
+    .eval-tab {
+        padding: 10px 20px;
+        border-radius: 12px 12px 0 0;
+        background: rgba(15, 20, 25, 0.6);
+        border: 1px solid rgba(82, 183, 136, 0.2);
+        border-bottom: none;
+        color: #8B9BB4;
+        text-decoration: none;
+        font-family: 'Rajdhani', sans-serif;
+        font-weight: 600;
+        white-space: nowrap;
+        transition: all 0.3s ease;
+    }
+    .eval-tab:hover {
+        background: rgba(82, 183, 136, 0.1);
+        color: #52B788;
+    }
+    .eval-tab.active {
+        background: #1B4332;
+        color: #52B788;
+        border-color: #52B788;
+        padding-bottom: 11px;
+        margin-bottom: -1px;
+    }
+    .sub-event-card {
+        background: rgba(15, 20, 25, 0.8);
+        border: 1px solid rgba(82, 183, 136, 0.15);
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 16px;
+        transition: all 0.3s ease;
+    }
+    .sub-event-card:hover {
+        border-color: rgba(82, 183, 136, 0.4);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+    .marks-input {
+        font-family: 'Rajdhani', sans-serif;
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #52B788 !important;
+        background: rgba(27, 67, 50, 0.2) !important;
+        border-color: rgba(82, 183, 136, 0.3) !important;
+    }
+    .marks-input:focus {
+        border-color: #52B788 !important;
+        box-shadow: 0 0 0 0.25rem rgba(82, 183, 136, 0.25) !important;
+    }
+</style>
+
+<div class="row justify-content-center">
+    <div class="col-xl-10">
+        <!-- Tab Navigation -->
+        <div class="eval-tabs">
+            {% for code, name in test_types %}
+            <a href="?test={{ code }}" class="eval-tab {% if active_test == code %}active{% endif %}">
+                {{ name }}
+            </a>
+            {% endfor %}
+        </div>
+
+        <div class="army-card">
+            <div class="army-card-header d-flex justify-content-between align-items-center">
+                <h6 class="army-card-title">
+                    <i class="bi bi-clipboard-data-fill text-army"></i> 
+                    Result Sheet: {{ active_test }}
+                </h6>
+                <div class="d-flex gap-2">
+                    {% if is_locked %}
+                    <span class="badge bg-success"><i class="bi bi-lock-fill"></i> Locked</span>
+                    {% else %}
+                    <span class="badge bg-warning text-dark"><i class="bi bi-pencil"></i> Open for Evaluation</span>
+                    {% endif %}
+                    <a href="{% url 'departments:agniveer_detail' agniveer.pk %}" class="btn btn-army-outline btn-sm">
+                        <i class="bi bi-arrow-left"></i> Back to Profile
+                    </a>
+                </div>
+            </div>
+
+            <div class="army-card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="active_test" value="{{ active_test }}">
+                    
+                    <div class="table-responsive">
+                    {% if columns|length > 1 %}
+                        <table class="army-table">
+                            <thead>
+                                <tr>
+                                    <th>Event / Sub-Event</th>
+                                    {% for col in columns %}
+                                    <th style="text-align:center;">{{ col }}</th>
+                                    {% endfor %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for event in sub_events %}
+                                <tr>
+                                    <td style="font-weight: 600; color: #E0E6F0;">{{ event }}</td>
+                                    {% for col in columns %}
+                                    <td style="text-align:center;">
+                                        {% with field_name=col|add:"_"|add:event %}
+                                            {{ form|get_form_field:field_name }}
+                                        {% endwith %}
+                                    </td>
+                                    {% endfor %}
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    {% else %}
+                        <div class="row g-4">
+                            {% for field in form %}
+                                {% if field.name != 'remarks' %}
+                                <div class="col-md-6 col-lg-4">
+                                    <div class="sub-event-card">
+                                        <label class="form-label d-block mb-3" style="font-weight: 600; color: #E0E6F0;">
+                                            {{ field.label }}
+                                        </label>
+                                        {{ field }}
+                                        {% if field.errors %}
+                                            <div class="text-danger mt-1 small">{{ field.errors.0 }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                      {% endif %}
+                    </div>
+
+                    <div class="mt-4 p-3" style="background: rgba(27,67,50,0.1); border-radius: 12px; border: 1px dashed rgba(82,183,136,0.3);">
+                        <label class="form-label" style="font-weight: 600; color: #52B788;">Overall Remarks for {{ active_test }}</label>
+                        {{ form.remarks }}
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-3 mt-4">
+                        {% if not is_locked %}
+                        <button type="submit" class="btn btn-army px-5 py-2">
+                            <i class="bi bi-check-circle-fill me-2"></i> Save Marks for {{ active_test }}
+                        </button>
+                        {% else %}
+                        <div class="alert alert-info py-2 px-4 mb-0" style="background: rgba(82, 183, 136, 0.1); border: 1px solid #52B788; color: #52B788;">
+                            <i class="bi bi-info-circle-fill me-2"></i> This sheet is locked. Marks cannot be edited.
+                        </div>
+                        {% endif %}
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Evaluation Progress Summary -->
+        <div class="mt-4 text-center">
+            <div class="text-muted small mb-2">Total Evaluation Progress</div>
+            <div class="d-inline-flex align-items-center gap-3 p-3 rounded-pill" style="background: rgba(15,20,25,0.6); border: 1px solid rgba(82,183,136,0.2);">
+                {% with progress=agniveer.get_evaluation_progress %}
+                <div class="fw-bold" style="color: #52B788; font-family: 'Rajdhani', sans-serif; font-size: 1.2rem;">{{ progress }} Tests Fully Evaluated</div>
+                {% endwith %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %} {% endcomment %}

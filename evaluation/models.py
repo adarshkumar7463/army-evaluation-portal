@@ -15,20 +15,37 @@ class EvaluationSheet(models.Model):
     Evaluation sheet for each Agniveer per training category.
     """
     CATEGORY_CHOICES = [
-        ('on_field', 'On Field Training'),
-        ('trade', 'Basic Trade Training'),
+        ('physical', 'Physical Efficiency'),
+        ('weapon', 'Weapon Training'),
+        ('field', 'Field Craft'),
+        ('assessment', 'Assessment'),
+        ('theory', 'Theory & TMA'),
+        ('practical', 'Practical Assessment'),
+        ('result', 'Final Result'),
+        ('initial', 'Initial Test'),
+        ('weekly', 'Weekly Tests'),
+        ('final', 'Final Test'),
+        ('screening', 'Screening'),
     ]
 
     TEST_TYPE_CHOICES = [
-        # On Field
-        ('physical', 'Physical Test'),
-        ('weapon', 'Weapon Test'),
-        ('field', 'Field Training'),
-        # Trade
-        ('assessment', 'Assessment'),
-        ('viva', 'Viva'),
-        ('ojt', 'On Job Training'),
-        ('written', 'Written Exam'),
+        ('PPT', 'PPT'),
+        ('BPET', 'BPET'),
+        ('Firing', 'Firing'),
+        ('DST', 'DST'),
+        ('FC_Practical', 'FC Practical'),
+        ('FC_Online', 'FC Online'),
+        ('PDP', 'PDP Test'),
+        ('BFC', 'BFC Test'),
+        ('MR', 'MR'),
+        ('MR_III', 'MR-III'),
+        ('FC_All', 'FC Practical, FC Online & Camp Trg'),
+        ('CS_RESULT', 'CS Final Result'),
+        ('CLK_INITIAL', 'Clerk Initial Test'),
+        ('CLK_WEEKLY_1', 'Clerk 1st Weekly Test'),
+        ('CLK_WEEKLY_2', 'Clerk 2nd Weekly Progress Test'),
+        ('CLK_FINAL', 'Clerk Final Test'),
+        ('CMK_SHEET', 'Common Mil Knowledge Sheet'),
     ]
 
     agniveer = models.ForeignKey(Agniveer, on_delete=models.CASCADE, related_name='evaluations')
@@ -43,6 +60,9 @@ class EvaluationSheet(models.Model):
         CustomUser, on_delete=models.SET_NULL, null=True, blank=True, related_name='locked_sheets'
     )
     locked_at = models.DateTimeField(null=True, blank=True)
+
+    # Sub-event results stored as JSON: {"2.4 KM Run": 15, "100M Sprint": 18, ...}
+    sub_event_results = models.JSONField(default=dict, blank=True)
 
     created_by = models.ForeignKey(
         CustomUser, on_delete=models.SET_NULL, null=True, related_name='created_sheets'
@@ -70,15 +90,40 @@ class EvaluationSheet(models.Model):
         mark = self.marks.filter(evaluator_type='officer').first()
         return mark.marks if mark else 0
 
+    def get_admin_marks(self):
+        mark = self.marks.filter(evaluator_type='admin').first()
+        return mark.marks if mark else 0
+
     def get_total_marks(self):
+        # Admin marks supersede individual evaluator marks if present
+        admin_marks = self.get_admin_marks()
+        if admin_marks > 0:
+            return admin_marks
         return self.get_nco_marks() + self.get_jco_marks() + self.get_officer_marks()
 
     def get_max_marks(self):
+        from .constants import get_dept_config
+        config = get_dept_config(self.department)
+        configured_max = config.get('max_marks', {}).get(self.test_type)
+        if configured_max:
+            score_event = config.get('score_events', {}).get(self.test_type)
+            if score_event and score_event in configured_max:
+                return configured_max[score_event]
+            if 'CONVERTED TO 40' in configured_max:
+                return configured_max['CONVERTED TO 40']
+            return configured_max.get('TOTAL (600)') or sum(
+                max_mark for event, max_mark in configured_max.items()
+                if not event.upper().startswith('TOTAL') and event != 'FEE TOTAL'
+            )
+        # Dynamic max marks based on sub-events if they exist
+        if self.test_type in config.get('sub_events', {}):
+             return len(config['sub_events'][self.test_type]) * 20 # Assuming 20 max per sub-event
         return 60
 
     def get_percentage(self):
         total = self.get_total_marks()
-        return round((total / 60) * 100, 2)
+        max_marks = self.get_max_marks()
+        return round((total / max_marks) * 100, 2) if max_marks else 0
 
     def is_pass(self):
         return self.get_percentage() >= 50
@@ -99,6 +144,7 @@ class Marks(models.Model):
         ('nco', 'NCO'),
         ('jco', 'JCO'),
         ('officer', 'Officer'),
+        ('admin', 'Department Admin'),
     ]
 
     evaluation_sheet = models.ForeignKey(
@@ -109,7 +155,7 @@ class Marks(models.Model):
     )
     evaluator_type = models.CharField(max_length=10, choices=EVALUATOR_CHOICES)
     marks = models.PositiveSmallIntegerField(
-        validators=[MinValueValidator(0), MaxValueValidator(20)]
+        validators=[MinValueValidator(0), MaxValueValidator(500)]
     )
     remarks = models.TextField(blank=True, null=True)
     submitted_at = models.DateTimeField(auto_now_add=True)
@@ -125,8 +171,8 @@ class Marks(models.Model):
     def clean(self):
         if self.evaluation_sheet.is_locked:
             raise ValidationError("Cannot modify marks on a locked evaluation sheet.")
-        if self.marks > 20:
-            raise ValidationError("Marks cannot exceed 20 per evaluator.")
+        if self.marks > 500:
+            raise ValidationError("Marks cannot exceed 500 per evaluator.")
 
     def save(self, *args, **kwargs):
         self.full_clean()

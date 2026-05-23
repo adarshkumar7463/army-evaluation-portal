@@ -18,11 +18,12 @@ def global_context(request):
         'is_g_head': user.is_g_head,
         'is_department': user.is_department,
         'is_trainer': user.is_trainer,
+        'is_registration_office': user.is_registration_office,
     }
 
     # Quick stats for navbar
     try:
-        if user.is_commander or user.is_g_head or user.is_department:
+        if user.is_commander or user.is_g_head or user.is_department or user.is_registration_office:
             context['total_agniveers'] = Agniveer.objects.count()
         elif user.is_trainer:
             context['total_agniveers'] = user.assigned_agniveers.count()

@@ -1,4 +1,5 @@
 {% comment %} {% extends 'base.html' %}
+{% load custom_filters %}
 {% block title %}Assign Trainers – Army Portal{% endblock %}
 {% block page_title %}Assign Trainers{% endblock %}
 {% block page_subtitle %}{{ object.enrollment_number }} – {{ object.get_full_name }}{% endblock %}
@@ -17,7 +18,7 @@
         <div style="background:rgba(27,67,50,0.15);border:1px solid rgba(27,67,50,0.3);border-radius:10px;padding:14px;margin-bottom:20px;">
           <div style="font-size:13px;color:#8B9BB4;">Assigning trainers for:</div>
           <div style="font-family:Rajdhani,sans-serif;font-size:18px;font-weight:700;color:#E0E6F0;">
-            {{ object.get_full_name }} ({{ object.enrollment_number }}) — Dept {{ object.department }}
+            {{ object.get_full_name }} ({{ object.enrollment_number }}) — {{ object.department|department_name }}
           </div>
         </div>
 

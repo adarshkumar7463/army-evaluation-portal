@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" data-bs-theme="dark">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -9,44 +10,80 @@
   <!-- Bootstrap Icons -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
   <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Rajdhani:wght@500;600;700&display=swap"
+    rel="stylesheet" />
   <style>
-    :root {
+    :root,
+    [data-bs-theme="dark"] {
       --army-green: #1B4332;
       --army-green-light: #2D6A4F;
       --army-green-mid: #40916C;
       --army-olive: #52B788;
       --army-gold: #D4A017;
       --army-gold-light: #F4C842;
-      --dark-bg: #0A0E1A;
+      --bg-dark: #0A0E1A;
       --card-bg: #0F1629;
       --sidebar-bg: #080D18;
-      --sidebar-width: 260px;
-      --navbar-height: 60px;
-      --border-color: rgba(27,67,50,0.3);
+      --sidebar-width: 200px;
+      --navbar-height: 50px;
+      --border-color: rgba(82, 183, 136, 0.2);
       --text-muted: #8B9BB4;
+      --text-primary: #E0E6F0;
       --transition-speed: 0.2s;
     }
 
-    * { box-sizing: border-box; }
+    /* Light Mode Variables */
+    [data-bs-theme="light"] {
+      --army-green: #1B4332;
+      --army-green-light: #2D6A4F;
+      --army-green-mid: #40916C;
+      --army-olive: #2D6A4F;
+      --army-gold: #B8860B;
+      --army-gold-light: #D4A017;
+      --bg-dark: #F0F2F5;
+      --card-bg: #FFFFFF;
+      --sidebar-bg: #FFFFFF;
+      --border-color: rgba(27, 67, 50, 0.15);
+      --text-muted: #6C757D;
+      --text-primary: #1A2C3E;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
 
     body {
       font-family: 'Inter', sans-serif;
-      background: var(--dark-bg);
-      color: #E0E6F0;
+      background: var(--bg-dark);
+      color: var(--text-primary);
       margin: 0;
       overflow-x: hidden;
+      font-size: 12px;
+      line-height: 1.5;
+      transition: background-color 0.3s ease, color 0.3s ease;
     }
 
-    /* ─── SCROLLBAR ─── */
-    ::-webkit-scrollbar { width: 5px; height: 5px; }
-    ::-webkit-scrollbar-track { background: var(--dark-bg); }
-    ::-webkit-scrollbar-thumb { background: var(--army-green-light); border-radius: 10px; }
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
 
-    /* ─── SIDEBAR ─── */
+    ::-webkit-scrollbar-track {
+      background: var(--bg-dark);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--army-green-mid);
+      border-radius: 10px;
+    }
+
+    /* Sidebar */
     .sidebar {
       position: fixed;
-      top: 0; left: 0;
+      top: 0;
+      left: 0;
       width: var(--sidebar-width);
       height: 100vh;
       background: var(--sidebar-bg);
@@ -55,95 +92,82 @@
       display: flex;
       flex-direction: column;
       transition: transform 0.3s ease;
-      overflow-y: auto;
+      overflow: hidden;
     }
 
     .sidebar-brand {
-      padding: 24px 16px;
+      padding: 20px 12px;
       border-bottom: 1px solid var(--border-color);
       display: flex;
-      flex-direction: column;
-      gap: 10px;
-      text-align: center;
       align-items: center;
       justify-content: center;
+      gap: 10px;
+    }
+
+    .sidebar-brand-icon {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, var(--army-green), var(--army-olive));
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      color: white;
     }
 
     .sidebar-brand-text {
       font-family: 'Rajdhani', sans-serif;
-      font-weight: 700;
-      font-size: 26px;
+      font-weight: 600;
+      font-size: 11px;
       line-height: 1.2;
-      color: #E0E6F0;
-      letter-spacing: 2px;
+      color: var(--text-primary);
+      letter-spacing: 1px;
       text-transform: uppercase;
     }
 
     .sidebar-brand-text span {
       display: block;
-      font-size: 12px;
+      font-size: 7px;
       color: var(--army-olive);
-      font-weight: 600;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      margin-top: 6px;
-    }
-
-    /* Removed sidebar-user styles as info moved to dashboard */
-
-    .sidebar-user-avatar {
-      width: 38px; height: 38px;
-      background: linear-gradient(135deg, var(--army-green-light), var(--army-green-mid));
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-weight: 700;
-      font-size: 14px;
-      color: white;
-      flex-shrink: 0;
-    }
-
-    .sidebar-user-info { flex: 1; min-width: 0; }
-    .sidebar-user-name {
-      font-size: 13px; font-weight: 600;
-      color: #E0E6F0;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
-    .sidebar-user-role {
-      font-size: 10px;
-      color: var(--army-olive);
-      text-transform: uppercase;
+      font-weight: 500;
       letter-spacing: 0.5px;
+      text-transform: uppercase;
+      margin-top: 2px;
     }
 
-    .sidebar-nav { padding: 12px 0; flex: 1; }
+    .sidebar-nav {
+      padding: 8px 0;
+      flex: 1;
+      overflow-y: auto;
+    }
 
     .nav-section-label {
-      font-size: 10px;
+      font-size: 9px;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 1.2px;
       color: var(--text-muted);
-      padding: 14px 20px 8px;
+      padding: 12px 16px 6px;
     }
 
     .sidebar-link {
       display: flex;
       align-items: center;
-      gap: 12px;
-      padding: 12px 20px;
-      color: #A8B5C8;
+      gap: 10px;
+      padding: 8px 16px;
+      color: var(--text-muted);
       text-decoration: none;
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 500;
-      border-left: 4px solid transparent;
+      border-left: 3px solid transparent;
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      position: relative;
     }
 
     .sidebar-link:hover {
       color: var(--army-olive);
       background: rgba(82, 183, 136, 0.08);
-      padding-left: 28px;
+      padding-left: 22px;
     }
 
     .sidebar-link.active {
@@ -153,73 +177,99 @@
       font-weight: 700;
     }
 
-    .sidebar-link i { font-size: 20px; width: 24px; text-align: center; }
+    .sidebar-link i {
+      font-size: 16px;
+      width: 20px;
+      text-align: center;
+    }
 
-    /* ─── FIXED SIDEBAR FOOTER ─── */
     .sidebar-footer {
       margin-top: auto;
       border-top: 1px solid var(--border-color);
-      padding: 10px 0;
+      padding: 5px 0;
+      flex-shrink: 0;
+      background: var(--sidebar-bg);
     }
 
     .sidebar-badge {
       margin-left: auto;
       background: var(--army-olive);
-      color: var(--dark-bg);
-      font-size: 10px;
+      color: var(--bg-dark);
+      font-size: 9px;
       font-weight: 800;
       padding: 2px 8px;
       border-radius: 12px;
     }
 
-    /* ─── MAIN CONTENT ─── */
+    /* Main Wrapper */
     .main-wrapper {
       margin-left: var(--sidebar-width);
       min-height: 100vh;
       display: flex;
       flex-direction: column;
-      padding: 40px;
+      padding: 20px 24px;
     }
 
-    /* ─── CONTENT ─── */
     .content-area {
       flex: 1;
       animation: fadeIn 0.5s ease-out;
     }
 
     @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
+    /* Page Header */
     .page-header {
-      margin-bottom: 40px;
+      margin-bottom: 20px;
       border-bottom: 1px solid var(--border-color);
-      padding-bottom: 20px;
+      padding: 4px 0 16px;
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .page-header-left {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      flex-wrap: wrap;
     }
 
     .page-title {
       font-family: 'Rajdhani', sans-serif;
-      font-size: 44px;
+      font-size: 22px;
       font-weight: 700;
-      color: #E0E6F0;
+      color: var(--text-primary);
       margin: 0;
       letter-spacing: 2px;
       text-transform: uppercase;
-      background: linear-gradient(135deg, #E0E6F0 0%, #8B9BB4 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
     }
 
     .page-subtitle {
-      font-size: 14px;
+      font-size: 12px;
       color: var(--army-olive);
-      font-weight: 600;
-      margin-top: 8px;
-      letter-spacing: 0.5px;
+      font-weight: 500;
+      margin: 0;
+      letter-spacing: 0.3px;
     }
 
-    /* ─── CARDS ─── */
+    .page-header-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* Cards */
     .army-card {
       background: var(--card-bg);
       border: 1px solid var(--border-color);
@@ -228,19 +278,20 @@
     }
 
     .army-card-header {
-      padding: 16px 20px;
+      padding: 14px 18px;
       border-bottom: 1px solid var(--border-color);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 12px;
+      flex-wrap: wrap;
+      gap: 10px;
     }
 
     .army-card-title {
       font-family: 'Rajdhani', sans-serif;
-      font-size: 14px;
+      font-size: 12px;
       font-weight: 700;
-      color: #E0E6F0;
+      color: var(--text-primary);
       margin: 0;
       display: flex;
       align-items: center;
@@ -248,173 +299,239 @@
       letter-spacing: 0.5px;
     }
 
-    .army-card-body { padding: 20px; }
-
-    /* ─── STAT CARDS ─── */
-    .stat-card {
-      background: var(--card-bg);
-      border: 1px solid var(--border-color);
-      border-radius: 12px;
-      padding: 20px;
-      position: relative;
-      overflow: hidden;
-      transition: transform 0.2s, border-color 0.2s;
+    .army-card-body {
+      padding: 16px 18px;
     }
 
-    .stat-card:hover {
-      transform: translateY(-2px);
-      border-color: var(--army-green-mid);
+    /* Tables */
+    .army-table {
+      width: 100%;
+      border-collapse: collapse;
     }
 
-    a .stat-card:hover {
-      transform: translateY(-4px);
-      border-color: var(--army-green);
-      box-shadow: 0 8px 16px rgba(27,67,50,0.2);
-    }
-
-    .stat-click-hint {
-      font-size: 11px;
-      color: var(--text-muted);
-      margin-top: 8px;
-      opacity: 0.7;
-      font-style: italic;
-    }
-
-    .stat-card::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 3px;
-    }
-
-    .stat-card.green::before { background: linear-gradient(90deg, var(--army-green), var(--army-olive)); }
-    .stat-card.gold::before { background: linear-gradient(90deg, var(--army-gold), var(--army-gold-light)); }
-    .stat-card.blue::before { background: linear-gradient(90deg, #1565C0, #42A5F5); }
-    .stat-card.red::before { background: linear-gradient(90deg, #B71C1C, #EF5350); }
-
-    .stat-icon {
-      width: 48px; height: 48px;
-      border-radius: 12px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 22px;
-      margin-bottom: 12px;
-    }
-
-    .stat-icon.green { background: rgba(27,67,50,0.4); color: var(--army-olive); }
-    .stat-icon.gold { background: rgba(212,160,23,0.2); color: var(--army-gold-light); }
-    .stat-icon.blue { background: rgba(21,101,192,0.2); color: #42A5F5; }
-    .stat-icon.red { background: rgba(183,28,28,0.2); color: #EF5350; }
-
-    .stat-value {
-      font-family: 'Rajdhani', sans-serif;
-      font-size: 36px;
-      font-weight: 700;
-      color: #E0E6F0;
-      line-height: 1;
-    }
-
-    .stat-label {
-      font-size: 12px;
-      color: var(--text-muted);
-      margin-top: 4px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    /* ─── TABLES ─── */
-    .army-table { width: 100%; border-collapse: collapse; }
     .army-table th {
-      background: rgba(27,67,50,0.3);
+      background: rgba(27, 67, 50, 0.3);
       color: var(--army-olive);
-      font-size: 11px;
+      font-size: 10px;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.8px;
-      padding: 12px 16px;
+      padding: 12px 14px;
       border-bottom: 1px solid var(--border-color);
       white-space: nowrap;
     }
+
     .army-table td {
-      padding: 12px 16px;
-      border-bottom: 1px solid rgba(27,67,50,0.2);
-      font-size: 13px;
-      color: #C5CDE0;
+      padding: 12px 14px;
+      border-bottom: 1px solid rgba(27, 67, 50, 0.2);
+      font-size: 12px;
+      color: var(--text-primary);
       vertical-align: middle;
     }
-    .army-table tbody tr:hover { background: rgba(27,67,50,0.15); }
-    .army-table tbody tr:last-child td { border-bottom: none; }
 
-    /* ─── BADGES ─── */
-    .badge-pass { background: rgba(21,87,36,0.3); color: #4CAF50; border: 1px solid rgba(76,175,80,0.3); }
-    .badge-fail { background: rgba(114,28,36,0.3); color: #EF5350; border: 1px solid rgba(239,83,80,0.3); }
-    .badge-pending { background: rgba(100,100,0,0.3); color: #FFC107; border: 1px solid rgba(255,193,7,0.3); }
-
-    .role-badge {
-      font-size: 10px;
-      font-weight: 600;
-      padding: 3px 8px;
-      border-radius: 20px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
+    .army-table tbody tr:hover {
+      background: rgba(27, 67, 50, 0.15);
     }
 
-    /* ─── FORMS ─── */
-    .form-control, .form-select {
-      background: rgba(15,22,41,0.8) !important;
-      border: 1px solid var(--border-color) !important;
-      color: #E0E6F0 !important;
-      border-radius: 8px !important;
+    .army-table tbody tr:last-child td {
+      border-bottom: none;
     }
-    .form-control:focus, .form-select:focus {
-      border-color: var(--army-green-mid) !important;
-      box-shadow: 0 0 0 3px rgba(64,145,108,0.15) !important;
-    }
-    .form-label { color: #8B9BB4; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
 
-    /* ─── BUTTONS ─── */
+    /* Buttons */
     .btn-army {
       background: linear-gradient(135deg, var(--army-green), var(--army-green-light));
       color: white;
       border: none;
       border-radius: 8px;
       font-weight: 600;
-      font-size: 13px;
-      padding: 8px 18px;
+      font-size: 11px;
+      padding: 6px 14px;
       transition: all 0.2s;
     }
+
     .btn-army:hover {
       background: linear-gradient(135deg, var(--army-green-light), var(--army-green-mid));
       color: white;
       transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(27,67,50,0.4);
+      box-shadow: 0 4px 12px rgba(27, 67, 50, 0.4);
     }
+
     .btn-army-outline {
       background: transparent;
       color: var(--army-olive);
       border: 1px solid var(--army-green-mid);
       border-radius: 8px;
       font-weight: 600;
-      font-size: 13px;
-      padding: 8px 18px;
+      font-size: 11px;
+      padding: 5px 12px;
       transition: all 0.2s;
     }
+
     .btn-army-outline:hover {
-      background: rgba(27,67,50,0.3);
+      background: rgba(27, 67, 50, 0.3);
       color: var(--army-olive);
     }
 
-    /* ─── SIDEBAR TOGGLE ─── */
+    /* Badges */
+    .badge-pass, .badge-success {
+      background: rgba(21, 87, 36, 0.3);
+      color: #4CAF50;
+      border: 1px solid rgba(76, 175, 80, 0.3);
+      border-radius: 20px;
+      padding: 3px 10px;
+      font-size: 10px;
+      font-weight: 600;
+    }
+
+    .badge-fail, .badge-danger {
+      background: rgba(114, 28, 36, 0.3);
+      color: #EF5350;
+      border: 1px solid rgba(239, 83, 80, 0.3);
+      border-radius: 20px;
+      padding: 3px 10px;
+      font-size: 10px;
+      font-weight: 600;
+    }
+
+    .badge-warning {
+      background: rgba(100, 100, 0, 0.3);
+      color: #FFC107;
+      border: 1px solid rgba(255, 193, 7, 0.3);
+      border-radius: 20px;
+      padding: 3px 10px;
+      font-size: 10px;
+      font-weight: 600;
+    }
+
+    /* User Profile */
+    .user-profile-card {
+      background: rgba(255, 255, 255, 0.03);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 8px;
+      padding: 4px 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+      text-decoration: none !important;
+    }
+
+    .user-profile-card:hover {
+      background: rgba(255, 255, 255, 0.06);
+      border-color: rgba(82, 183, 136, 0.3);
+      transform: translateY(-1px);
+    }
+
+    .user-profile-avatar {
+      width: 28px;
+      height: 28px;
+      background: linear-gradient(135deg, var(--army-green), var(--army-green-mid));
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      color: white;
+    }
+
+    .user-profile-info {
+      text-align: right;
+    }
+
+    .user-profile-name {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-primary);
+      line-height: 1.2;
+    }
+
+    .user-profile-role {
+      font-size: 8px;
+      color: var(--army-olive);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-top: 2px;
+    }
+
+    /* Theme Toggle */
+    .theme-toggle {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-primary);
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+
+    .theme-toggle:hover {
+      background: rgba(82, 183, 136, 0.1);
+      border-color: var(--army-olive);
+    }
+
+    /* Status Pill */
+    .status-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      background: rgba(82, 183, 136, 0.05);
+      border: 1px solid rgba(82, 183, 136, 0.15);
+      border-radius: 30px;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--army-olive);
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      background: var(--army-olive);
+      border-radius: 50%;
+      box-shadow: 0 0 6px var(--army-olive);
+      animation: status-pulse 2s infinite;
+    }
+
+    @keyframes status-pulse {
+      0% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(1.15); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    /* Sidebar Toggle */
     .sidebar-toggle {
       display: none;
       background: none;
       border: none;
-      color: #E0E6F0;
-      font-size: 22px;
+      color: var(--text-primary);
+      font-size: 20px;
       cursor: pointer;
       padding: 4px;
     }
 
-    /* ─── MOBILE ─── */
+    /* Pagination */
+    .pagination .page-link {
+      background: var(--card-bg);
+      border-color: var(--border-color);
+      color: var(--text-muted);
+      font-size: 12px;
+      padding: 5px 10px;
+    }
+
+    .pagination .page-item.active .page-link {
+      background: var(--army-green);
+      border-color: var(--army-green);
+      color: white;
+    }
+
+    /* Mobile */
     @media (max-width: 768px) {
       .sidebar {
         transform: translateX(-100%);
@@ -424,6 +541,7 @@
       }
       .main-wrapper {
         margin-left: 0;
+        padding: 12px;
       }
       .sidebar-toggle {
         display: block;
@@ -432,226 +550,232 @@
         display: none;
         position: fixed;
         inset: 0;
-        background: rgba(0,0,0,0.5);
+        background: rgba(0, 0, 0, 0.5);
         z-index: 999;
       }
       .sidebar-overlay.show {
         display: block;
       }
+      .page-title { font-size: 18px; }
+      .page-subtitle { font-size: 10px; }
+      .army-table th, .army-table td { padding: 8px 10px; }
+    }
+
+    /* Light mode specific */
+    [data-bs-theme="light"] .sidebar-link {
+      color: #4a5568;
+    }
+    [data-bs-theme="light"] .sidebar-link:hover {
+      color: var(--army-olive);
+    }
+    [data-bs-theme="light"] .user-profile-card {
+      background: rgba(0, 0, 0, 0.03);
+      border-color: rgba(0, 0, 0, 0.05);
+    }
+    [data-bs-theme="light"] .army-table th {
+      background: rgba(45, 106, 79, 0.08);
+    }
+    [data-bs-theme="light"] .army-table tbody tr:hover {
+      background: rgba(45, 106, 79, 0.04);
     }
   </style>
   {% block extra_css %}{% endblock %}
-  <!-- Offline Support -->
-  <link rel="manifest" href="/static/manifest.json" />
-  <link rel="stylesheet" href="/static/css/offline.css" />
-  <!-- Theme Toggle -->
-  <link rel="stylesheet" href="/static/css/theme-toggle.css" />
   <meta name="theme-color" content="#1a472a" />
-  <meta name="description" content="Army Evaluation Portal with Offline Support" />
-  <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="Army Portal" />
-  <!-- Service Worker Registration Script -->
-  <script>
-    // Register service worker for offline support
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/static/js/service-worker.js')
-          .then(reg => {
-            console.log('Service Worker registered successfully:', reg);
-            // Check for updates periodically
-            setInterval(() => {
-              reg.update().catch(err => console.log('SW update check failed:', err));
-            }, 60000); // Check every minute
-          })
-          .catch(err => {
-            console.log('Service Worker registration failed:', err);
-          });
-      });
-    }
-  </script>
 </head>
+
 <body>
 
-<!-- Sidebar Overlay (mobile) -->
-<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+  <!-- Sidebar Overlay (mobile) -->
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 
-<!-- ═══ SIDEBAR ═══ -->
-<aside class="sidebar" id="sidebar">
-  <div class="sidebar-brand text-center">
-    <div class="sidebar-brand-icon mx-auto mb-3" style="width: 60px; height: 60px; font-size: 30px;">⚔️</div>
-    <div class="sidebar-brand-text">
-      Army Evaluation
-      <div style="font-size: 28px; color: var(--army-olive);">PORTAL</div>
-      <span style="margin-top: 8px;">Agniveer Management System</span>
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="sidebar-brand-icon">
+        <i class="bi bi-shield"></i>
+      </div>
+      <div class="sidebar-brand-text">
+        G-Head Evaluation
+        <span>Army Management System</span>
+      </div>
     </div>
-  </div>
 
-  {% if user.is_authenticated %}
-  <!-- Navigation -->
-  <nav class="sidebar-nav">
-    <div class="nav-section-label">Main Menu</div>
-    <a href="{% url 'core:dashboard' %}" class="sidebar-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
-      <i class="bi bi-grid-3x3-gap-fill"></i> Dashboard
-    </a>
+    {% if user.is_authenticated %}
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Main Menu</div>
+      <a href="{% url 'core:dashboard' %}" class="sidebar-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+        <i class="bi bi-grid-3x3-gap-fill"></i> Dashboard
+      </a>
 
-    <div class="nav-section-label">Agniveers</div>
-    <a href="{% url 'departments:agniveer_list' %}" class="sidebar-link {% if 'agniveer' in request.path and 'search' not in request.path %}active{% endif %}">
-      <i class="bi bi-people-fill"></i> Agniveers
-      {% if total_assigned %}<span class="sidebar-badge">{{ total_assigned }}</span>{% endif %}
-    </a>
+      <div class="nav-section-label">Agniveers</div>
+      <a href="{% url 'departments:agniveer_list' %}" class="sidebar-link {% if 'agniveer' in request.path %}active{% endif %}">
+        <i class="bi bi-people-fill"></i> Agniveers
+        {% if total_assigned %}<span class="sidebar-badge">{{ total_assigned }}</span>{% endif %}
+      </a>
 
-    {% if is_g_head %}
-    <a href="{% url 'departments:agniveer_create' %}" class="sidebar-link">
-      <i class="bi bi-person-plus-fill"></i> Register
-    </a>
-    {% endif %}
+      {% if is_registration_office %}
+      <a href="{% url 'departments:registration_dashboard' %}" class="sidebar-link {% if 'registration' in request.path %}active{% endif %}">
+        <i class="bi bi-person-plus-fill"></i> Registration
+      </a>
+      {% endif %}
 
-    {% if is_department %}
-    <a href="{% url 'accounts:my_team' %}" class="sidebar-link {% if 'my-team' in request.path %}active{% endif %}">
-      <i class="bi bi-people-fill"></i> My Team
-    </a>
-    {% endif %}
+      <!-- My Team - Only for Department Heads -->
+      {% if is_department_head or is_commander or is_g_head %}
+      <div class="nav-section-label">Team</div>
+      <a href="{% url 'accounts:my_team' %}" class="sidebar-link {% if 'my-team' in request.path %}active{% endif %}">
+        <i class="bi bi-people-fill"></i> My Team
+      </a>
+      {% endif %}
 
-    {% if not is_trainer %}
-    <div class="nav-section-label">Evaluation</div>
-    <a href="{% url 'evaluation:evaluation_list' %}" class="sidebar-link {% if 'evaluation' in request.path and 'report' not in request.path %}active{% endif %}">
-      <i class="bi bi-clipboard2-check-fill"></i> Evaluations
-    </a>
-    {% endif %}
+      <!-- Evaluation - Only for Department Heads and Commander/G-Head -->
+      {% if is_department_head or is_commander or is_g_head %}
+      <div class="nav-section-label">Evaluation</div>
+      <a href="{% url 'evaluation:evaluation_list' %}" class="sidebar-link {% if 'evaluation' in request.path %}active{% endif %}">
+        <i class="bi bi-clipboard2-check-fill"></i> Evaluations
+      </a>
+      {% endif %}
 
-    {% if is_commander or is_g_head %}
-    <div class="nav-section-label">Admin</div>
-    <a href="{% url 'accounts:user_list' %}" class="sidebar-link {% if 'users' in request.path %}active{% endif %}">
-      <i class="bi bi-shield-fill-check"></i> Manage Users
-    </a>
-    <a href="{% url 'logs:activity_log' %}" class="sidebar-link {% if 'logs' in request.path %}active{% endif %}">
-      <i class="bi bi-journal-text"></i> Logs
-    </a>
-    {% endif %}
-  </nav>
+      <!-- Admin Section -->
+      {% if is_commander or is_g_head or is_department_head %}
+      <div class="nav-section-label">Admin</div>
+      {% if is_commander or is_g_head %}
+      <a href="{% url 'accounts:user_list' %}" class="sidebar-link {% if 'users' in request.path %}active{% endif %}">
+        <i class="bi bi-shield-fill-check"></i> Manage Users
+      </a>
+      {% endif %}
+      <a href="{% url 'logs:activity_log' %}" class="sidebar-link {% if 'logs' in request.path %}active{% endif %}">
+        <i class="bi bi-journal-text"></i> Logs
+      </a>
+      {% endif %}
+    </nav>
 
-  <!-- Fixed Sidebar Footer -->
-  <div class="sidebar-footer">
-    <a href="{% url 'accounts:logout' %}" class="sidebar-link" style="color:#EF5350;">
-      <i class="bi bi-box-arrow-right"></i> Logout
-    </a>
-    <div style="padding:10px 20px; font-size:20px; color:var(--text-muted); text-align:center;">
-      v1.0 · Secure System
+    <div class="sidebar-footer">
+      <a href="{% url 'accounts:logout' %}" class="sidebar-link" style="color:#EF5350; padding: 8px 18px;">
+        <i class="bi bi-box-arrow-right"></i> Logout
+      </a>
+      <div style="padding: 8px 0; font-size: 8px; color:var(--text-muted); text-align:center; opacity: 0.7; letter-spacing: 0.5px; text-transform: uppercase;">
+        v1.0 · Secure System
+      </div>
     </div>
-  </div>
-  {% endif %}
-</aside>
+    {% endif %}
+  </aside>
 
-<!-- ═══ MAIN WRAPPER ═══ -->
-<div class="main-wrapper">
+  <!-- Main Wrapper -->
+  <div class="main-wrapper">
 
-  <!-- Page Header -->
-  <div class="page-header d-flex align-items-center justify-content-between w-100">
-    <div class="d-flex align-items-center gap-3">
-      <button class="btn btn-outline-army d-lg-none" onclick="toggleSidebar()">
-        <i class="bi bi-list fs-4"></i>
-      </button>
-      <div>
+    <!-- Page Header -->
+    <div class="page-header">
+      <div class="page-header-left">
+        <button class="btn btn-outline-army d-lg-none sidebar-toggle" onclick="toggleSidebar()">
+          <i class="bi bi-list fs-4"></i>
+        </button>
         <h1 class="page-title">{% block page_title %}{% endblock %}</h1>
         <div class="page-subtitle">{% block page_subtitle %}{% endblock %}</div>
       </div>
+
+      <div class="page-header-right">
+        <button id="themeToggle" class="theme-toggle" title="Toggle Light/Dark Mode">
+          <i class="bi bi-sun-fill" style="font-size: 12px;"></i>
+        </button>
+
+        {% if user.is_authenticated %}
+        <a href="{% url 'accounts:profile' %}" class="user-profile-card">
+          <div class="user-profile-info">
+            <div class="user-profile-name">
+              {% if user.first_name %}{{ user.first_name }} {{ user.last_name }}{% else %}{{ user.username }}{% endif %}
+            </div>
+            <div class="user-profile-role">
+              {{ user.get_role_display }}
+            </div>
+          </div>
+          <div class="user-profile-avatar">
+            {{ user.first_name.0|upper }}{{ user.last_name.0|upper }}
+          </div>
+        </a>
+        {% endif %}
+      </div>
     </div>
-    
-    <div class="d-flex align-items-center gap-3 no-print">
-      <!-- Theme Toggle Button -->
-      <button id="themeToggle" class="theme-toggle" title="Toggle Light/Dark Mode (Ctrl+Shift+T)">
-        <i class="bi bi-sun-fill"></i>
-      </button>
-      
-      {% if user.is_authenticated %}
-      <a href="{% url 'accounts:profile' %}" class="text-decoration-none d-flex align-items-center gap-3" style="color: #E0E6F0; background: rgba(82, 183, 136, 0.1); padding: 8px 20px; border-radius: 12px; border: 1px solid rgba(82, 183, 136, 0.3); transition: all 0.2s;">
-        <div class="text-end">
-          <div style="font-size: 18px; font-weight: 700; font-family: 'Rajdhani', sans-serif; line-height: 1;">{{ user.get_full_name|default:user.username }}</div>
-          <div style="font-size: 11px; color: var(--army-olive); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-top: 2px;">{{ user.get_role_display }}</div>
-        </div>
-        <div style="width: 45px; height: 45px; background: linear-gradient(135deg, var(--army-green), var(--army-green-mid)); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; color: white; border: 1px solid rgba(255,255,255,0.1);">
-          {{ user.first_name.0|upper }}{{ user.last_name.0|upper }}
-        </div>
-      </a>
-      {% endif %}
+
+    <!-- Messages -->
+    {% if messages %}
+    <div style="padding:0 0 16px 0;">
+      {% for message in messages %}
+      <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show d-flex align-items-center gap-2" role="alert">
+        {% if message.tags == 'success' %}<i class="bi bi-check-circle-fill text-success"></i>
+        {% elif message.tags == 'error' or message.tags == 'danger' %}<i class="bi bi-x-circle-fill text-danger"></i>
+        {% elif message.tags == 'warning' %}<i class="bi bi-exclamation-triangle-fill text-warning"></i>
+        {% else %}<i class="bi bi-info-circle-fill text-info"></i>{% endif %}
+        {{ message }}
+        <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
+      </div>
+      {% endfor %}
     </div>
+    {% endif %}
+
+    <!-- Content -->
+    <div class="content-area">
+      {% block content %}{% endblock %}
+    </div>
+
   </div>
 
-  <!-- ─── MESSAGES ─── -->
-  {% if messages %}
-  <div style="padding:12px 24px 0;">
-    {% for message in messages %}
-    <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show d-flex align-items-center gap-2" role="alert">
-      {% if message.tags == 'success' %}<i class="bi bi-check-circle-fill text-success"></i>
-      {% elif message.tags == 'error' or message.tags == 'danger' %}<i class="bi bi-x-circle-fill text-danger"></i>
-      {% elif message.tags == 'warning' %}<i class="bi bi-exclamation-triangle-fill text-warning"></i>
-      {% else %}<i class="bi bi-info-circle-fill text-info"></i>{% endif %}
-      {{ message }}
-      <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
-    </div>
-    {% endfor %}
-  </div>
-  {% endif %}
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 
-  <!-- ─── GLOBAL SEARCH ─── -->
-  {% if is_commander or is_g_head %}
-  <div class="row mb-5 no-print">
-    <div class="col-lg-10 mx-auto">
-      <form action="{% url 'core:search' %}" method="GET" class="position-relative">
-        <div class="input-group input-group-lg" style="box-shadow: 0 15px 35px rgba(0,0,0,0.4); border-radius: 15px; overflow: hidden;">
-          <span class="input-group-text border-0" style="background: #1B4332; color: var(--army-olive); padding-left: 25px;">
-            <i class="bi bi-search fs-4"></i>
-          </span>
-          <input type="text" name="q" class="form-control border-0" 
-                 placeholder="Search Agniveer by Army Number / Enrollment..." 
-                 style="background: #1B4332; color: white; height: 65px; font-size: 18px; padding-left: 15px;">
-          <button class="btn btn-army px-5" type="submit" style="font-weight: 700; letter-spacing: 1px; font-family: 'Rajdhani', sans-serif; font-size: 18px;">SEARCH</button>
-        </div>
-      </form>
-    </div>
-  </div>
-  {% endif %}
+  <script>
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('sidebarOverlay');
+      sidebar.classList.toggle('show');
+      overlay.classList.toggle('show');
+    }
 
-  <!-- ─── CONTENT ─── -->
-  <div class="content-area">
-    {% block content %}{% endblock %}
-  </div>
+    // Auto-dismiss alerts
+    setTimeout(() => {
+      document.querySelectorAll('.alert').forEach(el => {
+        const bsAlert = new bootstrap.Alert(el);
+        bsAlert.close();
+      });
+    }, 5000);
 
-</div><!-- /main-wrapper -->
+    // Theme Toggle Functionality
+    function initTheme() {
+      const savedTheme = localStorage.getItem('theme') || 'dark';
+      document.documentElement.setAttribute('data-bs-theme', savedTheme);
+      updateThemeIcon(savedTheme);
+    }
 
-<!-- Bootstrap JS -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<!-- Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    function updateThemeIcon(theme) {
+      const toggleBtn = document.getElementById('themeToggle');
+      if (toggleBtn) {
+        if (theme === 'light') {
+          toggleBtn.innerHTML = '<i class="bi bi-moon-fill" style="font-size: 12px;"></i>';
+        } else {
+          toggleBtn.innerHTML = '<i class="bi bi-sun-fill" style="font-size: 12px;"></i>';
+        }
+      }
+    }
 
-<script>
-  function toggleSidebar() {
-    const sidebar = document.getElementById('sidebar');
-    const overlay = document.getElementById('sidebarOverlay');
-    sidebar.classList.toggle('show');
-    overlay.classList.toggle('show');
-  }
+    function toggleTheme() {
+      const currentTheme = document.documentElement.getAttribute('data-bs-theme');
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-bs-theme', newTheme);
+      localStorage.setItem('theme', newTheme);
+      updateThemeIcon(newTheme);
+      window.dispatchEvent(new CustomEvent('themeChanged', { detail: { theme: newTheme } }));
+    }
 
-  // Auto-dismiss alerts
-  setTimeout(() => {
-    document.querySelectorAll('.alert').forEach(el => {
-      const bsAlert = new bootstrap.Alert(el);
-      bsAlert.close();
-    });
-  }, 5000);
+    document.getElementById('themeToggle')?.addEventListener('click', toggleTheme);
+    initTheme();
 
-  // Chart.js global defaults
-  Chart.defaults.color = '#8B9BB4';
-  Chart.defaults.borderColor = 'rgba(27,67,50,0.3)';
-  Chart.defaults.font.family = "'Inter', sans-serif";
-</script>
+    Chart.defaults.color = getComputedStyle(document.documentElement).getPropertyValue('--text-primary') || '#E0E6F0';
+    Chart.defaults.borderColor = 'rgba(27,67,50,0.3)';
+    Chart.defaults.font.family = "'Inter', sans-serif";
+  </script>
 
-{% block extra_js %}{% endblock %}
-<!-- Theme Toggle and Offline Status -->
-<script src="/static/js/theme-toggle.js"></script>
-<!-- Offline Mode Support -->
-<script src="/static/js/offline-manager.js"></script>
+  {% block extra_js %}{% endblock %}
 </body>
+
 </html>
