@@ -60,7 +60,7 @@ class OfflineManager {
     // Handle going online
     goOnline() {
         this.isOnline = true;
-        // Offline indicator now handled by OfflineStatusBadge in theme-toggle.js
+        // Offline indicator is handled by the active app shell.
         this.syncPendingOperations();
         console.log('Application is online');
     }
@@ -68,7 +68,7 @@ class OfflineManager {
     // Handle going offline
     goOffline() {
         this.isOnline = false;
-        // Offline indicator now handled by OfflineStatusBadge in theme-toggle.js
+        // Offline indicator is handled by the active app shell.
         console.log('Application is offline');
     }
 

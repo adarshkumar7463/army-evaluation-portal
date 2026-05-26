@@ -3,9 +3,38 @@
 {% block title %}{{ title|default:"Manage Users" }} – Army Portal{% endblock %}
 {% block page_title %}{{ title|default:"Manage Users" }}{% endblock %}
 {% block page_subtitle %}User & Role Administration{% endblock %}
+{% block body_class %}portal-ops-page{% endblock %}
 
 {% block extra_css %}
 <style>
+  .portal-ops-page .page-title {
+    font-size: 16px !important;
+  }
+
+  .portal-ops-page .army-table,
+  .portal-ops-page .table {
+    font-size: 11px !important;
+  }
+
+  .portal-ops-page .army-table th,
+  .portal-ops-page .army-table td,
+  .portal-ops-page .table th,
+  .portal-ops-page .table td {
+    padding: 8px 10px !important;
+  }
+
+  .portal-ops-page .btn {
+    font-size: 10.5px !important;
+  }
+
+  .portal-ops-page .form-control,
+  .portal-ops-page .form-select,
+  .portal-ops-page .filter-select,
+  .portal-ops-page .search-input {
+    min-height: 30px !important;
+    font-size: 11px !important;
+  }
+
   /* Light mode compatibility */
   [data-bs-theme="light"] .army-table th {
     background: rgba(45, 106, 79, 0.08);

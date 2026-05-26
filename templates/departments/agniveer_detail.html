@@ -4,6 +4,7 @@
 {% block page_title %}{% endblock %}
 {% block page_subtitle %}{% endblock %}
 {% block header_extra %}{% endblock %}
+{% block body_class %}portal-evaluation-page{% endblock %}
 
 {% block content %}
 <style>
@@ -44,7 +45,7 @@
     flex: 1 1 auto !important;
     overflow-y: auto !important;
     padding: 10px !important;
-    background: rgba(15, 20, 25, 0.8) !important;
+    background: rgba(218, 227, 237, 0.8) !important;
     border: 1px solid rgba(82, 183, 136, 0.2) !important;
     border-top: none !important;
     border-radius: 0 0 12px 12px !important;
@@ -86,6 +87,323 @@
 
   .evaluation-workspace input[type="text"][name="remarks"] {
     width: 100% !important;
+  }
+
+  /* Evaluation sheet source styling: fixed action footer and unified section layout */
+  .evaluation-workspace > .army-card {
+    max-height: calc(100vh - 30px) !important;
+    background: linear-gradient(180deg, var(--card-bg), rgba(220, 238, 248, 0.92)) !important;
+    border: 1px solid var(--border-color) !important;
+  }
+
+  [data-bs-theme="dark"] .evaluation-workspace > .army-card {
+    background: linear-gradient(180deg, var(--card-bg), rgba(31, 42, 50, 0.94)) !important;
+  }
+
+  .evaluation-workspace .tab-content {
+    display: flex !important;
+    flex-direction: column !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+    padding: 10px 12px 0 !important;
+    background: rgba(225, 242, 250, 0.94) !important;
+    border-color: var(--border-color) !important;
+  }
+
+  [data-bs-theme="dark"] .evaluation-workspace .tab-content {
+    background: rgba(37, 48, 57, 0.92) !important;
+  }
+
+  .test-tab-pane[style*="display: block"] {
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .test-tab-pane > h5,
+  .test-tab-pane > h6 {
+    flex: 0 0 auto !important;
+  }
+
+  .test-tab-pane > form {
+    flex: 1 1 auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+    min-height: 0 !important;
+    overflow: auto !important;
+    padding-right: 2px !important;
+  }
+
+  .test-tab-pane .table-responsive {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: auto !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 10px !important;
+    background: rgba(217, 236, 246, 0.85) !important;
+  }
+
+  [data-bs-theme="dark"] .test-tab-pane .table-responsive {
+    background: rgba(43, 56, 66, 0.88) !important;
+  }
+
+  .evaluation-workspace .army-table {
+    width: 100% !important;
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+  }
+
+  .evaluation-workspace .army-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: linear-gradient(90deg, #a9d5ec, #b9e4ef) !important;
+    color: #0a5f8f !important;
+    padding: 8px 10px !important;
+    font-size: 10px !important;
+    text-transform: uppercase;
+    letter-spacing: 1px !important;
+  }
+
+  [data-bs-theme="dark"] .evaluation-workspace .army-table thead th {
+    background: linear-gradient(90deg, rgba(139, 215, 183, 0.18), rgba(133, 205, 224, 0.12)) !important;
+    color: var(--army-olive) !important;
+  }
+
+  .evaluation-workspace .army-table td {
+    padding: 8px 10px !important;
+    font-size: 11px !important;
+    border-color: rgba(15, 95, 135, 0.16) !important;
+  }
+
+  .evaluation-workspace .army-table tbody tr:hover {
+    background: rgba(31, 149, 207, 0.12) !important;
+  }
+
+  .evaluation-workspace .marks-input,
+  .evaluation-workspace .bn-input,
+  .evaluation-workspace input[type="number"] {
+    width: 64px !important;
+    height: 32px !important;
+    background: rgba(248, 252, 255, 0.92) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid rgba(15, 95, 135, 0.22) !important;
+    border-radius: 7px !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    text-align: center !important;
+  }
+
+  [data-bs-theme="dark"] .evaluation-workspace .marks-input,
+  [data-bs-theme="dark"] .evaluation-workspace .bn-input,
+  [data-bs-theme="dark"] .evaluation-workspace input[type="number"] {
+    background: rgba(47, 61, 71, 0.95) !important;
+    color: var(--text-primary) !important;
+    border-color: rgba(149, 183, 169, 0.22) !important;
+  }
+
+  .evaluation-workspace .marks-input:focus,
+  .evaluation-workspace .bn-input:focus,
+  .evaluation-workspace input[type="number"]:focus {
+    border-color: #168fc7 !important;
+    box-shadow: 0 0 0 3px rgba(22, 143, 199, 0.16) !important;
+  }
+
+  .evaluation-sticky-footer {
+    position: relative !important;
+    left: auto !important;
+    bottom: auto !important;
+    width: auto !important;
+    flex: 0 0 auto !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    align-items: center !important;
+    gap: 10px !important;
+    margin: 10px -12px 0 !important;
+    padding: 10px 12px !important;
+    background: rgba(225, 242, 250, 0.96) !important;
+    border-top: 1px solid var(--border-color) !important;
+    border-radius: 0 0 10px 10px !important;
+    box-shadow: 0 -10px 24px rgba(14, 72, 104, 0.1) !important;
+    z-index: 8 !important;
+  }
+
+  [data-bs-theme="dark"] .evaluation-sticky-footer {
+    background: rgba(37, 48, 57, 0.96) !important;
+  }
+
+  .evaluation-sticky-footer > .d-flex {
+    min-width: 0 !important;
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(135px, 1fr)) !important;
+    gap: 8px !important;
+  }
+
+  .evaluation-sticky-footer > div:last-child {
+    justify-self: end !important;
+  }
+
+  .compact-score-card {
+    width: 100% !important;
+    min-width: 0 !important;
+    height: 42px !important;
+    padding: 7px 10px !important;
+    background: rgba(248, 252, 255, 0.78) !important;
+    border: 1px solid rgba(15, 95, 135, 0.16) !important;
+    border-radius: 8px !important;
+    align-items: flex-start !important;
+  }
+
+  [data-bs-theme="dark"] .compact-score-card {
+    background: rgba(47, 61, 71, 0.78) !important;
+  }
+
+  .compact-score-card .card-label {
+    color: var(--text-muted) !important;
+    font-size: 8.5px !important;
+  }
+
+  .compact-score-card .card-val {
+    color: var(--army-olive) !important;
+    font-size: 14px !important;
+  }
+
+  .evaluation-sticky-footer .btn-army {
+    min-width: 138px !important;
+    height: 42px !important;
+    border-radius: 9px !important;
+    white-space: nowrap !important;
+  }
+
+  /* Normalize Clerk and Battalion Screening custom cards to the same sheet language */
+  [id*="tab-CLK_"] > .row,
+  [id*="tab-CLK_"] > form > .row,
+  #tab-BN_SCREENING > .row,
+  #tab-BN_SCREENING > form > .row {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)) !important;
+    gap: 10px !important;
+    margin: 0 !important;
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    padding-right: 2px;
+  }
+
+  [id*="tab-CLK_"] > .row > [class*="col"],
+  [id*="tab-CLK_"] > form > .row > [class*="col"],
+  #tab-BN_SCREENING > .row > [class*="col"],
+  #tab-BN_SCREENING > form > .row > [class*="col"] {
+    width: 100% !important;
+    max-width: none !important;
+    padding: 0 !important;
+  }
+
+  [id*="tab-CLK_"] .army-card,
+  #tab-BN_SCREENING .army-card {
+    height: 100% !important;
+    min-height: 0 !important;
+    background: rgba(217, 236, 246, 0.85) !important;
+    border: 1px solid rgba(15, 95, 135, 0.2) !important;
+    box-shadow: 0 10px 24px rgba(14, 72, 104, 0.1) !important;
+  }
+
+  [data-bs-theme="dark"] [id*="tab-CLK_"] .army-card,
+  [data-bs-theme="dark"] #tab-BN_SCREENING .army-card {
+    background: rgba(43, 56, 66, 0.88) !important;
+    border-color: rgba(149, 183, 169, 0.18) !important;
+  }
+
+  [id*="tab-CLK_"] .army-card-header,
+  #tab-BN_SCREENING .army-card-header {
+    padding: 9px 11px !important;
+    background: linear-gradient(90deg, #a9d5ec, #b9e4ef) !important;
+    border-bottom: 1px solid rgba(15, 95, 135, 0.16) !important;
+  }
+
+  [data-bs-theme="dark"] [id*="tab-CLK_"] .army-card-header,
+  [data-bs-theme="dark"] #tab-BN_SCREENING .army-card-header {
+    background: linear-gradient(90deg, rgba(139, 215, 183, 0.18), rgba(133, 205, 224, 0.12)) !important;
+  }
+
+  [id*="tab-CLK_"] .army-card-title,
+  #tab-BN_SCREENING .army-card-title {
+    color: var(--army-olive) !important;
+    font-size: 11px !important;
+    letter-spacing: 0.6px !important;
+    text-transform: uppercase !important;
+  }
+
+  [id*="tab-CLK_"] .army-card-body,
+  #tab-BN_SCREENING .army-card-body {
+    padding: 11px !important;
+    display: grid !important;
+    gap: 8px !important;
+  }
+
+  [id*="tab-CLK_"] .mb-2,
+  [id*="tab-CLK_"] .mb-3,
+  [id*="tab-CLK_"] .mb-4,
+  #tab-BN_SCREENING .mb-2,
+  #tab-BN_SCREENING .mb-3,
+  #tab-BN_SCREENING .mb-4 {
+    margin-bottom: 0 !important;
+    min-height: 45px !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    align-items: center !important;
+    gap: 8px !important;
+    padding: 7px 8px !important;
+    border: 1px solid rgba(15, 95, 135, 0.16) !important;
+    border-radius: 8px !important;
+    background: rgba(255, 255, 255, 0.18) !important;
+  }
+
+  [id*="tab-CLK_"] label,
+  #tab-BN_SCREENING label {
+    margin: 0 !important;
+    color: var(--text-muted) !important;
+    font-size: 9.5px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.35px !important;
+    text-transform: uppercase !important;
+  }
+
+  @media (max-width: 900px) {
+    .evaluation-workspace {
+      height: auto !important;
+      overflow: visible !important;
+    }
+
+    .evaluation-workspace > .army-card {
+      max-height: none !important;
+      height: auto !important;
+    }
+
+    .evaluation-workspace .tab-content,
+    .test-tab-pane[style*="display: block"] {
+      overflow: visible !important;
+      height: auto !important;
+    }
+
+    .test-tab-pane > form {
+      overflow: visible !important;
+    }
+
+    .evaluation-sticky-footer {
+      grid-template-columns: 1fr !important;
+    }
+
+    .evaluation-sticky-footer > div:last-child {
+      justify-self: stretch !important;
+    }
+
+    .evaluation-sticky-footer .btn-army {
+      width: 100% !important;
+    }
   }
 </style>
 <div class="row g-3">

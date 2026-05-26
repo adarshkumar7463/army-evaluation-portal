@@ -2,9 +2,153 @@
 {% block title %}Commander Dashboard – Army Portal{% endblock %}
 {% block page_title %}Commander Dashboard{% endblock %}
 {% block page_subtitle %}Advanced Analytics & Insights{% endblock %}
+{% block body_class %}portal-dashboard-page portal-collapsible-sidebar{% endblock %}
 
 {% block extra_css %}
 <style>
+  .portal-dashboard-page .content-area {
+    height: calc(100vh - var(--portal-header-height) - 12px);
+    overflow: hidden;
+    padding-right: 3px;
+  }
+
+  .portal-dashboard-page .portal-surface {
+    height: 100%;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(220px, 29vw);
+    grid-auto-rows: min-content;
+    gap: 8px;
+    align-content: start !important;
+    overflow: auto;
+  }
+
+  .portal-dashboard-page .portal-surface > .row {
+    margin: 0 !important;
+  }
+
+  .portal-dashboard-page .portal-surface > .row:first-child {
+    grid-column: 1;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .portal-dashboard-page .portal-surface > .row:first-child > [class*="col"],
+  .portal-dashboard-page .portal-surface > .row:nth-of-type(3) > [class*="col"],
+  .portal-dashboard-page .portal-surface > .row:nth-of-type(n+4) > [class*="col"] {
+    width: 100%;
+    max-width: none;
+    padding: 0 !important;
+  }
+
+  .portal-dashboard-page .portal-surface > .row:nth-of-type(3) {
+    grid-column: 1;
+    display: block;
+    margin-bottom: 24px !important;
+  }
+
+  .portal-dashboard-page .portal-surface > .row:nth-of-type(n+4) {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 9px;
+  }
+
+  .portal-dashboard-page .metric-card,
+  .portal-dashboard-page .stat-card {
+    min-height: 44px;
+    padding: 8px 10px !important;
+  }
+
+  .portal-dashboard-page .metric-icon,
+  .portal-dashboard-page .stat-icon {
+    display: none !important;
+  }
+
+  .portal-dashboard-page .metric-value,
+  .portal-dashboard-page .stat-value {
+    font-size: 18px !important;
+  }
+
+  .portal-dashboard-page .chart-box,
+  .portal-dashboard-page .army-card {
+    min-height: 0;
+    height: 100%;
+    max-height: none;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .portal-dashboard-page canvas {
+    display: block;
+    width: 100% !important;
+    height: 138px !important;
+    max-height: 138px !important;
+  }
+
+  .portal-dashboard-page .pie-chart-canvas {
+    width: 138px !important;
+    height: 138px !important;
+    aspect-ratio: 1;
+    flex: 0 0 auto;
+  }
+
+  .portal-dashboard-page .table-responsive,
+  .portal-dashboard-page [style*="overflow-x:auto"],
+  .portal-dashboard-page [style*="overflow-x: auto"] {
+    max-height: calc(100vh - 246px);
+  }
+
+  .portal-dashboard-page .chart-title,
+  .portal-dashboard-page .army-card-title {
+    min-height: 22px;
+    font-size: 10.5px !important;
+    line-height: 1.2;
+  }
+
+  .portal-dashboard-page .portal-chart-shell {
+    position: relative;
+    min-height: 0;
+  }
+
+  .portal-dashboard-page .chart-box > canvas,
+  .portal-dashboard-page .chart-box .portal-chart-shell canvas {
+    flex: 1 1 auto;
+  }
+
+  .portal-dashboard-page .overall-stats-wrapper,
+  .portal-dashboard-page .pie-chart-container {
+    min-height: 0;
+    gap: 10px !important;
+  }
+
+  .portal-dashboard-page .distribution-section {
+    margin-top: 4px !important;
+    padding-top: 6px !important;
+  }
+
+  .portal-dashboard-page .distribution-values {
+    gap: 18px !important;
+  }
+
+  .portal-dashboard-page .default-stats-container,
+  .portal-dashboard-page .row.g-3 {
+    gap: 8px !important;
+  }
+
+  .portal-dashboard-page .dept-stat-card,
+  .portal-dashboard-page .default-stat-item {
+    padding: 8px 6px !important;
+  }
+
+  @media (max-width: 991px) {
+    .portal-dashboard-page .portal-surface,
+    .portal-dashboard-page .portal-surface > .row:nth-of-type(2),
+    .portal-dashboard-page .portal-surface > .row:nth-of-type(n+3) {
+      grid-template-columns: 1fr;
+    }
+  }
+
   /* Metric Cards */
   .metric-card {
     background: var(--card-bg);
@@ -17,12 +161,48 @@
     position: relative;
     overflow: hidden;
   }
-  
+
+  /* Per-card colour themes */
+  .metric-card.mc-agniveers {
+    background: linear-gradient(145deg, rgba(79,195,247,0.25), rgba(33,150,243,0.15)) !important;
+    border-color: rgba(79,195,247,0.5) !important;
+  }
+  .metric-card.mc-agniveers::before { background: linear-gradient(90deg,#4FC3F7,#2196F3); }
+  .metric-card.mc-agniveers .metric-value { color: #0288D1; }
+  .metric-card.mc-agniveers .metric-icon { background: rgba(79,195,247,0.25); color: #0288D1; }
+
+  .metric-card.mc-trainers {
+    background: linear-gradient(145deg, rgba(212,160,23,0.25), rgba(255,193,7,0.15)) !important;
+    border-color: rgba(212,160,23,0.5) !important;
+  }
+  .metric-card.mc-trainers::before { background: linear-gradient(90deg,#D4A017,#FFC107); }
+  .metric-card.mc-trainers .metric-value { color: #F57F17; }
+  .metric-card.mc-trainers .metric-icon { background: rgba(212,160,23,0.25); color: #F57F17; }
+
+  .metric-card.mc-passed {
+    background: linear-gradient(145deg, rgba(82,183,136,0.25), rgba(46,125,50,0.15)) !important;
+    border-color: rgba(82,183,136,0.5) !important;
+  }
+  .metric-card.mc-passed::before { background: linear-gradient(90deg,#52B788,#2E7D32); }
+  .metric-card.mc-passed .metric-value { color: #2E7D32; }
+  .metric-card.mc-passed .metric-icon { background: rgba(82,183,136,0.25); color: #2E7D32; }
+
+  .metric-card.mc-failed {
+    background: linear-gradient(145deg, rgba(239,83,80,0.25), rgba(183,28,28,0.15)) !important;
+    border-color: rgba(239,83,80,0.5) !important;
+  }
+  .metric-card.mc-failed::before { background: linear-gradient(90deg,#EF5350,#B71C1C); }
+  .metric-card.mc-failed .metric-value { color: #C62828; }
+  .metric-card.mc-failed .metric-icon { background: rgba(239,83,80,0.25); color: #C62828; }
+
   .metric-card:hover {
     transform: translateY(-3px);
-    border-color: var(--army-olive);
-    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.22);
   }
+  .metric-card.mc-agniveers:hover { border-color: #4FC3F7; box-shadow: 0 10px 28px rgba(79,195,247,0.22); }
+  .metric-card.mc-trainers:hover  { border-color: #D4A017; box-shadow: 0 10px 28px rgba(212,160,23,0.22); }
+  .metric-card.mc-passed:hover    { border-color: #52B788; box-shadow: 0 10px 28px rgba(82,183,136,0.22); }
+  .metric-card.mc-failed:hover    { border-color: #EF5350; box-shadow: 0 10px 28px rgba(239,83,80,0.22); }
   
   .metric-card::before {
     content: '';
@@ -82,12 +262,21 @@
     letter-spacing: 1px;
     font-weight: 600;
   }
+
+  /* Pie chart card anchored to top-right grid cell */
+  .portal-dashboard-page .pie-top-right-wrapper {
+    grid-column: 2 / 3;
+    grid-row: 1 / 3; /* Spans row 1 (metrics) and row 2 (dept details) */
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
   
   /* Chart Boxes */
   .chart-box {
     background: var(--card-bg);
     border-radius: 16px;
-    padding: 14px;
+    padding: 12px;
     border: 1px solid var(--border-color);
     transition: all 0.3s ease;
     height: 100%;
@@ -216,8 +405,8 @@
   }
   
   .pie-chart-canvas {
-    width: 220px;
-    height: 220px;
+    width: 280px;
+    height: 280px;
   }
   
   .stats-numbers {
@@ -444,38 +633,72 @@
 <!-- Key Metrics Row -->
 <div class="row g-3 mb-4">
   <div class="col-6 col-md-3">
-    <div class="metric-card" onclick="location.href='{% url 'departments:agniveer_list' %}'">
-      <div class="metric-icon success mx-auto"><i class="bi bi-people-fill"></i></div>
+    <div class="metric-card mc-agniveers" onclick="location.href='{% url 'departments:agniveer_list' %}'">
+      <div class="metric-icon mx-auto"><i class="bi bi-people-fill"></i></div>
       <div class="metric-value">{{ total_agniveers }}</div>
       <div class="metric-label">Total Agniveers</div>
     </div>
   </div>
   <div class="col-6 col-md-3">
-    <div class="metric-card" onclick="location.href='{% url 'accounts:my_team' %}'">
-      <div class="metric-icon info mx-auto"><i class="bi bi-person-badge-fill"></i></div>
+    <div class="metric-card mc-trainers" onclick="location.href='{% url 'accounts:my_team' %}'">
+      <div class="metric-icon mx-auto"><i class="bi bi-person-badge-fill"></i></div>
       <div class="metric-value">{{ total_trainers }}</div>
       <div class="metric-label">Total Trainers</div>
     </div>
   </div>
   <div class="col-6 col-md-3">
-    <div class="metric-card" data-bs-toggle="modal" data-bs-target="#passedModal">
-      <div class="metric-icon success mx-auto"><i class="bi bi-check-circle-fill"></i></div>
-      <div class="metric-value" style="color: var(--army-olive);">{{ pass_count }}</div>
+    <div class="metric-card mc-passed" data-bs-toggle="modal" data-bs-target="#passedModal">
+      <div class="metric-icon mx-auto"><i class="bi bi-check-circle-fill"></i></div>
+      <div class="metric-value">{{ pass_count }}</div>
       <div class="metric-label">Passed</div>
     </div>
   </div>
   <div class="col-6 col-md-3">
-    <div class="metric-card" data-bs-toggle="modal" data-bs-target="#failedModal">
-      <div class="metric-icon danger mx-auto"><i class="bi bi-x-circle-fill"></i></div>
-      <div class="metric-value" style="color: #EF5350;">{{ fail_count }}</div>
+    <div class="metric-card mc-failed" data-bs-toggle="modal" data-bs-target="#failedModal">
+      <div class="metric-icon mx-auto"><i class="bi bi-x-circle-fill"></i></div>
+      <div class="metric-value">{{ fail_count }}</div>
       <div class="metric-label">Failed</div>
+    </div>
+  </div>
+</div>
+<!-- Pie Chart anchored to top-right, beside metric cards row -->
+<div class="pie-top-right-wrapper">
+  <div class="chart-box" style="flex:1;">
+    <div class="chart-title"><i class="bi bi-pie-chart"></i> OVERALL PASS/FAIL</div>
+    <div class="overall-stats-wrapper">
+      <div class="pie-chart-container" style="flex: 1; display: flex; align-items: center; justify-content: center; min-height: 200px;">
+        <div class="pie-chart-canvas" style="width: 100%; max-width: 280px; aspect-ratio: 1; filter: drop-shadow(0px 8px 20px rgba(82, 183, 136, 0.4)); margin: auto;">
+          <canvas id="passFailChart"></canvas>
+        </div>
+      </div>
+      <div class="distribution-section mt-2">
+        <div class="distribution-title d-none">DISTRIBUTION</div>
+        <div class="distribution-values">
+          <div class="distribution-item">
+            <div class="distribution-number" style="color: var(--army-olive);">{{ pass_count }}</div>
+            <div class="distribution-label">Passed</div>
+          </div>
+          <div class="distribution-item">
+            <div class="distribution-number" style="color: #EF5350;">{{ fail_count }}</div>
+            <div class="distribution-label">Failed</div>
+          </div>
+        </div>
+      </div>
+      <div class="ai-insight-box mt-3 p-3" style="background: linear-gradient(145deg, rgba(33,150,243,0.1), rgba(33,150,243,0.02)); border: 1px solid rgba(33,150,243,0.2); border-radius: 12px;">
+        <div class="d-flex align-items-center gap-2 mb-2">
+          <i class="bi bi-stars" style="color: #4FC3F7;"></i> <span class="fw-bold" style="font-size: 11px; color: var(--text-primary); text-transform: uppercase; letter-spacing: 0.5px;">Analytics Insight</span>
+        </div>
+        <p class="mb-0" style="font-size: 12px; color: var(--text-muted); line-height: 1.4;">
+          The overall evaluation metrics indicate a healthy passing distribution across all monitored departments.
+        </p>
+      </div>
     </div>
   </div>
 </div>
 
 <!-- Department Selection & Details -->
 <div class="row g-4 mb-4">
-  <div class="col-lg-7">
+  <div class="col-lg-12">
     <div class="chart-box">
       <div class="chart-title"><i class="bi bi-building"></i> Department Evaluation Details</div>
       
@@ -503,33 +726,6 @@
       <div id="deptCategoryChartContainer" class="category-chart-container" style="display: none;">
         <div class="chart-title" style="margin-bottom: 10px;"><i class="bi bi-bar-chart"></i> Category Performance</div>
         <canvas id="deptSelectedCategoryChart" style="max-height: 140px; width: 100%;"></canvas>
-      </div>
-    </div>
-  </div>
-  
-  <!-- Overall Pass/Fail Section - Larger Pie Chart -->
-  <div class="col-lg-5">
-    <div class="chart-box">
-      <div class="chart-title"><i class="bi bi-pie-chart"></i> OVERALL PASS/FAIL</div>
-      <div class="overall-stats-wrapper">
-        <div class="pie-chart-container">
-          <div class="pie-chart-canvas">
-            <canvas id="passFailChart"></canvas>
-          </div>
-
-        <div class="distribution-section">
-          <div class="distribution-title">DISTRIBUTION</div>
-          <div class="distribution-values">
-            <div class="distribution-item">
-              <div class="distribution-number" style="color: var(--army-olive);">{{ pass_count }}</div>
-              <div class="distribution-label">Passed</div>
-            </div>
-            <div class="distribution-item">
-              <div class="distribution-number" style="color: #EF5350;">{{ fail_count }}</div>
-              <div class="distribution-label">Failed</div>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   </div>
@@ -745,7 +941,7 @@ function updateDeptCategoryChart(dept) {
       datasets: [{
         label: deptNames[dept],
         data: [stats.total, stats.passed, stats.failed],
-        backgroundColor: [deptColors[dept].bg, deptColors[dept].bg, 'rgba(239,83,80,0.7)'],
+        backgroundColor: ['rgba(33, 150, 243, 0.7)', 'rgba(76, 175, 80, 0.7)', 'rgba(239, 83, 80, 0.7)'],
         borderRadius: 6
       }]
     },
@@ -768,11 +964,23 @@ document.querySelectorAll('.dept-btn').forEach(btn => {
     this.classList.add('active');
     
     document.getElementById('deptDetailsContainer').innerHTML = `
-      <div class="row g-3">
-        <div class="col-3"><div class="dept-stat-card"><div class="dept-stat-value">${stats.total}</div><div class="dept-stat-label">Total</div></div></div>
-        <div class="col-3"><div class="dept-stat-card"><div class="dept-stat-value" style="color: var(--army-olive);">${stats.passed}</div><div class="dept-stat-label">Passed</div></div></div>
-        <div class="col-3"><div class="dept-stat-card"><div class="dept-stat-value" style="color: #EF5350;">${stats.failed}</div><div class="dept-stat-label">Failed</div></div></div>
-        <div class="col-3"><div class="dept-stat-card"><div class="dept-stat-value" style="color: #4FC3F7;">${stats.pass_rate.toFixed(1)}%</div><div class="dept-stat-label">Rate</div></div></div>
+      <div class="d-flex w-100 gap-3">
+        <div class="flex-fill dept-stat-card" style="background: linear-gradient(145deg, rgba(79,195,247,0.15), rgba(33,150,243,0.05)); border-color: rgba(79,195,247,0.3);">
+          <div class="dept-stat-value" style="color: #0288D1;">${stats.total}</div>
+          <div class="dept-stat-label">Total</div>
+        </div>
+        <div class="flex-fill dept-stat-card" style="background: linear-gradient(145deg, rgba(82,183,136,0.15), rgba(46,125,50,0.05)); border-color: rgba(82,183,136,0.3);">
+          <div class="dept-stat-value" style="color: #2E7D32;">${stats.passed}</div>
+          <div class="dept-stat-label">Passed</div>
+        </div>
+        <div class="flex-fill dept-stat-card" style="background: linear-gradient(145deg, rgba(239,83,80,0.15), rgba(183,28,28,0.05)); border-color: rgba(239,83,80,0.3);">
+          <div class="dept-stat-value" style="color: #C62828;">${stats.failed}</div>
+          <div class="dept-stat-label">Failed</div>
+        </div>
+        <div class="flex-fill dept-stat-card" style="background: linear-gradient(145deg, rgba(212,160,23,0.15), rgba(255,193,7,0.05)); border-color: rgba(212,160,23,0.3);">
+          <div class="dept-stat-value" style="color: #F57F17;">${stats.pass_rate.toFixed(1)}%</div>
+          <div class="dept-stat-label">Rate</div>
+        </div>
       </div>
     `;
     document.getElementById('deptCategoryChartContainer').style.display = 'block';
@@ -843,6 +1051,12 @@ window.addEventListener('themeChanged', function(e) {
 });
 
 updateChartColors();
+// Initialize the dashboard by clicking the Battalion button by default
+const defaultBtn = document.querySelector('.dept-btn[data-dept="A"]');
+if (defaultBtn) {
+  defaultBtn.click();
+}
+
 </script>
 {% endblock %}
 

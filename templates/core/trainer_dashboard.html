@@ -2,6 +2,48 @@
 {% block title %}Trainer Dashboard{% endblock %}
 {% block page_title %}{{ page_title }}{% endblock %}
 {% block page_subtitle %}Available Agniveers & Evaluations{% endblock %}
+{% block body_class %}portal-dashboard-page portal-collapsible-sidebar{% endblock %}
+
+{% block extra_css %}
+<style>
+  .portal-dashboard-page .content-area {
+    height: calc(100vh - var(--portal-header-height) - 12px);
+    overflow: hidden;
+  }
+
+  .portal-dashboard-page .portal-surface {
+    height: 100%;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    gap: 10px;
+    overflow: hidden;
+  }
+
+  .portal-dashboard-page .stat-card {
+    min-height: 64px;
+    padding: 10px !important;
+  }
+
+  .portal-dashboard-page .stat-icon {
+    display: none !important;
+  }
+
+  .portal-dashboard-page .stat-value {
+    font-size: 20px !important;
+  }
+
+  .portal-dashboard-page .army-card {
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .portal-dashboard-page .army-card > div[style*="overflow-x"] {
+    min-height: 0;
+    overflow: auto !important;
+  }
+</style>
+{% endblock %}
 
 {% block content %}
 <div class="row g-3 mb-4">

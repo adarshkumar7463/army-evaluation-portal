@@ -1,5 +1,6 @@
+{% load static %}
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
+<html lang="en" data-bs-theme="light">
 
 <head>
   <meta charset="UTF-8" />
@@ -220,6 +221,7 @@
         opacity: 0;
         transform: translateY(10px);
       }
+
       to {
         opacity: 1;
         transform: translateY(0);
@@ -373,7 +375,8 @@
     }
 
     /* Badges */
-    .badge-pass, .badge-success {
+    .badge-pass,
+    .badge-success {
       background: rgba(21, 87, 36, 0.3);
       color: #4CAF50;
       border: 1px solid rgba(76, 175, 80, 0.3);
@@ -383,7 +386,8 @@
       font-weight: 600;
     }
 
-    .badge-fail, .badge-danger {
+    .badge-fail,
+    .badge-danger {
       background: rgba(114, 28, 36, 0.3);
       color: #EF5350;
       border: 1px solid rgba(239, 83, 80, 0.3);
@@ -500,9 +504,20 @@
     }
 
     @keyframes status-pulse {
-      0% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.5; transform: scale(1.15); }
-      100% { opacity: 1; transform: scale(1); }
+      0% {
+        opacity: 1;
+        transform: scale(1);
+      }
+
+      50% {
+        opacity: 0.5;
+        transform: scale(1.15);
+      }
+
+      100% {
+        opacity: 1;
+        transform: scale(1);
+      }
     }
 
     /* Sidebar Toggle */
@@ -536,16 +551,20 @@
       .sidebar {
         transform: translateX(-100%);
       }
+
       .sidebar.show {
         transform: translateX(0);
       }
+
       .main-wrapper {
         margin-left: 0;
         padding: 12px;
       }
+
       .sidebar-toggle {
         display: block;
       }
+
       .sidebar-overlay {
         display: none;
         position: fixed;
@@ -553,43 +572,63 @@
         background: rgba(0, 0, 0, 0.5);
         z-index: 999;
       }
+
       .sidebar-overlay.show {
         display: block;
       }
-      .page-title { font-size: 18px; }
-      .page-subtitle { font-size: 10px; }
-      .army-table th, .army-table td { padding: 8px 10px; }
+
+      .page-title {
+        font-size: 18px;
+      }
+
+      .page-subtitle {
+        font-size: 10px;
+      }
+
+      .army-table th,
+      .army-table td {
+        padding: 8px 10px;
+      }
     }
 
     /* Light mode specific */
     [data-bs-theme="light"] .sidebar-link {
       color: #4a5568;
     }
+
     [data-bs-theme="light"] .sidebar-link:hover {
       color: var(--army-olive);
     }
+
     [data-bs-theme="light"] .user-profile-card {
       background: rgba(0, 0, 0, 0.03);
       border-color: rgba(0, 0, 0, 0.05);
     }
+
     [data-bs-theme="light"] .army-table th {
       background: rgba(45, 106, 79, 0.08);
     }
+
     [data-bs-theme="light"] .army-table tbody tr:hover {
       background: rgba(45, 106, 79, 0.04);
     }
   </style>
+  <link href="{% static 'css/portal-ui.css' %}" rel="stylesheet" />
   {% block extra_css %}{% endblock %}
   <meta name="theme-color" content="#1a472a" />
 </head>
 
-<body>
+<body class="{% block body_class %}{% endblock %}">
 
   <!-- Sidebar Overlay (mobile) -->
   <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 
   <!-- Sidebar -->
   <aside class="sidebar" id="sidebar">
+    <button type="button" class="sidebar-expand-btn" id="sidebarExpandBtn" title="Expand navigation"
+      aria-label="Expand navigation">
+      <i class="bi bi-layout-sidebar-inset"></i>
+    </button>
     <div class="sidebar-brand">
       <div class="sidebar-brand-icon">
         <i class="bi bi-shield"></i>
@@ -603,18 +642,21 @@
     {% if user.is_authenticated %}
     <nav class="sidebar-nav">
       <div class="nav-section-label">Main Menu</div>
-      <a href="{% url 'core:dashboard' %}" class="sidebar-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+      <a href="{% url 'core:dashboard' %}"
+        class="sidebar-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
         <i class="bi bi-grid-3x3-gap-fill"></i> Dashboard
       </a>
 
       <div class="nav-section-label">Agniveers</div>
-      <a href="{% url 'departments:agniveer_list' %}" class="sidebar-link {% if 'agniveer' in request.path %}active{% endif %}">
+      <a href="{% url 'departments:agniveer_list' %}"
+        class="sidebar-link {% if 'agniveer' in request.path %}active{% endif %}">
         <i class="bi bi-people-fill"></i> Agniveers
         {% if total_assigned %}<span class="sidebar-badge">{{ total_assigned }}</span>{% endif %}
       </a>
 
       {% if is_registration_office %}
-      <a href="{% url 'departments:registration_dashboard' %}" class="sidebar-link {% if 'registration' in request.path %}active{% endif %}">
+      <a href="{% url 'departments:registration_dashboard' %}"
+        class="sidebar-link {% if 'registration' in request.path %}active{% endif %}">
         <i class="bi bi-person-plus-fill"></i> Registration
       </a>
       {% endif %}
@@ -627,13 +669,7 @@
       </a>
       {% endif %}
 
-      <!-- Evaluation - Only for Department Heads and Commander/G-Head -->
-      {% if is_department_head or is_commander or is_g_head %}
-      <div class="nav-section-label">Evaluation</div>
-      <a href="{% url 'evaluation:evaluation_list' %}" class="sidebar-link {% if 'evaluation' in request.path %}active{% endif %}">
-        <i class="bi bi-clipboard2-check-fill"></i> Evaluations
-      </a>
-      {% endif %}
+
 
       <!-- Admin Section -->
       {% if is_commander or is_g_head or is_department_head %}
@@ -653,7 +689,8 @@
       <a href="{% url 'accounts:logout' %}" class="sidebar-link" style="color:#EF5350; padding: 8px 18px;">
         <i class="bi bi-box-arrow-right"></i> Logout
       </a>
-      <div style="padding: 8px 0; font-size: 8px; color:var(--text-muted); text-align:center; opacity: 0.7; letter-spacing: 0.5px; text-transform: uppercase;">
+      <div
+        style="padding: 8px 0; font-size: 8px; color:var(--text-muted); text-align:center; opacity: 0.7; letter-spacing: 0.5px; text-transform: uppercase;">
         v1.0 · Secure System
       </div>
     </div>
@@ -700,7 +737,9 @@
     {% if messages %}
     <div style="padding:0 0 16px 0;">
       {% for message in messages %}
-      <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show d-flex align-items-center gap-2" role="alert">
+      <div
+        class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show d-flex align-items-center gap-2"
+        role="alert">
         {% if message.tags == 'success' %}<i class="bi bi-check-circle-fill text-success"></i>
         {% elif message.tags == 'error' or message.tags == 'danger' %}<i class="bi bi-x-circle-fill text-danger"></i>
         {% elif message.tags == 'warning' %}<i class="bi bi-exclamation-triangle-fill text-warning"></i>
@@ -713,7 +752,7 @@
     {% endif %}
 
     <!-- Content -->
-    <div class="content-area">
+    <div class="content-area portal-surface" id="portalSurface">
       {% block content %}{% endblock %}
     </div>
 
@@ -742,9 +781,11 @@
 
     // Theme Toggle Functionality
     function initTheme() {
-      const savedTheme = localStorage.getItem('theme') || 'dark';
-      document.documentElement.setAttribute('data-bs-theme', savedTheme);
-      updateThemeIcon(savedTheme);
+      const savedTheme = localStorage.getItem('theme');
+      const initialTheme = savedTheme || 'light';
+      document.documentElement.setAttribute('data-bs-theme', initialTheme);
+      localStorage.setItem('theme', initialTheme);
+      updateThemeIcon(initialTheme);
     }
 
     function updateThemeIcon(theme) {
@@ -770,11 +811,12 @@
     document.getElementById('themeToggle')?.addEventListener('click', toggleTheme);
     initTheme();
 
-    Chart.defaults.color = getComputedStyle(document.documentElement).getPropertyValue('--text-primary') || '#E0E6F0';
-    Chart.defaults.borderColor = 'rgba(27,67,50,0.3)';
+    Chart.defaults.color = getComputedStyle(document.documentElement).getPropertyValue('--text-primary') || '#20342E';
+    Chart.defaults.borderColor = 'rgba(38, 84, 70, 0.18)';
     Chart.defaults.font.family = "'Inter', sans-serif";
   </script>
 
+  <script src="{% static 'js/portal-ui.js' %}"></script>
   {% block extra_js %}{% endblock %}
 </body>
 

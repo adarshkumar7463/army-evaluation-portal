@@ -5,9 +5,66 @@
 
 {% block page_title %}Agniveer Registration Dashboard{% endblock %}
 {% block page_subtitle %}Manage individual and bulk Agniveer registrations{% endblock %}
+{% block body_class %}portal-standard-page portal-ops-page{% endblock %}
 
 {% block extra_css %}
 <style>
+    .portal-standard-page .sidebar {
+        width: var(--sidebar-expanded-width) !important;
+    }
+
+    .portal-standard-page .main-wrapper {
+        margin-left: var(--sidebar-expanded-width) !important;
+        height: auto !important;
+        min-height: 100vh !important;
+        overflow: visible !important;
+    }
+
+    .portal-standard-page .content-area {
+        height: auto !important;
+        overflow: visible !important;
+        padding-right: 0 !important;
+    }
+
+    .portal-standard-page .sidebar-expand-btn {
+        display: none !important;
+    }
+
+    .portal-standard-page .reg-card,
+    .portal-standard-page .army-card,
+    .portal-standard-page .army-card-body {
+        overflow: visible;
+        max-height: none;
+    }
+
+    .portal-standard-page .page-title {
+        font-size: 16px !important;
+    }
+
+    .portal-standard-page .army-table,
+    .portal-standard-page .table {
+        font-size: 11px !important;
+    }
+
+    .portal-standard-page .army-table th,
+    .portal-standard-page .army-table td,
+    .portal-standard-page .table th,
+    .portal-standard-page .table td {
+        padding: 8px 10px !important;
+    }
+
+    .portal-standard-page .btn {
+        font-size: 10.5px !important;
+    }
+
+    .portal-standard-page .form-control,
+    .portal-standard-page .form-select,
+    .portal-standard-page .filter-select,
+    .portal-standard-page .search-input {
+        min-height: 30px !important;
+        font-size: 11px !important;
+    }
+
     .reg-card {
         background: var(--card-bg);
         border: 1px solid var(--border-color);
