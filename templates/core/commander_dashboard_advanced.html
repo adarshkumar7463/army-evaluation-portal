@@ -6,6 +6,7 @@
 
 {% block extra_css %}
 <style>
+  /* ── Layout Shell ─────────────────────────────────────── */
   .portal-dashboard-page .content-area {
     height: calc(100vh - var(--portal-header-height) - 12px);
     overflow: hidden;
@@ -15,246 +16,94 @@
   .portal-dashboard-page .portal-surface {
     height: 100%;
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(220px, 29vw);
-    grid-auto-rows: min-content;
+    grid-template-columns: minmax(0, 1fr) minmax(220px, 28vw);
+    grid-template-rows: auto auto auto auto auto auto 1fr;
     gap: 8px;
-    align-content: start !important;
+    align-content: start;
     overflow: auto;
+    padding-bottom: 8px;
   }
 
-  .portal-dashboard-page .portal-surface > .row {
-    margin: 0 !important;
-  }
-
-  .portal-dashboard-page .portal-surface > .row:first-child {
+  /* ── Grid slot assignments ─────────────────────────────── */
+  .portal-dashboard-page .metrics-row {
     grid-column: 1;
+    grid-row: 1;
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 8px;
   }
 
-  .portal-dashboard-page .portal-surface > .row:first-child > [class*="col"],
-  .portal-dashboard-page .portal-surface > .row:nth-of-type(3) > [class*="col"],
-  .portal-dashboard-page .portal-surface > .row:nth-of-type(n+4) > [class*="col"] {
-    width: 100%;
-    max-width: none;
-    padding: 0 !important;
-  }
-
-  .portal-dashboard-page .portal-surface > .row:nth-of-type(3) {
+  .portal-dashboard-page .dept-detail-row {
     grid-column: 1;
-    display: block;
-    margin-bottom: 24px !important;
+    grid-row: 2;
   }
 
-  .portal-dashboard-page .portal-surface > .row:nth-of-type(n+4) {
-    grid-column: 1 / -1;
+  .portal-dashboard-page .dept-charts-row {
+    grid-column: 1 / 3;
+    grid-row: 3;
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 9px;
+    gap: 8px;
   }
 
-  .portal-dashboard-page .metric-card,
-  .portal-dashboard-page .stat-card {
-    min-height: 44px;
-    padding: 8px 10px !important;
+  .portal-dashboard-page .monthly-testtype-row {
+    grid-column: 1 / 3;
+    grid-row: 4;
+    display: grid;
+    grid-template-columns: 7fr 5fr;
+    gap: 8px;
   }
 
-  .portal-dashboard-page .metric-icon,
-  .portal-dashboard-page .stat-icon {
-    display: none !important;
+  .portal-dashboard-page .stats-table-row {
+    grid-column: 1 / -1;
+    grid-row: 5;
   }
 
-  .portal-dashboard-page .metric-value,
-  .portal-dashboard-page .stat-value {
-    font-size: 18px !important;
-  }
-
-  .portal-dashboard-page .chart-box,
-  .portal-dashboard-page .army-card {
-    min-height: 0;
-    height: 100%;
-    max-height: none;
+  .portal-dashboard-page .pie-panel {
+    grid-column: 2;
+    grid-row: 1 / 3;
     display: flex;
     flex-direction: column;
   }
 
-  .portal-dashboard-page canvas {
-    display: block;
-    width: 100% !important;
-    height: 138px !important;
-    max-height: 138px !important;
-  }
-
-  .portal-dashboard-page .pie-chart-canvas {
-    width: 138px !important;
-    height: 138px !important;
-    aspect-ratio: 1;
-    flex: 0 0 auto;
-  }
-
-  .portal-dashboard-page .table-responsive,
-  .portal-dashboard-page [style*="overflow-x:auto"],
-  .portal-dashboard-page [style*="overflow-x: auto"] {
-    max-height: calc(100vh - 246px);
-  }
-
-  .portal-dashboard-page .chart-title,
-  .portal-dashboard-page .army-card-title {
-    min-height: 22px;
-    font-size: 10.5px !important;
-    line-height: 1.2;
-  }
-
-  .portal-dashboard-page .portal-chart-shell {
-    position: relative;
-    min-height: 0;
-  }
-
-  .portal-dashboard-page .chart-box > canvas,
-  .portal-dashboard-page .chart-box .portal-chart-shell canvas {
-    flex: 1 1 auto;
-  }
-
-  .portal-dashboard-page .overall-stats-wrapper,
-  .portal-dashboard-page .pie-chart-container {
-    min-height: 0;
-    gap: 10px !important;
-  }
-
-  .portal-dashboard-page .distribution-section {
-    margin-top: 4px !important;
-    padding-top: 6px !important;
-  }
-
-  .portal-dashboard-page .distribution-values {
-    gap: 18px !important;
-  }
-
-  .portal-dashboard-page .default-stats-container,
-  .portal-dashboard-page .row.g-3 {
-    gap: 8px !important;
-  }
-
-  .portal-dashboard-page .dept-stat-card,
-  .portal-dashboard-page .default-stat-item {
-    padding: 8px 6px !important;
-  }
-
-  @media (max-width: 991px) {
-    .portal-dashboard-page .portal-surface,
-    .portal-dashboard-page .portal-surface > .row:nth-of-type(2),
-    .portal-dashboard-page .portal-surface > .row:nth-of-type(n+3) {
-      grid-template-columns: 1fr;
-    }
-  }
-
-  /* Metric Cards */
+  /* ── Metric Cards ─────────────────────────────────────── */
   .metric-card {
     background: var(--card-bg);
     border-radius: 12px;
-    padding: 12px 8px;
+    padding: 8px 10px;
+    min-height: 44px;
     text-align: center;
-    transition: all 0.3s ease;
     border: 1px solid var(--border-color);
     cursor: pointer;
     position: relative;
     overflow: hidden;
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
   }
 
-  /* Per-card colour themes */
-  .metric-card.mc-agniveers {
-    background: linear-gradient(145deg, rgba(79,195,247,0.25), rgba(33,150,243,0.15)) !important;
-    border-color: rgba(79,195,247,0.5) !important;
-  }
-  .metric-card.mc-agniveers::before { background: linear-gradient(90deg,#4FC3F7,#2196F3); }
-  .metric-card.mc-agniveers .metric-value { color: #0288D1; }
-  .metric-card.mc-agniveers .metric-icon { background: rgba(79,195,247,0.25); color: #0288D1; }
-
-  .metric-card.mc-trainers {
-    background: linear-gradient(145deg, rgba(212,160,23,0.25), rgba(255,193,7,0.15)) !important;
-    border-color: rgba(212,160,23,0.5) !important;
-  }
-  .metric-card.mc-trainers::before { background: linear-gradient(90deg,#D4A017,#FFC107); }
-  .metric-card.mc-trainers .metric-value { color: #F57F17; }
-  .metric-card.mc-trainers .metric-icon { background: rgba(212,160,23,0.25); color: #F57F17; }
-
-  .metric-card.mc-passed {
-    background: linear-gradient(145deg, rgba(82,183,136,0.25), rgba(46,125,50,0.15)) !important;
-    border-color: rgba(82,183,136,0.5) !important;
-  }
-  .metric-card.mc-passed::before { background: linear-gradient(90deg,#52B788,#2E7D32); }
-  .metric-card.mc-passed .metric-value { color: #2E7D32; }
-  .metric-card.mc-passed .metric-icon { background: rgba(82,183,136,0.25); color: #2E7D32; }
-
-  .metric-card.mc-failed {
-    background: linear-gradient(145deg, rgba(239,83,80,0.25), rgba(183,28,28,0.15)) !important;
-    border-color: rgba(239,83,80,0.5) !important;
-  }
-  .metric-card.mc-failed::before { background: linear-gradient(90deg,#EF5350,#B71C1C); }
-  .metric-card.mc-failed .metric-value { color: #C62828; }
-  .metric-card.mc-failed .metric-icon { background: rgba(239,83,80,0.25); color: #C62828; }
-
-  .metric-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 10px 25px rgba(0,0,0,0.22);
-  }
-  .metric-card.mc-agniveers:hover { border-color: #4FC3F7; box-shadow: 0 10px 28px rgba(79,195,247,0.22); }
-  .metric-card.mc-trainers:hover  { border-color: #D4A017; box-shadow: 0 10px 28px rgba(212,160,23,0.22); }
-  .metric-card.mc-passed:hover    { border-color: #52B788; box-shadow: 0 10px 28px rgba(82,183,136,0.22); }
-  .metric-card.mc-failed:hover    { border-color: #EF5350; box-shadow: 0 10px 28px rgba(239,83,80,0.22); }
-  
   .metric-card::before {
     content: '';
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
+    top: 0; left: 0; right: 0;
     height: 3px;
-    background: linear-gradient(90deg, var(--army-olive), #4FC3F7);
     transform: scaleX(0);
     transition: transform 0.3s ease;
+    border-radius: 12px 12px 0 0;
   }
-  
-  .metric-card:hover::before {
-    transform: scaleX(1);
-  }
-  
-  .metric-icon {
-    width: 36px;
-    height: 36px;
-    border-radius: 10px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 8px;
-    font-size: 18px;
-  }
-  
-  .metric-icon.success {
-    background: rgba(82, 183, 136, 0.15);
-    color: var(--army-olive);
-  }
-  
-  .metric-icon.danger {
-    background: rgba(239, 83, 80, 0.15);
-    color: #EF5350;
-  }
-  
-  .metric-icon.info {
-    background: rgba(79, 195, 247, 0.15);
-    color: #4FC3F7;
-  }
-  
+
+  .metric-card:hover { transform: translateY(-3px); }
+  .metric-card:hover::before { transform: scaleX(1); }
+
+  .portal-dashboard-page .metric-icon { display: none !important; }
+
   .metric-value {
-    font-size: 28px;
+    font-size: 18px !important;
     font-weight: 700;
     font-family: 'Rajdhani', monospace;
     line-height: 1.2;
-    margin-bottom: 4px;
-    color: var(--text-primary);
+    margin-bottom: 2px;
+    transition: color 0.3s;
   }
-  
+
   .metric-label {
     font-size: 9px;
     color: var(--text-muted);
@@ -263,105 +112,332 @@
     font-weight: 600;
   }
 
-  /* Pie chart card anchored to top-right grid cell */
-  .portal-dashboard-page .pie-top-right-wrapper {
-    grid-column: 2 / 3;
-    grid-row: 1 / 3; /* Spans row 1 (metrics) and row 2 (dept details) */
-    display: flex;
-    flex-direction: column;
-    height: 100%;
+  /* live counter underbar */
+  .counter-bar {
+    height: 2px;
+    border-radius: 1px;
+    margin-top: 5px;
+    width: 0;
   }
-  
-  /* Chart Boxes */
+  .counter-bar.loaded {
+    animation: barGrow 1.1s cubic-bezier(.4,0,.2,1) forwards;
+  }
+  @keyframes barGrow { to { width: 100%; } }
+
+  /* Per-card colour themes */
+  .metric-card.mc-agniveers {
+    background: linear-gradient(145deg, rgba(79,195,247,0.22), rgba(33,150,243,0.08)) !important;
+    border-color: rgba(79,195,247,0.45) !important;
+  }
+  .metric-card.mc-agniveers::before { background: linear-gradient(90deg,#4FC3F7,#2196F3); }
+  .metric-card.mc-agniveers .metric-value { color: #0288D1; }
+  .metric-card.mc-agniveers .counter-bar  { background: linear-gradient(90deg,#4FC3F7,#2196F3); }
+  .metric-card.mc-agniveers:hover { border-color:#4FC3F7 !important; box-shadow:0 10px 28px rgba(79,195,247,0.22); }
+
+  .metric-card.mc-trainers {
+    background: linear-gradient(145deg, rgba(212,160,23,0.22), rgba(255,193,7,0.08)) !important;
+    border-color: rgba(212,160,23,0.45) !important;
+  }
+  .metric-card.mc-trainers::before { background: linear-gradient(90deg,#D4A017,#FFC107); }
+  .metric-card.mc-trainers .metric-value { color: #F57F17; }
+  .metric-card.mc-trainers .counter-bar  { background: linear-gradient(90deg,#D4A017,#FFC107); }
+  .metric-card.mc-trainers:hover { border-color:#D4A017 !important; box-shadow:0 10px 28px rgba(212,160,23,0.22); }
+
+  .metric-card.mc-passed {
+    background: linear-gradient(145deg, rgba(82,183,136,0.22), rgba(46,125,50,0.08)) !important;
+    border-color: rgba(82,183,136,0.45) !important;
+  }
+  .metric-card.mc-passed::before { background: linear-gradient(90deg,#52B788,#2E7D32); }
+  .metric-card.mc-passed .metric-value { color: #2E7D32; }
+  .metric-card.mc-passed .counter-bar  { background: linear-gradient(90deg,#52B788,#2E7D32); }
+  .metric-card.mc-passed:hover { border-color:#52B788 !important; box-shadow:0 10px 28px rgba(82,183,136,0.22); }
+
+  .metric-card.mc-failed {
+    background: linear-gradient(145deg, rgba(239,83,80,0.22), rgba(183,28,28,0.08)) !important;
+    border-color: rgba(239,83,80,0.45) !important;
+  }
+  .metric-card.mc-failed::before { background: linear-gradient(90deg,#EF5350,#B71C1C); }
+  .metric-card.mc-failed .metric-value { color: #C62828; }
+  .metric-card.mc-failed .counter-bar  { background: linear-gradient(90deg,#EF5350,#B71C1C); }
+  .metric-card.mc-failed:hover { border-color:#EF5350 !important; box-shadow:0 10px 28px rgba(239,83,80,0.22); }
+
+  [data-bs-theme="dark"] .metric-card.mc-agniveers .metric-value { color: #4FC3F7; }
+  [data-bs-theme="dark"] .metric-card.mc-trainers  .metric-value { color: #D4A017; }
+  [data-bs-theme="dark"] .metric-card.mc-passed    .metric-value { color: #52B788; }
+  [data-bs-theme="dark"] .metric-card.mc-failed    .metric-value { color: #EF5350; }
+
+  /* ── Chart Boxes ──────────────────────────────────────── */
   .chart-box {
     background: var(--card-bg);
     border-radius: 16px;
     padding: 12px;
     border: 1px solid var(--border-color);
-    transition: all 0.3s ease;
+    transition: box-shadow 0.25s ease, border-color 0.25s ease;
     height: 100%;
+    display: flex;
+    flex-direction: column;
   }
-  
+
   .chart-box:hover {
-    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
     border-color: var(--army-olive);
   }
-  
+
   .chart-title {
     color: var(--army-olive);
-    font-size: 12px;
-    margin-bottom: 12px;
+    font-size: 10.5px;
+    margin-bottom: 8px;
     font-family: 'Rajdhani', sans-serif;
     letter-spacing: 1px;
+    font-weight: 700;
+    text-transform: uppercase;
     display: flex;
     align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .chart-title .ct-dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--army-olive);
+    flex-shrink: 0;
+  }
+
+  .chart-title i { font-size: 13px; }
+
+  .chart-canvas-wrap {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+  }
+
+  /* ── Custom chart legend ──────────────────────────────── */
+  .chart-legend {
+    display: flex;
+    flex-wrap: wrap;
     gap: 8px;
+    margin-bottom: 7px;
+    flex-shrink: 0;
   }
-  
-  /* Department Stats Cards */
-  .dept-stat-card {
-    background: rgba(82, 183, 136, 0.05);
-    border-radius: 10px;
-    padding: 10px 6px;
+  .chart-legend span {
+    display: flex; align-items: center; gap: 4px;
+    font-size: 10px; color: var(--text-muted);
+  }
+  .leg-sq {
+    width: 9px; height: 9px;
+    border-radius: 2px; flex-shrink: 0;
+  }
+
+  /* ── Pie Panel ────────────────────────────────────────── */
+  .pie-panel .chart-box { flex: 1; }
+
+  .donut-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    min-height: 150px;
+  }
+
+  .donut-canvas-outer {
+    width: 165px; height: 165px;
+    flex-shrink: 0;
+  }
+
+  .donut-center-label {
+    position: absolute;
     text-align: center;
-    border: 1px solid var(--border-color);
-    transition: all 0.3s ease;
-    cursor: pointer;
+    pointer-events: none;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
   }
-  
-  .dept-stat-card:hover {
-    transform: translateY(-2px);
-    border-color: var(--army-olive);
-    background: rgba(82, 183, 136, 0.1);
-  }
-  
-  .dept-stat-value {
-    font-size: 22px;
+
+  .donut-pct {
+    font-size: 20px;
     font-weight: 700;
     font-family: 'Rajdhani', monospace;
-    color: var(--text-primary);
+    color: #52B788;
+    line-height: 1;
   }
-  
-  .dept-stat-label {
+
+  .donut-sub {
     font-size: 8px;
     color: var(--text-muted);
     text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-top: 4px;
+    letter-spacing: 0.8px;
+    margin-top: 2px;
   }
-  
-  /* Department Buttons */
+
+  .dist-row {
+    display: flex;
+    justify-content: center;
+    gap: 28px;
+    margin: 8px 0 10px;
+    flex-shrink: 0;
+  }
+
+  .dist-item { text-align: center; }
+
+  .dist-num {
+    font-size: 17px;
+    font-weight: 700;
+    font-family: 'Rajdhani', monospace;
+    line-height: 1;
+  }
+
+  .dist-lbl {
+    font-size: 9px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    margin-top: 2px;
+  }
+
+  .ai-insight-box {
+    background: linear-gradient(135deg, rgba(33,150,243,0.10), rgba(33,150,243,0.02));
+    border: 1px solid rgba(79,195,247,0.22);
+    border-radius: 10px;
+    padding: 9px 11px;
+    flex-shrink: 0;
+    margin-top: auto;
+  }
+
+  .ai-insight-head {
+    display: flex; align-items: center; gap: 5px;
+    font-size: 10px; font-weight: 700;
+    color: #4FC3F7;
+    text-transform: uppercase; letter-spacing: 0.5px;
+    margin-bottom: 4px;
+  }
+
+  .ai-insight-p {
+    font-size: 11px;
+    color: var(--text-muted);
+    line-height: 1.45;
+    margin: 0;
+  }
+
+  /* ── Department buttons ───────────────────────────────── */
   .dept-btn {
-    padding: 6px 16px;
+    padding: 5px 14px;
     border-radius: 30px;
     border: 1px solid var(--border-color);
     background: transparent;
     color: var(--text-muted);
     font-weight: 600;
     font-size: 11px;
-    transition: all 0.3s ease;
+    transition: all 0.25s ease;
+    cursor: pointer;
   }
-  
+
   .dept-btn:hover {
-    background: rgba(82, 183, 136, 0.1);
+    background: rgba(82,183,136,0.10);
     border-color: var(--army-olive);
     color: var(--army-olive);
     transform: translateY(-2px);
   }
-  
+
   .dept-btn.active {
-    background: rgba(82, 183, 136, 0.15);
+    background: rgba(82,183,136,0.15);
     border-color: var(--army-olive);
     color: var(--army-olive);
   }
-  
-  /* Table Styles */
+
+  /* ── Department stat cards ────────────────────────────── */
+  .dept-stat-card {
+    border-radius: 10px;
+    padding: 8px 6px;
+    text-align: center;
+    border: 1px solid var(--border-color);
+    transition: all 0.25s ease;
+    cursor: pointer;
+    flex: 1;
+  }
+
+  .dept-stat-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--army-olive);
+  }
+
+  .dept-stat-value {
+    font-size: 20px;
+    font-weight: 700;
+    font-family: 'Rajdhani', monospace;
+  }
+
+  .dept-stat-label {
+    font-size: 8px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 3px;
+  }
+
+  /* ── Default stats ────────────────────────────────────── */
+  .default-stats-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: space-between;
+  }
+
+  .default-stat-item {
+    flex: 1;
+    text-align: center;
+    padding: 10px 6px;
+    background: rgba(82,183,136,0.05);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    transition: all 0.25s;
+  }
+
+  [data-bs-theme="light"] .default-stat-item {
+    background: rgba(45,106,79,0.05);
+    border-color: rgba(45,106,79,0.15);
+  }
+
+  .default-stat-item:hover {
+    border-color: var(--army-olive);
+    background: rgba(82,183,136,0.10);
+  }
+
+  .default-stat-value {
+    font-size: 22px;
+    font-weight: 700;
+    font-family: 'Rajdhani', monospace;
+    color: var(--text-primary);
+  }
+
+  .default-stat-label {
+    font-size: 9px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 4px;
+  }
+
+  /* ── Department badge pill ────────────────────────────── */
+  .dept-badge {
+    width: 24px; height: 24px;
+    border-radius: 7px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    color: white;
+    flex-shrink: 0;
+  }
+
+  /* ── Stats table ──────────────────────────────────────── */
   .stats-table {
     width: 100%;
     color: var(--text-primary);
     font-size: 11px;
   }
-  
+
   .stats-table th {
     padding: 10px 12px;
     text-align: left;
@@ -370,454 +446,320 @@
     font-size: 10px;
     border-bottom: 2px solid var(--army-olive);
   }
-  
+
   .stats-table td {
-    padding: 10px 12px;
+    padding: 9px 12px;
     border-bottom: 1px solid var(--border-color);
   }
-  
+
   .stats-table tr:hover td {
-    background: rgba(82, 183, 136, 0.05);
+    background: rgba(82,183,136,0.05);
   }
-  
-  /* Category Chart Container */
-  .category-chart-container {
-    margin-top: 14px;
-    padding-top: 12px;
-    border-top: 1px solid var(--border-color);
-  }
-  
-  /* Overall Pass/Fail Section - Larger Pie Chart */
-  .overall-stats-wrapper {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 15px;
-  }
-  
-  .pie-chart-container {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 30px;
-    flex-wrap: wrap;
-    width: 100%;
-  }
-  
-  .pie-chart-canvas {
-    width: 280px;
-    height: 280px;
-  }
-  
-  .stats-numbers {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-  
-  .stat-number-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    font-size: 14px;
-  }
-  
-  .stat-color-dot {
-    width: 12px;
-    height: 12px;
-    border-radius: 3px;
-  }
-  
-  .stat-color-dot.passed {
-    background: #52B788;
-  }
-  
-  .stat-color-dot.failed {
-    background: #EF5350;
-  }
-  
-  .stat-number-value {
-    font-weight: 700;
-    font-size: 16px;
-    margin-left: 4px;
-  }
-  
-  .distribution-section {
-    text-align: center;
-    margin-top: 10px;
-    padding-top: 10px;
-    border-top: 1px solid var(--border-color);
-    width: 100%;
-  }
-  
-  .distribution-title {
-    font-size: 10px;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-bottom: 8px;
-  }
-  
-  .distribution-values {
-    display: flex;
-    justify-content: center;
-    gap: 30px;
-  }
-  
-  .distribution-item {
-    text-align: center;
-  }
-  
-  .distribution-number {
-    font-size: 20px;
-    font-weight: 700;
-    font-family: 'Rajdhani', monospace;
-  }
-  
-  .distribution-label {
-    font-size: 9px;
-    color: var(--text-muted);
-  }
-  
-  /* Modal Styles - Smaller Title & Button */
-  .custom-modal .modal-dialog {
-    max-width: 700px;
-  }
-  
-  .custom-modal .modal-content {
-    background: var(--card-bg);
-    border: 1px solid var(--army-olive);
-    border-radius: 16px;
-  }
-  
-  .custom-modal .modal-header {
-    border-bottom: 1px solid var(--border-color);
-    padding: 12px 20px;
-  }
-  
-  .custom-modal .modal-title {
-    font-size: 14px;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-  }
-  
-  .custom-modal .modal-title i {
-    font-size: 16px;
-  }
-  
-  .custom-modal .btn-download {
-    font-size: 10px;
-    padding: 4px 12px;
+
+  /* ── Modal ────────────────────────────────────────────── */
+  .custom-modal .modal-dialog  { max-width: 700px; }
+  .custom-modal .modal-content { background: var(--card-bg); border: 1px solid var(--army-olive); border-radius: 16px; }
+  .custom-modal .modal-header  { border-bottom: 1px solid var(--border-color); padding: 12px 20px; }
+  .custom-modal .modal-title   { font-size: 14px; font-weight: 600; letter-spacing: 0.5px; }
+  .custom-modal .modal-body    { padding: 0; max-height: 500px; overflow-y: auto; }
+
+  .btn-download {
+    font-size: 10px; padding: 4px 12px;
     border-radius: 6px;
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
+    display: inline-flex; align-items: center; gap: 5px;
   }
-  
-  .custom-modal .btn-download i {
-    font-size: 11px;
-  }
-  
-  .custom-modal .btn-close {
-    font-size: 12px;
-  }
-  
-  .custom-modal .modal-body {
-    padding: 0;
-    max-height: 500px;
-    overflow-y: auto;
-  }
-  
-  .modal-table {
-    width: 100%;
-    margin: 0;
-  }
-  
+
+  .modal-table { width: 100%; margin: 0; }
   .modal-table th {
-    background: rgba(82, 183, 136, 0.1);
-    padding: 10px 15px;
-    font-size: 10px;
-    font-weight: 600;
-    color: var(--army-olive);
-    border-bottom: 1px solid var(--border-color);
+    background: rgba(82,183,136,0.08);
+    padding: 10px 15px; font-size: 10px; font-weight: 600;
+    color: var(--army-olive); border-bottom: 1px solid var(--border-color);
   }
-  
   .modal-table td {
-    padding: 8px 15px;
-    font-size: 11px;
-    border-bottom: 1px solid var(--border-color);
-    color: var(--text-primary);
+    padding: 8px 15px; font-size: 11px;
+    border-bottom: 1px solid var(--border-color); color: var(--text-primary);
   }
-  
-  .modal-table tr:last-child td {
-    border-bottom: none;
+  .modal-table tr:last-child td { border-bottom: none; }
+  .modal-table tr:hover td { background: rgba(82,183,136,0.05); }
+
+  /* ── Responsive ───────────────────────────────────────── */
+  @media (max-width: 991px) {
+    .portal-dashboard-page .portal-surface { grid-template-columns: 1fr; }
+    .portal-dashboard-page .metrics-row,
+    .portal-dashboard-page .dept-detail-row,
+    .portal-dashboard-page .dept-charts-row,
+    .portal-dashboard-page .monthly-testtype-row,
+    .portal-dashboard-page .stats-table-row,
+    .portal-dashboard-page .pie-panel { grid-column: 1; grid-row: auto; }
+    .portal-dashboard-page .dept-charts-row,
+    .portal-dashboard-page .monthly-testtype-row { grid-template-columns: 1fr; }
   }
-  
-  /* Default Department Stats View */
-  .default-stats-container {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 15px;
-    justify-content: space-between;
-  }
-  
-  .default-stat-item {
-    flex: 1;
-    text-align: center;
-    padding: 15px 10px;
-    background: rgba(82, 183, 136, 0.05);
-    border-radius: 12px;
-    border: 1px solid var(--border-color);
-  }
-  
-  .default-stat-value {
-    font-size: 28px;
-    font-weight: 700;
-    font-family: 'Rajdhani', monospace;
-    color: var(--text-primary);
-  }
-  
-  .default-stat-label {
-    font-size: 10px;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    margin-top: 5px;
-  }
-  
-  /* Department Specific Colors for Category Bars */
-  .category-bar-battalion {
-    background: rgba(76, 175, 80, 0.7);
-  }
-  .category-bar-tts {
-    background: rgba(79, 195, 247, 0.7);
-  }
-  .category-bar-cs {
-    background: rgba(212, 160, 23, 0.7);
-  }
-  .category-bar-clerk {
-    background: rgba(156, 39, 176, 0.7);
-  }
-  
-  /* Responsive */
-  @media (max-width: 768px) {
-    .metric-value { font-size: 22px; }
-    .dept-btn { padding: 4px 12px; font-size: 10px; }
-    .pie-chart-canvas { width: 160px; height: 160px; }
-    .default-stat-value { font-size: 22px; }
-    .custom-modal .modal-dialog { max-width: 95%; }
-    .pie-chart-container { gap: 15px; }
-  }
-  
-  /* Light mode specific adjustments */
-  [data-bs-theme="light"] .default-stat-item {
-    background: rgba(45, 106, 79, 0.05);
-    border-color: rgba(45, 106, 79, 0.15);
-  }
-  
-  [data-bs-theme="light"] .dept-stat-card {
-    background: rgba(45, 106, 79, 0.04);
-  }
-  
-  [data-bs-theme="light"] .dept-stat-card:hover {
-    background: rgba(45, 106, 79, 0.1);
-  }
-  
-  [data-bs-theme="light"] .modal-table th {
-    background: rgba(45, 106, 79, 0.08);
+
+  @media (max-width: 576px) {
+    .portal-dashboard-page .metrics-row { grid-template-columns: repeat(2, 1fr); }
   }
 </style>
 {% endblock %}
 
 {% block content %}
 
-<!-- Key Metrics Row -->
-<div class="row g-3 mb-4">
-  <div class="col-6 col-md-3">
-    <div class="metric-card mc-agniveers" onclick="location.href='{% url 'departments:agniveer_list' %}'">
-      <div class="metric-icon mx-auto"><i class="bi bi-people-fill"></i></div>
-      <div class="metric-value">{{ total_agniveers }}</div>
-      <div class="metric-label">Total Agniveers</div>
-    </div>
+<!-- Row 1 : Metric Cards -->
+<div class="metrics-row">
+  <div class="metric-card mc-agniveers" onclick="location.href='{% url 'departments:agniveer_list' %}'">
+    <div class="metric-value" id="cnt-agniveers">0</div>
+    <div class="metric-label">Total Agniveers</div>
+    <div class="counter-bar" id="bar-agniveers"></div>
   </div>
-  <div class="col-6 col-md-3">
-    <div class="metric-card mc-trainers" onclick="location.href='{% url 'accounts:my_team' %}'">
-      <div class="metric-icon mx-auto"><i class="bi bi-person-badge-fill"></i></div>
-      <div class="metric-value">{{ total_trainers }}</div>
-      <div class="metric-label">Total Trainers</div>
-    </div>
+  <div class="metric-card mc-trainers" onclick="location.href='{% url 'accounts:my_team' %}'">
+    <div class="metric-value" id="cnt-trainers">0</div>
+    <div class="metric-label">Total Trainers</div>
+    <div class="counter-bar" id="bar-trainers"></div>
   </div>
-  <div class="col-6 col-md-3">
-    <div class="metric-card mc-passed" data-bs-toggle="modal" data-bs-target="#passedModal">
-      <div class="metric-icon mx-auto"><i class="bi bi-check-circle-fill"></i></div>
-      <div class="metric-value">{{ pass_count }}</div>
-      <div class="metric-label">Passed</div>
-    </div>
+  <div class="metric-card mc-passed" data-bs-toggle="modal" data-bs-target="#passedModal" style="cursor:pointer;">
+    <div class="metric-value" id="cnt-passed">0</div>
+    <div class="metric-label">Passed</div>
+    <div class="counter-bar" id="bar-passed"></div>
   </div>
-  <div class="col-6 col-md-3">
-    <div class="metric-card mc-failed" data-bs-toggle="modal" data-bs-target="#failedModal">
-      <div class="metric-icon mx-auto"><i class="bi bi-x-circle-fill"></i></div>
-      <div class="metric-value">{{ fail_count }}</div>
-      <div class="metric-label">Failed</div>
+  <div class="metric-card mc-failed" data-bs-toggle="modal" data-bs-target="#failedModal" style="cursor:pointer;">
+    <div class="metric-value" id="cnt-failed">0</div>
+    <div class="metric-label">Failed</div>
+    <div class="counter-bar" id="bar-failed"></div>
+  </div>
+</div>
+
+<!-- Pie Panel — right col, spans rows 1-4 -->
+<div class="pie-panel">
+  <div class="chart-box">
+    <div class="chart-title">
+      <span class="ct-dot"></span>
+      <i class="bi bi-pie-chart-fill"></i> Overall Pass / Fail
+    </div>
+
+    <div class="donut-wrap">
+      <div class="donut-canvas-outer">
+        <canvas id="passFailChart"
+          role="img"
+          aria-label="Donut chart showing overall pass and fail ratio">
+          {{ pass_count }} passed, {{ fail_count }} failed.
+        </canvas>
+      </div>
+      <div class="donut-center-label">
+        <div class="donut-pct" id="donut-pct">0%</div>
+        <div class="donut-sub">Pass Rate</div>
+      </div>
+    </div>
+
+    <div class="dist-row">
+      <div class="dist-item">
+        <div class="dist-num" id="dist-pass" style="color:#52B788">0</div>
+        <div class="dist-lbl">Passed</div>
+      </div>
+      <div class="dist-item">
+        <div class="dist-num" id="dist-fail" style="color:#EF5350">0</div>
+        <div class="dist-lbl">Failed</div>
+      </div>
+    </div>
+
+    <div class="ai-insight-box">
+      <div class="ai-insight-head">
+        <i class="bi bi-stars"></i> Analytics Insight
+      </div>
+      <p class="ai-insight-p">
+        The overall evaluation metrics indicate a healthy passing distribution across all monitored departments.
+      </p>
     </div>
   </div>
 </div>
-<!-- Pie Chart anchored to top-right, beside metric cards row -->
-<div class="pie-top-right-wrapper">
-  <div class="chart-box" style="flex:1;">
-    <div class="chart-title"><i class="bi bi-pie-chart"></i> OVERALL PASS/FAIL</div>
-    <div class="overall-stats-wrapper">
-      <div class="pie-chart-container" style="flex: 1; display: flex; align-items: center; justify-content: center; min-height: 200px;">
-        <div class="pie-chart-canvas" style="width: 100%; max-width: 280px; aspect-ratio: 1; filter: drop-shadow(0px 8px 20px rgba(82, 183, 136, 0.4)); margin: auto;">
-          <canvas id="passFailChart"></canvas>
+
+<!-- Row 2 : Department Details -->
+<div class="dept-detail-row">
+  <div class="chart-box">
+    <div class="chart-title">
+      <span class="ct-dot"></span>
+      <i class="bi bi-building"></i> Department Evaluation Details
+    </div>
+
+    <div class="d-flex gap-2 flex-wrap mb-3">
+      <button type="button" class="btn dept-btn" data-dept="A"><i class="bi bi-building"></i> Battalion</button>
+      <button type="button" class="btn dept-btn" data-dept="B"><i class="bi bi-tools"></i> TTS</button>
+      <button type="button" class="btn dept-btn" data-dept="C"><i class="bi bi-wifi"></i> CS</button>
+      <button type="button" class="btn dept-btn" data-dept="D"><i class="bi bi-file-text"></i> Clerk</button>
+    </div>
+
+    <div id="deptDetailsContainer">
+      <div class="default-stats-container">
+        {% for dept_code, stats in dept_stats.items %}
+        <div class="default-stat-item">
+          <div class="default-stat-value">{{ stats.total }}</div>
+          <div class="default-stat-label">{% if dept_code == 'A' %}Battalion{% elif dept_code == 'B' %}TTS{% elif dept_code == 'C' %}CS{% else %}Clerk{% endif %}</div>
         </div>
+        {% endfor %}
       </div>
-      <div class="distribution-section mt-2">
-        <div class="distribution-title d-none">DISTRIBUTION</div>
-        <div class="distribution-values">
-          <div class="distribution-item">
-            <div class="distribution-number" style="color: var(--army-olive);">{{ pass_count }}</div>
-            <div class="distribution-label">Passed</div>
-          </div>
-          <div class="distribution-item">
-            <div class="distribution-number" style="color: #EF5350;">{{ fail_count }}</div>
-            <div class="distribution-label">Failed</div>
-          </div>
-        </div>
+    </div>
+
+    <div id="deptCategoryChartContainer" style="display:none; margin-top:12px; padding-top:10px; border-top:1px solid var(--border-color);">
+      <div class="chart-title" style="margin-bottom:8px;">
+        <span class="ct-dot"></span>
+        <i class="bi bi-bar-chart"></i> Category Performance
       </div>
-      <div class="ai-insight-box mt-3 p-3" style="background: linear-gradient(145deg, rgba(33,150,243,0.1), rgba(33,150,243,0.02)); border: 1px solid rgba(33,150,243,0.2); border-radius: 12px;">
-        <div class="d-flex align-items-center gap-2 mb-2">
-          <i class="bi bi-stars" style="color: #4FC3F7;"></i> <span class="fw-bold" style="font-size: 11px; color: var(--text-primary); text-transform: uppercase; letter-spacing: 0.5px;">Analytics Insight</span>
-        </div>
-        <p class="mb-0" style="font-size: 12px; color: var(--text-muted); line-height: 1.4;">
-          The overall evaluation metrics indicate a healthy passing distribution across all monitored departments.
-        </p>
+      <div class="chart-legend" id="deptCatLegend"></div>
+      <div style="position:relative; height:120px;">
+        <canvas id="deptSelectedCategoryChart"
+          role="img"
+          aria-label="Horizontal bar chart of selected department category performance">
+          Department category performance data.
+        </canvas>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Department Selection & Details -->
-<div class="row g-4 mb-4">
-  <div class="col-lg-12">
-    <div class="chart-box">
-      <div class="chart-title"><i class="bi bi-building"></i> Department Evaluation Details</div>
-      
-      <!-- Department Buttons -->
-      <div class="d-flex gap-2 flex-wrap mb-4">
-        <button type="button" class="btn dept-btn" data-dept="A"><i class="bi bi-building"></i> Battalion</button>
-        <button type="button" class="btn dept-btn" data-dept="B"><i class="bi bi-tools"></i> TTS</button>
-        <button type="button" class="btn dept-btn" data-dept="C"><i class="bi bi-wifi"></i> CS</button>
-        <button type="button" class="btn dept-btn" data-dept="D"><i class="bi bi-file-text"></i> Clerk</button>
-      </div>
-      
-      <!-- Department Stats Container - Shows Default View -->
-      <div id="deptDetailsContainer">
-        <div class="default-stats-container">
-          {% for dept_code, stats in dept_stats.items %}
-          <div class="default-stat-item">
-            <div class="default-stat-value">{{ stats.total }}</div>
-            <div class="default-stat-label">{% if dept_code == 'A' %}Battalion{% elif dept_code == 'B' %}TTS{% elif dept_code == 'C' %}CS{% else %}Clerk{% endif %}</div>
-          </div>
+<!-- Row 3 : Dept Test-Type Charts (2×2) -->
+<div class="dept-charts-row">
+  <div class="chart-box">
+    <div class="chart-title">
+      <span class="dept-badge" style="background:#4CAF50;">A</span>
+      Battalion Performance
+    </div>
+    <div class="chart-legend">
+      <span><span class="leg-sq" style="background:rgba(76,175,80,0.75)"></span>Avg Marks</span>
+      <span><span class="leg-sq" style="background:rgba(79,195,247,0.75)"></span>Pass Rate %</span>
+    </div>
+    <div class="chart-canvas-wrap" style="height:130px;">
+      <canvas id="deptATestTypeChart" role="img" aria-label="Battalion test type performance chart">Battalion performance data.</canvas>
+    </div>
+  </div>
+
+  <div class="chart-box">
+    <div class="chart-title">
+      <span class="dept-badge" style="background:#4FC3F7;">B</span>
+      TTS Performance
+    </div>
+    <div class="chart-legend">
+      <span><span class="leg-sq" style="background:rgba(79,195,247,0.75)"></span>Avg Marks</span>
+      <span><span class="leg-sq" style="background:rgba(79,195,247,0.75)"></span>Pass Rate %</span>
+    </div>
+    <div class="chart-canvas-wrap" style="height:130px;">
+      <canvas id="deptBTestTypeChart" role="img" aria-label="TTS test type performance chart">TTS performance data.</canvas>
+    </div>
+  </div>
+
+  <div class="chart-box">
+    <div class="chart-title">
+      <span class="dept-badge" style="background:#D4A017;">C</span>
+      CS Performance
+    </div>
+    <div class="chart-legend">
+      <span><span class="leg-sq" style="background:rgba(212,160,23,0.75)"></span>Avg Marks</span>
+      <span><span class="leg-sq" style="background:rgba(79,195,247,0.75)"></span>Pass Rate %</span>
+    </div>
+    <div class="chart-canvas-wrap" style="height:130px;">
+      <canvas id="deptCTestTypeChart" role="img" aria-label="CS test type performance chart">CS performance data.</canvas>
+    </div>
+  </div>
+
+  <div class="chart-box">
+    <div class="chart-title">
+      <span class="dept-badge" style="background:#9C27B0;">D</span>
+      Clerk Performance
+    </div>
+    <div class="chart-legend">
+      <span><span class="leg-sq" style="background:rgba(156,39,176,0.75)"></span>Avg Marks</span>
+      <span><span class="leg-sq" style="background:rgba(79,195,247,0.75)"></span>Pass Rate %</span>
+    </div>
+    <div class="chart-canvas-wrap" style="height:130px;">
+      <canvas id="deptDTestTypeChart" role="img" aria-label="Clerk test type performance chart">Clerk performance data.</canvas>
+    </div>
+  </div>
+</div>
+
+<!-- Row 4 : Monthly Trend + Overall Test Type -->
+<div class="monthly-testtype-row">
+  <div class="chart-box">
+    <div class="chart-title">
+      <span class="ct-dot"></span>
+      <i class="bi bi-calendar-event"></i> Monthly Evaluation Trend
+    </div>
+    <div class="chart-legend">
+      <span><span class="leg-sq" style="background:#4FC3F7"></span>Total Evaluations</span>
+      <span><span class="leg-sq" style="background:#52B788"></span>Passed</span>
+    </div>
+    <div class="chart-canvas-wrap" style="height:165px;">
+      <canvas id="monthlyChart"
+        role="img"
+        aria-label="Line chart of monthly evaluation trend over last 6 months">
+        Monthly evaluation data.
+      </canvas>
+    </div>
+  </div>
+
+  <div class="chart-box">
+    <div class="chart-title">
+      <span class="ct-dot"></span>
+      <i class="bi bi-bar-chart-steps"></i> Overall Test Type Performance
+    </div>
+    <div class="chart-legend">
+      <span><span class="leg-sq" style="background:rgba(82,183,136,0.75)"></span>Avg Marks</span>
+      <span><span class="leg-sq" style="background:rgba(79,195,247,0.75)"></span>Pass Rate %</span>
+    </div>
+    <div class="chart-canvas-wrap" style="height:165px;">
+      <canvas id="testTypeChart"
+        role="img"
+        aria-label="Grouped bar chart showing overall test type performance by avg marks and pass rate">
+        Overall test type performance data.
+      </canvas>
+    </div>
+  </div>
+</div>
+
+<!-- Row 5 : Stats Table (full width) -->
+<div class="stats-table-row">
+  <div class="chart-box">
+    <div class="chart-title">
+      <span class="ct-dot"></span>
+      <i class="bi bi-table"></i> Detailed Department Statistics
+    </div>
+    <div style="overflow-x:auto; flex:1;">
+      <table class="stats-table">
+        <thead>
+          <tr>
+            <th>Department</th>
+            <th class="text-center">Total Evaluations</th>
+            <th class="text-center"><i class="bi bi-check-circle"></i> Passed</th>
+            <th class="text-center"><i class="bi bi-x-circle"></i> Failed</th>
+            <th class="text-center">Pass Rate</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for dept, stats in dept_stats.items %}
+          <tr>
+            <td><strong style="color:var(--army-olive);">
+              {% if dept == 'A' %}Battalion{% elif dept == 'B' %}TTS{% elif dept == 'C' %}CS{% else %}Clerk{% endif %}
+            </strong></td>
+            <td class="text-center">{{ stats.total }}</td>
+            <td class="text-center" style="color:var(--army-olive);">{{ stats.passed }}</td>
+            <td class="text-center" style="color:#EF5350;">{{ stats.failed }}</td>
+            <td class="text-center"><strong style="color:#4FC3F7;">{{ stats.pass_rate|floatformat:1 }}%</strong></td>
+          </tr>
           {% endfor %}
-        </div>
-      </div>
-      
-      <!-- Category Performance Chart -->
-      <div id="deptCategoryChartContainer" class="category-chart-container" style="display: none;">
-        <div class="chart-title" style="margin-bottom: 10px;"><i class="bi bi-bar-chart"></i> Category Performance</div>
-        <canvas id="deptSelectedCategoryChart" style="max-height: 140px; width: 100%;"></canvas>
-      </div>
+        </tbody>
+      </table>
     </div>
   </div>
 </div>
 
-<!-- Test Type Performance by Department (2x2 Grid) -->
-<div class="row g-4 mb-4">
-  <div class="col-lg-6">
-    <div class="chart-box">
-      <div class="chart-title"><span style="background: #4CAF50; width: 26px; height: 26px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; color: white;">A</span> Battalion Performance</div>
-      <canvas id="deptATestTypeChart" style="max-height: 140px; width: 100%;"></canvas>
-    </div>
-  </div>
-  <div class="col-lg-6">
-    <div class="chart-box">
-      <div class="chart-title"><span style="background: #4FC3F7; width: 26px; height: 26px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; color: white;">B</span> TTS Performance</div>
-      <canvas id="deptBTestTypeChart" style="max-height: 140px; width: 100%;"></canvas>
-    </div>
-  </div>
-  <div class="col-lg-6">
-    <div class="chart-box">
-      <div class="chart-title"><span style="background: #D4A017; width: 26px; height: 26px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; color: white;">C</span> CS Performance</div>
-      <canvas id="deptCTestTypeChart" style="max-height: 140px; width: 100%;"></canvas>
-    </div>
-  </div>
-  <div class="col-lg-6">
-    <div class="chart-box">
-      <div class="chart-title"><span style="background: #9C27B0; width: 26px; height: 26px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; color: white;">D</span> Clerk Performance</div>
-      <canvas id="deptDTestTypeChart" style="max-height: 140px; width: 100%;"></canvas>
-    </div>
-  </div>
-</div>
-
-<!-- Charts Row -->
-<div class="row g-4 mb-4">
-  <div class="col-lg-7">
-    <div class="chart-box">
-      <div class="chart-title"><i class="bi bi-calendar-event"></i> Monthly Evaluation Trend (Last 6 Months)</div>
-      <canvas id="monthlyChart" style="max-height: 180px; width: 100%;"></canvas>
-    </div>
-  </div>
-  <div class="col-lg-5">
-    <div class="chart-box">
-      <div class="chart-title"><i class="bi bi-bar-chart-steps"></i> Overall Test Type Performance</div>
-      <canvas id="testTypeChart" style="max-height: 180px; width: 100%;"></canvas>
-    </div>
-  </div>
-</div>
-
-<!-- Department Statistics Table -->
-<div class="row g-4">
-  <div class="col-lg-12">
-    <div class="chart-box">
-      <div class="chart-title"><i class="bi bi-table"></i> Detailed Department Statistics</div>
-      <div style="overflow-x: auto;">
-        <table class="stats-table">
-          <thead>
-            <tr>
-              <th>Department</th>
-              <th class="text-center">Total Evaluations</th>
-              <th class="text-center"><i class="bi bi-check-circle"></i> Passed</th>
-              <th class="text-center"><i class="bi bi-x-circle"></i> Failed</th>
-              <th class="text-center">Pass Rate</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for dept, stats in dept_stats.items %}
-            <tr>
-              <td><strong style="color: var(--army-olive);">{% if dept == 'A' %}Battalion{% elif dept == 'B' %}TTS{% elif dept == 'C' %}CS{% else %}Clerk{% endif %}</strong></td>
-              <td class="text-center">{{ stats.total }}</td>
-              <td class="text-center" style="color: var(--army-olive);">{{ stats.passed }}</td>
-              <td class="text-center" style="color: #EF5350;">{{ stats.failed }}</td>
-              <td class="text-center"><strong style="color: #4FC3F7;">{{ stats.pass_rate|floatformat:1 }}%</strong></td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Passed Modal - Smaller Title & Download Button on Top Right -->
+<!-- Passed Modal -->
 <div class="modal fade custom-modal" id="passedModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" style="color: var(--army-olive);">
-          <i class="bi bi-trophy-fill"></i> PASSED AGNIVEERS
+        <h5 class="modal-title" style="color:var(--army-olive);">
+          <i class="bi bi-trophy-fill me-2"></i>PASSED AGNIVEERS
         </h5>
         <div class="d-flex align-items-center gap-2">
-          <a href="{% url 'reports:export_dashboard_excel' %}?status=pass" class="btn btn-download" style="background: var(--army-green); color: white; border: none;">
+          <a href="{% url 'reports:export_dashboard_excel' %}?status=pass"
+             class="btn btn-download"
+             style="background:var(--army-green);color:white;border:none;">
             <i class="bi bi-download"></i> Download All
           </a>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -827,8 +769,7 @@
         <table class="modal-table">
           <thead>
             <tr>
-              <th>Enrollment No</th>
-              <th>Name</th>
+              <th>Enrollment No</th><th>Name</th>
               <th class="text-center">Score</th>
               <th class="text-center">Percentage</th>
               <th class="text-center">Action</th>
@@ -837,16 +778,21 @@
           <tbody>
             {% for ag in passed_agniveers %}
             <tr>
-              <td><a href="{% url 'departments:agniveer_detail' ag.id %}" style="color: var(--army-olive); text-decoration: none; font-weight: 600;">{{ ag.enrollment }}</a></td>
+              <td><a href="{% url 'departments:agniveer_detail' ag.id %}" style="color:var(--army-olive);text-decoration:none;font-weight:600;">{{ ag.enrollment }}</a></td>
               <td>{{ ag.name }}</td>
               <td class="text-center">{{ ag.score }}</td>
-              <td class="text-center"><span class="badge-pass">{{ ag.percentage }}%</span></td>
               <td class="text-center">
-                <a href="{% url 'departments:agniveer_detail' ag.id %}" class="btn btn-sm" style="background: var(--army-green); color: white; border-radius: 6px; padding: 3px 10px; font-size: 10px;">View</a>
+                <span style="padding:3px 10px;border-radius:20px;font-size:10px;background:rgba(82,183,136,0.15);color:#52B788;">{{ ag.percentage }}%</span>
+              </td>
+              <td class="text-center">
+                <a href="{% url 'departments:agniveer_detail' ag.id %}" class="btn btn-sm"
+                   style="background:var(--army-green);color:white;border-radius:6px;padding:3px 10px;font-size:10px;">
+                  <i class="bi bi-eye"></i> View
+                </a>
               </td>
             </tr>
             {% empty %}
-            <tr><td colspan="5" class="text-center py-4">No records found</td></tr>
+            <tr><td colspan="5" class="text-center py-4" style="color:var(--text-muted)">No records found</td></tr>
             {% endfor %}
           </tbody>
         </table>
@@ -855,16 +801,18 @@
   </div>
 </div>
 
-<!-- Failed Modal - Smaller Title & Download Button on Top Right -->
+<!-- Failed Modal -->
 <div class="modal fade custom-modal" id="failedModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" style="color: #EF5350;">
-          <i class="bi bi-exclamation-triangle-fill"></i> FAILED AGNIVEERS
+        <h5 class="modal-title" style="color:#EF5350;">
+          <i class="bi bi-exclamation-triangle-fill me-2"></i>FAILED AGNIVEERS
         </h5>
         <div class="d-flex align-items-center gap-2">
-          <a href="{% url 'reports:export_dashboard_excel' %}?status=fail" class="btn btn-download" style="background: #2d0000; color: #EF5350; border: 1px solid #EF5350;">
+          <a href="{% url 'reports:export_dashboard_excel' %}?status=fail"
+             class="btn btn-download"
+             style="background:#2d0000;color:#EF5350;border:1px solid #EF5350;">
             <i class="bi bi-download"></i> Download All
           </a>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -874,8 +822,7 @@
         <table class="modal-table">
           <thead>
             <tr>
-              <th>Enrollment No</th>
-              <th>Name</th>
+              <th>Enrollment No</th><th>Name</th>
               <th class="text-center">Score</th>
               <th class="text-center">Percentage</th>
               <th class="text-center">Action</th>
@@ -884,16 +831,21 @@
           <tbody>
             {% for ag in failed_agniveers %}
             <tr>
-              <td><a href="{% url 'departments:agniveer_detail' ag.id %}" style="color: #EF5350; text-decoration: none; font-weight: 600;">{{ ag.enrollment }}</a></td>
+              <td><a href="{% url 'departments:agniveer_detail' ag.id %}" style="color:#EF5350;text-decoration:none;font-weight:600;">{{ ag.enrollment }}</a></td>
               <td>{{ ag.name }}</td>
               <td class="text-center">{{ ag.score }}</td>
-              <td class="text-center"><span class="badge-fail">{{ ag.percentage }}%</span></td>
               <td class="text-center">
-                <a href="{% url 'departments:agniveer_detail' ag.id %}" class="btn btn-sm" style="background: #EF5350; color: white; border-radius: 6px; padding: 3px 10px; font-size: 10px;">View</a>
+                <span style="padding:3px 10px;border-radius:20px;font-size:10px;background:rgba(239,83,80,0.15);color:#EF5350;">{{ ag.percentage }}%</span>
+              </td>
+              <td class="text-center">
+                <a href="{% url 'departments:agniveer_detail' ag.id %}" class="btn btn-sm"
+                   style="background:#EF5350;color:white;border-radius:6px;padding:3px 10px;font-size:10px;">
+                  <i class="bi bi-eye"></i> View
+                </a>
               </td>
             </tr>
             {% empty %}
-            <tr><td colspan="5" class="text-center py-4">No records found</td></tr>
+            <tr><td colspan="5" class="text-center py-4" style="color:var(--text-muted)">No records found</td></tr>
             {% endfor %}
           </tbody>
         </table>
@@ -902,162 +854,411 @@
   </div>
 </div>
 
+{% endblock %}
+
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
 <script>
-// Chart defaults - Dynamic for theme
-function updateChartColors() {
-  const isDark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
-  Chart.defaults.color = isDark ? '#E0E6F0' : '#1A2C3E';
-  Chart.defaults.borderColor = 'rgba(82, 183, 136, 0.2)';
-}
+(function () {
+  'use strict';
 
-// Department Data
-const deptData = {
-  'A': {{ dept_stats.A|safe }},
-  'B': {{ dept_stats.B|safe }},
-  'C': {{ dept_stats.C|safe }},
-  'D': {{ dept_stats.D|safe }}
-};
-const deptNames = { A: 'Battalion', B: 'TTS', C: 'CS', D: 'Clerk' };
-const deptColors = {
-  'A': { bg: 'rgba(76, 175, 80, 0.7)', border: '#4CAF50' },
-  'B': { bg: 'rgba(79, 195, 247, 0.7)', border: '#4FC3F7' },
-  'C': { bg: 'rgba(212, 160, 23, 0.7)', border: '#D4A017' },
-  'D': { bg: 'rgba(156, 39, 176, 0.7)', border: '#9C27B0' }
-};
-let deptCategoryChartInstance = null;
-
-function updateDeptCategoryChart(dept) {
-  const stats = deptData[dept];
-  const canvas = document.getElementById('deptSelectedCategoryChart');
-  if (!canvas) return;
-  if (deptCategoryChartInstance) deptCategoryChartInstance.destroy();
-  
-  deptCategoryChartInstance = new Chart(canvas.getContext('2d'), {
-    type: 'bar',
-    data: {
-      labels: ['Total', 'Passed', 'Failed'],
-      datasets: [{
-        label: deptNames[dept],
-        data: [stats.total, stats.passed, stats.failed],
-        backgroundColor: ['rgba(33, 150, 243, 0.7)', 'rgba(76, 175, 80, 0.7)', 'rgba(239, 83, 80, 0.7)'],
-        borderRadius: 6
-      }]
+  /* ── Django data ─────────────────────────────────────── */
+  const DATA = {
+    totalAgniveers : Number('{{ total_agniveers }}'),
+    totalTrainers  : Number('{{ total_trainers }}'),
+    passCount      : Number('{{ pass_count }}'),
+    failCount      : Number('{{ fail_count }}'),
+    testLabels     : JSON.parse('{{ test_labels|safe }}'),
+    testAvgMarks   : JSON.parse('{{ test_avg_marks|safe }}'),
+    testPassRates  : JSON.parse('{{ test_pass_rates|safe }}'),
+    monthsLabels   : JSON.parse('{{ months_labels|safe }}'),
+    monthCounts    : JSON.parse('{{ month_counts|safe }}'),
+    monthPass      : JSON.parse('{{ month_pass|safe }}'),
+    deptStats      : {
+      A: {{ dept_stats.A|safe }},
+      B: {{ dept_stats.B|safe }},
+      C: {{ dept_stats.C|safe }},
+      D: {{ dept_stats.D|safe }},
     },
-    options: {
-      responsive: true,
-      maintainAspectRatio: true,
-      indexAxis: 'y',
-      plugins: { legend: { display: false } },
-      scales: { x: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } }, y: { grid: { display: false } } }
-    }
-  });
-}
+    testTypeData   : {{ test_type_data|safe }},
+  };
 
-// Department Button Handlers
-document.querySelectorAll('.dept-btn').forEach(btn => {
-  btn.addEventListener('click', function() {
-    const dept = this.getAttribute('data-dept');
-    const stats = deptData[dept];
-    document.querySelectorAll('.dept-btn').forEach(b => b.classList.remove('active'));
-    this.classList.add('active');
-    
-    document.getElementById('deptDetailsContainer').innerHTML = `
-      <div class="d-flex w-100 gap-3">
-        <div class="flex-fill dept-stat-card" style="background: linear-gradient(145deg, rgba(79,195,247,0.15), rgba(33,150,243,0.05)); border-color: rgba(79,195,247,0.3);">
-          <div class="dept-stat-value" style="color: #0288D1;">${stats.total}</div>
-          <div class="dept-stat-label">Total</div>
-        </div>
-        <div class="flex-fill dept-stat-card" style="background: linear-gradient(145deg, rgba(82,183,136,0.15), rgba(46,125,50,0.05)); border-color: rgba(82,183,136,0.3);">
-          <div class="dept-stat-value" style="color: #2E7D32;">${stats.passed}</div>
-          <div class="dept-stat-label">Passed</div>
-        </div>
-        <div class="flex-fill dept-stat-card" style="background: linear-gradient(145deg, rgba(239,83,80,0.15), rgba(183,28,28,0.05)); border-color: rgba(239,83,80,0.3);">
-          <div class="dept-stat-value" style="color: #C62828;">${stats.failed}</div>
-          <div class="dept-stat-label">Failed</div>
-        </div>
-        <div class="flex-fill dept-stat-card" style="background: linear-gradient(145deg, rgba(212,160,23,0.15), rgba(255,193,7,0.05)); border-color: rgba(212,160,23,0.3);">
-          <div class="dept-stat-value" style="color: #F57F17;">${stats.pass_rate.toFixed(1)}%</div>
-          <div class="dept-stat-label">Rate</div>
-        </div>
-      </div>
-    `;
-    document.getElementById('deptCategoryChartContainer').style.display = 'block';
-    updateDeptCategoryChart(dept);
-  });
-});
+  const DEPT_NAMES  = { A:'Battalion', B:'TTS', C:'CS', D:'Clerk' };
+  const DEPT_COLORS = {
+    A: { bg:'rgba(76,175,80,0.75)',   border:'#4CAF50' },
+    B: { bg:'rgba(79,195,247,0.75)',  border:'#4FC3F7' },
+    C: { bg:'rgba(212,160,23,0.75)', border:'#D4A017' },
+    D: { bg:'rgba(156,39,176,0.75)', border:'#9C27B0' },
+  };
 
-// Pass/Fail Pie Chart - No data labels on chart
-const pfCanvas = document.getElementById('passFailChart');
-if (pfCanvas) {
-  new Chart(pfCanvas.getContext('2d'), {
-    type: 'pie',
-    data: { 
-      labels: ['Passed', 'Failed'], 
-      datasets: [{ 
-        data: [Number('{{ pass_count }}'), Number('{{ fail_count }}')], 
-        backgroundColor: ['#52B788', '#EF5350'], 
-        borderWidth: 0 
-      }] 
-    },
-    options: { 
-      responsive: true, 
-      maintainAspectRatio: true, 
-      plugins: { 
-        legend: { display: false },
-        tooltip: { enabled: true }
-      } 
-    }
-  });
-}
+  /* ── Theme helpers ───────────────────────────────────── */
+  function isDark() {
+    return document.documentElement.getAttribute('data-bs-theme') === 'dark';
+  }
 
-// Test Type Chart
-const testCanvas = document.getElementById('testTypeChart');
-if (testCanvas) {
-  new Chart(testCanvas.getContext('2d'), {
-    type: 'bar',
-    data: { labels: JSON.parse('{{ test_labels|safe }}'), datasets: [{ label: 'Avg Marks', data: JSON.parse('{{ test_avg_marks|safe }}'), backgroundColor: 'rgba(82,183,136,0.7)', borderRadius: 6 }, { label: 'Pass Rate %', data: JSON.parse('{{ test_pass_rates|safe }}'), backgroundColor: 'rgba(79,195,247,0.7)', borderRadius: 6, yAxisID: 'y1' }] },
-    options: { responsive: true, maintainAspectRatio: true, scales: { y: { beginAtZero: true }, y1: { beginAtZero: true, max: 100, position: 'right' } }, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } } } }
-  });
-}
+  function chartColors() {
+    return {
+      grid  : isDark() ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.06)',
+      tick  : isDark() ? '#8B9BB4'                : '#6b7a8d',
+      border: isDark() ? '#1a2236'                : '#ffffff',
+    };
+  }
 
-// Monthly Trend
-const monthCanvas = document.getElementById('monthlyChart');
-if (monthCanvas) {
-  new Chart(monthCanvas.getContext('2d'), {
-    type: 'line',
-    data: { labels: JSON.parse('{{ months_labels|safe }}'), datasets: [{ label: 'Total Evaluations', data: JSON.parse('{{ month_counts|safe }}'), borderColor: '#4FC3F7', backgroundColor: 'rgba(79,195,247,0.1)', fill: true, tension: 0.4 }, { label: 'Passed', data: JSON.parse('{{ month_pass|safe }}'), borderColor: '#52B788', backgroundColor: 'rgba(82,183,136,0.1)', fill: true, tension: 0.4 }] },
-    options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } } } }
-  });
-}
+  function applyDefaults() {
+    const c = chartColors();
+    Chart.defaults.color       = c.tick;
+    Chart.defaults.borderColor = c.grid;
+  }
 
-// Department Test Type Charts
-const testTypeData = {{ test_type_data|safe }};
-['A', 'B', 'C', 'D'].forEach(dept => {
-  const canvas = document.getElementById(`dept${dept}TestTypeChart`);
-  if (canvas && testTypeData[dept]) {
-    new Chart(canvas.getContext('2d'), {
-      type: 'bar',
-      data: { labels: testTypeData[dept].labels, datasets: [{ label: 'Avg Marks', data: testTypeData[dept].avg_marks, backgroundColor: deptColors[dept].bg, borderRadius: 5 }, { label: 'Pass Rate %', data: testTypeData[dept].pass_rates, backgroundColor: 'rgba(79,195,247,0.6)', borderRadius: 5, yAxisID: 'y1' }] },
-      options: { responsive: true, maintainAspectRatio: true, scales: { y: { beginAtZero: true }, y1: { beginAtZero: true, max: 100, position: 'right' } }, plugins: { legend: { position: 'top', labels: { boxWidth: 10, font: { size: 9 } } } } }
+  function sb() {
+    const c = chartColors();
+    return {
+      grid : { color: c.grid },
+      ticks: { color: c.tick, font: { size: 9 } },
+    };
+  }
+
+  /* ── Live counter animation ──────────────────────────── */
+  function animateCount(el, target, duration) {
+    if (!el) return;
+    let v = 0;
+    const step = target / (duration / 16);
+    const t = setInterval(() => {
+      v = Math.min(v + step, target);
+      el.textContent = Math.round(v).toLocaleString();
+      if (v >= target) clearInterval(t);
+    }, 16);
+  }
+
+  function runCounters() {
+    const dur = 1200;
+    animateCount(document.getElementById('cnt-agniveers'), DATA.totalAgniveers, dur);
+    animateCount(document.getElementById('cnt-trainers'),  DATA.totalTrainers,  dur);
+    animateCount(document.getElementById('cnt-passed'),    DATA.passCount,      dur);
+    animateCount(document.getElementById('cnt-failed'),    DATA.failCount,      dur);
+    animateCount(document.getElementById('dist-pass'),     DATA.passCount,      dur);
+    animateCount(document.getElementById('dist-fail'),     DATA.failCount,      dur);
+
+    /* donut % counter */
+    const pctEl     = document.getElementById('donut-pct');
+    const total     = DATA.totalAgniveers || 1;
+    const targetPct = Math.round((DATA.passCount / total) * 100);
+    let cur = 0;
+    const pt = setInterval(() => {
+      cur = Math.min(cur + 2, targetPct);
+      if (pctEl) pctEl.textContent = cur + '%';
+      if (cur >= targetPct) clearInterval(pt);
+    }, 24);
+
+    /* progress bars */
+    setTimeout(() => {
+      ['bar-agniveers','bar-trainers','bar-passed','bar-failed'].forEach(id => {
+        const b = document.getElementById(id);
+        if (b) { b.style.width = '0'; b.classList.add('loaded'); }
+      });
+    }, 80);
+  }
+
+  /* ── Chart registry ──────────────────────────────────── */
+  const charts = {};
+  function kill(k) {
+    if (charts[k]) { try { charts[k].destroy(); } catch(e){} delete charts[k]; }
+  }
+
+  /* ── 1. Donut ────────────────────────────────────────── */
+  function buildDonut() {
+    kill('donut');
+    const ctx = document.getElementById('passFailChart');
+    if (!ctx) return;
+    charts.donut = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels  : ['Passed', 'Failed'],
+        datasets: [{
+          data           : [DATA.passCount, DATA.failCount],
+          backgroundColor: ['#52B788', '#EF5350'],
+          borderColor    : chartColors().border,
+          borderWidth    : 3,
+          hoverOffset    : 8,
+          borderRadius   : 4,
+          spacing        : 3,
+        }]
+      },
+      options: {
+        responsive         : true,
+        maintainAspectRatio: true,
+        cutout             : '68%',
+        animation          : { duration: 900, easing: 'easeOutQuart' },
+        plugins: {
+          legend : { display: false },
+          tooltip: {
+            callbacks: {
+              label: c => {
+                const t = DATA.totalAgniveers || 1;
+                return ` ${c.label}: ${c.parsed} (${Math.round(c.parsed / t * 100)}%)`;
+              }
+            }
+          }
+        }
+      }
     });
   }
-});
 
-// Theme change listener
-window.addEventListener('themeChanged', function(e) {
-  updateChartColors();
-});
+  /* ── 2. Overall Test Type ────────────────────────────── */
+  function buildTestType() {
+    kill('tt');
+    const ctx = document.getElementById('testTypeChart');
+    if (!ctx) return;
+    const s = sb();
+    charts.tt = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels  : DATA.testLabels,
+        datasets: [
+          {
+            label          : 'Avg Marks',
+            data           : DATA.testAvgMarks,
+            backgroundColor: 'rgba(82,183,136,0.75)',
+            borderColor    : '#52B788',
+            borderWidth    : 1.5,
+            borderRadius   : 5,
+            yAxisID        : 'y',
+          },
+          {
+            label          : 'Pass Rate (%)',
+            data           : DATA.testPassRates,
+            backgroundColor: 'rgba(79,195,247,0.75)',
+            borderColor    : '#4FC3F7',
+            borderWidth    : 1.5,
+            borderRadius   : 5,
+            yAxisID        : 'y1',
+          }
+        ]
+      },
+      options: {
+        responsive         : true,
+        maintainAspectRatio: false,
+        animation          : { duration: 900, easing: 'easeOutQuart' },
+        interaction        : { mode: 'index', intersect: false },
+        scales: {
+          y : { ...s, beginAtZero: true, max: 100,
+                title: { display: true, text: 'Avg Marks',    color: '#52B788', font: { size: 9 } } },
+          y1: { ...s, beginAtZero: true, max: 100, position: 'right',
+                grid : { drawOnChartArea: false },
+                title: { display: true, text: 'Pass Rate (%)', color: '#4FC3F7', font: { size: 9 } } },
+          x : { ...s }
+        },
+        plugins: { legend: { display: false } }
+      }
+    });
+  }
 
-updateChartColors();
-// Initialize the dashboard by clicking the Battalion button by default
-const defaultBtn = document.querySelector('.dept-btn[data-dept="A"]');
-if (defaultBtn) {
-  defaultBtn.click();
-}
+  /* ── 3. Monthly Trend ────────────────────────────────── */
+  function buildMonthly() {
+    kill('monthly');
+    const ctx = document.getElementById('monthlyChart');
+    if (!ctx) return;
+    const s  = sb();
+    const bd = chartColors().border;
+    charts.monthly = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels  : DATA.monthsLabels,
+        datasets: [
+          {
+            label               : 'Total Evaluations',
+            data                : DATA.monthCounts,
+            borderColor         : '#4FC3F7',
+            backgroundColor     : 'rgba(79,195,247,0.10)',
+            fill                : true,
+            tension             : 0.35,
+            borderWidth         : 2.5,
+            pointRadius         : 4,
+            pointBackgroundColor: '#4FC3F7',
+            pointBorderColor    : bd,
+            pointBorderWidth    : 2,
+          },
+          {
+            label               : 'Passed',
+            data                : DATA.monthPass,
+            borderColor         : '#52B788',
+            backgroundColor     : 'rgba(82,183,136,0.10)',
+            fill                : true,
+            tension             : 0.35,
+            borderWidth         : 2.5,
+            pointRadius         : 4,
+            pointBackgroundColor: '#52B788',
+            pointBorderColor    : bd,
+            pointBorderWidth    : 2,
+          }
+        ]
+      },
+      options: {
+        responsive         : true,
+        maintainAspectRatio: false,
+        animation          : { duration: 900, easing: 'easeOutQuart' },
+        interaction        : { mode: 'index', intersect: false },
+        scales: {
+          y : { ...s, beginAtZero: true },
+          x : { ...s }
+        },
+        plugins: { legend: { display: false } }
+      }
+    });
+  }
 
+  /* ── 4. Per-department Test Type charts ──────────────── */
+  function buildDeptCharts() {
+    ['A','B','C','D'].forEach(dept => {
+      kill('dept_' + dept);
+      const ctx = document.getElementById(`dept${dept}TestTypeChart`);
+      if (!ctx || !DATA.testTypeData[dept]) return;
+      const s   = sb();
+      const dc  = DEPT_COLORS[dept];
+      charts['dept_' + dept] = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels  : DATA.testTypeData[dept].labels,
+          datasets: [
+            {
+              label          : 'Avg Marks',
+              data           : DATA.testTypeData[dept].avg_marks,
+              backgroundColor: dc.bg,
+              borderColor    : dc.border,
+              borderWidth    : 1.5,
+              borderRadius   : 5,
+              yAxisID        : 'y',
+            },
+            {
+              label          : 'Pass Rate (%)',
+              data           : DATA.testTypeData[dept].pass_rates,
+              backgroundColor: 'rgba(79,195,247,0.70)',
+              borderColor    : '#4FC3F7',
+              borderWidth    : 1.5,
+              borderRadius   : 5,
+              yAxisID        : 'y1',
+            }
+          ]
+        },
+        options: {
+          responsive         : true,
+          maintainAspectRatio: false,
+          animation          : { duration: 900, easing: 'easeOutQuart' },
+          interaction        : { mode: 'index', intersect: false },
+          scales: {
+            y : { ...s, beginAtZero: true, max: 100,
+                  title: { display: true, text: 'Avg Marks', color: dc.border, font: { size: 9 } } },
+            y1: { ...s, beginAtZero: true, max: 100, position: 'right',
+                  grid : { drawOnChartArea: false },
+                  title: { display: true, text: 'Pass Rate %', color: '#4FC3F7', font: { size: 9 } } },
+            x : { ...s }
+          },
+          plugins: { legend: { display: false } }
+        }
+      });
+    });
+  }
+
+  /* ── 5. Dept Category Chart (on button click) ────────── */
+  function buildDeptCategoryChart(dept) {
+    kill('deptCat');
+    const ctx = document.getElementById('deptSelectedCategoryChart');
+    if (!ctx) return;
+    const stats = DATA.deptStats[dept];
+    const s     = sb();
+    const legEl = document.getElementById('deptCatLegend');
+    if (legEl) {
+      legEl.innerHTML = `
+        <span><span class="leg-sq" style="background:rgba(33,150,243,0.75)"></span>Total</span>
+        <span><span class="leg-sq" style="background:rgba(76,175,80,0.75)"></span>Passed</span>
+        <span><span class="leg-sq" style="background:rgba(239,83,80,0.75)"></span>Failed</span>
+      `;
+    }
+    charts.deptCat = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels  : ['Total', 'Passed', 'Failed'],
+        datasets: [{
+          label          : DEPT_NAMES[dept],
+          data           : [stats.total, stats.passed, stats.failed],
+          backgroundColor: ['rgba(33,150,243,0.75)', 'rgba(76,175,80,0.75)', 'rgba(239,83,80,0.75)'],
+          borderColor    : ['#2196F3', '#4CAF50', '#EF5350'],
+          borderWidth    : 1.5,
+          borderRadius   : 6,
+        }]
+      },
+      options: {
+        responsive         : true,
+        maintainAspectRatio: false,
+        indexAxis          : 'y',
+        animation          : { duration: 700, easing: 'easeOutQuart' },
+        scales: {
+          x: { ...s, beginAtZero: true },
+          y: { ...s, grid: { display: false } }
+        },
+        plugins: { legend: { display: false } }
+      }
+    });
+  }
+
+  /* ── Build all static charts ─────────────────────────── */
+  function buildAll() {
+    applyDefaults();
+    buildDonut();
+    buildTestType();
+    buildMonthly();
+    buildDeptCharts();
+    /* if a dept was previously selected, rebuild its cat chart too */
+    const activeBtn = document.querySelector('.dept-btn.active');
+    if (activeBtn) buildDeptCategoryChart(activeBtn.getAttribute('data-dept'));
+  }
+
+  /* ── Department button handlers ──────────────────────── */
+  document.querySelectorAll('.dept-btn').forEach(btn => {
+    btn.addEventListener('click', function () {
+      const dept  = this.getAttribute('data-dept');
+      const stats = DATA.deptStats[dept];
+
+      document.querySelectorAll('.dept-btn').forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+
+      document.getElementById('deptDetailsContainer').innerHTML = `
+        <div class="d-flex w-100 gap-3">
+          <div class="dept-stat-card" style="background:linear-gradient(145deg,rgba(79,195,247,0.12),rgba(33,150,243,0.04));border-color:rgba(79,195,247,0.3);">
+            <div class="dept-stat-value" style="color:#0288D1;">${stats.total.toLocaleString()}</div>
+            <div class="dept-stat-label">Total</div>
+          </div>
+          <div class="dept-stat-card" style="background:linear-gradient(145deg,rgba(82,183,136,0.12),rgba(46,125,50,0.04));border-color:rgba(82,183,136,0.3);">
+            <div class="dept-stat-value" style="color:#2E7D32;">${stats.passed.toLocaleString()}</div>
+            <div class="dept-stat-label">Passed</div>
+          </div>
+          <div class="dept-stat-card" style="background:linear-gradient(145deg,rgba(239,83,80,0.12),rgba(183,28,28,0.04));border-color:rgba(239,83,80,0.3);">
+            <div class="dept-stat-value" style="color:#C62828;">${stats.failed.toLocaleString()}</div>
+            <div class="dept-stat-label">Failed</div>
+          </div>
+          <div class="dept-stat-card" style="background:linear-gradient(145deg,rgba(212,160,23,0.12),rgba(255,193,7,0.04));border-color:rgba(212,160,23,0.3);">
+            <div class="dept-stat-value" style="color:#F57F17;">${stats.pass_rate.toFixed(1)}%</div>
+            <div class="dept-stat-label">Rate</div>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('deptCategoryChartContainer').style.display = 'block';
+      buildDeptCategoryChart(dept);
+    });
+  });
+
+  /* ── Theme listener ──────────────────────────────────── */
+  window.addEventListener('themeChanged', buildAll);
+
+  /* ── Init ────────────────────────────────────────────── */
+  buildAll();
+  runCounters();
+
+  /* Auto-click Battalion on load */
+  const defaultBtn = document.querySelector('.dept-btn[data-dept="A"]');
+  if (defaultBtn) defaultBtn.click();
+
+})();
 </script>
-{% endblock %}
-
 {% endblock %}

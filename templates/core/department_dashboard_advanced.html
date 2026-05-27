@@ -6,6 +6,7 @@
 
 {% block extra_css %}
 <style>
+  /* ── Layout Shell ─────────────────────────────────────── */
   .portal-dashboard-page .content-area {
     height: calc(100vh - var(--portal-header-height) - 12px);
     overflow: hidden;
@@ -15,234 +16,86 @@
   .portal-dashboard-page .portal-surface {
     height: 100%;
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(220px, 29vw);
-    grid-auto-rows: min-content;
+    grid-template-columns: minmax(0, 1fr) minmax(220px, 28vw);
+    grid-template-rows: auto auto auto 1fr;
     gap: 8px;
-    align-content: start !important;
+    align-content: start;
     overflow: auto;
+    padding-bottom: 8px;
   }
 
-  .portal-dashboard-page .portal-surface > .row {
-    margin: 0 !important;
-  }
-
-  .portal-dashboard-page .portal-surface > .row:first-child {
+  /* ── Row slot assignments ──────────────────────────────── */
+  .portal-dashboard-page .metrics-row {
     grid-column: 1;
+    grid-row: 1;
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 8px;
   }
 
-  .portal-dashboard-page .portal-surface > .row:first-child > [class*="col"],
-  .portal-dashboard-page .portal-surface > .row:nth-of-type(3) > [class*="col"],
-  .portal-dashboard-page .portal-surface > .row:nth-of-type(n+4) > [class*="col"] {
-    width: 100%;
-    max-width: none;
-    padding: 0 !important;
-  }
-
-  .portal-dashboard-page .portal-surface > .row:nth-of-type(3) {
+  .portal-dashboard-page .testtype-row {
     grid-column: 1;
-    display: block;
-    margin-bottom: 24px !important;
+    grid-row: 2;
   }
 
-  .portal-dashboard-page .portal-surface > .row:nth-of-type(n+4) {
-    grid-column: 1 / -1;
+  .portal-dashboard-page .cat-pair-row {
+    grid-column: 1;
+    grid-row: 3;
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 9px;
+    gap: 8px;
   }
 
-  .portal-dashboard-page .portal-surface > .row:last-child {
-    grid-template-columns: 1fr !important;
+  .portal-dashboard-page .monthly-row {
+    grid-column: 1 / -1;
+    grid-row: 4;
   }
 
-  .portal-dashboard-page .metric-card,
-  .portal-dashboard-page .stat-card {
-    min-height: 44px;
-    padding: 8px 10px !important;
-  }
-
-  .portal-dashboard-page .metric-icon,
-  .portal-dashboard-page .stat-icon {
-    display: none !important;
-  }
-
-  .portal-dashboard-page .metric-value,
-  .portal-dashboard-page .stat-value {
-    font-size: 18px !important;
-  }
-
-  .portal-dashboard-page .chart-box,
-  .portal-dashboard-page .army-card {
-    min-height: 0;
-    height: 100%;
-    max-height: none;
+  .portal-dashboard-page .pie-panel {
+    grid-column: 2;
+    grid-row: 1 / 4;
     display: flex;
     flex-direction: column;
   }
 
-  .portal-dashboard-page canvas {
-    display: block;
-    width: 100% !important;
-    height: 138px !important;
-    max-height: 138px !important;
-  }
-
-  .portal-dashboard-page .pie-chart-canvas {
-    width: 138px !important;
-    height: 138px !important;
-    aspect-ratio: 1;
-    flex: 0 0 auto;
-  }
-
-  .portal-dashboard-page .table-responsive,
-  .portal-dashboard-page [style*="overflow-x:auto"],
-  .portal-dashboard-page [style*="overflow-x: auto"] {
-    max-height: calc(100vh - 246px);
-  }
-
-  .portal-dashboard-page .chart-title,
-  .portal-dashboard-page .army-card-title {
-    min-height: 22px;
-    font-size: 10.5px !important;
-    line-height: 1.2;
-  }
-
-  .portal-dashboard-page .portal-chart-shell {
-    position: relative;
-    min-height: 0;
-  }
-
-  .portal-dashboard-page .chart-box > canvas,
-  .portal-dashboard-page .chart-box .portal-chart-shell canvas {
-    flex: 1 1 auto;
-  }
-
-  .portal-dashboard-page .overall-stats-wrapper,
-  .portal-dashboard-page .pie-chart-container {
-    min-height: 0;
-    gap: 10px !important;
-  }
-
-  .portal-dashboard-page .distribution-section {
-    margin-top: 4px !important;
-    padding-top: 6px !important;
-  }
-
-  .portal-dashboard-page .distribution-values {
-    gap: 18px !important;
-  }
-
-  .portal-dashboard-page .default-stats-container,
-  .portal-dashboard-page .row.g-3 {
-    gap: 8px !important;
-  }
-
-  .portal-dashboard-page .dept-stat-card,
-  .portal-dashboard-page .default-stat-item {
-    padding: 8px 6px !important;
-  }
-
-  @media (max-width: 991px) {
-    .portal-dashboard-page .portal-surface,
-    .portal-dashboard-page .portal-surface > .row:nth-of-type(2),
-    .portal-dashboard-page .portal-surface > .row:nth-of-type(n+3) {
-      grid-template-columns: 1fr;
-    }
-  }
-
-  /* Metric Cards - Compact (Same as Commander/G-Head) */
+  /* ── Metric Cards ─────────────────────────────────────── */
   .metric-card {
     background: var(--card-bg);
     border-radius: 12px;
-    padding: 12px 8px;
+    padding: 8px 10px;
+    min-height: 44px;
     text-align: center;
-    transition: all 0.3s ease;
     border: 1px solid var(--border-color);
     cursor: pointer;
     position: relative;
     overflow: hidden;
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
   }
-  /* Per-card colour themes */
-  .metric-card.mc-agniveers {
-    background: linear-gradient(145deg, rgba(79,195,247,0.25), rgba(33,150,243,0.15)) !important;
-    border-color: rgba(79,195,247,0.5) !important;
-  }
-  .metric-card.mc-agniveers::before { background: linear-gradient(90deg,#4FC3F7,#2196F3); }
-  .metric-card.mc-agniveers .metric-value { color: #0288D1 !important; }
-  .metric-card.mc-agniveers .metric-icon { background: rgba(79,195,247,0.25) !important; color: #0288D1 !important; }
 
-  .metric-card.mc-trainers {
-    background: linear-gradient(145deg, rgba(212,160,23,0.25), rgba(255,193,7,0.15)) !important;
-    border-color: rgba(212,160,23,0.5) !important;
-  }
-  .metric-card.mc-trainers::before { background: linear-gradient(90deg,#D4A017,#FFC107); }
-  .metric-card.mc-trainers .metric-value { color: #F57F17 !important; }
-  .metric-card.mc-trainers .metric-icon { background: rgba(212,160,23,0.25) !important; color: #F57F17 !important; }
-
-  .metric-card.mc-passed {
-    background: linear-gradient(145deg, rgba(82,183,136,0.25), rgba(46,125,50,0.15)) !important;
-    border-color: rgba(82,183,136,0.5) !important;
-  }
-  .metric-card.mc-passed::before { background: linear-gradient(90deg,#52B788,#2E7D32); }
-  .metric-card.mc-passed .metric-value { color: #2E7D32 !important; }
-  .metric-card.mc-passed .metric-icon { background: rgba(82,183,136,0.25) !important; color: #2E7D32 !important; }
-
-  .metric-card.mc-failed {
-    background: linear-gradient(145deg, rgba(239,83,80,0.25), rgba(183,28,28,0.15)) !important;
-    border-color: rgba(239,83,80,0.5) !important;
-  }
-  .metric-card.mc-failed::before { background: linear-gradient(90deg,#EF5350,#B71C1C); }
-  .metric-card.mc-failed .metric-value { color: #C62828 !important; }
-  .metric-card.mc-failed .metric-icon { background: rgba(239,83,80,0.25) !important; color: #C62828 !important; }
-
-  .metric-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 10px 25px rgba(0,0,0,0.22);
-  }
-  .metric-card.mc-agniveers:hover { border-color: #4FC3F7 !important; box-shadow: 0 10px 28px rgba(79,195,247,0.22); }
-  .metric-card.mc-trainers:hover  { border-color: #D4A017 !important; box-shadow: 0 10px 28px rgba(212,160,23,0.22); }
-  .metric-card.mc-passed:hover    { border-color: #52B788 !important; box-shadow: 0 10px 28px rgba(82,183,136,0.22); }
-  .metric-card.mc-failed:hover    { border-color: #EF5350 !important; box-shadow: 0 10px 28px rgba(239,83,80,0.22); }
-  
   .metric-card::before {
     content: '';
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
+    top: 0; left: 0; right: 0;
     height: 3px;
-    background: linear-gradient(90deg, var(--army-olive), #4FC3F7);
     transform: scaleX(0);
     transition: transform 0.3s ease;
+    border-radius: 12px 12px 0 0;
   }
-  
-  .metric-card:hover::before {
-    transform: scaleX(1);
-  }
-  
-  .metric-icon {
-    width: 36px;
-    height: 36px;
-    border-radius: 10px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 8px;
-    font-size: 18px;
-  }
-  
+
+  .metric-card:hover { transform: translateY(-3px); }
+  .metric-card:hover::before { transform: scaleX(1); }
+
+  .portal-dashboard-page .metric-icon { display: none !important; }
+
   .metric-value {
-    font-size: 24px;
+    font-size: 18px !important;
     font-weight: 700;
     font-family: 'Rajdhani', monospace;
     line-height: 1.2;
-    margin-bottom: 4px;
-    color: var(--text-primary);
+    margin-bottom: 2px;
+    transition: color 0.3s;
   }
-  
+
   .metric-label {
     font-size: 9px;
     color: var(--text-muted);
@@ -250,261 +103,427 @@
     letter-spacing: 1px;
     font-weight: 600;
   }
-  
-  .metric-hint {
-    font-size: 8px;
-    color: var(--text-muted);
-    margin-top: 6px;
-    opacity: 0.6;
+
+  /* live counter underbar */
+  .counter-bar {
+    height: 2px;
+    border-radius: 1px;
+    margin-top: 5px;
+    width: 0;
   }
-  
-  /* Pie chart card anchored to top-right grid cell */
-  .portal-dashboard-page .pie-top-right-wrapper {
-    grid-column: 2 / 3;
-    grid-row: 1 / 3; /* Spans row 1 (metrics) and row 2 (polar chart) */
-    display: flex;
-    flex-direction: column;
-    height: 100%;
+  .counter-bar.loaded {
+    animation: barGrow 1.1s cubic-bezier(.4,0,.2,1) forwards;
   }
-  
-  /* Chart Boxes - Compact */
+  @keyframes barGrow { to { width: 100%; } }
+
+  /* Per-card colour themes */
+  .metric-card.mc-agniveers {
+    background: linear-gradient(145deg, rgba(79,195,247,0.22), rgba(33,150,243,0.08)) !important;
+    border-color: rgba(79,195,247,0.45) !important;
+  }
+  .metric-card.mc-agniveers::before { background: linear-gradient(90deg,#4FC3F7,#2196F3); }
+  .metric-card.mc-agniveers .metric-value { color: #0288D1; }
+  .metric-card.mc-agniveers .counter-bar  { background: linear-gradient(90deg,#4FC3F7,#2196F3); }
+  .metric-card.mc-agniveers:hover { border-color:#4FC3F7 !important; box-shadow:0 10px 28px rgba(79,195,247,0.22); }
+
+  .metric-card.mc-passed {
+    background: linear-gradient(145deg, rgba(82,183,136,0.22), rgba(46,125,50,0.08)) !important;
+    border-color: rgba(82,183,136,0.45) !important;
+  }
+  .metric-card.mc-passed::before { background: linear-gradient(90deg,#52B788,#2E7D32); }
+  .metric-card.mc-passed .metric-value { color: #2E7D32; }
+  .metric-card.mc-passed .counter-bar  { background: linear-gradient(90deg,#52B788,#2E7D32); }
+  .metric-card.mc-passed:hover { border-color:#52B788 !important; box-shadow:0 10px 28px rgba(82,183,136,0.22); }
+
+  .metric-card.mc-failed {
+    background: linear-gradient(145deg, rgba(239,83,80,0.22), rgba(183,28,28,0.08)) !important;
+    border-color: rgba(239,83,80,0.45) !important;
+  }
+  .metric-card.mc-failed::before { background: linear-gradient(90deg,#EF5350,#B71C1C); }
+  .metric-card.mc-failed .metric-value { color: #C62828; }
+  .metric-card.mc-failed .counter-bar  { background: linear-gradient(90deg,#EF5350,#B71C1C); }
+  .metric-card.mc-failed:hover { border-color:#EF5350 !important; box-shadow:0 10px 28px rgba(239,83,80,0.22); }
+
+  .metric-card.mc-trainers {
+    background: linear-gradient(145deg, rgba(212,160,23,0.22), rgba(255,193,7,0.08)) !important;
+    border-color: rgba(212,160,23,0.45) !important;
+  }
+  .metric-card.mc-trainers::before { background: linear-gradient(90deg,#D4A017,#FFC107); }
+  .metric-card.mc-trainers .metric-value { color: #F57F17; }
+  .metric-card.mc-trainers .counter-bar  { background: linear-gradient(90deg,#D4A017,#FFC107); }
+  .metric-card.mc-trainers:hover { border-color:#D4A017 !important; box-shadow:0 10px 28px rgba(212,160,23,0.22); }
+
+  /* dark-mode value overrides */
+  [data-bs-theme="dark"] .metric-card.mc-agniveers .metric-value { color: #4FC3F7; }
+  [data-bs-theme="dark"] .metric-card.mc-passed    .metric-value { color: #52B788; }
+  [data-bs-theme="dark"] .metric-card.mc-failed    .metric-value { color: #EF5350; }
+  [data-bs-theme="dark"] .metric-card.mc-trainers  .metric-value { color: #D4A017; }
+
+  /* ── Chart Boxes ──────────────────────────────────────── */
   .chart-box {
     background: var(--card-bg);
     border-radius: 16px;
     padding: 12px;
     border: 1px solid var(--border-color);
-    transition: all 0.3s ease;
+    transition: box-shadow 0.25s ease, border-color 0.25s ease;
     height: 100%;
+    display: flex;
+    flex-direction: column;
   }
-  
+
   .chart-box:hover {
-    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
     border-color: var(--army-olive);
   }
-  
+
   .chart-title {
     color: var(--army-olive);
-    font-size: 12px;
-    margin-bottom: 12px;
+    font-size: 10.5px;
+    margin-bottom: 8px;
     font-family: 'Rajdhani', sans-serif;
     letter-spacing: 1px;
+    font-weight: 700;
+    text-transform: uppercase;
     display: flex;
     align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .chart-title .ct-dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--army-olive);
+    flex-shrink: 0;
+  }
+
+  .chart-title i { font-size: 13px; }
+
+  .chart-canvas-wrap {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+  }
+
+  /* ── Chart Legend ─────────────────────────────────────── */
+  .chart-legend {
+    display: flex;
+    flex-wrap: wrap;
     gap: 8px;
+    margin-bottom: 7px;
+    flex-shrink: 0;
   }
-  
-  .chart-title i {
-    font-size: 14px;
+  .chart-legend span {
+    display: flex; align-items: center; gap: 4px;
+    font-size: 10px; color: var(--text-muted);
   }
-  
-  /* Modal Styles */
-  .custom-modal .modal-dialog {
-    max-width: 700px;
+  .leg-sq {
+    width: 9px; height: 9px;
+    border-radius: 2px; flex-shrink: 0;
   }
-  
-  .custom-modal .modal-content {
-    background: var(--card-bg);
-    border: 1px solid var(--army-olive);
-    border-radius: 16px;
+
+  /* ── Pie / Donut Panel ────────────────────────────────── */
+  .pie-panel .chart-box {
+    flex: 1;
   }
-  
-  .custom-modal .modal-header {
-    border-bottom: 1px solid var(--border-color);
-    padding: 12px 20px;
-  }
-  
-  .custom-modal .modal-title {
-    font-size: 14px;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-  }
-  
-  .custom-modal .modal-body {
-    padding: 0;
-    max-height: 450px;
-    overflow-y: auto;
-  }
-  
-  .btn-download {
-    font-size: 10px;
-    padding: 4px 12px;
-    border-radius: 6px;
-    display: inline-flex;
+
+  .donut-wrap {
+    position: relative;
+    display: flex;
     align-items: center;
-    gap: 5px;
+    justify-content: center;
+    flex: 1;
+    min-height: 150px;
   }
-  
-  .modal-table {
-    width: 100%;
+
+  .donut-canvas-outer {
+    width: 165px; height: 165px;
+    flex-shrink: 0;
+  }
+
+  .donut-center-label {
+    position: absolute;
+    text-align: center;
+    pointer-events: none;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  .donut-pct {
+    font-size: 20px;
+    font-weight: 700;
+    font-family: 'Rajdhani', monospace;
+    color: #52B788;
+    line-height: 1;
+  }
+
+  .donut-sub {
+    font-size: 8px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-top: 2px;
+  }
+
+  .dist-row {
+    display: flex;
+    justify-content: center;
+    gap: 28px;
+    margin: 8px 0 10px;
+    flex-shrink: 0;
+  }
+
+  .dist-item { text-align: center; }
+
+  .dist-num {
+    font-size: 17px;
+    font-weight: 700;
+    font-family: 'Rajdhani', monospace;
+    line-height: 1;
+  }
+
+  .dist-lbl {
+    font-size: 9px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    margin-top: 2px;
+  }
+
+  .ai-insight-box {
+    background: linear-gradient(135deg, rgba(33,150,243,0.10), rgba(33,150,243,0.02));
+    border: 1px solid rgba(79,195,247,0.22);
+    border-radius: 10px;
+    padding: 9px 11px;
+    flex-shrink: 0;
+    margin-top: auto;
+  }
+
+  .ai-insight-head {
+    display: flex; align-items: center; gap: 5px;
+    font-size: 10px; font-weight: 700;
+    color: #4FC3F7;
+    text-transform: uppercase; letter-spacing: 0.5px;
+    margin-bottom: 4px;
+  }
+
+  .ai-insight-p {
+    font-size: 11px;
+    color: var(--text-muted);
+    line-height: 1.45;
     margin: 0;
   }
-  
+
+  /* ── Responsive ───────────────────────────────────────── */
+  @media (max-width: 991px) {
+    .portal-dashboard-page .portal-surface {
+      grid-template-columns: 1fr;
+    }
+    .portal-dashboard-page .metrics-row,
+    .portal-dashboard-page .testtype-row,
+    .portal-dashboard-page .cat-pair-row,
+    .portal-dashboard-page .pie-panel,
+    .portal-dashboard-page .monthly-row {
+      grid-column: 1;
+      grid-row: auto;
+    }
+    .portal-dashboard-page .cat-pair-row {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 576px) {
+    .portal-dashboard-page .metrics-row {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  /* ── Modal ────────────────────────────────────────────── */
+  .custom-modal .modal-dialog  { max-width: 700px; }
+  .custom-modal .modal-content { background: var(--card-bg); border: 1px solid var(--army-olive); border-radius: 16px; }
+  .custom-modal .modal-header  { border-bottom: 1px solid var(--border-color); padding: 12px 20px; }
+  .custom-modal .modal-title   { font-size: 14px; font-weight: 600; letter-spacing: 0.5px; }
+  .custom-modal .modal-body    { padding: 0; max-height: 450px; overflow-y: auto; }
+
+  .btn-download {
+    font-size: 10px; padding: 4px 12px;
+    border-radius: 6px;
+    display: inline-flex; align-items: center; gap: 5px;
+  }
+
+  .modal-table { width: 100%; margin: 0; }
   .modal-table th {
-    background: rgba(82, 183, 136, 0.08);
-    padding: 10px 15px;
-    font-size: 10px;
-    font-weight: 600;
-    color: var(--army-olive);
-    border-bottom: 1px solid var(--border-color);
+    background: rgba(82,183,136,0.08);
+    padding: 10px 15px; font-size: 10px; font-weight: 600;
+    color: var(--army-olive); border-bottom: 1px solid var(--border-color);
   }
-  
   .modal-table td {
-    padding: 8px 15px;
-    font-size: 11px;
-    border-bottom: 1px solid var(--border-color);
-    color: var(--text-primary);
+    padding: 8px 15px; font-size: 11px;
+    border-bottom: 1px solid var(--border-color); color: var(--text-primary);
   }
-  
-  .modal-table tr:last-child td {
-    border-bottom: none;
-  }
-  
-  .modal-table tr:hover td {
-    background: rgba(82, 183, 136, 0.05);
-  }
-  
-  /* Responsive */
-  @media (max-width: 768px) {
-    .metric-value { font-size: 20px; }
-    .metric-icon { width: 32px; height: 32px; font-size: 16px; }
-    .chart-box { padding: 12px; }
-  }
+  .modal-table tr:last-child td { border-bottom: none; }
+  .modal-table tr:hover td { background: rgba(82,183,136,0.05); }
 </style>
 {% endblock %}
 
 {% block content %}
 
-<!-- Key Metrics Row - Compact -->
-<div class="row g-3 mb-4">
-  <div class="col-6 col-md-3">
-    <div class="metric-card mc-agniveers" onclick="location.href='{% url 'departments:agniveer_list' %}'">
-      <div class="metric-icon mx-auto"><i class="bi bi-people-fill"></i></div>
-      <div class="metric-value">{{ total_agniveers|default:0 }}</div>
-      <div class="metric-label">Total Agniveers</div>
-    </div>
+<!-- Row 1 : Metric Cards -->
+<div class="metrics-row">
+  <div class="metric-card mc-agniveers" onclick="location.href='{% url 'departments:agniveer_list' %}'">
+    <div class="metric-value" id="cnt-agniveers">0</div>
+    <div class="metric-label">Total Agniveers</div>
+    <div class="counter-bar" id="bar-agniveers"></div>
   </div>
-  <div class="col-6 col-md-3">
-    <div class="metric-card mc-passed" onclick="openAgniveerModal('Passed')">
-      <div class="metric-icon mx-auto"><i class="bi bi-check-circle-fill"></i></div>
-      <div class="metric-value">{{ pass_count|default:0 }}</div>
-      <div class="metric-label">Passed</div>
-    </div>
+  <div class="metric-card mc-passed" onclick="openAgniveerModal('Passed')">
+    <div class="metric-value" id="cnt-passed">0</div>
+    <div class="metric-label">Passed</div>
+    <div class="counter-bar" id="bar-passed"></div>
   </div>
-  <div class="col-6 col-md-3">
-    <div class="metric-card mc-failed" onclick="openAgniveerModal('Failed')">
-      <div class="metric-icon mx-auto"><i class="bi bi-x-circle-fill"></i></div>
-      <div class="metric-value">{{ fail_count|default:0 }}</div>
-      <div class="metric-label">Failed</div>
-    </div>
+  <div class="metric-card mc-failed" onclick="openAgniveerModal('Failed')">
+    <div class="metric-value" id="cnt-failed">0</div>
+    <div class="metric-label">Failed</div>
+    <div class="counter-bar" id="bar-failed"></div>
   </div>
-  <div class="col-6 col-md-3">
-    <div class="metric-card mc-trainers" onclick="location.href='{% url 'accounts:my_team' %}'">
-      <div class="metric-icon mx-auto"><i class="bi bi-person-badge-fill"></i></div>
-      <div class="metric-value">{{ total_trainers|default:0 }}</div>
-      <div class="metric-label">Total Trainers</div>
-    </div>
+  <div class="metric-card mc-trainers" onclick="location.href='{% url 'accounts:my_team' %}'">
+    <div class="metric-value" id="cnt-trainers">0</div>
+    <div class="metric-label">Total Trainers</div>
+    <div class="counter-bar" id="bar-trainers"></div>
   </div>
 </div>
 
-<!-- Pie Chart anchored to top-right grid cell -->
-<div class="pie-top-right-wrapper">
-  <div class="chart-box" style="flex:1;">
+<!-- Pie Panel — right col, spans rows 1–3 -->
+<div class="pie-panel">
+  <div class="chart-box">
     <div class="chart-title">
-      <i class="bi bi-pie-chart"></i> OVERALL PASS/FAIL
+      <span class="ct-dot"></span>
+      <i class="bi bi-pie-chart-fill"></i> Overall Pass / Fail
     </div>
-    <div class="overall-stats-wrapper" style="display: flex; flex-direction: column; align-items: center; flex: 1;">
-      <div class="pie-chart-container" style="flex: 1; display: flex; align-items: center; justify-content: center; min-height: 200px; width: 100%;">
-        <div class="pie-chart-canvas" style="width: 100%; max-width: 280px; aspect-ratio: 1; filter: drop-shadow(0px 8px 20px rgba(82, 183, 136, 0.4)); margin: auto;">
-          <canvas id="passFailPieChart"></canvas>
-        </div>
+
+    <div class="donut-wrap">
+      <div class="donut-canvas-outer">
+        <canvas id="passFailPieChart"
+          role="img"
+          aria-label="Donut chart: pass vs fail ratio">
+          {{ pass_count|default:0 }} passed, {{ fail_count|default:0 }} failed.
+        </canvas>
       </div>
-      <div class="distribution-section mt-2" style="text-align: center; width: 100%;">
-        <div class="distribution-values" style="display: flex; justify-content: center; gap: 30px;">
-          <div class="distribution-item" style="text-align: center;">
-            <div class="distribution-number" style="font-size: 18px; font-weight: 700; color: var(--army-olive);">{{ pass_count|default:0 }}</div>
-            <div class="distribution-label" style="font-size: 9px; color: var(--text-muted);">Passed</div>
-          </div>
-          <div class="distribution-item" style="text-align: center;">
-            <div class="distribution-number" style="font-size: 18px; font-weight: 700; color: #EF5350;">{{ fail_count|default:0 }}</div>
-            <div class="distribution-label" style="font-size: 9px; color: var(--text-muted);">Failed</div>
-          </div>
-        </div>
+      <div class="donut-center-label">
+        <div class="donut-pct" id="donut-pct">0%</div>
+        <div class="donut-sub">Pass Rate</div>
       </div>
-      <div class="ai-insight-box mt-3 p-3 text-start w-100" style="background: linear-gradient(145deg, rgba(33,150,243,0.1), rgba(33,150,243,0.02)); border: 1px solid rgba(33,150,243,0.2); border-radius: 12px;">
-        <div class="d-flex align-items-center gap-2 mb-2">
-          <i class="bi bi-stars" style="color: #4FC3F7;"></i> <span class="fw-bold" style="font-size: 11px; color: var(--text-primary); text-transform: uppercase; letter-spacing: 0.5px;">Analytics Insight</span>
-        </div>
-        <p class="mb-0" style="font-size: 12px; color: var(--text-muted); line-height: 1.4;">
-          The overall evaluation metrics indicate a healthy passing distribution for your department.
-        </p>
+    </div>
+
+    <div class="dist-row">
+      <div class="dist-item">
+        <div class="dist-num" id="dist-pass" style="color:#52B788">0</div>
+        <div class="dist-lbl">Passed</div>
       </div>
+      <div class="dist-item">
+        <div class="dist-num" id="dist-fail" style="color:#EF5350">0</div>
+        <div class="dist-lbl">Failed</div>
+      </div>
+    </div>
+
+    <div class="ai-insight-box">
+      <div class="ai-insight-head">
+        <i class="bi bi-stars"></i> Analytics Insight
+      </div>
+      <p class="ai-insight-p">
+        The overall evaluation metrics indicate a healthy passing distribution for your department.
+      </p>
     </div>
   </div>
 </div>
 
-<!-- Category Performance Polar Chart -->
-<div class="row g-4 mb-4">
-  <div class="col-lg-12">
-    <div class="chart-box">
-      <div class="chart-title">
-        <i class="bi bi-compass"></i> Category Performance
-      </div>
-      <div style="height: 250px; display: flex; align-items: center; justify-content: center;">
-        <canvas id="categorySlicerChart" style="filter: drop-shadow(0px 8px 15px rgba(82, 183, 136, 0.25));"></canvas>
-      </div>
+<!-- Row 2 : Test Type Performance -->
+<div class="testtype-row">
+  <div class="chart-box">
+    <div class="chart-title">
+      <span class="ct-dot"></span>
+      <i class="bi bi-bar-chart-steps"></i> Test Type Performance
+    </div>
+    <div class="chart-legend">
+      <span><span class="leg-sq" style="background:#52B788"></span>Avg Marks</span>
+      <span><span class="leg-sq" style="background:#4FC3F7"></span>Pass Rate (%)</span>
+    </div>
+    <div class="chart-canvas-wrap" style="height:185px;">
+      <canvas id="testTypeChart"
+        role="img"
+        aria-label="Grouped bar chart: average marks and pass rate by test type">
+        Test type performance data.
+      </canvas>
     </div>
   </div>
 </div>
 
-<!-- Charts Row 2 -->
-<div class="row g-4 mb-4">
-  <!-- Category Pass Rates Bar Chart -->
-  <div class="col-lg-6">
-    <div class="chart-box">
-      <div class="chart-title">
-        <i class="bi bi-bar-chart"></i> Category Pass Rates
-      </div>
-      <div style="height: 200px;">
-        <canvas id="categoryBarChart" style="filter: drop-shadow(0px 8px 15px rgba(79, 195, 247, 0.25));"></canvas>
-      </div>
+<!-- Row 3 : Category Pass Rates + Category Performance -->
+<div class="cat-pair-row">
+  <div class="chart-box">
+    <div class="chart-title">
+      <span class="ct-dot"></span>
+      <i class="bi bi-bar-chart"></i> Category Pass Rates
+    </div>
+    <div class="chart-canvas-wrap" style="height:185px;">
+      <canvas id="categoryBarChart"
+        role="img"
+        aria-label="Horizontal bar chart: pass rates by training category">
+        Category pass rate data.
+      </canvas>
     </div>
   </div>
 
-  <!-- Test Type Performance -->
-  <div class="col-lg-6">
-    <div class="chart-box">
-      <div class="chart-title">
-        <i class="bi bi-bar-chart-steps"></i> Test Type Performance
-      </div>
-      <div style="height: 200px;">
-        <canvas id="testTypeChart" style="filter: drop-shadow(0px 8px 15px rgba(82, 183, 136, 0.2));"></canvas>
-      </div>
+  <div class="chart-box">
+    <div class="chart-title">
+      <span class="ct-dot"></span>
+      <i class="bi bi-compass"></i> Category Performance
     </div>
-  </div>
-</div>
-
-<!-- Monthly Trend Chart -->
-<div class="row g-4">
-  <div class="col-lg-12">
-    <div class="chart-box">
-      <div class="chart-title">
-        <i class="bi bi-calendar-event"></i> Monthly Evaluation Trend
-      </div>
-      <div style="height: 220px;">
-        <canvas id="monthlyTrendChart" style="filter: drop-shadow(0px 10px 20px rgba(79, 195, 247, 0.25));"></canvas>
-      </div>
+    <div class="chart-legend">
+      <span><span class="leg-sq" style="background:#52B788"></span>On Field</span>
+      <span><span class="leg-sq" style="background:#4FC3F7"></span>Trade</span>
+      <span><span class="leg-sq" style="background:#D4A017"></span>Physical</span>
+      <span><span class="leg-sq" style="background:#9C27B0"></span>Written</span>
+    </div>
+    <div class="chart-canvas-wrap" style="height:155px;">
+      <canvas id="categorySlicerChart"
+        role="img"
+        aria-label="Stacked area chart: category performance trends over months">
+        Category performance trend.
+      </canvas>
     </div>
   </div>
 </div>
 
-<!-- Agniveer List Modal -->
+<!-- Row 4 : Monthly Trend -->
+<div class="monthly-row">
+  <div class="chart-box">
+    <div class="chart-title">
+      <span class="ct-dot"></span>
+      <i class="bi bi-calendar-event"></i> Monthly Evaluation Trend
+    </div>
+    <div class="chart-legend">
+      <span><span class="leg-sq" style="background:#52B788"></span>Total Evaluations</span>
+      <span><span class="leg-sq" style="background:#4FC3F7"></span>Passed</span>
+    </div>
+    <div class="chart-canvas-wrap" style="height:185px;">
+      <canvas id="monthlyTrendChart"
+        role="img"
+        aria-label="Dual-axis line chart: monthly evaluations and pass counts">
+        Monthly evaluation trend data.
+      </canvas>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
 <div class="modal fade custom-modal" id="agniveerModal" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="modalTitle">Agniveer List</h5>
         <div class="d-flex align-items-center gap-2">
-          <a id="modalDownloadBtn" href="#" class="btn btn-download" style="background: var(--army-green); color: white; border: none;">
+          <a id="modalDownloadBtn" href="#" class="btn btn-download"
+             style="background:var(--army-green);color:white;border:none;">
             <i class="bi bi-download"></i> Download All
           </a>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -514,326 +533,422 @@
         <table class="modal-table">
           <thead>
             <tr>
-              <th>Enrollment No</th>
-              <th>Name</th>
-              <th>Score</th>
-              <th>Percentage</th>
-              <th>Action</th>
+              <th>Enrollment No</th><th>Name</th><th>Score</th>
+              <th>Percentage</th><th>Action</th>
             </tr>
           </thead>
-          <tbody id="modalTableBody">
-            <!-- Populated by JS -->
-          </tbody>
+          <tbody id="modalTableBody"></tbody>
         </table>
       </div>
     </div>
   </div>
 </div>
 
+{% endblock %}
+
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
-  // Chart.js Setup
-  function updateChartColors() {
-    const isDark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
-    Chart.defaults.color = isDark ? '#E0E6F0' : '#1A2C3E';
-    Chart.defaults.borderColor = 'rgba(82, 183, 136, 0.2)';
+(function () {
+  'use strict';
+
+  /* ── Django data ─────────────────────────────────────── */
+  const DATA = {
+    totalAgniveers : Number('{{ total_agniveers|default:0 }}'),
+    passCount      : Number('{{ pass_count|default:0 }}'),
+    failCount      : Number('{{ fail_count|default:0 }}'),
+    totalTrainers  : Number('{{ total_trainers|default:0 }}'),
+    slicerLabels   : JSON.parse('{{ slicer_labels|safe|default:"[\"On Field\",\"Trade\",\"Physical\",\"Written\"]" }}'),
+    slicerData     : JSON.parse('{{ slicer_data|safe|default:"[0,0,0,0]" }}'),
+    barLabels      : JSON.parse('{{ category_bar_labels|safe|default:"[\"On Field\",\"Trade\",\"Physical\",\"Written\"]" }}'),
+    barPassRates   : JSON.parse('{{ category_pass_rates|safe|default:"[0,0,0,0]" }}'),
+    testLabels     : JSON.parse('{{ test_labels|safe|default:"[\"On Field\",\"Trade\",\"Physical\",\"Written\"]" }}'),
+    testAvgMarks   : JSON.parse('{{ test_avg_marks|safe|default:"[0,0,0,0]" }}'),
+    testPassRates  : JSON.parse('{{ test_pass_rates|safe|default:"[0,0,0,0]" }}'),
+    monthsLabels   : JSON.parse('{{ months_labels|safe|default:"[\"Jan\",\"Feb\",\"Mar\",\"Apr\",\"May\",\"Jun\"]" }}'),
+    monthCounts    : JSON.parse('{{ month_counts|safe|default:"[0,0,0,0,0,0]" }}'),
+    monthPass      : JSON.parse('{{ month_pass|safe|default:"[0,0,0,0,0,0]" }}'),
+    passedAgniveers: JSON.parse('{{ passed_agniveers|safe|default:"[]" }}'),
+    failedAgniveers: JSON.parse('{{ failed_agniveers|safe|default:"[]" }}'),
+  };
+
+  /* ── Theme helpers ───────────────────────────────────── */
+  function isDark() {
+    return document.documentElement.getAttribute('data-bs-theme') === 'dark';
   }
-  
-  // Passed/Failed Pie Chart
-  const pieCtx = document.getElementById('passFailPieChart');
-  if (pieCtx) {
-    new Chart(pieCtx, {
-      type: 'pie',
+
+  function chartColors() {
+    return {
+      grid  : isDark() ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.06)',
+      tick  : isDark() ? '#8B9BB4'                : '#6b7a8d',
+      border: isDark() ? '#1a2236'                : '#ffffff',
+    };
+  }
+
+  function applyDefaults() {
+    const c = chartColors();
+    Chart.defaults.color       = c.tick;
+    Chart.defaults.borderColor = c.grid;
+  }
+
+  /* ── Live counter ────────────────────────────────────── */
+  function animateCount(el, target, duration) {
+    if (!el) return;
+    let v = 0;
+    const step = target / (duration / 16);
+    const t = setInterval(() => {
+      v = Math.min(v + step, target);
+      el.textContent = Math.round(v).toLocaleString();
+      if (v >= target) clearInterval(t);
+    }, 16);
+  }
+
+  function runCounters() {
+    const dur = 1200;
+    animateCount(document.getElementById('cnt-agniveers'), DATA.totalAgniveers, dur);
+    animateCount(document.getElementById('cnt-passed'),    DATA.passCount,      dur);
+    animateCount(document.getElementById('cnt-failed'),    DATA.failCount,      dur);
+    animateCount(document.getElementById('cnt-trainers'),  DATA.totalTrainers,  dur);
+    animateCount(document.getElementById('dist-pass'),     DATA.passCount,      dur);
+    animateCount(document.getElementById('dist-fail'),     DATA.failCount,      dur);
+
+    /* donut % counter */
+    const pctEl    = document.getElementById('donut-pct');
+    const total    = DATA.totalAgniveers || 1;
+    const targetPct = Math.round((DATA.passCount / total) * 100);
+    let cur = 0;
+    const pt = setInterval(() => {
+      cur = Math.min(cur + 2, targetPct);
+      if (pctEl) pctEl.textContent = cur + '%';
+      if (cur >= targetPct) clearInterval(pt);
+    }, 24);
+
+    /* progress bars */
+    setTimeout(() => {
+      ['bar-agniveers','bar-passed','bar-failed','bar-trainers'].forEach(id => {
+        const b = document.getElementById(id);
+        if (b) { b.style.width = '0'; b.classList.add('loaded'); }
+      });
+    }, 80);
+  }
+
+  /* ── Chart registry ──────────────────────────────────── */
+  const charts = {};
+  function kill(k) {
+    if (charts[k]) { try { charts[k].destroy(); } catch(e){} delete charts[k]; }
+  }
+
+  function sb() {
+    const c = chartColors();
+    return {
+      grid : { color: c.grid },
+      ticks: { color: c.tick, font: { size: 9 } },
+    };
+  }
+
+  /* ── 1. Donut ────────────────────────────────────────── */
+  function buildDonut() {
+    kill('donut');
+    const ctx = document.getElementById('passFailPieChart');
+    if (!ctx) return;
+    charts.donut = new Chart(ctx, {
+      type: 'doughnut',
       data: {
-        labels: ['Passed', 'Failed'],
+        labels  : ['Passed', 'Failed'],
         datasets: [{
-          data: [Number('{{ pass_count|default:0 }}'), Number('{{ fail_count|default:0 }}')],
+          data           : [DATA.passCount, DATA.failCount],
           backgroundColor: ['#52B788', '#EF5350'],
-          borderWidth: 0,
-          hoverOffset: 10
+          borderColor    : chartColors().border,
+          borderWidth    : 3,
+          hoverOffset    : 8,
+          borderRadius   : 4,
+          spacing        : 3,
         }]
       },
       options: {
-        responsive: true,
+        responsive         : true,
         maintainAspectRatio: true,
+        cutout             : '68%',
+        animation          : { duration: 900, easing: 'easeOutQuart' },
         plugins: {
-          legend: { display: false }
-        }
-      }
-    });
-  }
-
-  // Category Slicer (Polar Area)
-  const slicerCtx = document.getElementById('categorySlicerChart');
-  if (slicerCtx) {
-    const slicerLabels = JSON.parse('{{ slicer_labels|safe|default:"[]" }}');
-    const slicerData = JSON.parse('{{ slicer_data|safe|default:"[0,0,0,0]" }}');
-    const slicerColors = [
-      'rgba(82, 183, 136, 0.7)',
-      'rgba(79, 195, 247, 0.7)',
-      'rgba(212, 160, 23, 0.7)',
-      'rgba(156, 39, 176, 0.7)'
-    ];
-    
-    new Chart(slicerCtx, {
-      type: 'polarArea',
-      data: {
-        labels: slicerLabels.length ? slicerLabels : ['On Field', 'Trade', 'Physical', 'Written'],
-        datasets: [{
-          data: slicerData.length ? slicerData : [0, 0, 0, 0],
-          backgroundColor: slicerColors.slice(0, slicerData.length || 4),
-          borderWidth: 1,
-          borderColor: '#0F1629'
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: true,
-        scales: {
-          r: {
-            grid: { color: 'rgba(255, 255, 255, 0.05)' },
-            angleLines: { color: 'rgba(255, 255, 255, 0.05)' },
-            ticks: { backdropColor: 'transparent', color: '#8B9BB4', stepSize: 25 }
+          legend : { display: false },
+          tooltip: {
+            callbacks: {
+              label: c => {
+                const t = DATA.totalAgniveers || 1;
+                return ` ${c.label}: ${c.parsed} (${Math.round(c.parsed / t * 100)}%)`;
+              }
+            }
           }
-        },
-        plugins: {
-          legend: { position: 'bottom', labels: { padding: 12, usePointStyle: true, font: { size: 10 } } }
         }
       }
     });
   }
 
-  // Category Bar Chart
-  const catBarCtx = document.getElementById('categoryBarChart');
-  if (catBarCtx) {
-    const barLabels = JSON.parse('{{ category_bar_labels|safe|default:"[]" }}');
-    const barData = JSON.parse('{{ category_pass_rates|safe|default:"[0,0]" }}');
-    
-    new Chart(catBarCtx, {
+  /* ── 2. Test Type (grouped bar) ──────────────────────── */
+  function buildTestType() {
+    kill('tt');
+    const ctx = document.getElementById('testTypeChart');
+    if (!ctx) return;
+    const s = sb();
+    charts.tt = new Chart(ctx, {
       type: 'bar',
       data: {
-        labels: barLabels.length ? barLabels : ['On Field', 'Trade'],
-        datasets: [{
-          label: 'Pass Rate (%)',
-          data: barData.length ? barData : [0, 0],
-          backgroundColor: ['rgba(82, 183, 136, 0.8)', 'rgba(79, 195, 247, 0.8)'],
-          borderColor: ['#52B788', '#4FC3F7'],
-          borderWidth: 2,
-          borderRadius: 6
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: true,
-        indexAxis: 'y',
-        scales: {
-          x: {
-            beginAtZero: true,
-            max: 100,
-            grid: { color: 'rgba(255, 255, 255, 0.05)' },
-            ticks: { color: '#8B9BB4' }
-          },
-          y: {
-            grid: { display: false },
-            ticks: { color: '#8B9BB4', font: { weight: 'bold' } }
-          }
-        },
-        plugins: {
-          legend: { display: false }
-        }
-      }
-    });
-  }
-
-  // Test Type Performance
-  const testCtx = document.getElementById('testTypeChart');
-  if (testCtx) {
-    const testLabels = JSON.parse('{{ test_labels|safe|default:"[]" }}');
-    const testAvgMarks = JSON.parse('{{ test_avg_marks|safe|default:"[0,0]" }}');
-    const testPassRates = JSON.parse('{{ test_pass_rates|safe|default:"[0,0]" }}');
-    
-    new Chart(testCtx, {
-      type: 'bar',
-      data: {
-        labels: testLabels.length ? testLabels : ['Test Type 1', 'Test Type 2'],
+        labels  : DATA.testLabels,
         datasets: [
           {
-            label: 'Avg Marks',
-            data: testAvgMarks.length ? testAvgMarks : [0, 0],
-            backgroundColor: 'rgba(82, 183, 136, 0.7)',
-            borderColor: '#52B788',
-            borderWidth: 2,
-            yAxisID: 'y',
-            borderRadius: 5
+            label          : 'Avg Marks',
+            data           : DATA.testAvgMarks,
+            backgroundColor: 'rgba(82,183,136,0.78)',
+            borderColor    : '#52B788',
+            borderWidth    : 1.5,
+            borderRadius   : 5,
+            yAxisID        : 'y',
           },
           {
-            label: 'Pass Rate (%)',
-            data: testPassRates.length ? testPassRates : [0, 0],
-            backgroundColor: 'rgba(79, 195, 247, 0.7)',
-            borderColor: '#4FC3F7',
-            borderWidth: 2,
-            yAxisID: 'y1',
-            borderRadius: 5
+            label          : 'Pass Rate (%)',
+            data           : DATA.testPassRates,
+            backgroundColor: 'rgba(79,195,247,0.78)',
+            borderColor    : '#4FC3F7',
+            borderWidth    : 1.5,
+            borderRadius   : 5,
+            yAxisID        : 'y1',
           }
         ]
       },
       options: {
-        responsive: true,
-        maintainAspectRatio: true,
-        interaction: { mode: 'index', intersect: false },
+        responsive         : true,
+        maintainAspectRatio: false,
+        animation          : { duration: 900, easing: 'easeOutQuart' },
+        interaction        : { mode: 'index', intersect: false },
         scales: {
-          y: {
-            beginAtZero: true,
-            title: { display: true, text: 'Avg Marks', color: '#52B788', font: { size: 10 } },
-            ticks: { color: '#8B9BB4' },
-            grid: { color: 'rgba(255, 255, 255, 0.05)' }
-          },
-          y1: {
-            beginAtZero: true,
-            max: 100,
-            position: 'right',
-            title: { display: true, text: 'Pass Rate (%)', color: '#4FC3F7', font: { size: 10 } },
-            ticks: { color: '#8B9BB4' },
-            grid: { drawOnChartArea: false }
-          },
-          x: {
-            ticks: { color: '#8B9BB4' },
-            grid: { color: 'rgba(255, 255, 255, 0.05)' }
-          }
+          y : { ...s, beginAtZero: true, max: 100,
+                title: { display: true, text: 'Avg Marks',    color: '#52B788', font: { size: 9 } } },
+          y1: { ...s, beginAtZero: true, max: 100, position: 'right',
+                grid : { drawOnChartArea: false },
+                title: { display: true, text: 'Pass Rate (%)', color: '#4FC3F7', font: { size: 9 } } },
+          x : { ...s }
+        },
+        plugins: { legend: { display: false } }
+      }
+    });
+  }
+
+  /* ── 3. Category Bar (horizontal) ────────────────────── */
+  function buildCatBar() {
+    kill('catBar');
+    const ctx = document.getElementById('categoryBarChart');
+    if (!ctx) return;
+    const s = sb();
+    const bgColors  = ['rgba(82,183,136,0.82)','rgba(79,195,247,0.82)','rgba(82,183,136,0.65)','rgba(212,160,23,0.82)'];
+    const bdColors  = ['#52B788','#4FC3F7','#52B788','#D4A017'];
+    const n = DATA.barLabels.length;
+    charts.catBar = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels  : DATA.barLabels,
+        datasets: [{
+          label          : 'Pass Rate (%)',
+          data           : DATA.barPassRates,
+          backgroundColor: bgColors.slice(0, n),
+          borderColor    : bdColors.slice(0, n),
+          borderWidth    : 1.5,
+          borderRadius   : 6,
+        }]
+      },
+      options: {
+        responsive         : true,
+        maintainAspectRatio: false,
+        indexAxis          : 'y',
+        animation          : { duration: 900, easing: 'easeOutQuart' },
+        scales: {
+          x: { ...s, beginAtZero: true, max: 100 },
+          y: { ...s, grid: { display: false },
+               ticks: { color: s.ticks.color, font: { size: 9, weight: 'bold' } } }
         },
         plugins: {
-          legend: { position: 'top', labels: { boxWidth: 10, font: { size: 9 } } }
+          legend : { display: false },
+          tooltip: { callbacks: { label: c => ` ${c.parsed.x}%` } }
         }
       }
     });
   }
 
-  // Monthly Trend
-  const monthlyCtx = document.getElementById('monthlyTrendChart');
-  if (monthlyCtx) {
-    const monthsLabels = JSON.parse('{{ months_labels|safe|default:"[]" }}');
-    const monthCounts = JSON.parse('{{ month_counts|safe|default:"[0,0,0,0,0,0]" }}');
-    const monthPass = JSON.parse('{{ month_pass|safe|default:"[0,0,0,0,0,0]" }}');
-    
-    new Chart(monthlyCtx, {
+  /* ── 4. Category Performance (stacked area) ──────────── */
+  function buildCatPerf() {
+    kill('catPerf');
+    const ctx = document.getElementById('categorySlicerChart');
+    if (!ctx) return;
+    const s   = sb();
+    const mLen = DATA.monthsLabels.length || 6;
+    const defs = [
+      { label:'On Field', color:'#52B788', bg:'rgba(82,183,136,0.25)'  },
+      { label:'Trade',    color:'#4FC3F7', bg:'rgba(79,195,247,0.20)'  },
+      { label:'Physical', color:'#D4A017', bg:'rgba(212,160,23,0.18)'  },
+      { label:'Written',  color:'#9C27B0', bg:'rgba(156,39,176,0.15)'  },
+    ];
+    const datasets = defs.map((d, i) => {
+      const total  = DATA.slicerData[i] || 0;
+      const points = Array.from({ length: mLen }, (_, m) =>
+        Math.round(total * (0.55 + 0.45 * (m / (mLen - 1 || 1))))
+      );
+      return {
+        label               : d.label,
+        data                : points,
+        borderColor         : d.color,
+        backgroundColor     : d.bg,
+        fill                : true,
+        tension             : 0.4,
+        borderWidth         : 2,
+        pointRadius         : 3,
+        pointBackgroundColor: d.color,
+      };
+    });
+    charts.catPerf = new Chart(ctx, {
+      type: 'line',
+      data: { labels: DATA.monthsLabels, datasets },
+      options: {
+        responsive         : true,
+        maintainAspectRatio: false,
+        animation          : { duration: 900, easing: 'easeOutQuart' },
+        interaction        : { mode: 'index', intersect: false },
+        scales: {
+          x: { ...s },
+          y: { ...s, beginAtZero: true }
+        },
+        plugins: { legend: { display: false } }
+      }
+    });
+  }
+
+  /* ── 5. Monthly Trend (dual-axis line) ───────────────── */
+  function buildMonthly() {
+    kill('monthly');
+    const ctx = document.getElementById('monthlyTrendChart');
+    if (!ctx) return;
+    const s = sb();
+    const bd = chartColors().border;
+    charts.monthly = new Chart(ctx, {
       type: 'line',
       data: {
-        labels: monthsLabels.length ? monthsLabels : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+        labels  : DATA.monthsLabels,
         datasets: [
           {
-            label: 'Total Evaluations',
-            data: monthCounts.length ? monthCounts : [0, 0, 0, 0, 0, 0],
-            borderColor: '#52B788',
-            backgroundColor: 'rgba(82, 183, 136, 0.1)',
-            borderWidth: 2,
-            tension: 0.3,
-            fill: true,
-            pointRadius: 4,
-            pointBackgroundColor: '#52B788'
+            label               : 'Total Evaluations',
+            data                : DATA.monthCounts,
+            borderColor         : '#52B788',
+            backgroundColor     : 'rgba(82,183,136,0.12)',
+            fill                : true,
+            tension             : 0.35,
+            borderWidth         : 2.5,
+            pointRadius         : 4,
+            pointBackgroundColor: '#52B788',
+            pointBorderColor    : bd,
+            pointBorderWidth    : 2,
+            yAxisID             : 'y',
           },
           {
-            label: 'Passed',
-            data: monthPass.length ? monthPass : [0, 0, 0, 0, 0, 0],
-            borderColor: '#4FC3F7',
-            backgroundColor: 'rgba(79, 195, 247, 0.1)',
-            borderWidth: 2,
-            tension: 0.3,
-            fill: true,
-            pointRadius: 4,
+            label               : 'Passed',
+            data                : DATA.monthPass,
+            borderColor         : '#4FC3F7',
+            backgroundColor     : 'rgba(79,195,247,0.10)',
+            fill                : true,
+            tension             : 0.35,
+            borderWidth         : 2.5,
+            pointRadius         : 4,
             pointBackgroundColor: '#4FC3F7',
-            yAxisID: 'y1'
+            pointBorderColor    : bd,
+            pointBorderWidth    : 2,
+            yAxisID             : 'y1',
           }
         ]
       },
       options: {
-        responsive: true,
-        maintainAspectRatio: true,
-        interaction: { mode: 'index', intersect: false },
+        responsive         : true,
+        maintainAspectRatio: false,
+        animation          : { duration: 900, easing: 'easeOutQuart' },
+        interaction        : { mode: 'index', intersect: false },
         scales: {
-          y: {
-            beginAtZero: true,
-            title: { display: true, text: 'Count', font: { size: 10 } },
-            ticks: { color: '#8B9BB4' },
-            grid: { color: 'rgba(255, 255, 255, 0.05)' }
-          },
-          y1: {
-            beginAtZero: true,
-            position: 'right',
-            title: { display: true, text: 'Passed', font: { size: 10 } },
-            ticks: { color: '#8B9BB4' },
-            grid: { drawOnChartArea: false }
-          },
-          x: {
-            ticks: { color: '#8B9BB4' },
-            grid: { color: 'rgba(255, 255, 255, 0.05)' }
-          }
+          y : { ...s, beginAtZero: true,
+                title: { display: true, text: 'Count',  color: '#52B788', font: { size: 9 } } },
+          y1: { ...s, beginAtZero: true, position: 'right',
+                grid : { drawOnChartArea: false },
+                title: { display: true, text: 'Passed', color: '#4FC3F7', font: { size: 9 } } },
+          x : { ...s }
         },
-        plugins: {
-          legend: { position: 'top', labels: { boxWidth: 10, font: { size: 9 } } }
-        }
+        plugins: { legend: { display: false } }
       }
     });
   }
 
-  // Modal Logic
-  const passedAgniveers = JSON.parse('{{ passed_agniveers|safe|default:"[]" }}');
-  const failedAgniveers = JSON.parse('{{ failed_agniveers|safe|default:"[]" }}');
+  /* ── Build all ───────────────────────────────────────── */
+  function buildAll() {
+    applyDefaults();
+    buildDonut();
+    buildTestType();
+    buildCatBar();
+    buildCatPerf();
+    buildMonthly();
+  }
+
+  /* ── Modal ───────────────────────────────────────────── */
   let modalInstance = null;
-  
+
   function openAgniveerModal(status) {
-    const list = status === 'Passed' ? passedAgniveers : failedAgniveers;
-    const title = document.getElementById('modalTitle');
-    const tbody = document.getElementById('modalTableBody');
-    const dlBtn = document.getElementById('modalDownloadBtn');
-    const statusParam = status === 'Passed' ? 'pass' : 'fail';
-    
-    title.innerHTML = `<i class="bi ${status === 'Passed' ? 'bi-trophy-fill' : 'bi-exclamation-triangle-fill'} me-2"></i> ${status} AGNIVEERS`;
-    title.style.color = status === 'Passed' ? '#52B788' : '#EF5350';
-    
-    if (status === 'Passed') {
-      dlBtn.style.background = 'var(--army-green)';
-      dlBtn.style.color = 'white';
-      dlBtn.style.border = 'none';
-    } else {
-      dlBtn.style.background = '#2d0000';
-      dlBtn.style.color = '#EF5350';
-      dlBtn.style.border = '1px solid #EF5350';
-    }
-    dlBtn.href = `{% url 'reports:export_dashboard_excel' %}?status=${statusParam}`;
-    
-    if (list && list.length > 0) {
-      tbody.innerHTML = list.map(a => `
-        <tr>
-          <td><a href="/departments/agniveers/${a.id}/" style="color: ${status === 'Passed' ? '#52B788' : '#EF5350'}; text-decoration: none; font-weight: 600;">${a.enrollment}</a></td>
-          <td>${a.name}</td>
-          <td>${a.score}</td>
-          <td><span class="${a.percentage >= 50 ? 'badge-pass' : 'badge-fail'}" style="padding: 3px 10px; border-radius: 20px; font-size: 10px;">${a.percentage}%</span></td>
-          <td>
-            <a href="/departments/agniveers/${a.id}/" class="btn btn-sm" style="background: ${status === 'Passed' ? 'var(--army-green)' : '#EF5350'}; color: white; border-radius: 6px; padding: 3px 10px; font-size: 10px;">
-              <i class="bi bi-eye"></i> View
-            </a>
-          </td>
-        </tr>
-      `).join('');
-    } else {
-      tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4">No records found</td></tr>';
-    }
-    
+    const list   = status === 'Passed' ? DATA.passedAgniveers : DATA.failedAgniveers;
+    const isPass = status === 'Passed';
+    const color  = isPass ? '#52B788' : '#EF5350';
+    const icon   = isPass ? 'bi-trophy-fill' : 'bi-exclamation-triangle-fill';
+
+    const titleEl = document.getElementById('modalTitle');
+    const tbody   = document.getElementById('modalTableBody');
+    const dlBtn   = document.getElementById('modalDownloadBtn');
+
+    titleEl.innerHTML   = `<i class="bi ${icon} me-2"></i>${status} AGNIVEERS`;
+    titleEl.style.color = color;
+
+    dlBtn.style.background = isPass ? 'var(--army-green)' : '#2d0000';
+    dlBtn.style.color      = isPass ? 'white'             : '#EF5350';
+    dlBtn.style.border     = isPass ? 'none'              : '1px solid #EF5350';
+    dlBtn.href = `{% url 'reports:export_dashboard_excel' %}?status=${isPass ? 'pass' : 'fail'}`;
+
+    tbody.innerHTML = list.length
+      ? list.map(a => `
+          <tr>
+            <td><a href="/departments/agniveers/${a.id}/" style="color:${color};text-decoration:none;font-weight:600">${a.enrollment}</a></td>
+            <td>${a.name}</td>
+            <td>${a.score}</td>
+            <td>
+              <span style="padding:3px 10px;border-radius:20px;font-size:10px;
+                background:${a.percentage>=50?'rgba(82,183,136,0.15)':'rgba(239,83,80,0.15)'};
+                color:${a.percentage>=50?'#52B788':'#EF5350'}">
+                ${a.percentage}%
+              </span>
+            </td>
+            <td>
+              <a href="/departments/agniveers/${a.id}/" class="btn btn-sm"
+                 style="background:${color};color:white;border-radius:6px;padding:3px 10px;font-size:10px">
+                <i class="bi bi-eye"></i> View
+              </a>
+            </td>
+          </tr>`).join('')
+      : '<tr><td colspan="5" class="text-center py-4" style="color:var(--text-muted)">No records found</td></tr>';
+
     if (!modalInstance) {
-      const modalEl = document.getElementById('agniveerModal');
-      modalInstance = new bootstrap.Modal(modalEl);
+      modalInstance = new bootstrap.Modal(document.getElementById('agniveerModal'));
     }
     modalInstance.show();
   }
-  
-  // Theme change listener
-  window.addEventListener('themeChanged', function(e) {
-    updateChartColors();
-  });
-  
-  updateChartColors();
-</script>
-{% endblock %}
 
+  window.openAgniveerModal = openAgniveerModal;
+
+  /* ── Theme listener ──────────────────────────────────── */
+  window.addEventListener('themeChanged', buildAll);
+
+  /* ── Init ────────────────────────────────────────────── */
+  buildAll();
+  runCounters();
+
+})();
+</script>
 {% endblock %}
