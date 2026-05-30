@@ -18,12 +18,12 @@
     </a>
   </div>
   <div class="col-sm-6 col-xl-3">
-    <a href="{% url 'accounts:user_list' %}" class="text-decoration-none">
+    <a href="{% url 'departments:agniveer_list' %}?eval_status=evaluated" class="text-decoration-none">
       <div class="stat-card gold h-100">
         <div class="stat-icon gold"><i class="bi bi-people-badge-fill"></i></div>
-        <div class="stat-value">{{ total_trainers }}</div>
-        <div class="stat-label">Total Trainers</div>
-        <div class="stat-click-hint">Click to view list</div>
+        <div class="stat-value">{{ evaluated_agniveers|default:0 }}</div>
+        <div class="stat-label">Evaluated Agniveers</div>
+        <div class="stat-click-hint">Evaluated only</div>
       </div>
     </a>
   </div>
@@ -109,7 +109,7 @@
         <h6 class="army-card-title"><i class="bi bi-building text-army"></i> Department PDF Reports</h6>
       </div>
       <div class="army-card-body d-flex flex-column gap-2">
-        {% for dept in 'ABCD' %}
+        {% for dept in report_departments %}
         <a href="{% url 'reports:export_dept_pdf' dept=dept %}" class="btn btn-army-outline d-flex align-items-center gap-2" style="padding:8px 14px;">
           <i class="bi bi-file-earmark-pdf-fill" style="color:#EF5350;"></i>
           <div style="text-align:left;">

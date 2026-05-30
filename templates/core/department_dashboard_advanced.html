@@ -375,6 +375,11 @@
     <div class="metric-label">Total Agniveers</div>
     <div class="counter-bar" id="bar-agniveers"></div>
   </div>
+  <div class="metric-card mc-trainers">
+    <div class="metric-value" id="cnt-evaluated">0</div>
+    <div class="metric-label">Evaluated Agniveers</div>
+    <div class="counter-bar" id="bar-evaluated"></div>
+  </div>
   <div class="metric-card mc-passed" onclick="openAgniveerModal('Passed')">
     <div class="metric-value" id="cnt-passed">0</div>
     <div class="metric-label">Passed</div>
@@ -384,11 +389,6 @@
     <div class="metric-value" id="cnt-failed">0</div>
     <div class="metric-label">Failed</div>
     <div class="counter-bar" id="bar-failed"></div>
-  </div>
-  <div class="metric-card mc-trainers" onclick="location.href='{% url 'accounts:my_team' %}'">
-    <div class="metric-value" id="cnt-trainers">0</div>
-    <div class="metric-label">Total Trainers</div>
-    <div class="counter-bar" id="bar-trainers"></div>
   </div>
 </div>
 
@@ -557,7 +557,7 @@
     totalAgniveers : Number('{{ total_agniveers|default:0 }}'),
     passCount      : Number('{{ pass_count|default:0 }}'),
     failCount      : Number('{{ fail_count|default:0 }}'),
-    totalTrainers  : Number('{{ total_trainers|default:0 }}'),
+    evaluatedAgniveers: Number('{{ evaluated_agniveers|default:0 }}'),
     slicerLabels   : JSON.parse('{{ slicer_labels|safe|default:"[\"On Field\",\"Trade\",\"Physical\",\"Written\"]" }}'),
     slicerData     : JSON.parse('{{ slicer_data|safe|default:"[0,0,0,0]" }}'),
     barLabels      : JSON.parse('{{ category_bar_labels|safe|default:"[\"On Field\",\"Trade\",\"Physical\",\"Written\"]" }}'),
@@ -608,13 +608,13 @@
     animateCount(document.getElementById('cnt-agniveers'), DATA.totalAgniveers, dur);
     animateCount(document.getElementById('cnt-passed'),    DATA.passCount,      dur);
     animateCount(document.getElementById('cnt-failed'),    DATA.failCount,      dur);
-    animateCount(document.getElementById('cnt-trainers'),  DATA.totalTrainers,  dur);
+    animateCount(document.getElementById('cnt-evaluated'), DATA.evaluatedAgniveers, dur);
     animateCount(document.getElementById('dist-pass'),     DATA.passCount,      dur);
     animateCount(document.getElementById('dist-fail'),     DATA.failCount,      dur);
 
     /* donut % counter */
     const pctEl    = document.getElementById('donut-pct');
-    const total    = DATA.totalAgniveers || 1;
+    const total    = DATA.evaluatedAgniveers || 1;
     const targetPct = Math.round((DATA.passCount / total) * 100);
     let cur = 0;
     const pt = setInterval(() => {
@@ -625,7 +625,7 @@
 
     /* progress bars */
     setTimeout(() => {
-      ['bar-agniveers','bar-passed','bar-failed','bar-trainers'].forEach(id => {
+      ['bar-agniveers','bar-passed','bar-failed','bar-evaluated'].forEach(id => {
         const b = document.getElementById(id);
         if (b) { b.style.width = '0'; b.classList.add('loaded'); }
       });
@@ -675,7 +675,7 @@
           tooltip: {
             callbacks: {
               label: c => {
-                const t = DATA.totalAgniveers || 1;
+                const t = DATA.evaluatedAgniveers || 1;
                 return ` ${c.label}: ${c.parsed} (${Math.round(c.parsed / t * 100)}%)`;
               }
             }

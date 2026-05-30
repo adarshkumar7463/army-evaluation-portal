@@ -1,650 +1,903 @@
 {% extends 'base.html' %}
+{% load custom_filters %}
 {% block title %}Report Card – {{ agniveer.get_full_name }}{% endblock %}
-{% block page_title %}Report Card{% endblock %}
-{% block extra_css %}
-<style>
-  .print-only { display: none !important; }
-  @media print {
-    .print-only { display: block !important; }
-    /* Hide non-essential elements */
-    .sidebar, .page-header, .no-print, .btn, .sidebar-overlay, .sidebar-toggle, .alert, form, .input-group {
-      display: none !important;
-    }
-
-    /* Reset layout for print */
-    .main-wrapper {
-      margin-left: 0 !important;
-      padding: 0 !important;
-      background: white !important;
-      color: black !important;
-    }
-
-    .content-area {
-      padding: 0 !important;
-    }
-
-    .army-card {
-      border: 2px solid #1B4332 !important;
-      box-shadow: none !important;
-      background: white !important;
-      color: black !important;
-    }
-
-    /* Professional Print Header */
-    .army-card > div:first-child {
-      background: #1B4332 !important;
-      -webkit-print-color-adjust: exact;
-    }
-
-    /* Highlighting text and borders */
-    .army-table th {
-      background: #f0f0f0 !important;
-      color: #1B4332 !important;
-      border: 1px solid #1B4332 !important;
-      -webkit-print-color-adjust: exact;
-    }
-
-    .army-table td {
-      border: 1px solid #ddd !important;
-      color: black !important;
-    }
-
-    .badge-pass {
-      background: #d4edda !important;
-      color: #155724 !important;
-      border: 1px solid #c3e6cb !important;
-      -webkit-print-color-adjust: exact;
-    }
-
-    .badge-fail {
-      background: #f8d7da !important;
-      color: #721c24 !important;
-      border: 1px solid #f5c6cb !important;
-      -webkit-print-color-adjust: exact;
-    }
-
-    /* Profile Section Print Alignment */
-    .print-profile-label {
-      color: #666 !important;
-      font-size: 10pt !important;
-      text-transform: uppercase;
-      font-weight: 600;
-      margin-bottom: 2pt;
-    }
-
-    .print-profile-value {
-      color: #1B4332 !important;
-      font-size: 14pt !important;
-      font-weight: 700;
-      margin-bottom: 15pt;
-    }
-
-    .marks-cell {
-      font-weight: 700 !important;
-      color: black !important;
-    }
-
-    /* Keep section headers with their tables */
-    .evaluation-section {
-      break-inside: avoid !important;
-      page-break-inside: avoid !important;
-    }
-
-    /* Full Page Border */
-    .print-page-border {
-      display: block !important;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      border: 15px solid #1B4332 !important;
-      border-image: linear-gradient(to bottom, #1B4332, #2D6A4F) 1;
-      pointer-events: none;
-      z-index: 1000;
-      box-sizing: border-box;
-    }
-
-    /* Watermark */
-    .print-watermark {
-      display: flex !important;
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%) rotate(-45deg);
-      font-size: 80pt;
-      color: rgba(27, 67, 50, 0.05);
-      font-family: 'Rajdhani', sans-serif;
-      font-weight: 800;
-      text-transform: uppercase;
-      white-space: nowrap;
-      z-index: -1;
-      pointer-events: none;
-    }
-  }
-</style>
-{% endblock %}
-{% block page_subtitle %}{{ agniveer.enrollment_number }}{% endblock %}
+{% block page_title %}{% endblock %}
+{% block page_subtitle %}{% endblock %}
+{% block header_extra %}{% endblock %}
+{% block body_class %}portal-report-card-page{% endblock %}
 
 {% block content %}
-<div class="print-page-border print-only"></div>
-<div class="print-watermark print-only">ARMY EVALUATION</div>
+<style>
+  /* ── CSS Variables (inherit from portal, fallback for print) ── */
+  :root {
+    --rc-green:       #2E7D32;
+    --rc-green-light: #52B788;
+    --rc-gold:        #B8860B;
+    --rc-gold-light:  #D4A017;
+    --rc-blue:        #0288D1;
+    --rc-red:         #C62828;
+    --rc-ink:         #1A2C3E;
+    --rc-muted:       #5a6a7a;
+    --rc-border:      rgba(46,125,50,0.18);
+    --rc-bg:          #ffffff;
+    --rc-surface:     #f7faf8;
+    --rc-header-bg:   #1B4332;
+  }
 
-<div class="row justify-content-center">
-  <div class="col-xl-10">
+  [data-bs-theme="dark"] {
+    --rc-ink:     #E0E6F0;
+    --rc-muted:   #8B9BB4;
+    --rc-border:  rgba(82,183,136,0.2);
+    --rc-bg:      #0F1629;
+    --rc-surface: #1a2236;
+  }
 
-    <!-- Action Bar -->
-    <div class="d-flex justify-content-between align-items-center mb-3 no-print">
-      <a href="{% url 'departments:agniveer_detail' agniveer.pk %}" class="btn btn-army-outline">
-        <i class="bi bi-arrow-left"></i> Back
-      </a>
-      <div class="d-flex gap-2">
-        <a href="{% url 'reports:export_report_card_pdf' agniveer.pk %}{% if request.GET.dept %}?dept={{ request.GET.dept }}{% endif %}" class="btn btn-gold d-flex align-items-center gap-2">
-          <i class="bi bi-file-earmark-pdf-fill"></i> Download PDF
-        </a>
-        <button onclick="window.print()" class="btn btn-army-outline d-flex align-items-center gap-2">
-          <i class="bi bi-printer-fill"></i> Print
-        </button>
-      </div>
+  /* ── Page Shell ─────────────────────────────────────────── */
+  .portal-report-card-page .page-header { display: none !important; }
+  .portal-report-card-page .main-wrapper { padding: 10px !important; }
+
+  .rc-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 10px;
+    padding: 8px 14px;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+  }
+
+  .rc-toolbar-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'Rajdhani', sans-serif;
+  }
+
+  .rc-toolbar-left .back-btn {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 5px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-muted);
+    font-size: 11px; font-weight: 700;
+    text-decoration: none;
+    text-transform: uppercase; letter-spacing: 0.5px;
+    transition: all 0.2s;
+  }
+  .rc-toolbar-left .back-btn:hover { border-color: var(--army-olive); color: var(--army-olive); }
+
+  .rc-toolbar-right { display: flex; gap: 6px; }
+
+  .rc-btn {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 0.5px; text-transform: uppercase;
+    border: 1px solid var(--border-color);
+    cursor: pointer; transition: all 0.2s;
+    text-decoration: none;
+    color: var(--text-muted);
+    background: transparent;
+  }
+  .rc-btn:hover { border-color: var(--army-olive); color: var(--army-olive); }
+  .rc-btn.primary {
+    background: rgba(82,183,136,0.15);
+    border-color: rgba(82,183,136,0.5);
+    color: #52B788;
+  }
+  .rc-btn.primary:hover { background: rgba(82,183,136,0.25); box-shadow: 0 4px 12px rgba(82,183,136,0.2); }
+  .rc-btn.gold {
+    background: rgba(212,160,23,0.12);
+    border-color: rgba(212,160,23,0.4);
+    color: #D4A017;
+  }
+  .rc-btn.gold:hover { background: rgba(212,160,23,0.22); }
+
+  /* ── Report Card Paper ──────────────────────────────────── */
+  .rc-paper {
+    width: 100%;
+    max-width: 860px;
+    margin: 0 auto;
+    background: var(--rc-bg);
+    border: 1px solid var(--rc-border);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.10);
+    font-family: 'Rajdhani', Georgia, serif;
+  }
+
+  /* ── Report Header ──────────────────────────────────────── */
+  .rc-header {
+    background: var(--rc-header-bg);
+    padding: 18px 24px 14px;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 16px;
+    position: relative;
+  }
+
+  .rc-header::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #D4A017, #52B788, #4FC3F7, #D4A017);
+  }
+
+  .rc-emblem {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #D4A017, #B8860B);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; font-weight: 700; color: #1B4332;
+    border: 2px solid rgba(212,160,23,0.5);
+    font-family: 'Rajdhani', serif;
+    flex-shrink: 0;
+  }
+
+  .rc-header-center { text-align: center; }
+
+  .rc-org-name {
+    font-size: 11px;
+    color: rgba(212,160,23,0.9);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-weight: 600;
+    margin-bottom: 2px;
+  }
+
+  .rc-title {
+    font-size: 20px;
+    font-weight: 800;
+    color: #ffffff;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    line-height: 1.1;
+    font-family: 'Rajdhani', sans-serif;
+  }
+
+  .rc-subtitle {
+    font-size: 9px;
+    color: rgba(255,255,255,0.55);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-top: 3px;
+  }
+
+  .rc-header-photo {
+    width: 56px; height: 56px;
+    border-radius: 10px;
+    border: 2px solid rgba(212,160,23,0.5);
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+
+  .rc-header-initials {
+    width: 56px; height: 56px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, rgba(82,183,136,0.3), rgba(79,195,247,0.2));
+    border: 2px solid rgba(82,183,136,0.4);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; font-weight: 700; color: #52B788;
+    flex-shrink: 0;
+  }
+
+  /* ── Identity Strip ─────────────────────────────────────── */
+  .rc-identity {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    border-bottom: 1px solid var(--rc-border);
+    background: var(--rc-surface);
+  }
+
+  .rc-id-cell {
+    padding: 10px 14px;
+    border-right: 1px solid var(--rc-border);
+  }
+
+  .rc-id-cell:last-child { border-right: none; }
+
+  .rc-id-lbl {
+    font-size: 8.5px;
+    color: var(--rc-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    font-weight: 700;
+    margin-bottom: 2px;
+  }
+
+  .rc-id-val {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--rc-ink);
+    line-height: 1.2;
+    font-family: 'Rajdhani', monospace;
+  }
+
+  .rc-id-val.green { color: var(--rc-green-light); }
+  .rc-id-val.gold  { color: var(--rc-gold-light); }
+
+  /* ── Summary Band ───────────────────────────────────────── */
+  .rc-summary {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr auto;
+    gap: 0;
+    border-bottom: 2px solid var(--rc-border);
+    background: var(--rc-bg);
+  }
+
+  .rc-sum-cell {
+    padding: 12px 16px;
+    border-right: 1px solid var(--rc-border);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+  }
+
+  .rc-sum-cell:last-child { border-right: none; }
+
+  .rc-sum-lbl {
+    font-size: 8.5px;
+    color: var(--rc-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    font-weight: 700;
+    margin-bottom: 3px;
+  }
+
+  .rc-sum-val {
+    font-size: 22px;
+    font-weight: 800;
+    line-height: 1;
+    font-family: 'Rajdhani', monospace;
+    color: var(--rc-ink);
+  }
+
+  .rc-sum-val.green { color: #2E7D32; }
+  [data-bs-theme="dark"] .rc-sum-val.green { color: #52B788; }
+  .rc-sum-val.red   { color: var(--rc-red); }
+  [data-bs-theme="dark"] .rc-sum-val.red { color: #EF5350; }
+  .rc-sum-val.blue  { color: var(--rc-blue); }
+  [data-bs-theme="dark"] .rc-sum-val.blue { color: #4FC3F7; }
+
+  .rc-progress-wrap {
+    margin-top: 6px;
+    height: 5px;
+    background: var(--rc-border);
+    border-radius: 3px;
+    overflow: hidden;
+    width: 100%;
+  }
+
+  .rc-progress-bar {
+    height: 100%;
+    border-radius: 3px;
+    background: linear-gradient(90deg, #52B788, #2E7D32);
+    transition: width 0.6s ease;
+  }
+
+  .rc-badge-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    font-family: 'Rajdhani', sans-serif;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+
+  .rc-badge-status.pass {
+    background: rgba(82,183,136,0.15);
+    color: #2E7D32;
+    border: 1px solid rgba(82,183,136,0.4);
+  }
+
+  [data-bs-theme="dark"] .rc-badge-status.pass { color: #52B788; }
+
+  .rc-badge-status.fail {
+    background: rgba(239,83,80,0.12);
+    color: #C62828;
+    border: 1px solid rgba(239,83,80,0.35);
+  }
+
+  [data-bs-theme="dark"] .rc-badge-status.fail { color: #EF5350; }
+
+  .rc-badge-status.pending {
+    background: rgba(139,155,180,0.12);
+    color: var(--rc-muted);
+    border: 1px solid rgba(139,155,180,0.3);
+  }
+
+  /* ── Section Label ──────────────────────────────────────── */
+  .rc-section-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: linear-gradient(90deg, rgba(46,125,50,0.10), transparent);
+    border-bottom: 1px solid var(--rc-border);
+    font-size: 9.5px;
+    font-weight: 800;
+    color: var(--rc-green-light);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+  }
+
+  [data-bs-theme="light"] .rc-section-label {
+    background: linear-gradient(90deg, rgba(46,125,50,0.08), transparent);
+  }
+
+  .rc-section-label::before {
+    content: '';
+    width: 3px; height: 14px;
+    border-radius: 2px;
+    background: var(--rc-green-light);
+    flex-shrink: 0;
+  }
+
+  /* ── Evaluation Grid ────────────────────────────────────── */
+  .rc-eval-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+    border-bottom: 1px solid var(--rc-border);
+  }
+
+  .rc-eval-card {
+    padding: 10px 14px;
+    border-right: 1px solid var(--rc-border);
+    border-bottom: 1px solid var(--rc-border);
+    position: relative;
+    transition: background 0.2s;
+  }
+
+  .rc-eval-card:hover { background: rgba(82,183,136,0.03); }
+  .rc-eval-card:nth-child(3n) { border-right: none; }
+
+  .rc-eval-name {
+    font-size: 9px;
+    font-weight: 700;
+    color: var(--rc-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+    margin-bottom: 5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .rc-eval-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 4px;
+    margin-bottom: 4px;
+  }
+
+  .rc-eval-score {
+    font-family: 'Rajdhani', monospace;
+    font-size: 17px;
+    font-weight: 800;
+    color: var(--rc-ink);
+    line-height: 1;
+  }
+
+  .rc-eval-max {
+    font-size: 9px;
+    color: var(--rc-muted);
+    font-weight: 600;
+  }
+
+  .rc-eval-pct {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--rc-muted);
+  }
+
+  .rc-mini-bar {
+    height: 3px;
+    background: var(--rc-border);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 5px;
+  }
+
+  .rc-mini-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    background: linear-gradient(90deg, #52B788, #2E7D32);
+  }
+
+  .rc-mini-bar-fill.fail { background: linear-gradient(90deg, #EF5350, #C62828); }
+
+  .rc-eval-status {
+    position: absolute;
+    top: 8px; right: 10px;
+    font-size: 8.5px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+
+  .rc-eval-status.pass { color: #52B788; background: rgba(82,183,136,0.12); }
+  .rc-eval-status.fail { color: #EF5350; background: rgba(239,83,80,0.12); }
+  .rc-eval-status.pend { color: var(--rc-muted); background: rgba(139,155,180,0.1); }
+
+  /* ── Category Summary Table ─────────────────────────────── */
+  .rc-cat-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+  }
+
+  .rc-cat-table th {
+    padding: 7px 14px;
+    font-size: 8.5px;
+    font-weight: 800;
+    color: var(--rc-green-light);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    border-bottom: 1px solid var(--rc-border);
+    background: rgba(82,183,136,0.06);
+    text-align: left;
+  }
+
+  [data-bs-theme="light"] .rc-cat-table th { background: rgba(46,125,50,0.06); }
+
+  .rc-cat-table td {
+    padding: 7px 14px;
+    border-bottom: 1px solid var(--rc-border);
+    color: var(--rc-ink);
+    vertical-align: middle;
+  }
+
+  .rc-cat-table tr:last-child td { border-bottom: none; }
+
+  .rc-cat-table tr:hover td { background: rgba(82,183,136,0.04); }
+
+  .rc-cat-table .cat-total td {
+    font-weight: 800;
+    background: rgba(82,183,136,0.08) !important;
+    color: var(--rc-green-light);
+    font-size: 12px;
+  }
+
+  .pct-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 700;
+    font-family: 'Rajdhani', monospace;
+  }
+
+  .pct-pill.pass { background: rgba(82,183,136,0.15); color: #2E7D32; }
+  [data-bs-theme="dark"] .pct-pill.pass { color: #52B788; }
+  .pct-pill.fail { background: rgba(239,83,80,0.12); color: #C62828; }
+  [data-bs-theme="dark"] .pct-pill.fail { color: #EF5350; }
+  .pct-pill.pend { background: rgba(139,155,180,0.1); color: var(--rc-muted); }
+
+  /* ── Footer Strip ───────────────────────────────────────── */
+  .rc-footer {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 20px;
+    background: var(--rc-surface);
+    border-top: 2px solid var(--rc-border);
+  }
+
+  .rc-footer-sig {
+    text-align: center;
+  }
+
+  .rc-sig-line {
+    width: 100px;
+    height: 1px;
+    background: var(--rc-border);
+    margin: 0 auto 4px;
+  }
+
+  .rc-sig-lbl {
+    font-size: 8px;
+    color: var(--rc-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    font-weight: 700;
+  }
+
+  .rc-footer-stamp {
+    text-align: center;
+  }
+
+  .rc-stamp-circle {
+    width: 50px; height: 50px;
+    border-radius: 50%;
+    border: 2px dashed var(--rc-border);
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto;
+    font-size: 8px;
+    color: var(--rc-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 700;
+  }
+
+  .rc-watermark {
+    font-size: 8px;
+    color: var(--rc-muted);
+    text-align: right;
+    opacity: 0.6;
+    font-style: italic;
+  }
+
+  /* ══════════════════════════════════════════════════════════
+     PRINT STYLES
+  ══════════════════════════════════════════════════════════ */
+  @media print {
+    @page {
+      size: A4 portrait;
+      margin: 12mm 10mm;
+    }
+
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+
+    body, html { background: white !important; }
+
+    .portal-report-card-page .main-wrapper { padding: 0 !important; }
+    .rc-toolbar { display: none !important; }
+
+    .rc-paper {
+      max-width: 100% !important;
+      width: 100% !important;
+      border: none !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+      margin: 0 !important;
+    }
+
+    .rc-header { padding: 12px 16px 10px !important; }
+    .rc-emblem { width: 44px !important; height: 44px !important; font-size: 18px !important; }
+    .rc-header-photo, .rc-header-initials { width: 44px !important; height: 44px !important; }
+    .rc-title { font-size: 16px !important; letter-spacing: 2px !important; }
+
+    .rc-eval-grid { grid-template-columns: repeat(3, 1fr) !important; }
+    .rc-eval-card { padding: 7px 10px !important; }
+    .rc-eval-score { font-size: 14px !important; }
+
+    .rc-identity { grid-template-columns: repeat(4, 1fr) !important; }
+    .rc-id-cell { padding: 7px 10px !important; }
+
+    .rc-summary { grid-template-columns: 1fr 1fr 1fr auto !important; }
+
+    /* Force colors in print */
+    .rc-header { background: #1B4332 !important; }
+    .rc-section-label { background: rgba(46,125,50,0.10) !important; }
+    .rc-cat-table th { background: rgba(46,125,50,0.08) !important; }
+    .rc-footer { background: #f7faf8 !important; }
+    .rc-identity { background: #f7faf8 !important; }
+    .rc-eval-status.pass { color: #2E7D32 !important; background: rgba(82,183,136,0.12) !important; }
+    .rc-eval-status.fail { color: #C62828 !important; background: rgba(239,83,80,0.12) !important; }
+    .pct-pill.pass { color: #2E7D32 !important; background: rgba(82,183,136,0.15) !important; }
+    .pct-pill.fail { color: #C62828 !important; background: rgba(239,83,80,0.12) !important; }
+    .rc-sum-val.green { color: #2E7D32 !important; }
+    .rc-sum-val.red   { color: #C62828 !important; }
+    .rc-mini-bar-fill { background: linear-gradient(90deg, #52B788, #2E7D32) !important; }
+    .rc-progress-bar  { background: linear-gradient(90deg, #52B788, #2E7D32) !important; }
+    .rc-badge-status.pass { color: #2E7D32 !important; background: rgba(82,183,136,0.15) !important; }
+    .rc-badge-status.fail { color: #C62828 !important; background: rgba(239,83,80,0.12) !important; }
+  }
+
+  /* ── Responsive ─────────────────────────────────────────── */
+  @media screen and (max-width: 700px) {
+    .rc-eval-grid { grid-template-columns: repeat(2,1fr) !important; }
+    .rc-eval-card:nth-child(3n) { border-right: 1px solid var(--rc-border); }
+    .rc-eval-card:nth-child(2n) { border-right: none !important; }
+    .rc-identity  { grid-template-columns: repeat(2,1fr) !important; }
+    .rc-summary   { grid-template-columns: 1fr 1fr !important; }
+    .rc-header    { grid-template-columns: auto 1fr !important; }
+    .rc-header-photo, .rc-header-initials { display: none !important; }
+    .rc-footer { grid-template-columns: 1fr !important; }
+  }
+</style>
+
+<!-- Toolbar -->
+<div class="rc-toolbar no-print">
+  <div class="rc-toolbar-left">
+    {# CORRECT - use the evaluation sheet URL you already have #}
+    <a href="{% url 'evaluation:evaluate_agniveer' agniveer.pk %}" class="back-btn">
+      <i class="bi bi-arrow-left"></i> Back
+    </a>
+      
+    </a>
+    <span style="font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;">
+      <i class="bi bi-file-earmark-text-fill me-1" style="color:var(--army-olive);"></i>
+      Report Card — {{ agniveer.get_full_name }}
+    </span>
+  </div>
+  <div class="rc-toolbar-right">
+    <button onclick="window.print()" class="rc-btn gold">
+      <i class="bi bi-printer-fill"></i> Print
+    </button>
+    <a href="{% url 'reports:export_report_card_pdf' agniveer.pk %}" class="rc-btn primary">
+      <i class="bi bi-file-earmark-pdf-fill"></i> Download PDF
+    </a>
+  </div>
+</div>
+
+<!-- Report Card Paper -->
+<div class="rc-paper" id="reportCard">
+
+  <!-- Header -->
+  <div class="rc-header">
+    <div class="rc-emblem">{{ agniveer.department.short_name|default:"ARC"|slice:":3"|upper }}</div>
+    <div class="rc-header-center">
+      <div class="rc-org-name">{{ agniveer.department.name|default:"Army Training Command" }}</div>
+      <div class="rc-title">Agniveer Evaluation Report</div>
+      <div class="rc-subtitle">Comprehensive Performance Assessment Card — Batch {{ agniveer.batch }}</div>
     </div>
-
-    
-
-    <!-- Department View Indicator -->
-    {% if is_department_view %}
-    <div style="background:rgba(212,160,23,0.15);border-left:4px solid #D4A017;padding:12px 16px;margin-bottom:16px;border-radius:6px;">
-      <div style="color:#D4A017;font-size:11px;font-weight:600;">
-        <i class="bi bi-info-circle-fill"></i> {{ user_department_name }} Report
-      </div>
-      <div style="color:#8B9BB4;font-size:10px;margin-top:4px;">
-        Showing marks only from {{ user_department_name }} evaluations
-      </div>
-    </div>
+    {% if agniveer.photo %}
+    <img src="{{ agniveer.photo.url }}" alt="Photo" class="rc-header-photo">
+    {% else %}
+    <div class="rc-header-initials">{{ agniveer.first_name.0|upper }}{{ agniveer.last_name.0|upper }}</div>
     {% endif %}
+  </div>
 
-    <!-- Report Card -->
-    <div class="army-card" id="reportCard">
-      <!-- Header -->
-      <div
-        style="background:linear-gradient(135deg,#1B4332,#2D6A4F);padding:20px 24px;text-align:center;position:relative;">
-        <div style="font-size:24px;margin-bottom:8px;">⚔️</div>
-        <div style="font-family:Rajdhani,sans-serif;font-size:14px;font-weight:700;color:white;letter-spacing:1.2px;">
-          ARMY EVALUATION PORTAL
-        </div>
-        <div
-          style="font-size:10px;color:rgba(255,255,255,0.7);letter-spacing:2px;text-transform:uppercase;margin-top:4px;">
-          Agniveer Profile & Performance Report
-        </div>
-        <div style="position:absolute;top:20px;right:20px;text-align:right;">
-          {% if overall_pass %}
-          <div style="background:rgba(76,175,80,0.2);border:2px solid #4CAF50;border-radius:10px;padding:6px 12px;">
-            <div style="font-family:Rajdhani,sans-serif;font-size:12px;font-weight:700;color:#4CAF50;">✓ PASS</div>
-            <div style="font-size:10px;color:rgba(255,255,255,0.6);">{{ percentage }}%</div>
-          </div>
-          {% else %}
-          <div style="background:rgba(239,83,80,0.2);border:2px solid #EF5350;border-radius:10px;padding:6px 12px;">
-            <div style="font-family:Rajdhani,sans-serif;font-size:12px;font-weight:700;color:#EF5350;">✗ FAIL</div>
-            <div style="font-size:10px;color:rgba(255,255,255,0.6);">{{ percentage }}%</div>
-          </div>
-          {% endif %}
-        </div>
+  <!-- Identity Strip -->
+  <div class="rc-identity">
+    <div class="rc-id-cell">
+      <div class="rc-id-lbl">Full Name</div>
+      <div class="rc-id-val">{{ agniveer.get_full_name }}</div>
+    </div>
+    <div class="rc-id-cell">
+      <div class="rc-id-lbl">Enrollment No.</div>
+      <div class="rc-id-val green">{{ agniveer.enrollment_number }}</div>
+    </div>
+    <div class="rc-id-cell">
+      <div class="rc-id-lbl">Agniveer No.</div>
+      <div class="rc-id-val gold">{{ agniveer.agniveer_no }}</div>
+    </div>
+    <div class="rc-id-cell">
+      <div class="rc-id-lbl">Joining Date</div>
+      <div class="rc-id-val">{{ agniveer.joining_date|date:"d M Y" }}</div>
+    </div>
+  </div>
+
+  <!-- Summary Band -->
+  <div class="rc-summary">
+    <div class="rc-sum-cell">
+      <div class="rc-sum-lbl">Total Score</div>
+      <div class="rc-sum-val" style="color:var(--rc-ink);">
+        {{ total_score }}<span style="font-size:12px;color:var(--rc-muted);font-weight:600;"> / {{ max_marks }}</span>
       </div>
-
-      <!-- Fixed Agniveer Info -->
-      <div style="padding:16px 24px;border-bottom:1px solid rgba(27,67,50,0.3);">
-        <div class="row g-3">
-          <div class="col-md-2">
-            <div style="font-size:11px;color:#8B9BB4;text-transform:uppercase;letter-spacing:0.5px;">Name</div>
-            <div style="font-family:Rajdhani,sans-serif;font-size:13px;font-weight:700;color:#E0E6F0;">{{ agniveer.get_full_name }}</div>
-          </div>
-          <div class="col-md-2">
-            <div style="font-size:11px;color:#8B9BB4;text-transform:uppercase;letter-spacing:0.5px;">Rank</div>
-            <div style="font-family:Rajdhani,sans-serif;font-size:13px;font-weight:700;color:#E0E6F0;">{{ department_result_row.rank|default:"—" }}</div>
-          </div>
-          <div class="col-md-2">
-            <div style="font-size:11px;color:#8B9BB4;text-transform:uppercase;letter-spacing:0.5px;">Army No</div>
-            <div style="font-family:Rajdhani,sans-serif;font-size:13px;font-weight:700;color:#52B788;">{% if department_result_row %}{{ department_result_row.army_no }}{% else %}{{ agniveer.agniveer_no|default:agniveer.enrollment_number }}{% endif %}</div>
-          </div>
-          <div class="col-md-2">
-            <div style="font-size:11px;color:#8B9BB4;text-transform:uppercase;letter-spacing:0.5px;">Trade</div>
-            <div style="font-family:Rajdhani,sans-serif;font-size:13px;font-weight:700;color:#E0E6F0;">{{ agniveer.trade|default:"—" }}</div>
-          </div>
-          <div class="col-md-2">
-            <div style="font-size:11px;color:#8B9BB4;text-transform:uppercase;letter-spacing:0.5px;">Unit</div>
-            <div style="font-family:Rajdhani,sans-serif;font-size:13px;font-weight:700;color:#E0E6F0;">{{ agniveer.bn_desp|default:"—" }}</div>
-          </div>
-          <div class="col-md-2">
-            <div style="font-size:11px;color:#8B9BB4;text-transform:uppercase;letter-spacing:0.5px;">Enrollment No</div>
-            <div style="font-family:Rajdhani,sans-serif;font-size:13px;font-weight:700;color:#52B788;">{{ agniveer.enrollment_number }}</div>
-          </div>
-        </div>
+      <div class="rc-progress-wrap" style="margin-top:6px;">
+        <div class="rc-progress-bar" style="width:{{ percentage }}%;"></div>
       </div>
-
-      <!-- Agniveer Info (PRINT ONLY) -->
-      <div class="print-only" style="padding:40px; border-bottom:1px solid rgba(27,67,50,0.3);">
-        <div class="row align-items-center">
-          <!-- Left: Profile Image/Initials -->
-          <div class="col-3 text-center border-end" style="border-color: rgba(27,67,50,0.2) !important;">
-            {% if agniveer.photo %}
-            <img src="{{ agniveer.photo.url }}" class="rounded"
-              style="width:140px; height:140px; object-fit:cover; border:4px solid #1B4332;">
-            {% else %}
-            <div
-              style="width:140px; height:140px; border-radius:15px; background:transparent; display:flex; align-items:center; justify-content:center; font-family:Rajdhani,sans-serif; font-size:64px; font-weight:700; color:#1B4332; margin: 0 auto; border: 1px solid rgba(27, 67, 50, 0.2);">
-              {{ agniveer.first_name.0|upper }}{{ agniveer.last_name.0|upper }}
-            </div>
-            {% endif %}
-          </div>
-          
-          <!-- Right: Profile Details (Horizontal Grid for Print) -->
-          <div class="col-9 ps-5">
-            <div class="row mb-3">
-              <div class="col-6">
-                <div class="print-profile-label">NAME</div>
-                <div class="print-profile-value" style="font-family: 'Rajdhani', sans-serif;">{{ agniveer.get_full_name|upper }}</div>
-              </div>
-              <div class="col-6">
-                <div class="print-profile-label">ENROLLMENT NO</div>
-                <div class="print-profile-value" style="font-family: 'Rajdhani', sans-serif; color: #1B4332 !important;">{{ agniveer.enrollment_number }}</div>
-              </div>
-            </div>
-
-            <div class="row">
-              <div class="col-6">
-                <div class="print-profile-label">BATCH</div>
-                <div class="print-profile-value" style="color: black !important;">{{ agniveer.batch }}</div>
-              </div>
-              <div class="col-6">
-                <div class="print-profile-label">JOINING DATE</div>
-                <div class="print-profile-value" style="color: black !important;">{{ agniveer.joining_date|date:"d M Y" }}</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Performance Summary & Remarks (Fills the gap on Page 1) -->
-      <div class="print-only" style="padding:24px 40px; border-bottom:1.5pt solid #1B4332; background: rgba(27,67,50,0.02);">
-        <div class="row align-items-start">
-          <!-- Remarks Column -->
-          <div class="col-7">
-            <div style="font-family: 'Rajdhani', sans-serif; font-size: 13px; font-weight: 700; color: #1B4332; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px;">
-              Commander's Remarks / Assessment
-            </div>
-            <div style="border: 1pt dashed #1B4332; padding: 15px; min-height: 140px; font-size: 12px; color: #444; line-height: 1.6; position: relative; overflow: hidden;">
-              Qualitative assessment of character, discipline, and technical proficiency:<br><br><br>
-              
-              <div style="border-bottom: 0.5pt solid rgba(27,67,50,0.3); margin-top: 25px; width: 100%;"></div><br>
-              <div style="border-bottom: 0.5pt solid rgba(27,67,50,0.3); margin-top: 25px; width: 100%;"></div><br>
-              <div style="border-bottom: 0.5pt solid rgba(27,67,50,0.3); margin-top: 25px; width: 100%;"></div><br>
-              <div style="border-bottom: 0.5pt solid rgba(27,67,50,0.3); margin-top: 25px; width: 100%;"></div><br>
-              <div style="border-bottom: 0.5pt solid rgba(27,67,50,0.3); margin-top: 25px; width: 100%;"></div><br>
-              <div style="border-bottom: 0.5pt solid rgba(27,67,50,0.3); margin-top: 25px; width: 100%;"></div><br>
-            </div>
-          </div>
-
-          <!-- Grading Scale Column -->
-          <div class="col-5">
-            <div style="font-family: 'Rajdhani', sans-serif; font-size: 13px; font-weight: 700; color: #1B4332; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; text-align: center;">
-              Official Grading Scale
-            </div>
-            <table style="width: 100%; border-collapse: collapse; font-size: 10px; text-align: center;">
-              <thead>
-                <tr style="background: #1B4332; color: white;">
-                  <th style="padding: 4px; border: 0.5pt solid white;">PERCENTAGE</th>
-                  <th style="padding: 4px; border: 0.5pt solid white;">GRADE</th>
-                </tr>
-              </thead>
-              <tbody >
-                <tr>
-                  <td style="padding: 4px; border: 0.5pt solid #1B4332;">90% - 100%</td>
-                  <td style="padding: 4px; border: 0.5pt solid #1B4332; font-weight: 700;">EXEMPLARY (A)</td>
-                </tr>
-                <tr>
-                  <td style="padding: 4px; border: 0.5pt solid #1B4332;">75% - 89%</td>
-                  <td style="padding: 4px; border: 0.5pt solid #1B4332; font-weight: 700;">VERY GOOD (B)</td>
-                </tr>
-                <tr>
-                  <td style="padding: 4px; border: 0.5pt solid #1B4332;">50% - 74%</td>
-                  <td style="padding: 4px; border: 0.5pt solid #1B4332; font-weight: 700;">SATISFACTORY (C)</td>
-                </tr>
-                <tr style="color: #EF5350;">
-                  <td style="padding: 4px; border: 0.5pt solid #1B4332;">Below 50%</td>
-                  <td style="padding: 4px; border: 0.5pt solid #1B4332; font-weight: 700;">UNSATISFACTORY (F)</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-      {% if tts_result_row %}
-      <div class="evaluation-section" style="padding:16px 24px;">
-        <div
-          style="font-family:Rajdhani,sans-serif;font-size:14px;font-weight:700;color:#D4A017;margin-bottom:16px;display:flex;align-items:center;gap:8px;">
-          <i class="bi bi-table"></i> TTS FINAL RESULT
-        </div>
-        <div style="overflow-x:auto;">
-          <table class="army-table">
-            <thead>
-              <tr>
-                <th>S. No.</th>
-                <th>Army No</th>
-                <th>Rank</th>
-                <th>Trade</th>
-                <th>Name</th>
-                <th>Unit</th>
-                <th style="text-align:center;">Online Test-100</th>
-                <th style="text-align:center;">Convert in 20 Mks</th>
-                <th style="text-align:center;">JOB-40</th>
-                <th style="text-align:center;">Convert in 10 Mks</th>
-                <th style="text-align:center;">Practical-60</th>
-                <th style="text-align:center;">Convert in 10 Mks</th>
-                <th style="text-align:center;">Grand Total-40</th>
-                <th style="text-align:center;">%</th>
-                <th style="text-align:center;">Grading</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>1</td>
-                <td>{{ tts_result_row.army_no }}</td>
-                <td>{{ tts_result_row.rank|default:"—" }}</td>
-                <td>{{ tts_result_row.trade }}</td>
-                <td style="font-weight:600;color:#E0E6F0;">{{ tts_result_row.name }}</td>
-                <td>{{ tts_result_row.unit|default:"—" }}</td>
-                <td class="marks-cell">{{ tts_result_row.online|floatformat:2 }}</td>
-                <td class="marks-cell">{{ tts_result_row.online_conv|floatformat:2 }}</td>
-                <td class="marks-cell">{{ tts_result_row.job|floatformat:2 }}</td>
-                <td class="marks-cell">{{ tts_result_row.job_conv|floatformat:2 }}</td>
-                <td class="marks-cell">{{ tts_result_row.practical|floatformat:2 }}</td>
-                <td class="marks-cell">{{ tts_result_row.practical_conv|floatformat:2 }}</td>
-                <td class="marks-cell" style="font-size:16px;font-weight:700;color:#52B788;">{{ tts_result_row.grand_total|floatformat:2 }}</td>
-                <td style="text-align:center;font-weight:600;">{{ tts_result_row.percentage|floatformat:2 }}</td>
-                <td style="text-align:center;font-weight:700;">{{ tts_result_row.grading }}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-      {% endif %}
-      {% if not tts_result_row %}
-      {% for dept, data in dept_evaluations.items %}
-      <div class="evaluation-section" style="padding:16px 24px;">
-        <div
-          style="font-family:Rajdhani,sans-serif;font-size:14px;font-weight:700;color:#D4A017;margin-bottom:16px;display:flex;align-items:center;justify-content:between;gap:8px;">
-          <div style="display:flex;align-items:center;gap:8px;">
-            <i class="bi bi-building"></i> DEPARTMENT {{ dept }} EVALUATIONS
-          </div>
-          <div style="font-size:12px;color:#E0E6F0;background:rgba(212,160,23,0.1);padding:4px 12px;border-radius:20px;border:1px solid rgba(212,160,23,0.3);">
-            Score: <span style="color:#D4A017;">{{ data.total_marks }}</span> / {{ data.max_marks }}
-          </div>
-        </div>
-
-        <!-- On Field Training -->
-        {% if data.on_field %}
-        <div style="margin-bottom:24px;">
-          <div
-            style="font-family:Rajdhani,sans-serif;font-size:11px;font-weight:600;color:#52B788;margin-bottom:10px;text-transform:uppercase;letter-spacing:0.5px;">
-            <i class="bi bi-shield-fill"></i> On Field Training
-          </div>
-          <div style="overflow-x:auto;">
-            <table class="army-table">
-              <thead>
-                <tr>
-                  <th>Test Type</th>
-                  <th style="text-align:center;">NCO (20)</th>
-                  <th style="text-align:center;">JCO (20)</th>
-                  <th style="text-align:center;">Officer (20)</th>
-                  <th style="text-align:center;">Total (60)</th>
-                  <th style="text-align:center;">%</th>
-                  <th style="text-align:center;">Result</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for ev in data.on_field %}
-                <tr>
-                  <td style="font-weight:600;color:#E0E6F0;">{{ ev.get_test_type_display }}</td>
-                  <td class="marks-cell">{{ ev.get_nco_marks }}</td>
-                  <td class="marks-cell">{{ ev.get_jco_marks }}</td>
-                  <td class="marks-cell">{{ ev.get_officer_marks }}</td>
-                  <td class="marks-cell" style="font-size:18px;font-weight:700;color:#E0E6F0;">{{ ev.get_total_marks }}
-                  </td>
-                  <td style="text-align:center;font-weight:600;">{{ ev.get_percentage }}%</td>
-                  <td style="text-align:center;">
-                    {% if ev.get_total_marks > 0 %}
-                    {% if ev.is_pass %}
-                    <span class="badge-pass px-2 py-1 rounded" style="font-size:11px;font-weight:600;">✓ PASS</span>
-                    {% else %}
-                    <span class="badge-fail px-2 py-1 rounded" style="font-size:11px;font-weight:600;">✗ FAIL</span>
-                    {% endif %}
-                    {% else %}
-                    <span style="font-size:11px;color:#8B9BB4;font-weight:600;">–</span>
-                    {% endif %}
-                  </td>
-                </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
-        </div>
-        {% endif %}
-
-        <!-- Trade Training -->
-        {% if data.trade %}
-        <div style="margin-bottom:24px;">
-          <div
-            style="font-family:Rajdhani,sans-serif;font-size:11px;font-weight:600;color:#4FC3F7;margin-bottom:10px;text-transform:uppercase;letter-spacing:0.5px;">
-            <i class="bi bi-tools"></i> Basic Trade Training
-          </div>
-          <div style="overflow-x:auto;">
-            <table class="army-table">
-              <thead>
-                <tr>
-                  <th>Test Type</th>
-                  <th style="text-align:center;">NCO (20)</th>
-                  <th style="text-align:center;">JCO (20)</th>
-                  <th style="text-align:center;">Officer (20)</th>
-                  <th style="text-align:center;">Total (60)</th>
-                  <th style="text-align:center;">%</th>
-                  <th style="text-align:center;">Result</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for ev in data.trade %}
-                <tr>
-                  <td style="font-weight:600;color:#E0E6F0;">{{ ev.get_test_type_display }}</td>
-                  <td class="marks-cell">{{ ev.get_nco_marks }}</td>
-                  <td class="marks-cell">{{ ev.get_jco_marks }}</td>
-                  <td class="marks-cell">{{ ev.get_officer_marks }}</td>
-                  <td class="marks-cell" style="font-size:14px;font-weight:700;color:#E0E6F0;">{{ ev.get_total_marks }}
-                  </td>
-                  <td style="text-align:center;font-weight:600;">{{ ev.get_percentage }}%</td>
-                  <td style="text-align:center;">
-                    {% if ev.get_total_marks > 0 %}
-                    {% if ev.is_pass %}
-                    <span class="badge-pass px-2 py-1 rounded" style="font-size:11px;font-weight:600;">✓ PASS</span>
-                    {% else %}
-                    <span class="badge-fail px-2 py-1 rounded" style="font-size:11px;font-weight:600;">✗ FAIL</span>
-                    {% endif %}
-                    {% else %}
-                    <span style="font-size:11px;color:#8B9BB4;font-weight:600;">–</span>
-                    {% endif %}
-                  </td>
-                </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
-        </div>
+    </div>
+    <div class="rc-sum-cell">
+      <div class="rc-sum-lbl">Cumulative Percentage</div>
+      <div class="rc-sum-val blue">{{ percentage }}%</div>
+    </div>
+    <div class="rc-sum-cell">
+      <div class="rc-sum-lbl">Overall Status</div>
+      {% with ps=agniveer.get_pass_status %}
+      <div class="rc-badge-status {% if ps == 'Pass' %}pass{% elif ps == 'Fail' %}fail{% else %}pending{% endif %}">
+        {% if ps == 'Pass' %}
+        <i class="bi bi-trophy-fill"></i> PASSED
+        {% elif ps == 'Fail' %}
+        <i class="bi bi-x-circle-fill"></i> FAILED
+        {% else %}
+        <i class="bi bi-hourglass-split"></i> PENDING
         {% endif %}
       </div>
-      {% endfor %}
-      {% endif %}
-
-      <!-- Performance Summary Section -->
-      <div style="padding:20px 24px;border-top:2px solid rgba(27,67,50,0.3);">
-        <div
-          style="font-family:Rajdhani,sans-serif;font-size:14px;font-weight:700;color:#D4A017;margin-bottom:20px;display:flex;align-items:center;gap:8px;">
-          <i class="bi bi-pie-chart-fill"></i> OVERALL PERFORMANCE
-        </div>
-
-        <div class="row g-4">
-          <!-- Grand Total Card -->
-          <div class="col-md-6">
-            <div
-              style="background:linear-gradient(135deg,rgba(27,67,50,0.2),rgba(27,67,50,0.1));padding:24px;border-radius:12px;text-align:center;">
-              <div style="font-size:10px;color:#8B9BB4;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;">
-                Total Score</div>
-              <div
-                style="font-family:Rajdhani,sans-serif;font-size:36px;font-weight:700;color:#52B788;margin-bottom:4px;">
-                {{ grand_total }}
-              </div>
-              <div style="font-size:14px;color:#8B9BB4;margin-bottom:12px;">
-                out of <span style="font-weight:700;color:#E0E6F0;">{{ max_total }}</span>
-              </div>
-              <div style="font-size:24px;font-weight:700;color:#4FC3F7;">{{ percentage }}%</div>
-            </div>
-          </div>
-
-          <!-- Pie Chart -->
-          <div class="col-md-6">
-            <div
-              style="background:rgba(15,22,41,0.5);padding:20px;border-radius:12px;display:flex;align-items:center;justify-content:center;">
-              <canvas id="performanceChart" style="max-width:160px;max-height:160px;"></canvas>
-            </div>
-          </div>
-        </div>
-
-        <!-- Overall Result -->
-        <div style="margin-top:24px;text-align:center;">
-          {% if overall_pass %}
-          <div
-            style="background:rgba(76,175,80,0.1);border:2px solid #4CAF50;border-radius:12px;padding:20px;display:inline-block;">
-            <div
-              style="font-family:Rajdhani,sans-serif;font-size:24px;font-weight:700;color:#4CAF50;margin-bottom:4px;">
-              ✓ PASSED
-            </div>
-            <div style="font-size:11px;color:#8B9BB4;">Overall evaluation result</div>
-          </div>
-          {% else %}
-          <div
-            style="background:rgba(239,83,80,0.1);border:2px solid #EF5350;border-radius:12px;padding:20px;display:inline-block;">
-            <div
-              style="font-family:Rajdhani,sans-serif;font-size:24px;font-weight:700;color:#EF5350;margin-bottom:4px;">
-              ✗ FAILED
-            </div>
-            <div style="font-size:11px;color:#8B9BB4;">Overall evaluation result</div>
-          </div>
-          {% endif %}
-        </div>
-
-        <!-- Signature Section (PRINT ONLY) -->
-        <div class="print-only" style="margin-top: 60pt; margin-bottom: 20pt;">
-          <div class="row text-center">
-            <div class="col-4">
-              <div style="border-top: 1.5pt solid #1B4332; width: 80%; margin: 0 auto; padding-top: 5pt;">
-                <div style="font-weight: 700; color: #1B4332; font-size: 10pt;">COMMANDING OFFICER</div>
-                <div style="font-size: 8pt; color: #666;">(Signature & Stamp)</div>
-              </div>
-            </div>
-            <div class="col-4">
-              <div style="border-top: 1.5pt solid #1B4332; width: 80%; margin: 0 auto; padding-top: 5pt;">
-                <div style="font-weight: 700; color: #1B4332; font-size: 10pt;">G DEPARTMENT HEAD</div>
-                <div style="font-size: 8pt; color: #666;">(Signature & Stamp)</div>
-              </div>
-            </div>
-            <div class="col-4">
-              <div style="border-top: 1.5pt solid #1B4332; width: 80%; margin: 0 auto; padding-top: 5pt;">
-                <div style="font-weight: 700; color: #1B4332; font-size: 10pt;">DEPARTMENT IN-CHARGE</div>
-                <div style="font-size: 8pt; color: #666;">(Signature & Stamp)</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Footer -->
-      <div
-        style="padding:16px 32px;border-top:1px solid rgba(27,67,50,0.3);text-align:center;font-size:11px;color:#8B9BB4;">
-        Generated by Army Evaluation Portal · {{ request.user.get_full_name }} · Report Date: {% now "d M Y, H:i" %}
+      {% endwith %}
+    </div>
+    <div class="rc-sum-cell" style="align-items:center;justify-content:center;min-width:90px;">
+      <div class="rc-sum-lbl">Grade</div>
+      <div style="font-family:'Rajdhani',monospace;font-size:38px;font-weight:900;line-height:1;
+        color:{% if percentage >= 80 %}#2E7D32{% elif percentage >= 60 %}#0288D1{% elif percentage >= 46 %}#D4A017{% else %}#C62828{% endif %};">
+        {% if percentage >= 80 %}A{% elif percentage >= 60 %}B{% elif percentage >= 46 %}C{% else %}D{% endif %}
       </div>
     </div>
   </div>
-</div>
-{% endblock %}
 
-{% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <!-- Evaluation Results Grid -->
+  <div class="rc-section-label">
+    <i class="bi bi-clipboard2-data-fill"></i> Test-wise Evaluation Results
+  </div>
+
+  <div class="rc-eval-grid">
+    {% for code, name in test_type_choices %}
+    {% with sheet=evaluations|get_eval_sheet:code %}
+    <div class="rc-eval-card">
+      <div class="rc-eval-name" title="{{ name }}">{{ name }}</div>
+
+      {% if sheet %}
+      <div class="rc-eval-status {% if sheet.is_pass %}pass{% else %}fail{% endif %}">
+        {% if sheet.is_pass %}✓ PASS{% else %}✗ FAIL{% endif %}
+      </div>
+      <div class="rc-eval-row">
+        <div class="rc-eval-score">{{ sheet.get_total_marks|floatformat:1 }}</div>
+        <div class="rc-eval-max">/ {{ sheet.get_max_marks|default:"—" }}</div>
+        <div class="rc-eval-pct">{{ sheet.get_percentage|floatformat:1 }}%</div>
+      </div>
+      <div class="rc-mini-bar">
+        <div class="rc-mini-bar-fill {% if not sheet.is_pass %}fail{% endif %}"
+          style="width:{{ sheet.get_percentage|floatformat:0 }}%;"></div>
+      </div>
+      {% else %}
+      <div class="rc-eval-status pend">PENDING</div>
+      <div class="rc-eval-row">
+        <div class="rc-eval-score" style="color:var(--rc-muted);font-size:13px;">Not Evaluated</div>
+      </div>
+      <div class="rc-mini-bar"><div class="rc-mini-bar-fill" style="width:0%;"></div></div>
+      {% endif %}
+    </div>
+    {% endwith %}
+    {% endfor %}
+  </div>
+
+  <!-- Category Summary Table -->
+  {% if category_summary %}
+  <div class="rc-section-label" style="margin-top:0;">
+    <i class="bi bi-table"></i> Category-wise Summary
+  </div>
+  <table class="rc-cat-table">
+    <thead>
+      <tr>
+        <th>Category / Test</th>
+        <th class="text-center">Marks Obtained</th>
+        <th class="text-center">Max Marks</th>
+        <th class="text-center">Percentage</th>
+        <th class="text-center">Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in category_summary %}
+      <tr {% if row.is_total %}class="cat-total"{% endif %}>
+        <td style="font-weight:{% if row.is_total %}800{% else %}600{% endif %};">{{ row.name }}</td>
+        <td class="text-center" style="font-family:'Rajdhani',monospace;font-weight:700;">{{ row.obtained|floatformat:1 }}</td>
+        <td class="text-center" style="color:var(--rc-muted);">{{ row.max_marks }}</td>
+        <td class="text-center">
+          <span class="pct-pill {% if row.percentage >= 50 %}pass{% elif row.percentage == 0 and not row.is_evaluated %}pend{% else %}fail{% endif %}">
+            {{ row.percentage|floatformat:1 }}%
+          </span>
+        </td>
+        <td class="text-center">
+          {% if not row.is_evaluated %}
+          <span class="pct-pill pend">Pending</span>
+          {% elif row.is_pass %}
+          <span class="pct-pill pass">✓ Pass</span>
+          {% else %}
+          <span class="pct-pill fail">✗ Fail</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+      <!-- Grand Total Row -->
+      <tr class="cat-total">
+        <td>GRAND TOTAL</td>
+        <td class="text-center" style="font-family:'Rajdhani',monospace;">{{ total_score }}</td>
+        <td class="text-center">{{ max_marks }}</td>
+        <td class="text-center">
+          <span class="pct-pill {% if percentage >= 50 %}pass{% else %}fail{% endif %}">{{ percentage }}%</span>
+        </td>
+        <td class="text-center">
+          {% with ps=agniveer.get_pass_status %}
+          <span class="pct-pill {% if ps == 'Pass' %}pass{% elif ps == 'Fail' %}fail{% else %}pend{% endif %}">
+            {% if ps == 'Pass' %}✓ Pass{% elif ps == 'Fail' %}✗ Fail{% else %}Pending{% endif %}
+          </span>
+          {% endwith %}
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  {% else %}
+  <!-- Fallback: simple totals table from evaluations -->
+  <div class="rc-section-label" style="margin-top:0;">
+    <i class="bi bi-table"></i> Evaluation Summary
+  </div>
+  <table class="rc-cat-table">
+    <thead>
+      <tr>
+        <th>Test / Evaluation</th>
+        <th class="text-center">Score</th>
+        <th class="text-center">Percentage</th>
+        <th class="text-center">Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for code, name in test_type_choices %}
+      {% with sheet=evaluations|get_eval_sheet:code %}
+      <tr>
+        <td style="font-weight:600;">{{ name }}</td>
+        <td class="text-center" style="font-family:'Rajdhani',monospace;font-weight:700;">
+          {% if sheet %}{{ sheet.get_total_marks|floatformat:1 }}{% else %}—{% endif %}
+        </td>
+        <td class="text-center">
+          {% if sheet %}
+          <span class="pct-pill {% if sheet.is_pass %}pass{% else %}fail{% endif %}">{{ sheet.get_percentage|floatformat:1 }}%</span>
+          {% else %}
+          <span class="pct-pill pend">Pending</span>
+          {% endif %}
+        </td>
+        <td class="text-center">
+          {% if sheet %}
+          <span class="pct-pill {% if sheet.is_pass %}pass{% else %}fail{% endif %}">
+            {% if sheet.is_pass %}✓ Pass{% else %}✗ Fail{% endif %}
+          </span>
+          {% else %}
+          <span class="pct-pill pend">—</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% endwith %}
+      {% endfor %}
+      <tr class="cat-total">
+        <td>GRAND TOTAL</td>
+        <td class="text-center" style="font-family:'Rajdhani',monospace;">{{ total_score }} / {{ max_marks }}</td>
+        <td class="text-center">
+          <span class="pct-pill {% if percentage >= 50 %}pass{% else %}fail{% endif %}">{{ percentage }}%</span>
+        </td>
+        <td class="text-center">
+          {% with ps=agniveer.get_pass_status %}
+          <span class="pct-pill {% if ps == 'Pass' %}pass{% elif ps == 'Fail' %}fail{% else %}pend{% endif %}">
+            {% if ps == 'Pass' %}✓ Pass{% elif ps == 'Fail' %}✗ Fail{% else %}Pending{% endif %}
+          </span>
+          {% endwith %}
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  {% endif %}
+
+  <!-- Footer -->
+  <div class="rc-footer">
+    <div class="rc-footer-sig">
+      <div class="rc-sig-line"></div>
+      <div class="rc-sig-lbl">Training Officer</div>
+    </div>
+    <div class="rc-footer-stamp">
+      <div class="rc-stamp-circle">SEAL</div>
+    </div>
+    <div class="rc-watermark">
+      Generated: {% now "d M Y" %} &nbsp;·&nbsp;
+      {{ agniveer.department.name|default:"Army Training Command" }}<br>
+      This is a computer-generated document.
+    </div>
+  </div>
+
+</div><!-- /rc-paper -->
+
 <script>
+  // Animate progress bars on load
   document.addEventListener('DOMContentLoaded', function () {
-    const ctx = document.getElementById('performanceChart');
-    if (ctx) {
-      const chartPercentage = Number('{{ percentage }}');
-    const remaining = 100 - chartPercentage;
-
-    new Chart(ctx, {
-      type: 'pie',
-      data: {
-        labels: ['Score Achieved', 'Remaining'],
-        datasets: [{
-          data: [chartPercentage, remaining],
-          backgroundColor: [
-            '{% if percentage >= 50 %}#52B788{% else %}#4FC3F7{% endif %}',
-            'rgba(139, 155, 180, 0.2)'
-          ],
-          borderColor: [
-            '{% if percentage >= 50 %}#1B4332{% else %}#2E6F82{% endif %}',
-            'rgba(139, 155, 180, 0.4)'
-          ],
-          borderWidth: 2
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: true,
-        plugins: {
-          legend: {
-            position: 'bottom',
-            labels: {
-              color: '#E0E6F0',
-              font: {
-                size: 12,
-                weight: 'bold',
-                family: "'Rajdhani', sans-serif"
-              },
-              padding: 16
-            }
-          },
-          tooltip: {
-            backgroundColor: 'rgba(15, 22, 41, 0.95)',
-            titleColor: '#E0E6F0',
-            bodyColor: '#E0E6F0',
-            borderColor: 'rgba(82, 183, 136, 0.5)',
-            borderWidth: 1,
-            callbacks: {
-              label: function (context) {
-                return context.label + ': ' + context.parsed + '%';
-              }
-            }
-          }
-        }
-      }
+    document.querySelectorAll('.rc-progress-bar, .rc-mini-bar-fill').forEach(bar => {
+      const w = bar.style.width;
+      bar.style.width = '0';
+      requestAnimationFrame(() => {
+        setTimeout(() => { bar.style.width = w; }, 80);
+      });
     });
+  });
+
+  // Auto-print if ?print=1
+  if (new URLSearchParams(window.location.search).get('print') === '1') {
+    window.addEventListener('load', () => setTimeout(() => window.print(), 400));
   }
-});
 </script>
 {% endblock %}
-
-
-
-
-
-
-
-
-
-
-
-
-
-

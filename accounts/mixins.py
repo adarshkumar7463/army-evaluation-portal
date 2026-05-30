@@ -58,3 +58,7 @@ class RegistrationOfficeMixin(RoleRequiredMixin):
     """Only Registration Office can access."""
     allowed_roles = ['registration']
 
+class AgniveerEditMixin(RoleRequiredMixin):
+    """Registration, Commander or G-Head can edit."""
+    allowed_roles = ['registration', 'commander', 'g_head']
+

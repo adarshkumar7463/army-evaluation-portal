@@ -22,7 +22,7 @@ from .forms import (
 )
 from accounts.mixins import (
     CommanderOrDeptMixin, AnyStaffMixin, GHeadMixin, CommanderOrGHeadMixin,
-    RegistrationOfficeMixin
+    RegistrationOfficeMixin, AgniveerEditMixin
 )
 from accounts.models import CustomUser
 from evaluation.models import EvaluationSheet
@@ -80,6 +80,24 @@ class RegistrationDashboardView(RegistrationOfficeMixin, View):
         page_number = request.GET.get('page')
         page_obj = paginator.get_page(page_number)
 
+        # Fetch uploaded files list
+        import os
+        from django.conf import settings
+        from datetime import datetime
+        uploaded_files = []
+        upload_dir = os.path.join(settings.MEDIA_ROOT, 'excel_uploads')
+        if os.path.exists(upload_dir):
+            for fname in os.listdir(upload_dir):
+                fpath = os.path.join(upload_dir, fname)
+                if os.path.isfile(fpath):
+                    mtime = os.path.getmtime(fpath)
+                    uploaded_files.append({
+                        'name': fname,
+                        'size': f"{os.path.getsize(fpath) / 1024:.1f} KB",
+                        'uploaded_at': datetime.fromtimestamp(mtime),
+                    })
+        uploaded_files.sort(key=lambda x: x['uploaded_at'], reverse=True)
+
         context = {
             'reg_form': reg_form,
             'upload_form': upload_form,
@@ -93,6 +111,7 @@ class RegistrationDashboardView(RegistrationOfficeMixin, View):
             'trade_choices': TRADE_CHOICES,
             'cert_fields': cert_fields,
             'status_choices': Agniveer.STATUS_CHOICES,
+            'uploaded_files': uploaded_files,
         }
         return render(request, self.template_name, context)
 
@@ -158,8 +177,20 @@ class AgniveerBulkUploadView(RegistrationOfficeMixin, View):
             return redirect('departments:registration_dashboard')
 
         file_obj = request.FILES['excel_file']
+        
+        # Save Excel file to storage
+        import os
+        from django.conf import settings
+        from django.core.files.storage import FileSystemStorage
+        
+        fs = FileSystemStorage(location=os.path.join(settings.MEDIA_ROOT, 'excel_uploads'))
+        filename = fs.save(file_obj.name, file_obj)
+
         from .utils import parse_agniveer_excel
-        records, errors = parse_agniveer_excel(file_obj)
+        
+        # Open and parse the saved file
+        with fs.open(filename, 'rb') as f:
+            records, errors = parse_agniveer_excel(f)
 
         created_count = 0
         skip_errors = list(errors)
@@ -185,6 +216,26 @@ class AgniveerBulkUploadView(RegistrationOfficeMixin, View):
             for err in skip_errors[:10]:
                 messages.warning(request, err)
 
+        return redirect('departments:registration_dashboard')
+
+
+class DeleteUploadedFileView(RegistrationOfficeMixin, View):
+    """Delete an uploaded Excel file from storage."""
+
+    def post(self, request, filename):
+        import os
+        from django.conf import settings
+        
+        upload_dir = os.path.join(settings.MEDIA_ROOT, 'excel_uploads')
+        safe_filename = os.path.basename(filename)
+        fpath = os.path.join(upload_dir, safe_filename)
+        
+        if os.path.exists(fpath):
+            os.remove(fpath)
+            messages.success(request, f"Deleted file {safe_filename} successfully.")
+        else:
+            messages.error(request, "File not found.")
+            
         return redirect('departments:registration_dashboard')
 
 
@@ -297,6 +348,8 @@ class AgniveerListView(AnyStaffMixin, ListView):
         search = self.request.GET.get('search')
         batch = self.request.GET.get('batch')
         eval_filter = self.request.GET.get('eval_status')
+        trade_param = self.request.GET.get('trade')
+        battalion_param = self.request.GET.get('battalion')
 
         if status:
             queryset = queryset.filter(status=status)
@@ -309,6 +362,12 @@ class AgniveerListView(AnyStaffMixin, ListView):
                 Q(name__icontains=search) |
                 Q(father_name__icontains=search)
             )
+        if trade_param:
+            # For TTS (Dept B) 'OTHER' login, trade filter is already applied, so avoid double-filtering
+            if not (dept == 'B' and hasattr(user, 'tts_trade') and user.tts_trade == 'OTHER'):
+                queryset = queryset.filter(trade=trade_param)
+        if battalion_param:
+            queryset = queryset.filter(bn_desp=battalion_param)
 
         if eval_filter and (user.is_trainer or user.is_department):
             from evaluation.models import Marks
@@ -417,7 +476,7 @@ class AgniveerCreateView(RegistrationOfficeMixin, CreateView):
         return redirect('departments:registration_dashboard')
 
 
-class AgniveerUpdateView(RegistrationOfficeMixin, UpdateView):
+class AgniveerUpdateView(AgniveerEditMixin, UpdateView):
     model = Agniveer
     form_class = AgniveerForm
     template_name = 'departments/agniveer_form.html'

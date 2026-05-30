@@ -614,6 +614,50 @@ html[data-bs-theme="dark"] body .login-container {
   border-color: var(--portal-line) !important;
 }
 
+/* Light mode high-contrast overrides for inline colors */
+[data-bs-theme="light"] [style*="color:#52B788"],
+[data-bs-theme="light"] [style*="color: #52B788"],
+[data-bs-theme="light"] [style*="color:#52b788"],
+[data-bs-theme="light"] [style*="color: #52b788"] {
+  color: #176f4d !important;
+}
+
+[data-bs-theme="light"] [style*="color:#4FC3F7"],
+[data-bs-theme="light"] [style*="color: #4FC3F7"],
+[data-bs-theme="light"] [style*="color:#4fc3f7"],
+[data-bs-theme="light"] [style*="color: #4fc3f7"] {
+  color: #1678a5 !important;
+}
+
+[data-bs-theme="light"] [style*="color:#D4A017"],
+[data-bs-theme="light"] [style*="color: #D4A017"],
+[data-bs-theme="light"] [style*="color:#d4a017"],
+[data-bs-theme="light"] [style*="color: #d4a017"],
+[data-bs-theme="light"] [style*="color:#FFCA28"],
+[data-bs-theme="light"] [style*="color: #FFCA28"],
+[data-bs-theme="light"] [style*="color:#ffca28"],
+[data-bs-theme="light"] [style*="color: #ffca28"] {
+  color: #9b6f16 !important;
+}
+
+[data-bs-theme="light"] [style*="color:#B39DDB"],
+[data-bs-theme="light"] [style*="color: #B39DDB"],
+[data-bs-theme="light"] [style*="color:#b39ddb"],
+[data-bs-theme="light"] [style*="color: #b39ddb"],
+[data-bs-theme="light"] [style*="color:#CE93D8"],
+[data-bs-theme="light"] [style*="color: #CE93D8"],
+[data-bs-theme="light"] [style*="color:#ce93d8"],
+[data-bs-theme="light"] [style*="color: #ce93d8"] {
+  color: #6a1b9a !important;
+}
+
+[data-bs-theme="light"] [style*="color:#EF5350"],
+[data-bs-theme="light"] [style*="color: #EF5350"],
+[data-bs-theme="light"] [style*="color:#ef5350"],
+[data-bs-theme="light"] [style*="color: #ef5350"] {
+  color: #b84646 !important;
+}
+
 .text-muted,
 .small.text-muted {
   color: var(--portal-muted) !important;

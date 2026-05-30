@@ -482,6 +482,29 @@
   .modal-table tr:last-child td { border-bottom: none; }
   .modal-table tr:hover td { background: rgba(82,183,136,0.05); }
 
+  .sub-dept-btn {
+    padding: 3px 10px;
+    border-radius: 20px;
+    border: 1px solid var(--border-color);
+    background: transparent;
+    color: var(--text-muted);
+    font-weight: 500;
+    font-size: 10px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+  }
+  .sub-dept-btn:hover {
+    background: rgba(79,195,247,0.10);
+    border-color: #4FC3F7;
+    color: #4FC3F7;
+  }
+  .sub-dept-btn.active {
+    background: rgba(79,195,247,0.15);
+    border-color: #4FC3F7;
+    color: #4FC3F7;
+    font-weight: 600;
+  }
+
   /* ── Responsive ───────────────────────────────────────── */
   @media (max-width: 991px) {
     .portal-dashboard-page .portal-surface { grid-template-columns: 1fr; }
@@ -586,11 +609,16 @@
       <button type="button" class="btn dept-btn" data-dept="D"><i class="bi bi-file-text"></i> Clerk</button>
     </div>
 
+    <!-- Sub-department container -->
+    <div id="subDeptContainer" class="d-none gap-2 flex-wrap mb-3" style="border-top:1px dashed var(--border-color); padding-top:10px;">
+      <!-- sub-department pills dynamically created here -->
+    </div>
+
     <div id="deptDetailsContainer">
       <div class="default-stats-container">
         {% for dept_code, stats in dept_stats.items %}
         <div class="default-stat-item">
-          <div class="default-stat-value">{{ stats.total }}</div>
+          <div class="default-stat-value">{{ stats.total_eligible }}</div>
           <div class="default-stat-label">{% if dept_code == 'A' %}Battalion{% elif dept_code == 'B' %}TTS{% elif dept_code == 'C' %}CS{% else %}Clerk{% endif %}</div>
         </div>
         {% endfor %}
@@ -724,10 +752,10 @@
         <thead>
           <tr>
             <th>Department</th>
-            <th class="text-center">Total Evaluations</th>
+            <th class="text-center">Total Agniveers</th>
+            <th class="text-center">Evaluated Agniveers</th>
             <th class="text-center"><i class="bi bi-check-circle"></i> Passed</th>
             <th class="text-center"><i class="bi bi-x-circle"></i> Failed</th>
-            <th class="text-center">Pass Rate</th>
           </tr>
         </thead>
         <tbody>
@@ -736,10 +764,10 @@
             <td><strong style="color:var(--army-olive);">
               {% if dept == 'A' %}Battalion{% elif dept == 'B' %}TTS{% elif dept == 'C' %}CS{% else %}Clerk{% endif %}
             </strong></td>
-            <td class="text-center">{{ stats.total }}</td>
+            <td class="text-center">{{ stats.total_eligible }}</td>
+            <td class="text-center">{{ stats.evaluated }}</td>
             <td class="text-center" style="color:var(--army-olive);">{{ stats.passed }}</td>
             <td class="text-center" style="color:#EF5350;">{{ stats.failed }}</td>
-            <td class="text-center"><strong style="color:#4FC3F7;">{{ stats.pass_rate|floatformat:1 }}%</strong></td>
           </tr>
           {% endfor %}
         </tbody>
@@ -1146,7 +1174,7 @@
           animation          : { duration: 900, easing: 'easeOutQuart' },
           interaction        : { mode: 'index', intersect: false },
           scales: {
-            y : { ...s, beginAtZero: true, max: 100,
+            y : { ...s, beginAtZero: true,
                   title: { display: true, text: 'Avg Marks', color: dc.border, font: { size: 9 } } },
             y1: { ...s, beginAtZero: true, max: 100, position: 'right',
                   grid : { drawOnChartArea: false },
@@ -1159,6 +1187,30 @@
     });
   }
 
+  /* ── Helper to render stats cards ────────────────────── */
+  function renderStatsCards(data) {
+    document.getElementById('deptDetailsContainer').innerHTML = `
+      <div class="d-flex w-100 gap-3">
+        <div class="dept-stat-card" style="background:linear-gradient(145deg,rgba(79,195,247,0.12),rgba(33,150,243,0.04));border-color:rgba(79,195,247,0.3);">
+          <div class="dept-stat-value" style="color:#0288D1;">${data.total_eligible.toLocaleString()}</div>
+          <div class="dept-stat-label">Total Agniveer</div>
+        </div>
+        <div class="dept-stat-card" style="background:linear-gradient(145deg,rgba(212,160,23,0.12),rgba(255,193,7,0.04));border-color:rgba(212,160,23,0.3);">
+          <div class="dept-stat-value" style="color:#F57F17;">${data.evaluated.toLocaleString()}</div>
+          <div class="dept-stat-label">Evaluated Agniveer</div>
+        </div>
+        <div class="dept-stat-card" style="background:linear-gradient(145deg,rgba(82,183,136,0.12),rgba(46,125,50,0.04));border-color:rgba(82,183,136,0.3);">
+          <div class="dept-stat-value" style="color:#2E7D32;">${data.passed.toLocaleString()}</div>
+          <div class="dept-stat-label">Passed</div>
+        </div>
+        <div class="dept-stat-card" style="background:linear-gradient(145deg,rgba(239,83,80,0.12),rgba(183,28,28,0.04));border-color:rgba(239,83,80,0.3);">
+          <div class="dept-stat-value" style="color:#C62828;">${data.failed.toLocaleString()}</div>
+          <div class="dept-stat-label">Failed</div>
+        </div>
+      </div>
+    `;
+  }
+
   /* ── 5. Dept Category Chart (on button click) ────────── */
   function buildDeptCategoryChart(dept) {
     kill('deptCat');
@@ -1169,7 +1221,8 @@
     const legEl = document.getElementById('deptCatLegend');
     if (legEl) {
       legEl.innerHTML = `
-        <span><span class="leg-sq" style="background:rgba(33,150,243,0.75)"></span>Total</span>
+        <span><span class="leg-sq" style="background:rgba(79,195,247,0.75)"></span>Total Agniveer</span>
+        <span><span class="leg-sq" style="background:rgba(212,160,23,0.75)"></span>Evaluated Agniveer</span>
         <span><span class="leg-sq" style="background:rgba(76,175,80,0.75)"></span>Passed</span>
         <span><span class="leg-sq" style="background:rgba(239,83,80,0.75)"></span>Failed</span>
       `;
@@ -1177,12 +1230,54 @@
     charts.deptCat = new Chart(ctx, {
       type: 'bar',
       data: {
-        labels  : ['Total', 'Passed', 'Failed'],
+        labels  : ['Total Agniveer', 'Evaluated Agniveer', 'Passed', 'Failed'],
         datasets: [{
           label          : DEPT_NAMES[dept],
-          data           : [stats.total, stats.passed, stats.failed],
-          backgroundColor: ['rgba(33,150,243,0.75)', 'rgba(76,175,80,0.75)', 'rgba(239,83,80,0.75)'],
-          borderColor    : ['#2196F3', '#4CAF50', '#EF5350'],
+          data           : [stats.total_eligible, stats.evaluated, stats.passed, stats.failed],
+          backgroundColor: ['rgba(79,195,247,0.75)','rgba(212,160,23,0.75)','rgba(76,175,80,0.75)','rgba(239,83,80,0.75)'],
+          borderColor    : ['#4FC3F7','#D4A017','#4CAF50','#EF5350'],
+          borderWidth    : 1.5,
+          borderRadius   : 6,
+        }]
+      },
+      options: {
+        responsive         : true,
+        maintainAspectRatio: false,
+        indexAxis          : 'y',
+        animation          : { duration: 700, easing: 'easeOutQuart' },
+        scales: {
+          x: { ...s, beginAtZero: true },
+          y: { ...s, grid: { display: false } }
+        },
+        plugins: { legend: { display: false } }
+      }
+    });
+  }
+
+  /* ── Dept Sub Category Chart (on sub-dept click) ─────── */
+  function buildDeptSubCategoryChart(dept, subKey, subData) {
+    kill('deptCat');
+    const ctx = document.getElementById('deptSelectedCategoryChart');
+    if (!ctx) return;
+    const s     = sb();
+    const legEl = document.getElementById('deptCatLegend');
+    if (legEl) {
+      legEl.innerHTML = `
+        <span><span class="leg-sq" style="background:rgba(79,195,247,0.75)"></span>Total Agniveer</span>
+        <span><span class="leg-sq" style="background:rgba(212,160,23,0.75)"></span>Evaluated Agniveer</span>
+        <span><span class="leg-sq" style="background:rgba(76,175,80,0.75)"></span>Passed</span>
+        <span><span class="leg-sq" style="background:rgba(239,83,80,0.75)"></span>Failed</span>
+      `;
+    }
+    charts.deptCat = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels  : ['Total Agniveer', 'Evaluated Agniveer', 'Passed', 'Failed'],
+        datasets: [{
+          label          : `${DEPT_NAMES[dept]} - ${subKey}`,
+          data           : [subData.total_eligible, subData.evaluated, subData.passed, subData.failed],
+          backgroundColor: ['rgba(79,195,247,0.75)','rgba(212,160,23,0.75)','rgba(76,175,80,0.75)','rgba(239,83,80,0.75)'],
+          borderColor    : ['#4FC3F7','#D4A017','#4CAF50','#EF5350'],
           borderWidth    : 1.5,
           borderRadius   : 6,
         }]
@@ -1208,7 +1303,6 @@
     buildTestType();
     buildMonthly();
     buildDeptCharts();
-    /* if a dept was previously selected, rebuild its cat chart too */
     const activeBtn = document.querySelector('.dept-btn.active');
     if (activeBtn) buildDeptCategoryChart(activeBtn.getAttribute('data-dept'));
   }
@@ -1222,29 +1316,59 @@
       document.querySelectorAll('.dept-btn').forEach(b => b.classList.remove('active'));
       this.classList.add('active');
 
-      document.getElementById('deptDetailsContainer').innerHTML = `
-        <div class="d-flex w-100 gap-3">
-          <div class="dept-stat-card" style="background:linear-gradient(145deg,rgba(79,195,247,0.12),rgba(33,150,243,0.04));border-color:rgba(79,195,247,0.3);">
-            <div class="dept-stat-value" style="color:#0288D1;">${stats.total.toLocaleString()}</div>
-            <div class="dept-stat-label">Total</div>
-          </div>
-          <div class="dept-stat-card" style="background:linear-gradient(145deg,rgba(82,183,136,0.12),rgba(46,125,50,0.04));border-color:rgba(82,183,136,0.3);">
-            <div class="dept-stat-value" style="color:#2E7D32;">${stats.passed.toLocaleString()}</div>
-            <div class="dept-stat-label">Passed</div>
-          </div>
-          <div class="dept-stat-card" style="background:linear-gradient(145deg,rgba(239,83,80,0.12),rgba(183,28,28,0.04));border-color:rgba(239,83,80,0.3);">
-            <div class="dept-stat-value" style="color:#C62828;">${stats.failed.toLocaleString()}</div>
-            <div class="dept-stat-label">Failed</div>
-          </div>
-          <div class="dept-stat-card" style="background:linear-gradient(145deg,rgba(212,160,23,0.12),rgba(255,193,7,0.04));border-color:rgba(212,160,23,0.3);">
-            <div class="dept-stat-value" style="color:#F57F17;">${stats.pass_rate.toFixed(1)}%</div>
-            <div class="dept-stat-label">Rate</div>
-          </div>
-        </div>
-      `;
+      renderStatsCards(stats);
 
       document.getElementById('deptCategoryChartContainer').style.display = 'block';
       buildDeptCategoryChart(dept);
+
+      // Sub-department handling
+      const subDeptContainer = document.getElementById('subDeptContainer');
+      if (!subDeptContainer) return;
+
+      if (dept === 'A' || dept === 'B') {
+        subDeptContainer.classList.remove('d-none');
+        subDeptContainer.classList.add('d-flex');
+
+        let pillsHtml = '';
+        if (dept === 'A') {
+          pillsHtml = `
+            <button type="button" class="btn sub-dept-btn active" data-sub="all">All Units</button>
+            <button type="button" class="btn sub-dept-btn" data-sub="1TB">1TB</button>
+            <button type="button" class="btn sub-dept-btn" data-sub="2TB">2TB</button>
+            <button type="button" class="btn sub-dept-btn" data-sub="STB">STB</button>
+          `;
+        } else {
+          pillsHtml = `
+            <button type="button" class="btn sub-dept-btn active" data-sub="all">All Trades</button>
+            <button type="button" class="btn sub-dept-btn" data-sub="DMV">DMV</button>
+            <button type="button" class="btn sub-dept-btn" data-sub="OPEM">OPEM</button>
+            <button type="button" class="btn sub-dept-btn" data-sub="OTHER">Other Trades</button>
+          `;
+        }
+        subDeptContainer.innerHTML = pillsHtml;
+
+        // Bind click event to sub-department pills
+        subDeptContainer.querySelectorAll('.sub-dept-btn').forEach(pill => {
+          pill.addEventListener('click', function () {
+            subDeptContainer.querySelectorAll('.sub-dept-btn').forEach(p => p.classList.remove('active'));
+            this.classList.add('active');
+
+            const subKey = this.getAttribute('data-sub');
+            if (subKey === 'all') {
+              renderStatsCards(stats);
+              buildDeptCategoryChart(dept);
+            } else {
+              const subData = stats.sub_depts[subKey];
+              renderStatsCards(subData);
+              buildDeptSubCategoryChart(dept, subKey, subData);
+            }
+          });
+        });
+      } else {
+        subDeptContainer.classList.add('d-none');
+        subDeptContainer.classList.remove('d-flex');
+        subDeptContainer.innerHTML = '';
+      }
     });
   });
 

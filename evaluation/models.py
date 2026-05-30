@@ -26,6 +26,8 @@ class EvaluationSheet(models.Model):
         ('weekly', 'Weekly Tests'),
         ('final', 'Final Test'),
         ('screening', 'Screening'),
+        ('driving', 'Final Driving Test'),
+        ('maintenance', 'Maintenance Test'),
     ]
 
     TEST_TYPE_CHOICES = [

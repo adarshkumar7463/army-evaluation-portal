@@ -10,7 +10,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 from django.utils import timezone
 from django.db.models import Q
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseForbidden
 from django.urls import reverse_lazy
 from datetime import date
 
@@ -20,6 +20,9 @@ from .forms import EvaluationSheetForm, MarksForm, EvaluationFilterForm, Agnivee
 from departments.models import Agniveer
 from accounts.mixins import AnyStaffMixin, CommanderOrDeptMixin, TrainerMixin
 from logs.utils import log_action
+
+
+CLERK_TRADES = ['CLK', 'CLERK', 'Clerk', 'CLK_SD', 'CLK_IM']
 
 
 class EvaluationListView(AnyStaffMixin, ListView):
@@ -780,6 +783,41 @@ class UnlockSheetView(AnyStaffMixin, View):
 class AgniveerReportCardView(AnyStaffMixin, View):
     template_name = 'evaluation/report_card.html'
 
+    def _scope_evaluations_for_department_user(self, evaluations, user, agniveer, user_dept):
+        evaluations = evaluations.filter(department=user_dept)
+
+        if user_dept == 'A':
+            if user.battalion_unit and agniveer.bn_desp != user.battalion_unit:
+                return None
+            if not user.battalion_unit:
+                battalion_units = [choice[0] for choice in user.BATTALION_CHOICES]
+                if agniveer.bn_desp not in battalion_units:
+                    return None
+                evaluations = evaluations.filter(agniveer__bn_desp__in=battalion_units)
+            else:
+                evaluations = evaluations.filter(agniveer__bn_desp=user.battalion_unit)
+
+        elif user_dept == 'B' and user.tts_trade:
+            if user.tts_trade == 'DMV':
+                if agniveer.trade != 'DMV':
+                    return None
+                evaluations = evaluations.filter(agniveer__trade='DMV')
+            elif user.tts_trade == 'OPEM':
+                if agniveer.trade != 'OPEM':
+                    return None
+                evaluations = evaluations.filter(agniveer__trade='OPEM')
+            elif user.tts_trade == 'OTHER':
+                if agniveer.trade in ['DMV', 'OPEM']:
+                    return None
+                evaluations = evaluations.exclude(agniveer__trade__in=['DMV', 'OPEM'])
+
+        elif user_dept == 'D':
+            if agniveer.trade not in CLERK_TRADES:
+                return None
+            evaluations = evaluations.filter(agniveer__trade__in=CLERK_TRADES)
+
+        return evaluations
+
     def get(self, request, pk):
         agniveer = get_object_or_404(Agniveer, pk=pk)
         
@@ -797,10 +835,13 @@ class AgniveerReportCardView(AnyStaffMixin, View):
         target_dept = request.GET.get('dept')
         is_department_view = False
         user_dept = None
+        battalion_result_row = None
 
         if request.user.is_department:
             user_dept = request.user.get_department_code()
-            evaluations = evaluations.filter(department=user_dept)
+            evaluations = self._scope_evaluations_for_department_user(evaluations, request.user, agniveer, user_dept)
+            if evaluations is None:
+                return HttpResponseForbidden("You don't have permission to view this report card.")
             is_department_view = True
             departments_to_show = [user_dept]
         elif target_dept and target_dept in ['A', 'B', 'C', 'D'] and (request.user.is_commander or request.user.is_g_head):

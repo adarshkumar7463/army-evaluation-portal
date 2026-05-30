@@ -15,13 +15,101 @@ from django.db.models.functions import Coalesce
 
 from departments.models import Agniveer
 from evaluation.models import EvaluationSheet, Marks
-from evaluation.result_helpers import build_tts_result_row, build_battalion_result_row
+from evaluation.result_helpers import build_tts_result_row, build_battalion_result_row, build_department_result_row
 from accounts.models import CustomUser
 from accounts.mixins import AnyStaffMixin, CommanderOrGHeadMixin
 from logs.utils import log_action
 
 
 DEPARTMENT_NAMES = {'A': 'Battalion', 'B': 'TTS', 'C': 'CS', 'D': 'Clerk'}
+CLERK_TRADES = ['CLK', 'CLERK', 'Clerk', 'CLK_SD', 'CLK_IM']
+TTS_DIRECT_TRADES = ['DMV', 'OPEM']
+
+
+def scoped_agniveers(queryset, user, dept=None):
+    dept = dept or user.get_department_code()
+    if dept == 'A':
+        if user.is_department and user.battalion_unit:
+            return queryset.filter(bn_desp=user.battalion_unit)
+        battalion_units = [choice[0] for choice in CustomUser.BATTALION_CHOICES]
+        return queryset.filter(bn_desp__in=battalion_units)
+    if dept == 'B':
+        if user.is_department and user.tts_trade == 'DMV':
+            return queryset.filter(trade='DMV')
+        if user.is_department and user.tts_trade == 'OPEM':
+            return queryset.filter(trade='OPEM')
+        if user.is_department and user.tts_trade == 'OTHER':
+            return queryset.exclude(trade__in=TTS_DIRECT_TRADES)
+        return queryset
+    if dept == 'C':
+        return queryset.filter(evaluations__department='C').distinct()
+    if dept == 'D':
+        return queryset.filter(trade__in=CLERK_TRADES)
+    return queryset
+
+
+def scoped_sheets(queryset, user, dept=None):
+    dept = dept or user.get_department_code()
+    queryset = queryset.filter(department=dept)
+    if dept == 'A':
+        if user.is_department and user.battalion_unit:
+            return queryset.filter(agniveer__bn_desp=user.battalion_unit)
+        battalion_units = [choice[0] for choice in CustomUser.BATTALION_CHOICES]
+        return queryset.filter(agniveer__bn_desp__in=battalion_units)
+    if dept == 'B':
+        if user.is_department and user.tts_trade == 'DMV':
+            return queryset.filter(agniveer__trade='DMV')
+        if user.is_department and user.tts_trade == 'OPEM':
+            return queryset.filter(agniveer__trade='OPEM')
+        if user.is_department and user.tts_trade == 'OTHER':
+            return queryset.exclude(agniveer__trade__in=TTS_DIRECT_TRADES)
+        return queryset
+    if dept == 'D':
+        return queryset.filter(agniveer__trade__in=CLERK_TRADES)
+    return queryset
+
+
+def user_can_access_agniveer(user, agniveer, dept=None):
+    return scoped_agniveers(Agniveer.objects.filter(pk=agniveer.pk), user, dept).exists()
+
+
+def pass_fail_counts_for_scope(user, dept=None):
+    departments = [dept] if dept else ['A', 'B', 'C', 'D']
+    sheets_with_marks_ids = Marks.objects.values_list('evaluation_sheet_id', flat=True).distinct()
+    all_sheets = EvaluationSheet.objects.filter(
+        Q(is_locked=True) | Q(id__in=sheets_with_marks_ids)
+    ).prefetch_related('marks')
+
+    if dept:
+        all_sheets = scoped_sheets(all_sheets, user, dept)
+        agniveers = scoped_agniveers(Agniveer.objects.all(), user, dept)
+    else:
+        agniveers = Agniveer.objects.all()
+
+    passed = 0
+    failed = 0
+    for agniveer in agniveers:
+        total_marks = 0
+        max_marks = 0
+        for dept_code in departments:
+            dept_sheets = list(all_sheets.filter(agniveer=agniveer, department=dept_code))
+            if not dept_sheets:
+                continue
+            result_row = build_department_result_row(agniveer, dept_sheets, dept_code)
+            total_marks += result_row.get('grand_total', 0) or 0
+            max_marks += result_row.get('max_total') or 40
+        if max_marks <= 0:
+            continue
+        if (total_marks / max_marks) * 100 >= 50:
+            passed += 1
+        else:
+            failed += 1
+
+    return {
+        'evaluated': passed + failed,
+        'passed': passed,
+        'failed': failed,
+    }
 
 # Department-specific access mixins
 class TTSTradeHeadMixin(UserPassesTestMixin):
@@ -37,12 +125,12 @@ class BattalionHeadMixin(UserPassesTestMixin):
 class CSHeadMixin(UserPassesTestMixin):
     """Allow access only to CS head users"""
     def test_func(self):
-        return self.request.user.is_authenticated and self.request.user.role == CustomUser.ROLE_CS_HEAD
+        return self.request.user.is_authenticated and self.request.user.role == CustomUser.ROLE_DEPT_C
 
 class ClerkHeadMixin(UserPassesTestMixin):
     """Allow access only to Clerk head users"""
     def test_func(self):
-        return self.request.user.is_authenticated and self.request.user.role == CustomUser.ROLE_CLERK_HEAD
+        return self.request.user.is_authenticated and self.request.user.role == CustomUser.ROLE_DEPT_D
 
 
 class ReportDashboardView(AnyStaffMixin, View):
@@ -56,16 +144,18 @@ class ReportDashboardView(AnyStaffMixin, View):
             # Commander/G-Head sees ALL departments
             context['user_role'] = 'commander_ghead'
             context['show_all_departments'] = True
+            context['report_departments'] = ['A', 'B', 'C', 'D']
             
             # Get data for all departments
             dept_data = {}
             for dept_code, dept_name in DEPARTMENT_NAMES.items():
-                sheets = EvaluationSheet.objects.filter(department=dept_code, is_locked=True)
+                counts = pass_fail_counts_for_scope(user, dept_code)
                 dept_data[dept_code] = {
                     'name': dept_name,
-                    'total_agniveers': Agniveer.objects.filter(department=dept_code).count(),
-                    'pass_count': sheets.filter(is_locked=True).count(),
-                    'fail_count': 0,  # Calculate properly
+                    'total_agniveers': scoped_agniveers(Agniveer.objects.all(), user, dept_code).count(),
+                    'evaluated_agniveers': counts['evaluated'],
+                    'pass_count': counts['passed'],
+                    'fail_count': counts['failed'],
                     'total_trainers': CustomUser.objects.filter(
                         role__in=[CustomUser.ROLE_TRAINER_NCO, CustomUser.ROLE_TRAINER_JCO, CustomUser.ROLE_TRAINER_OFFICER],
                         department=dept_code
@@ -74,76 +164,56 @@ class ReportDashboardView(AnyStaffMixin, View):
             context['department_data'] = dept_data
             
             # Overall totals
-            total_sheets = EvaluationSheet.objects.filter(is_locked=True)
+            counts = pass_fail_counts_for_scope(user)
             context['total_agniveers'] = Agniveer.objects.count()
             context['total_trainers'] = CustomUser.objects.filter(
                 role__in=[CustomUser.ROLE_TRAINER_NCO, CustomUser.ROLE_TRAINER_JCO, CustomUser.ROLE_TRAINER_OFFICER]
             ).count()
-            context['pass_count'] = total_sheets.filter(is_locked=True).count()
+            context['evaluated_agniveers'] = counts['evaluated']
+            context['pass_count'] = counts['passed']
+            context['fail_count'] = counts['failed']
             
         elif user.is_department:
             dept = user.get_department_code()
             context['user_role'] = f'department_{dept}'
             context['department_code'] = dept
             context['department_name'] = DEPARTMENT_NAMES.get(dept, dept)
-            
-            # Check if user is department head
-            if dept == 'A' and user.is_battalion:
-                context['is_department_head'] = True
+            context['report_departments'] = [dept]
+
+            context['is_department_head'] = True
+            if dept == 'A':
                 context['head_type'] = 'battalion'
-                # Battalion head sees only their battalion unit
-                if user.battalion_unit:
-                    agniveers = Agniveer.objects.filter(bn_desp=user.battalion_unit)
-                else:
-                    agniveers = Agniveer.objects.filter(department='A')
-                sheets = EvaluationSheet.objects.filter(department='A', is_locked=True, agniveer__in=agniveers)
-                
-            elif dept == 'B' and getattr(user, 'tts_trade', None):
-                context['is_department_head'] = True
+            elif dept == 'B':
                 context['head_type'] = 'tts'
                 context['tts_trade'] = user.tts_trade
-                # TTS head sees only their trade
-                if user.tts_trade == 'DMV':
-                    agniveers = Agniveer.objects.filter(trade='DMV')
-                elif user.tts_trade == 'OPEM':
-                    agniveers = Agniveer.objects.filter(trade='OPEM')
-                else:  # OTHER
-                    agniveers = Agniveer.objects.exclude(trade__in=['DMV', 'OPEM'])
-                sheets = EvaluationSheet.objects.filter(department='B', is_locked=True, agniveer__in=agniveers)
-                
-            elif dept == 'C' and user.role == CustomUser.ROLE_CS_HEAD:
-                context['is_department_head'] = True
+            elif dept == 'C':
                 context['head_type'] = 'cs'
-                agniveers = Agniveer.objects.filter(department='C')
-                sheets = EvaluationSheet.objects.filter(department='C', is_locked=True)
-                
-            elif dept == 'D' and user.role == CustomUser.ROLE_CLERK_HEAD:
-                context['is_department_head'] = True
+            elif dept == 'D':
                 context['head_type'] = 'clerk'
-                agniveers = Agniveer.objects.filter(department='D', trade__in=['CLK', 'CLERK', 'Clerk', 'CLK_SD', 'CLK_IM'])
-                sheets = EvaluationSheet.objects.filter(department='D', is_locked=True, agniveer__in=agniveers)
-            else:
-                # Regular department user (not head)
-                context['is_department_head'] = False
-                agniveers = Agniveer.objects.filter(department=dept)
-                sheets = EvaluationSheet.objects.filter(department=dept, is_locked=True)
+
+            agniveers = scoped_agniveers(Agniveer.objects.all(), user, dept)
+            counts = pass_fail_counts_for_scope(user, dept)
             
             context['total_agniveers'] = agniveers.count()
             context['total_trainers'] = CustomUser.objects.filter(
                 role__in=[CustomUser.ROLE_TRAINER_NCO, CustomUser.ROLE_TRAINER_JCO, CustomUser.ROLE_TRAINER_OFFICER],
                 department=dept
             ).count()
-            context['pass_count'] = sheets.count()
+            context['evaluated_agniveers'] = counts['evaluated']
+            context['pass_count'] = counts['passed']
+            context['fail_count'] = counts['failed']
         else:
             # Trainer users
             context['user_role'] = 'trainer'
+            context['report_departments'] = []
             agniveers = user.assigned_agniveers.all()
             sheets = EvaluationSheet.objects.filter(agniveer__in=agniveers, is_locked=True)
             context['total_agniveers'] = agniveers.count()
             context['total_trainers'] = 0
             context['pass_count'] = sheets.count()
+            context['evaluated_agniveers'] = sheets.values('agniveer').distinct().count()
 
-        context['fail_count'] = context['total_agniveers'] - context['pass_count']
+        context['fail_count'] = context.get('fail_count', 0)
 
         return render(request, self.template_name, context)
 
@@ -196,9 +266,10 @@ class BattalionReportCardView(BattalionHeadMixin, View):
         
         # Filter agniveers by battalion unit
         if battalion_unit:
-            agniveers = Agniveer.objects.filter(bn_desp=battalion_unit, department='A')
+            agniveers = Agniveer.objects.filter(bn_desp=battalion_unit)
         else:
-            agniveers = Agniveer.objects.filter(department='A')
+            battalion_units = [choice[0] for choice in CustomUser.BATTALION_CHOICES]
+            agniveers = Agniveer.objects.filter(bn_desp__in=battalion_units)
         
         sheets = EvaluationSheet.objects.filter(
             department='A', 
@@ -226,8 +297,7 @@ class CSReportCardView(CSHeadMixin, View):
     template_name = 'reports/cs_report_card.html'
     
     def get(self, request):
-        user = request.user
-        agniveers = Agniveer.objects.filter(department='C')
+        agniveers = Agniveer.objects.filter(evaluations__department='C').distinct()
         
         return render(request, self.template_name, {
             'agniveers': agniveers,
@@ -241,8 +311,7 @@ class ClerkReportCardView(ClerkHeadMixin, View):
     template_name = 'reports/clerk_report_card.html'
     
     def get(self, request):
-        user = request.user
-        agniveers = Agniveer.objects.filter(department='D', trade__in=['CLK', 'CLERK', 'Clerk', 'CLK_SD', 'CLK_IM'])
+        agniveers = Agniveer.objects.filter(trade__in=CLERK_TRADES)
         
         return render(request, self.template_name, {
             'agniveers': agniveers,
@@ -271,37 +340,7 @@ class ReportCardDetailView(AnyStaffMixin, View):
             
         elif user.is_department:
             user_dept = user.get_department_code()
-            agniveer_dept = agniveer.department
-            
-            # Department users can only see their own department's agniveers
-            if user_dept == agniveer_dept:
-                # For Battalion head: also check battalion unit
-                if user.is_battalion:
-                    if user.battalion_unit:
-                        if agniveer.bn_desp == user.battalion_unit:
-                            has_access = True
-                    else:
-                        has_access = True
-                # For TTS head: check trade
-                elif user_dept == 'B' and getattr(user, 'tts_trade', None):
-                    if user.tts_trade == 'DMV' and agniveer.trade == 'DMV':
-                        has_access = True
-                    elif user.tts_trade == 'OPEM' and agniveer.trade == 'OPEM':
-                        has_access = True
-                    elif user.tts_trade == 'OTHER' and agniveer.trade not in ['DMV', 'OPEM']:
-                        has_access = True
-                    else:
-                        has_access = False
-                # For CS and Clerk heads
-                elif user_dept == 'C' and user.role == CustomUser.ROLE_CS_HEAD:
-                    has_access = True
-                elif user_dept == 'D' and user.role == CustomUser.ROLE_CLERK_HEAD:
-                    if agniveer.trade in ['CLK', 'CLERK', 'Clerk', 'CLK_SD', 'CLK_IM']:
-                        has_access = True
-                else:
-                    has_access = True
-            else:
-                has_access = False
+            has_access = user_can_access_agniveer(user, agniveer, user_dept)
         elif user.is_trainer:
             # Trainers can only see their assigned agniveers
             if agniveer in user.assigned_agniveers.all():
@@ -317,7 +356,11 @@ class ReportCardDetailView(AnyStaffMixin, View):
             is_department_view = False
         else:
             user_dept = user.get_department_code()
-            evaluations = EvaluationSheet.objects.filter(agniveer=agniveer, department=user_dept).prefetch_related('marks')
+            evaluations = scoped_sheets(
+                EvaluationSheet.objects.filter(agniveer=agniveer).prefetch_related('marks'),
+                user,
+                user_dept,
+            )
             departments_to_show = [user_dept]
             is_department_view = True
         
@@ -373,7 +416,7 @@ class ExportAgniveersCSVView(AnyStaffMixin, View):
         if user.is_commander or user.is_g_head:
             agniveers = Agniveer.objects.all()
         elif user.is_department:
-            agniveers = Agniveer.objects.all()  # Universal agniveers
+            agniveers = scoped_agniveers(Agniveer.objects.all(), user)
         else:
             agniveers = user.assigned_agniveers.all()
 
@@ -387,12 +430,16 @@ class ExportAgniveersCSVView(AnyStaffMixin, View):
         ])
 
         for a in agniveers:
+            dept_codes = list(
+                a.evaluations.values_list('department', flat=True).distinct()
+            )
+            department_text = ', '.join(DEPARTMENT_NAMES.get(dept, dept) for dept in dept_codes)
             writer.writerow([
                 a.enrollment_number,
                 a.get_full_name(),
-                DEPARTMENT_NAMES.get(a.department, a.department),
+                DEPARTMENT_NAMES.get(user.get_department_code(), '') if user.is_department else department_text,
                 a.batch,
-                a.joining_date.strftime('%Y-%m-%d'),
+                a.joining_date.strftime('%Y-%m-%d') if a.joining_date else '',
                 a.get_status_display(),
                 a.get_total_score(),
                 a.get_pass_status(),
@@ -408,7 +455,7 @@ class ExportEvaluationsCSVView(AnyStaffMixin, View):
         sheets = EvaluationSheet.objects.filter(is_locked=True).select_related('agniveer').prefetch_related('marks')
 
         if user.is_department:
-            sheets = sheets.filter(department=user.get_department_code())
+            sheets = scoped_sheets(sheets, user)
         elif user.is_trainer:
             sheets = sheets.filter(agniveer__in=user.assigned_agniveers.all())
 
@@ -452,7 +499,7 @@ class ExportExcelView(AnyStaffMixin, View):
         sheets = EvaluationSheet.objects.filter(is_locked=True).select_related('agniveer').prefetch_related('marks')
 
         if user.is_department:
-            sheets = sheets.filter(department=user.get_department_code())
+            sheets = scoped_sheets(sheets, user)
 
         wb = openpyxl.Workbook()
         ws = wb.active
@@ -572,9 +619,9 @@ class ExportDashboardResultsExcelView(AnyStaffMixin, View):
 
         headers = [
             'ARMY NO', 'RANK', 'TRADE', 'NAME',
-            'COMMON MIL KNOWLEDGE (20)', 'BASIC TACTICE (CES) (40)',
-            'TRADE PROFICIENCY (BTT) (40)', 'WPN & EQPT HANDLING (20)',
-            'TOTAL (120)', 'ROUND FIGURE(120)'
+            'FC/BC PRAC (30)', 'FC/BC ONLINE TEST (30)', 'CAMP TRG (30)',
+            'MR CONVERTED TO 40', 'BFC CONVERTED TO 15', 'PDP CONVERTED TO 15',
+            'TOTAL (160)', 'CONVERTED TO 20', '%', 'GRADING'
         ]
         
         ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=len(headers))
@@ -592,15 +639,16 @@ class ExportDashboardResultsExcelView(AnyStaffMixin, View):
         for index, row in enumerate(rows, 1):
             values = [
                 row['army_no'], row['rank'], row['trade'], row['name'],
-                row['cmk'], row['ces'], row['btt'], row['wpn'],
-                row['total'], row['round_figure']
+                row['fc_prac'], row['fc_online'], row['camp_trg'],
+                row['mr_conv'], row['bfc_conv'], row['pdp_conv'],
+                row['total_160'], row['conv_20'], row['percentage'], row['grading']
             ]
             for col, value in enumerate(values, 1):
                 cell = ws.cell(row=index + 2, column=col, value=value)
                 cell.alignment = center
                 cell.border = border
 
-        widths = [15, 10, 15, 25, 25, 25, 25, 25, 15, 20]
+        widths = [15, 10, 15, 25, 18, 22, 15, 20, 20, 20, 15, 16, 10, 12]
         for col, width in enumerate(widths, 1):
             ws.column_dimensions[openpyxl.utils.get_column_letter(col)].width = width
         ws.freeze_panes = 'A3'
@@ -723,7 +771,9 @@ class ExportDashboardResultsExcelView(AnyStaffMixin, View):
         except ImportError:
             return HttpResponse("openpyxl not installed.", status=500)
 
-        status_filter = request.GET.get('status', 'pass') # 'pass' or 'fail'
+        status_filter = request.GET.get('status', 'pass')
+        if status_filter not in ['pass', 'fail']:
+            status_filter = 'pass'
         is_pass_filter = status_filter == 'pass'
         
         user = request.user
@@ -733,60 +783,54 @@ class ExportDashboardResultsExcelView(AnyStaffMixin, View):
         if user.is_department and user.get_department_code() == 'B':
             return self._export_tts_results(request, status_filter)
         
-        # We need to replicate the pass/fail logic of the dashboard
-        from evaluation.models import Marks
-        from django.db.models import Q
-        
         sheets_with_marks_ids = Marks.objects.values_list('evaluation_sheet_id', flat=True).distinct()
-        all_sheets = EvaluationSheet.objects.filter(Q(is_locked=True) | Q(id__in=sheets_with_marks_ids)).prefetch_related('marks')
-        
         is_dept = user.is_department
         dept_code = user.get_department_code() if is_dept else None
-        
+        departments = [dept_code] if is_dept else ['A', 'B', 'C', 'D']
+
+        all_sheets = EvaluationSheet.objects.filter(
+            Q(is_locked=True) | Q(id__in=sheets_with_marks_ids)
+        ).prefetch_related('marks')
+
         if is_dept:
-            all_sheets = all_sheets.filter(department=dept_code)
-            if user.is_battalion:
-                if user.battalion_unit:
-                    all_sheets = all_sheets.filter(agniveer__bn_desp=user.battalion_unit)
-                else:
-                    from accounts.models import CustomUser
-                    battalion_units = [choice[0] for choice in CustomUser.BATTALION_CHOICES]
-                    all_sheets = all_sheets.filter(agniveer__bn_desp__in=battalion_units)
-            elif dept_code == 'D':
-                all_sheets = all_sheets.filter(agniveer__trade__in=['CLK', 'CLERK', 'Clerk', 'CLK_SD', 'CLK_IM'])
-        else:
-            # We use max_marks of valid sheets as per the updated dashboard logic
-            pass
+            all_sheets = scoped_sheets(all_sheets, user, dept_code)
             
         filtered_agniveers = []
-        all_agniveers = Agniveer.objects.prefetch_related('evaluations__marks')
+        all_agniveers = Agniveer.objects.all()
         if is_dept:
-            if user.is_battalion:
-                if user.battalion_unit:
-                    all_agniveers = all_agniveers.filter(bn_desp=user.battalion_unit)
-                else:
-                    from accounts.models import CustomUser
-                    battalion_units = [choice[0] for choice in CustomUser.BATTALION_CHOICES]
-                    all_agniveers = all_agniveers.filter(bn_desp__in=battalion_units)
-            elif dept_code == 'D':
-                all_agniveers = all_agniveers.filter(trade__in=['CLK', 'CLERK', 'Clerk', 'CLK_SD', 'CLK_IM'])
+            all_agniveers = scoped_agniveers(all_agniveers, user, dept_code)
         
-        for agniveer in all_agniveers:
-            ag_sheets = all_sheets.filter(agniveer=agniveer)
-            total_marks = sum(s.get_total_marks() for s in ag_sheets)
-            max_marks = sum(s.get_max_marks() for s in ag_sheets)
-                
-            if max_marks > 0:
-                percentage = (total_marks / max_marks) * 100
-                is_pass = percentage >= 50
-                if is_pass == is_pass_filter:
-                    filtered_agniveers.append({
-                        'enrollment_number': agniveer.enrollment_number,
-                        'name': agniveer.get_full_name(),
-                        'score': f"{total_marks}/{max_marks}",
-                        'percentage': round(percentage, 1),
-                        'status': 'PASS' if is_pass else 'FAIL'
-                    })
+        for agniveer in all_agniveers.order_by('agniveer_no', 'enrollment_number'):
+            total_marks = 0
+            max_marks = 0
+            evaluated_departments = []
+
+            for dept in departments:
+                dept_sheets = list(all_sheets.filter(agniveer=agniveer, department=dept))
+                if not dept_sheets:
+                    continue
+                result_row = build_department_result_row(agniveer, dept_sheets, dept)
+                total_marks += result_row.get('grand_total', 0) or 0
+                max_marks += result_row.get('max_total') or 40
+                evaluated_departments.append(DEPARTMENT_NAMES.get(dept, dept))
+
+            if max_marks <= 0:
+                continue
+
+            percentage = (total_marks / max_marks) * 100
+            is_pass = percentage >= 50
+            if is_pass == is_pass_filter:
+                filtered_agniveers.append({
+                    'enrollment_number': agniveer.enrollment_number,
+                    'army_no': agniveer.agniveer_no or agniveer.enrollment_number,
+                    'name': agniveer.get_full_name(),
+                    'trade': agniveer.trade or '',
+                    'unit': agniveer.bn_desp or '',
+                    'departments': ', '.join(evaluated_departments),
+                    'score': f"{total_marks:g}/{max_marks:g}",
+                    'percentage': round(percentage, 1),
+                    'status': 'PASS' if is_pass else 'FAIL'
+                })
 
         # Create Excel
         wb = openpyxl.Workbook()
@@ -796,39 +840,63 @@ class ExportDashboardResultsExcelView(AnyStaffMixin, View):
         # Styling
         brand_color = "1B4332"
         header_fill = PatternFill(start_color=brand_color, end_color=brand_color, fill_type="solid")
+        title_fill = PatternFill(start_color="EAF2F8", end_color="EAF2F8", fill_type="solid")
+        pass_fill = PatternFill(start_color="DDF4E8", end_color="DDF4E8", fill_type="solid")
+        fail_fill = PatternFill(start_color="FCE4E4", end_color="FCE4E4", fill_type="solid")
         header_font = Font(color="FFFFFF", bold=True, size=11)
-        center = Alignment(horizontal='center', vertical='center')
+        border = Border(
+            left=Side(style='thin', color='B7C4B7'),
+            right=Side(style='thin', color='B7C4B7'),
+            top=Side(style='thin', color='B7C4B7'),
+            bottom=Side(style='thin', color='B7C4B7'),
+        )
+        center = Alignment(horizontal='center', vertical='center', wrap_text=True)
+        left = Alignment(horizontal='left', vertical='center', wrap_text=True)
 
         # Title
-        ws.merge_cells('A1:E1')
+        ws.merge_cells('A1:I1')
         title_cell = ws['A1']
         dept_text = f" - DEPARTMENT {dept_code}" if is_dept else ""
         title_cell.value = f"ARMY EVALUATION PORTAL{dept_text} - {status_filter.upper()} AGNIVEERS"
         title_cell.font = Font(bold=True, size=14, color=brand_color)
+        title_cell.fill = title_fill
         title_cell.alignment = center
         ws.row_dimensions[1].height = 30
 
         # Headers
-        headers = ['S.No', 'Enrollment No', 'Name', 'Score', 'Percentage']
+        headers = ['S.No', 'Enrollment No', 'Army No', 'Name', 'Trade', 'Unit', 'Departments', 'Score', 'Percentage']
         for col, header in enumerate(headers, 1):
             cell = ws.cell(row=2, column=col, value=header)
             cell.fill = header_fill
             cell.font = header_font
             cell.alignment = center
+            cell.border = border
 
         # Data
+        row_fill = pass_fill if is_pass_filter else fail_fill
         for row_idx, data in enumerate(filtered_agniveers, 1):
-            ws.cell(row=row_idx + 2, column=1, value=row_idx).alignment = center
-            ws.cell(row=row_idx + 2, column=2, value=data['enrollment_number']).alignment = center
-            ws.cell(row=row_idx + 2, column=3, value=data['name']).alignment = center
-            ws.cell(row=row_idx + 2, column=4, value=data['score']).alignment = center
-            ws.cell(row=row_idx + 2, column=5, value=f"{data['percentage']}%").alignment = center
+            values = [
+                row_idx,
+                data['enrollment_number'],
+                data['army_no'],
+                data['name'],
+                data['trade'],
+                data['unit'],
+                data['departments'],
+                data['score'],
+                f"{data['percentage']}%",
+            ]
+            for col, value in enumerate(values, 1):
+                cell = ws.cell(row=row_idx + 2, column=col, value=value)
+                cell.fill = row_fill
+                cell.alignment = left if col in [4, 7] else center
+                cell.border = border
 
-        ws.column_dimensions['A'].width = 8
-        ws.column_dimensions['B'].width = 18
-        ws.column_dimensions['C'].width = 25
-        ws.column_dimensions['D'].width = 15
-        ws.column_dimensions['E'].width = 15
+        widths = [8, 18, 18, 28, 14, 12, 24, 15, 14]
+        for col, width in enumerate(widths, 1):
+            ws.column_dimensions[openpyxl.utils.get_column_letter(col)].width = width
+        ws.freeze_panes = 'A3'
+        ws.auto_filter.ref = f"A2:I{max(len(filtered_agniveers) + 2, 2)}"
 
         buffer = io.BytesIO()
         wb.save(buffer)
@@ -869,7 +937,9 @@ class ExportPDFReportCardView(AnyStaffMixin, View):
 
         if request.user.is_department:
             user_dept = request.user.get_department_code()
-            evaluations = evaluations.filter(department=user_dept)
+            if not user_can_access_agniveer(request.user, agniveer, user_dept):
+                return HttpResponse("You don't have permission to export this report card.", status=403)
+            evaluations = scoped_sheets(evaluations, request.user, user_dept)
             is_department_export = True
             departments_to_show = [user_dept]
         elif target_dept and target_dept in ['A', 'B', 'C', 'D'] and (request.user.is_commander or request.user.is_g_head):
@@ -1098,7 +1168,7 @@ class ExportPDFReportCardView(AnyStaffMixin, View):
         return FileResponse(buffer, as_attachment=True, filename=f'report_card_{agniveer.enrollment_number}.pdf')
 
 
-class ExportDepartmentPDFView(CommanderOrGHeadMixin, View):
+class ExportDepartmentPDFView(AnyStaffMixin, View):
     """Export department summary as PDF with polished styling."""
 
     def get(self, request, dept):
@@ -1112,7 +1182,14 @@ class ExportDepartmentPDFView(CommanderOrGHeadMixin, View):
         except ImportError:
             return HttpResponse("reportlab not installed.", status=500)
 
-        agniveers = Agniveer.objects.filter(evaluations__department=dept).distinct()
+        if request.user.is_department and request.user.get_department_code() != dept:
+            return HttpResponse("You don't have permission to export this department.", status=403)
+
+        agniveers = scoped_agniveers(
+            Agniveer.objects.filter(evaluations__department=dept).distinct(),
+            request.user,
+            dept,
+        )
         buffer = io.BytesIO()
         doc = SimpleDocTemplate(buffer, pagesize=landscape(A4), topMargin=0.4*inch, bottomMargin=0.4*inch)
         styles = getSampleStyleSheet()
@@ -1137,13 +1214,21 @@ class ExportDepartmentPDFView(CommanderOrGHeadMixin, View):
         data = [headers]
 
         for i, a in enumerate(agniveers, 1):
+            a_sheets = scoped_sheets(
+                EvaluationSheet.objects.filter(agniveer=a, is_locked=True).prefetch_related('marks'),
+                request.user,
+                dept,
+            )
+            total_score = sum(sheet.get_total_marks() for sheet in a_sheets)
+            max_score = sum(sheet.get_max_marks() for sheet in a_sheets)
+            pass_status = 'Pass' if max_score and (total_score / max_score) * 100 >= 50 else 'Fail'
             data.append([
                 str(i),
                 a.enrollment_number,
                 a.get_full_name(),
                 a.batch,
-                str(a.get_total_score()),
-                a.get_pass_status(),
+                str(total_score),
+                pass_status,
             ])
 
         table = Table(data, colWidths=[0.6*inch, 1.8*inch, 2.8*inch, 1.5*inch, 1.5*inch, 1.8*inch])

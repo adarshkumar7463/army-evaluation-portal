@@ -1,0 +1,186 @@
+{% extends 'base.html' %}
+{% block title %}{{ title }} – Army Portal{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+{% block page_subtitle %}Compact Edit System{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* Fixed single screen styling */
+  .main-wrapper {
+    height: 100vh !important;
+    overflow: hidden !important;
+  }
+  .content-area {
+    height: calc(100vh - 80px) !important;
+    overflow: hidden !important;
+    padding: 10px !important;
+  }
+  .compact-edit-card {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    box-shadow: var(--portal-shadow);
+    padding: 15px;
+  }
+  .compact-form-row {
+    margin-bottom: 8px !important;
+  }
+  .form-control, .form-select {
+    min-height: 28px !important;
+    height: 28px !important;
+    font-size: 11px !important;
+    padding: 2px 8px !important;
+  }
+  .form-label {
+    font-size: 10px !important;
+    margin-bottom: 2px !important;
+    font-weight: 600 !important;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+  .section-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--army-olive);
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 2px;
+    margin-bottom: 8px;
+    margin-top: 5px;
+  }
+  /* Style override for textarea to make it look compact like single-row input */
+  textarea#id_address {
+    height: 28px !important;
+    min-height: 28px !important;
+    rows: 1 !important;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="compact-edit-card">
+  <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
+    <h5 class="m-0" style="font-family:'Rajdhani'; font-weight:700; color: var(--army-olive);">
+      <i class="bi bi-pencil-square me-2"></i> {{ title }}
+    </h5>
+    <a href="{% url 'departments:agniveer_list' %}" class="btn btn-army-outline btn-sm" style="padding: 2px 10px; font-size:11px;">
+      <i class="bi bi-arrow-left"></i> Back to List
+    </a>
+  </div>
+
+  <form method="post" enctype="multipart/form-data" class="flex-grow-1 d-flex flex-column justify-content-between">
+    {% csrf_token %}
+    
+    <div>
+      <!-- Row 1: Identity -->
+      <div class="section-title">1. Personal Identity</div>
+      <div class="row g-2 compact-form-row">
+        <div class="col-md-3">
+          <label class="form-label">Agniveer No *</label>
+          {{ form.agniveer_no }}
+          {{ form.agniveer_no.errors }}
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Full Name *</label>
+          {{ form.name }}
+          {{ form.name.errors }}
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Father's Name *</label>
+          {{ form.father_name }}
+          {{ form.father_name.errors }}
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Gender *</label>
+          {{ form.gender }}
+          {{ form.gender.errors }}
+        </div>
+      </div>
+
+      <!-- Row 2: Service Details -->
+      <div class="section-title">2. Service Details</div>
+      <div class="row g-2 compact-form-row">
+        <div class="col-md-3">
+          <label class="form-label">DOR (Date of Reporting) *</label>
+          {{ form.dor }}
+          {{ form.dor.errors }}
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Trade *</label>
+          {{ form.trade }}
+          {{ form.trade.errors }}
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">AROs / BROs</label>
+          {{ form.aros_bros }}
+          {{ form.aros_bros.errors }}
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">BN DESP *</label>
+          {{ form.bn_desp }}
+          {{ form.bn_desp.errors }}
+        </div>
+      </div>
+
+      <!-- Row 3: Metadata & Contact -->
+      <div class="section-title">3. Enrollment & Metadata</div>
+      <div class="row g-2 compact-form-row">
+        <div class="col-md-3">
+          <label class="form-label">Batch *</label>
+          {{ form.batch }}
+          {{ form.batch.errors }}
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Joining Date *</label>
+          {{ form.joining_date }}
+          {{ form.joining_date.errors }}
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Status *</label>
+          {{ form.status }}
+          {{ form.status.errors }}
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Phone</label>
+          {{ form.phone }}
+          {{ form.phone.errors }}
+        </div>
+      </div>
+
+      <!-- Row 4: Contact Extra & photo -->
+      <div class="section-title">4. Contact & Media</div>
+      <div class="row g-2 compact-form-row">
+        <div class="col-md-3">
+          <label class="form-label">Email</label>
+          {{ form.email }}
+          {{ form.email.errors }}
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Photo</label>
+          {{ form.photo }}
+          {{ form.photo.errors }}
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Address</label>
+          {{ form.address }}
+          {{ form.address.errors }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="d-flex justify-content-end gap-2 pt-2 border-top mt-2">
+      <a href="{% url 'departments:agniveer_list' %}" class="btn btn-army-outline btn-sm">
+        <i class="bi bi-x-circle"></i> Cancel
+      </a>
+      <button type="submit" class="btn btn-army btn-sm">
+        <i class="bi bi-check-circle-fill"></i> Save Changes
+      </button>
+    </div>
+  </form>
+</div>
+{% endblock %}

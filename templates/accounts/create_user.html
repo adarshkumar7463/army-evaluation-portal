@@ -23,133 +23,140 @@
 {% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-  <div class="col-xl-7">
-
-    <!-- Role Info Card -->
-    <div style="background:rgba(27,67,50,0.15);border:1px solid rgba(27,67,50,0.3);border-radius:12px;padding:16px 20px;margin-bottom:20px;">
-      <div style="font-size:13px;font-weight:600;color:#52B788;margin-bottom:8px;">
-        <i class="bi bi-info-circle-fill me-2"></i> Creating: {{ role_label }} Account
+{% comment %} <div class="row g-3" style="max-height: calc(100vh - 120px); overflow: visible;">
+  <!-- Left Side: Role Info & Form Controls -->
+  <div class="col-lg-4 d-flex flex-column gap-3">
+    <!-- Role Info Panel -->
+    <div style="background: rgba(37, 111, 147, 0.08); border: 1px solid var(--portal-line); border-radius: 8px; padding: 14px 18px; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between;">
+      <div>
+        <div style="font-family: 'Rajdhani', sans-serif; font-size: 13px; font-weight: 700; color: var(--portal-accent); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">
+          <i class="bi bi-info-circle-fill me-1"></i> Creating: {{ role_label }} Account
+        </div>
+        <div style="font-size: 11px; color: var(--portal-muted); line-height: 1.5;">
+          {% if role_label == 'G Head' %}
+            G Department Head has access to all departments and can create department users, view all Agniveers and analytics.
+          {% elif role_label == 'Department' %}
+            Department users can manage their specific department — create Trainers and assign evaluations.
+          {% elif role_label == 'Trainer' %}
+            Trainers (NCO/JCO/Officer) can evaluate assigned Agniveers and submit marks (max 20 marks each).
+          {% endif %}
+        </div>
       </div>
-      <div style="font-size:12px;color:#8B9BB4;line-height:1.6;">
-        {% if role_label == 'G Head' %}
-          G Department Head has access to all departments and can create department users, view all Agniveers and analytics.
-        {% elif role_label == 'Department' %}
-          Department users can manage their specific department — create Trainers and assign evaluations.
-        {% elif role_label == 'Trainer' %}
-          Trainers (NCO/JCO/Officer) can evaluate assigned Agniveers and submit marks (max 20 marks each).
+      
+      <div class="d-flex flex-column gap-2 mt-4">
+        {% if is_department %}
+        <a href="{% url 'accounts:my_team' %}" class="btn btn-army-outline w-100 py-2">
+          <i class="bi bi-arrow-left me-1"></i> Back to Team
+        </a>
+        {% else %}
+        <a href="{% url 'accounts:user_list' %}" class="btn btn-army-outline w-100 py-2">
+          <i class="bi bi-arrow-left me-1"></i> Back to User List
+        </a>
         {% endif %}
       </div>
     </div>
+  </div> {% endcomment %}
 
-    <div class="army-card">
-      <div class="army-card-header">
-        <h6 class="army-card-title">
-          <i class="bi bi-person-plus-fill text-army"></i> {{ title }}
-        </h6>
-        {% if is_department %}
-        <a href="{% url 'accounts:my_team' %}" class="btn btn-army-outline" style="padding:4px 12px;font-size:12px;">
-          <i class="bi bi-arrow-left"></i> Back
-        </a>
-        {% else %}
-        <a href="{% url 'accounts:user_list' %}" class="btn btn-army-outline" style="padding:4px 12px;font-size:12px;">
-          <i class="bi bi-arrow-left"></i> Back
-        </a>
+  <!-- Right Side: The Form fields (taking full space directly on the page, no cards) -->
+  <div class="col-lg-8">
+    <div style="background: transparent; border: none; padding: 0 10px;">
+      <form method="post" id="userForm" data-role-label="{{ role_label|default:'' }}" data-dept-code="{{ department_code|default:'' }}">
+        {% csrf_token %}
+
+        <div class="section-divider" style="margin-top: 0; margin-bottom: 12px; font-weight: 700; border-bottom: 1px solid var(--portal-line); padding-bottom: 4px; text-transform: uppercase;">
+          <i class="bi bi-person-fill"></i> Personal Details
+        </div>
+        <div class="row g-2 mb-3">
+          <div class="col-md-4">
+            <label class="form-label">First Name *</label>
+            {{ form.first_name }}
+            {% if form.first_name.errors %}<div style="color:var(--portal-danger); font-size:10px; margin-top:2px;">{{ form.first_name.errors.0 }}</div>{% endif %}
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Last Name *</label>
+            {{ form.last_name }}
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Username *</label>
+            {{ form.username }}
+            {% if form.username.errors %}<div style="color:var(--portal-danger); font-size:10px; margin-top:2px;">{{ form.username.errors.0 }}</div>{% endif %}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Email</label>
+            {{ form.email }}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Phone</label>
+            {{ form.phone }}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Service Number</label>
+            {{ form.service_number }}
+            {% if form.service_number.errors %}<div style="color:var(--portal-danger); font-size:10px; margin-top:2px;">{{ form.service_number.errors.0 }}</div>{% endif %}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Rank</label>
+            {{ form.rank }}
+          </div>
+        </div>
+
+        {% if form.role or form.battalion_unit or form.tts_trade %}
+        <div class="section-divider" style="margin-bottom: 12px; font-weight: 700; border-bottom: 1px solid var(--portal-line); padding-bottom: 4px; text-transform: uppercase;">
+          <i class="bi bi-gear-fill"></i> Assignment Details
+        </div>
+        <div class="row g-2 mb-3">
+          {% if form.role %}
+          <div class="col-md-4">
+            <label class="form-label">Role *</label>
+            {{ form.role }}
+          </div>
+          {% endif %}
+          
+          <div class="col-md-4" id="battalion_container" style="display:none;">
+            <label class="form-label">Battalion Scope</label>
+            {{ form.battalion_unit }}
+          </div>
+          
+          <div class="col-md-4" id="tts_container" style="display:none;">
+            <label class="form-label">TTS Scope</label>
+            {{ form.tts_trade }}
+          </div>
+        </div>
         {% endif %}
-      </div>
-      <div class="army-card-body">
-        <form method="post" id="userForm" data-role-label="{{ role_label|default:'' }}" data-dept-code="{{ department_code|default:'' }}">
-          {% csrf_token %}
 
-          <div class="section-divider">Personal Details</div>
-          <div class="row g-3">
-            <div class="col-md-6">
-              <label class="form-label">First Name *</label>
-              {{ form.first_name }}
-              {% if form.first_name.errors %}<div style="color:#EF5350;font-size:12px;margin-top:4px;">{{ form.first_name.errors.0 }}</div>{% endif %}
-            </div>
-            <div class="col-md-6">
-              <label class="form-label">Last Name *</label>
-              {{ form.last_name }}
-            </div>
-            <div class="col-md-6">
-              <label class="form-label">Username *</label>
-              {{ form.username }}
-              {% if form.username.errors %}<div style="color:#EF5350;font-size:12px;margin-top:4px;">{{ form.username.errors.0 }}</div>{% endif %}
-            </div>
-            <div class="col-md-6">
-              <label class="form-label">Email</label>
-              {{ form.email }}
-            </div>
-            <div class="col-md-4">
-              <label class="form-label">Service Number</label>
-              {{ form.service_number }}
-              {% if form.service_number.errors %}<div style="color:#EF5350;font-size:12px;margin-top:4px;">{{ form.service_number.errors.0 }}</div>{% endif %}
-            </div>
-            <div class="col-md-4">
-              <label class="form-label">Rank</label>
-              {{ form.rank }}
-            </div>
-            <div class="col-md-4">
-              <label class="form-label">Phone</label>
-              {{ form.phone }}
-            </div>
+        <div class="section-divider" style="margin-bottom: 12px; font-weight: 700; border-bottom: 1px solid var(--portal-line); padding-bottom: 4px; text-transform: uppercase;">
+          <i class="bi bi-shield-lock-fill"></i> Security
+        </div>
+        <div class="row g-2 mb-3">
+          <div class="col-md-6">
+            <label class="form-label">Password *</label>
+            {{ form.password }}
+            {% if form.password.errors %}<div style="color:var(--portal-danger); font-size:10px; margin-top:2px;">{{ form.password.errors.0 }}</div>{% endif %}
           </div>
+          <div class="col-md-6">
+            <label class="form-label">Confirm Password *</label>
+            {{ form.confirm_password }}
+          </div>
+        </div>
 
-          {% if form.role or form.battalion_unit or form.tts_trade %}
-          <div class="section-divider">Assignment Details</div>
-          <div class="row g-3">
-            {% if form.role %}
-            <div class="col-md-4">
-              <label class="form-label">Role *</label>
-              {{ form.role }}
-            </div>
-            {% endif %}
-            
-            <div class="col-md-4" id="battalion_container" style="display:none;">
-              <label class="form-label">Battalion Scope</label>
-              {{ form.battalion_unit }}
-            </div>
-            
-            <div class="col-md-4" id="tts_container" style="display:none;">
-              <label class="form-label">TTS Scope</label>
-              {{ form.tts_trade }}
-            </div>
-          </div>
+        {% if form.non_field_errors %}
+        <div class="alert alert-danger py-2 mb-3">
+          <i class="bi bi-exclamation-circle-fill me-2"></i>
+          {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="d-flex justify-content-end gap-2 pt-3" style="border-top:1px solid var(--portal-line);">
+          {% if is_department %}
+          <a href="{% url 'accounts:my_team' %}" class="btn btn-army-outline px-4 py-2">Cancel</a>
+          {% else %}
+          <a href="{% url 'accounts:user_list' %}" class="btn btn-army-outline px-4 py-2">Cancel</a>
           {% endif %}
-
-          <div class="section-divider">Security</div>
-          <div class="row g-3">
-            <div class="col-md-6">
-              <label class="form-label">Password *</label>
-              {{ form.password }}
-              {% if form.password.errors %}<div style="color:#EF5350;font-size:12px;margin-top:4px;">{{ form.password.errors.0 }}</div>{% endif %}
-            </div>
-            <div class="col-md-6">
-              <label class="form-label">Confirm Password *</label>
-              {{ form.confirm_password }}
-            </div>
-          </div>
-
-          {% if form.non_field_errors %}
-          <div style="color:#EF5350;font-size:13px;margin-top:12px;padding:10px;background:rgba(239,83,80,0.1);border-radius:8px;">
-            <i class="bi bi-exclamation-circle-fill me-2"></i>
-            {% for error in form.non_field_errors %}{{ error }}{% endfor %}
-          </div>
-          {% endif %}
-
-          <div class="d-flex justify-content-end gap-3 mt-4 pt-3" style="border-top:1px solid rgba(27,67,50,0.3);">
-            {% if is_department %}
-            <a href="{% url 'accounts:my_team' %}" class="btn btn-army-outline">Cancel</a>
-            {% else %}
-            <a href="{% url 'accounts:user_list' %}" class="btn btn-army-outline">Cancel</a>
-            {% endif %}
-            <button type="submit" class="btn btn-army">
-              <i class="bi bi-person-check-fill me-2"></i> Create {{ role_label }}
-            </button>
-          </div>
-        </form>
-      </div>
+          <button type="submit" class="btn btn-army px-4 py-2">
+            <i class="bi bi-person-check-fill me-2"></i> Create {{ role_label }}
+          </button>
+        </div>
+      </form>
     </div>
   </div>
 </div>

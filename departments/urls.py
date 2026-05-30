@@ -8,6 +8,7 @@ urlpatterns = [
     path('registration/', views.RegistrationDashboardView.as_view(), name='registration_dashboard'),
     path('registration/bulk-upload/', views.AgniveerBulkUploadView.as_view(), name='bulk_upload'),
     path('registration/excel-template/', views.AgniveerExcelTemplateView.as_view(), name='excel_template'),
+    path('registration/delete-file/<str:filename>/', views.DeleteUploadedFileView.as_view(), name='delete_uploaded_file'),
     path('registration/<int:pk>/edit-ajax/', views.AgniveerEditAjaxView.as_view(), name='agniveer_edit_ajax'),
 
     # ── Standard Agniveer views (all roles) ──────────────────────────────────
