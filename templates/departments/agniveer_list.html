@@ -172,96 +172,64 @@
 
 
 
-<!-- ─── Advanced Search Bar for Commander/G-Head ONLY ─── -->
-{% if is_commander or is_g_head %}
 <div class="search-wrapper">
-  <form method="get" action="{% url 'departments:agniveer_list' %}" class="row g-3 align-items-end">
-    <div class="col-md-4">
+  <form method="get" action="{% url 'departments:agniveer_list' %}" class="row g-2 align-items-end">
+    <!-- Keep existing eval_status and status if set -->
+    {% if request.GET.eval_status %}
+      <input type="hidden" name="eval_status" value="{{ request.GET.eval_status }}">
+    {% endif %}
+    {% if request.GET.status %}
+      <input type="hidden" name="status" value="{{ request.GET.status }}">
+    {% endif %}
+
+    <div class="col">
       <label class="form-label small text-muted mb-1">Search</label>
       <div class="position-relative">
         <i class="bi bi-search position-absolute" style="left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 13px; z-index: 2;"></i>
-        <input type="text" name="search" class="search-input" placeholder="Army Number, Enrollment, Name..." value="{{ request.GET.search|default:'' }}">
+        <input type="text" name="search" class="search-input" placeholder="Search by name, enrollment, army number..." value="{{ request.GET.search|default:'' }}">
       </div>
     </div>
+
+    <!-- Trade Filter (hidden for Clerk, OPEM, DMV) -->
+    {% if dept_code != 'D' and request.user.tts_trade != 'OPEM' and request.user.tts_trade != 'DMV' %}
     <div class="col-md-3">
       <label class="form-label small text-muted mb-1">Trade</label>
       <select name="trade" class="filter-select" onchange="this.form.submit()">
         <option value="">All Trades</option>
-        <option value="DMV" {% if request.GET.trade == 'DMV' %}selected{% endif %}>DMV</option>
-        <option value="OPEM" {% if request.GET.trade == 'OPEM' %}selected{% endif %}>OPEM</option>
-        <option value="CLK" {% if request.GET.trade == 'CLK' %}selected{% endif %}>Clerk</option>
-        <option value="OTHER" {% if request.GET.trade == 'OTHER' %}selected{% endif %}>Other</option>
-      </select>
-    </div>
-    <div class="col-md-3">
-      <label class="form-label small text-muted mb-1">Battalion Unit</label>
-      <select name="battalion" class="filter-select" onchange="this.form.submit()">
-        <option value="">All Units</option>
-        <option value="1TB" {% if request.GET.battalion == '1TB' %}selected{% endif %}>1TB</option>
-        <option value="2TB" {% if request.GET.battalion == '2TB' %}selected{% endif %}>2TB</option>
-        <option value="3TB" {% if request.GET.battalion == '3TB' %}selected{% endif %}>3TB</option>
-        <option value="4TB" {% if request.GET.battalion == '4TB' %}selected{% endif %}>4TB</option>
-        <option value="5TB" {% if request.GET.battalion == '5TB' %}selected{% endif %}>5TB</option>
-        <option value="STB" {% if request.GET.battalion == 'STB' %}selected{% endif %}>STB</option>
-      </select>
-    </div>
-    <div class="col-md-2">
-      <button type="submit" class="btn btn-army w-100">
-        <i class="bi bi-funnel"></i> Filter
-      </button>
-    </div>
-  </form>
-  {% if request.GET.search or request.GET.trade or request.GET.battalion %}
-  <div class="mt-3">
-    <a href="{% url 'departments:agniveer_list' %}" class="btn btn-sm btn-army-outline">
-      <i class="bi bi-x-circle"></i> Clear Filters
-    </a>
-  </div>
-  {% endif %}
-</div>
-
-<!-- ─── Trainer/Department Search Bar (Simpler) ─── -->
-{% elif is_trainer or is_department %}
-<div class="search-wrapper" style="padding: 12px 16px;">
-  <form method="get" class="row g-2 align-items-end">
-    {% if request.GET.eval_status %}
-      <input type="hidden" name="eval_status" value="{{ request.GET.eval_status }}">
-    {% endif %}
-    
-    {% if tts_trade == 'OTHER' %}
-    <div class="col-md-3">
-      <label class="form-label small text-muted mb-1">Trade</label>
-      <select name="trade" onchange="this.form.submit()" class="filter-select">
-        <option value="">All Technical Trades</option>
-        {% for code, name in technical_trades %}
-          <option value="{{ code }}" {% if trade_filter == code %}selected{% endif %}>{{ name }}</option>
+        {% for code, label in trade_choices %}
+          <option value="{{ code }}" {% if request.GET.trade == code %}selected{% endif %}>{{ label }}</option>
         {% endfor %}
       </select>
     </div>
     {% endif %}
 
-    <div class="col-md-6">
-      <label class="form-label small text-muted mb-1">Search</label>
-      <div class="position-relative">
-        <i class="bi bi-search position-absolute" style="left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 13px;"></i>
-        <input type="text" name="search" value="{{ request.GET.search|default:'' }}" class="search-input" placeholder="Search by Army No. (Enrollment Number)…">
-      </div>
-    </div>
+    <!-- Battalion Filter (hidden for 1TB, 2TB, STB) -->
+    {% if not request.user.is_battalion or not request.user.battalion_unit %}
     <div class="col-md-3">
-      <button type="submit" class="btn btn-army w-100">
-        <i class="bi bi-search"></i> Search
+      <label class="form-label small text-muted mb-1">Battalion</label>
+      <select name="battalion" class="filter-select" onchange="this.form.submit()">
+        <option value="">All Battalions</option>
+        {% for code, label in bn_choices %}
+          <option value="{{ code }}" {% if request.GET.battalion == code %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    {% endif %}
+
+    <div class="col-md-auto">
+      <button type="submit" class="btn btn-army px-4" style="height: 30px;">
+        <i class="bi bi-funnel"></i> Filter
       </button>
     </div>
   </form>
-  {% if request.GET.search or request.GET.trade %}
+  {% if request.GET.search or request.GET.trade or request.GET.battalion %}
   <div class="mt-2">
     <a href="?{% if request.GET.eval_status %}eval_status={{ request.GET.eval_status }}{% endif %}" class="btn btn-sm btn-army-outline">
-      <i class="bi bi-x-circle"></i> Clear
+      <i class="bi bi-x-circle"></i> Clear Filters
     </a>
   </div>
   {% endif %}
 </div>
-{% endif %}
 
 <!-- ─── Table ─── -->
 <div class="army-card">
@@ -350,7 +318,12 @@
                 <i class="bi bi-file-earmark-text"></i>
               </a>
               {% endif %}
-              {% if is_registration_office or is_commander or is_g_head %}
+              {% if is_trainer or is_department or is_commander or is_g_head %}
+              <a href="{% url 'evaluation:evaluate_agniveer' a.pk %}" class="btn btn-army-outline" style="padding:4px 8px;font-size:12px;" title="Evaluation Sheet">
+                <i class="bi bi-clipboard-check"></i>
+              </a>
+              {% endif %}
+              {% if is_registration_office %}
               <a href="{% url 'departments:agniveer_edit' a.pk %}" class="btn btn-army-outline" style="padding:4px 8px;font-size:12px;" title="Edit">
                 <i class="bi bi-pencil-fill"></i>
               </a>
