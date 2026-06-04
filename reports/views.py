@@ -751,7 +751,6 @@ class ExportDashboardResultsExcelView(AnyStaffMixin, View):
         for col, width in enumerate(widths, 1):
             ws.column_dimensions[openpyxl.utils.get_column_letter(col)].width = width
         ws.freeze_panes = 'A3'
-
         buffer = io.BytesIO()
         wb.save(buffer)
         buffer.seek(0)
@@ -764,19 +763,222 @@ class ExportDashboardResultsExcelView(AnyStaffMixin, View):
         response['Content-Disposition'] = f'attachment; filename="tts_{status_filter}_results.xlsx"'
         return response
 
+    def _export_specific_test_results(self, request, dept_code, sub_dept_key, test_type, status_filter):
+        import openpyxl
+        from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+        import io
+        from django.db.models import Q
+        from django.http import HttpResponse
+        from departments.models import Agniveer
+        from evaluation.models import EvaluationSheet
+        from evaluation.constants import DEPT_CONFIG
+        from logs.utils import log_action
+
+        CLERK_TRADES = ['CLK', 'CLERK', 'Clerk', 'CLK_SD', 'CLK_IM']
+
+        # Get all agniveers and sheets for this department and sub-department
+        all_agniveers = Agniveer.objects.all()
+        if dept_code == 'A':
+            if sub_dept_key and sub_dept_key != 'all':
+                agniveers_qs = all_agniveers.filter(bn_desp=sub_dept_key)
+            else:
+                agniveers_qs = all_agniveers
+        elif dept_code == 'B':
+            if sub_dept_key and sub_dept_key != 'all':
+                if sub_dept_key == 'DMV':
+                    agniveers_qs = all_agniveers.filter(trade='DMV')
+                elif sub_dept_key == 'OPEM':
+                    agniveers_qs = all_agniveers.filter(trade='OPEM')
+                else:  # OTHER
+                    agniveers_qs = all_agniveers.exclude(trade__in=['DMV', 'OPEM'] + CLERK_TRADES)
+            else:
+                agniveers_qs = all_agniveers.exclude(trade__in=CLERK_TRADES)
+        elif dept_code == 'C':
+            agniveers_qs = all_agniveers
+        elif dept_code == 'D':
+            agniveers_qs = all_agniveers.filter(trade__in=CLERK_TRADES)
+        else:
+            agniveers_qs = all_agniveers.none()
+
+        sheets_qs = EvaluationSheet.objects.filter(
+            department=dept_code,
+            test_type=test_type,
+            agniveer__in=agniveers_qs
+        ).select_related('agniveer').prefetch_related('marks')
+
+        filtered_rows = []
+        for agniveer in agniveers_qs.order_by('agniveer_no', 'enrollment_number'):
+            sheet = sheets_qs.filter(agniveer=agniveer).first()
+            is_evaluated = sheet is not None
+            is_pass = sheet.is_pass() if is_evaluated else False
+
+            if status_filter == 'evaluated' and not is_evaluated:
+                continue
+            elif status_filter == 'pass' and (not is_evaluated or not is_pass):
+                continue
+            elif status_filter == 'fail' and (not is_evaluated or is_pass):
+                continue
+
+            filtered_rows.append({
+                'agniveer': agniveer,
+                'sheet': sheet,
+                'is_evaluated': is_evaluated,
+                'is_pass': is_pass
+            })
+
+        # Get sub-events if they exist
+        config = DEPT_CONFIG.get(dept_code, {})
+        sub_events = []
+
+        if dept_code == 'B' and sub_dept_key in ['DMV', 'OPEM', 'OTHER']:
+            sub_conf = config.get('sub_departments', {}).get(sub_dept_key, {})
+            sub_events = sub_conf.get('sub_events', {}).get(test_type, [])
+        else:
+            sub_events = config.get('sub_events', {}).get(test_type, [])
+
+        test_type_label = test_type
+        if dept_code == 'B' and sub_dept_key in ['DMV', 'OPEM', 'OTHER']:
+            sub_conf = config.get('sub_departments', {}).get(sub_dept_key, {})
+            for tt_val, tt_lbl in sub_conf.get('test_types', []):
+                if tt_val == test_type:
+                    test_type_label = tt_lbl
+                    break
+        else:
+            for tt_val, tt_lbl in config.get('test_types', []):
+                if tt_val == test_type:
+                    test_type_label = tt_lbl
+                    break
+
+        headers = ['S.No', 'Enrollment No', 'Army No', 'Name', 'Trade', 'Unit']
+        for event in sub_events:
+            headers.append(event)
+        headers.extend(['NCO Marks', 'JCO Marks', 'Officer Marks', 'Total Marks', 'Result'])
+
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = test_type[:30]
+
+        # Styles
+        brand_color = "1B4332"
+        header_fill = PatternFill(start_color=brand_color, end_color=brand_color, fill_type="solid")
+        title_fill = PatternFill(start_color="EAF2F8", end_color="EAF2F8", fill_type="solid")
+        pass_fill = PatternFill(start_color="DDF4E8", end_color="DDF4E8", fill_type="solid")
+        fail_fill = PatternFill(start_color="FCE4E4", end_color="FCE4E4", fill_type="solid")
+        unevaluated_fill = PatternFill(start_color="F2F4F4", end_color="F2F4F4", fill_type="solid")
+        header_font = Font(color="FFFFFF", bold=True, size=11)
+        border = Border(
+            left=Side(style='thin', color='B7C4B7'),
+            right=Side(style='thin', color='B7C4B7'),
+            top=Side(style='thin', color='B7C4B7'),
+            bottom=Side(style='thin', color='B7C4B7'),
+        )
+        center = Alignment(horizontal='center', vertical='center', wrap_text=True)
+        left = Alignment(horizontal='left', vertical='center', wrap_text=True)
+
+        ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=len(headers))
+        title_cell = ws.cell(row=1, column=1)
+        dept_name = config.get('name', f'Dept {dept_code}')
+        sub_dept_text = f" ({sub_dept_key})" if sub_dept_key and sub_dept_key != 'all' else ""
+        title_cell.value = f"ARMY EVALUATION PORTAL - {dept_name.upper()}{sub_dept_text.upper()} - {test_type_label.upper()} ({status_filter.upper()} LIST)"
+        title_cell.font = Font(bold=True, size=13, color=brand_color)
+        title_cell.fill = title_fill
+        title_cell.alignment = center
+        ws.row_dimensions[1].height = 30
+
+        for col, header in enumerate(headers, 1):
+            cell = ws.cell(row=2, column=col, value=header)
+            cell.fill = header_fill
+            cell.font = header_font
+            cell.alignment = center
+            cell.border = border
+        ws.row_dimensions[2].height = 25
+
+        for row_idx, row_data in enumerate(filtered_rows, 1):
+            agniveer = row_data['agniveer']
+            sheet = row_data['sheet']
+            is_eval = row_data['is_evaluated']
+            is_pass = row_data['is_pass']
+
+            if not is_eval:
+                row_fill = unevaluated_fill
+            elif is_pass:
+                row_fill = pass_fill
+            else:
+                row_fill = fail_fill
+
+            values = [
+                row_idx,
+                agniveer.enrollment_number,
+                agniveer.agniveer_no or agniveer.enrollment_number,
+                agniveer.get_full_name(),
+                agniveer.trade or '',
+                agniveer.bn_desp or ''
+            ]
+
+            for event in sub_events:
+                if is_eval and sheet.sub_event_results:
+                    val = sheet.sub_event_results.get(event, '')
+                    values.append(val)
+                else:
+                    values.append('')
+
+            if is_eval:
+                values.extend([
+                    sheet.get_nco_marks(),
+                    sheet.get_jco_marks(),
+                    sheet.get_officer_marks(),
+                    sheet.get_total_marks(),
+                    'PASS' if is_pass else 'FAIL'
+                ])
+            else:
+                values.extend(['', '', '', '', 'NOT EVALUATED'])
+
+            for col, value in enumerate(values, 1):
+                cell = ws.cell(row=row_idx + 2, column=col, value=value)
+                cell.fill = row_fill
+                cell.alignment = left if col == 4 else center
+                cell.border = border
+            ws.row_dimensions[row_idx + 2].height = 20
+
+        ws.freeze_panes = 'A3'
+        for col_idx in range(1, len(headers) + 1):
+            col_letter = openpyxl.utils.get_column_letter(col_idx)
+            max_len = max(len(str(ws.cell(row=r, column=col_idx).value or '')) for r in range(2, len(filtered_rows) + 3))
+            ws.column_dimensions[col_letter].width = max(max_len + 3, 10)
+
+        buffer = io.BytesIO()
+        wb.save(buffer)
+        buffer.seek(0)
+
+        log_action(request.user, 'EXPORT', f'Exported {test_type_label} Excel results ({status_filter})', request)
+
+        response = HttpResponse(
+            buffer.getvalue(),
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        filename = f"{dept_code}_{sub_dept_key or 'all'}_{test_type}_{status_filter}.xlsx"
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        return response
+
     def get(self, request):
         try:
             import openpyxl
             from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
         except ImportError:
             return HttpResponse("openpyxl not installed.", status=500)
-
         status_filter = request.GET.get('status', 'pass')
-        if status_filter not in ['pass', 'fail']:
+        if status_filter not in ['pass', 'fail', 'eligible', 'evaluated']:
             status_filter = 'pass'
         is_pass_filter = status_filter == 'pass'
         
         user = request.user
+
+        dept_code = request.GET.get('dept')
+        sub_dept_key = request.GET.get('sub_dept')
+        test_type = request.GET.get('test_type')
+
+        if dept_code and test_type:
+            return self._export_specific_test_results(request, dept_code, sub_dept_key, test_type, status_filter)
 
         if user.is_department and user.get_department_code() == 'A':
             return self._export_battalion_results(request, status_filter)

@@ -142,6 +142,77 @@ def build_sub_department_result_stats(dept, sub_dept_key, sheets, all_agniveers)
     }
 
 
+def get_scope_agniveers_and_sheets(dept, sub_dept_key, all_sheets, all_agniveers):
+    if dept == 'A':
+        if sub_dept_key and sub_dept_key != 'all':
+            agniveers = all_agniveers.filter(bn_desp=sub_dept_key)
+            sheets = all_sheets.filter(agniveer__bn_desp=sub_dept_key)
+        else:
+            agniveers = all_agniveers
+            sheets = all_sheets
+        total_eligible = agniveers.count()
+    elif dept == 'B':
+        if sub_dept_key and sub_dept_key != 'all':
+            if sub_dept_key == 'DMV':
+                agniveers = all_agniveers.filter(trade='DMV')
+                sheets = all_sheets.filter(agniveer__trade='DMV')
+            elif sub_dept_key == 'OPEM':
+                agniveers = all_agniveers.filter(trade='OPEM')
+                sheets = all_sheets.filter(agniveer__trade='OPEM')
+            else: # 'OTHER'
+                agniveers = all_agniveers.exclude(trade__in=['DMV', 'OPEM'] + CLERK_TRADES)
+                sheets = all_sheets.exclude(agniveer__trade__in=['DMV', 'OPEM'] + CLERK_TRADES)
+        else:
+            agniveers = all_agniveers.exclude(trade__in=CLERK_TRADES)
+            sheets = all_sheets.exclude(agniveer__trade__in=CLERK_TRADES)
+        total_eligible = agniveers.count()
+    elif dept == 'C':
+        agniveers = all_agniveers
+        sheets = all_sheets
+        total_eligible = agniveers.count()
+    elif dept == 'D':
+        agniveers = all_agniveers.filter(trade__in=CLERK_TRADES)
+        sheets = all_sheets.filter(agniveer__trade__in=CLERK_TRADES)
+        total_eligible = agniveers.count()
+    else:
+        agniveers = all_agniveers.none()
+        sheets = all_sheets.none()
+        total_eligible = 0
+
+    return agniveers, sheets, total_eligible
+
+
+def build_test_category_stats(dept, sub_dept_key, all_sheets, all_agniveers):
+    scoped_agniveers_qs, scoped_sheets_qs, total_eligible = get_scope_agniveers_and_sheets(
+        dept, sub_dept_key, all_sheets.filter(department=dept), all_agniveers
+    )
+    from evaluation.constants import DEPT_CONFIG
+    config = DEPT_CONFIG.get(dept, {})
+    
+    test_types_list = []
+    if dept == 'B' and sub_dept_key in ['DMV', 'OPEM', 'OTHER']:
+        sub_conf = config.get('sub_departments', {}).get(sub_dept_key, {})
+        test_types_list = sub_conf.get('test_types', [])
+    else:
+        test_types_list = config.get('test_types', [])
+        
+    test_stats = {}
+    for tt_code, tt_label in test_types_list:
+        tt_sheets = list(scoped_sheets_qs.filter(test_type=tt_code))
+        evaluated = len(tt_sheets)
+        passed = sum(1 for s in tt_sheets if s.is_pass())
+        failed = evaluated - passed
+        
+        test_stats[tt_code] = {
+            'label': tt_label,
+            'total_eligible': total_eligible,
+            'evaluated': evaluated,
+            'passed': passed,
+            'failed': failed,
+        }
+    return test_stats
+
+
 class DashboardView(LoginRequiredMixin, View):
     """
     Main dashboard - routes to role-specific dashboard.
@@ -250,11 +321,16 @@ class CommanderDashboard(LoginRequiredMixin, View):
             sub_stats = {}
             if dept == 'A':
                 for sub_key in ['1TB', '2TB', 'STB']:
-                    sub_stats[sub_key] = build_sub_department_result_stats('A', sub_key, dept_sheets, Agniveer.objects.all())
+                    sub_sub_stats = build_sub_department_result_stats('A', sub_key, dept_sheets, Agniveer.objects.all())
+                    sub_sub_stats['test_categories'] = build_test_category_stats('A', sub_key, all_sheets, Agniveer.objects.all())
+                    sub_stats[sub_key] = sub_sub_stats
             elif dept == 'B':
                 for sub_key in ['DMV', 'OPEM', 'OTHER']:
-                    sub_stats[sub_key] = build_sub_department_result_stats('B', sub_key, dept_sheets, Agniveer.objects.all())
+                    sub_sub_stats = build_sub_department_result_stats('B', sub_key, dept_sheets, Agniveer.objects.all())
+                    sub_sub_stats['test_categories'] = build_test_category_stats('B', sub_key, all_sheets, Agniveer.objects.all())
+                    sub_stats[sub_key] = sub_sub_stats
             stats['sub_depts'] = sub_stats
+            stats['test_categories'] = build_test_category_stats(dept, 'all', all_sheets, Agniveer.objects.all())
             
             dept_stats[dept] = stats
             dept_charts['labels'].append(DEPARTMENT_NAMES.get(dept, dept))
@@ -434,11 +510,16 @@ class GHeadDashboard(LoginRequiredMixin, View):
             sub_stats = {}
             if dept == 'A':
                 for sub_key in ['1TB', '2TB', 'STB']:
-                    sub_stats[sub_key] = build_sub_department_result_stats('A', sub_key, dept_sheets, Agniveer.objects.all())
+                    sub_sub_stats = build_sub_department_result_stats('A', sub_key, dept_sheets, Agniveer.objects.all())
+                    sub_sub_stats['test_categories'] = build_test_category_stats('A', sub_key, all_sheets, Agniveer.objects.all())
+                    sub_stats[sub_key] = sub_sub_stats
             elif dept == 'B':
                 for sub_key in ['DMV', 'OPEM', 'OTHER']:
-                    sub_stats[sub_key] = build_sub_department_result_stats('B', sub_key, dept_sheets, Agniveer.objects.all())
+                    sub_sub_stats = build_sub_department_result_stats('B', sub_key, dept_sheets, Agniveer.objects.all())
+                    sub_sub_stats['test_categories'] = build_test_category_stats('B', sub_key, all_sheets, Agniveer.objects.all())
+                    sub_stats[sub_key] = sub_sub_stats
             stats['sub_depts'] = sub_stats
+            stats['test_categories'] = build_test_category_stats(dept, 'all', all_sheets, Agniveer.objects.all())
             
             dept_stats[dept] = stats
             dept_labels.append(DEPARTMENT_NAMES.get(dept, dept))

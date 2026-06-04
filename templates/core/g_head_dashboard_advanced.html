@@ -507,6 +507,29 @@
     font-weight: 600;
   }
 
+  .test-cat-btn {
+    padding: 3px 10px;
+    border-radius: 20px;
+    border: 1px solid var(--border-color);
+    background: transparent;
+    color: var(--text-muted);
+    font-weight: 500;
+    font-size: 10px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+  }
+  .test-cat-btn:hover {
+    background: rgba(82,183,136,0.10);
+    border-color: var(--army-olive);
+    color: var(--army-olive);
+  }
+  .test-cat-btn.active {
+    background: rgba(82,183,136,0.15);
+    border-color: var(--army-olive);
+    color: var(--army-olive);
+    font-weight: 600;
+  }
+
   /* ── Responsive ───────────────────────────────────────── */
   @media (max-width: 991px) {
     .portal-dashboard-page .portal-surface { grid-template-columns: 1fr; }
@@ -599,9 +622,15 @@
 <!-- Row 2 : Department Details -->
 <div class="dept-detail-row">
   <div class="chart-box">
-    <div class="chart-title">
-      <span class="ct-dot"></span>
-      <i class="bi bi-building"></i> Department Evaluation Details
+    <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap">
+      <div class="chart-title mb-0">
+        <span class="ct-dot"></span>
+        <i class="bi bi-building"></i> Department Evaluation Details
+      </div>
+      <!-- Sub-department container -->
+      <div id="subDeptContainer" class="d-none gap-2 flex-wrap">
+        <!-- sub-department pills dynamically created here -->
+      </div>
     </div>
 
     <div class="d-flex gap-2 flex-wrap mb-3">
@@ -611,9 +640,9 @@
       <button type="button" class="btn dept-btn" data-dept="D"><i class="bi bi-file-text"></i> Clerk</button>
     </div>
 
-    <!-- Sub-department container -->
-    <div id="subDeptContainer" class="d-none gap-2 flex-wrap mb-3" style="border-top:1px dashed var(--border-color); padding-top:10px;">
-      <!-- sub-department pills dynamically created here -->
+    <!-- Test category container -->
+    <div id="testCategoryContainer" class="d-none gap-2 flex-wrap mb-3" style="border-top:1px dashed var(--border-color); padding-top:10px;">
+      <!-- test category pills dynamically created here -->
     </div>
 
     <div id="deptDetailsContainer">
@@ -1180,23 +1209,42 @@
     });
   }
 
+  /* ── Excel download trigger ──────────────────────────── */
+  window.downloadExcelForTest = function(status) {
+    const activeDeptBtn = document.querySelector('.dept-btn.active');
+    const dept = activeDeptBtn ? activeDeptBtn.getAttribute('data-dept') : 'A';
+    
+    const activeSubBtn = document.querySelector('.sub-dept-btn.active');
+    const sub_dept = activeSubBtn ? activeSubBtn.getAttribute('data-sub') : 'all';
+    
+    const activeTestBtn = document.querySelector('.test-cat-btn.active');
+    const test_type = activeTestBtn ? activeTestBtn.getAttribute('data-test') : '';
+    
+    if (!test_type || test_type === 'overall') {
+      window.location.href = `{% url 'reports:export_dashboard_excel' %}?status=${status}&dept=${dept}&sub_dept=${sub_dept}`;
+      return;
+    }
+    
+    window.location.href = `{% url 'reports:export_dashboard_excel' %}?dept=${dept}&sub_dept=${sub_dept}&test_type=${test_type}&status=${status}`;
+  };
+
   /* ── Helper to render stats cards ────────────────────── */
   function renderStatsCards(data) {
     document.getElementById('deptDetailsContainer').innerHTML = `
       <div class="d-flex w-100 gap-3">
-        <div class="dept-stat-card" style="background:linear-gradient(145deg,rgba(79,195,247,0.12),rgba(33,150,243,0.04));border-color:rgba(79,195,247,0.3);">
+        <div class="dept-stat-card" onclick="downloadExcelForTest('eligible')" style="background:linear-gradient(145deg,rgba(79,195,247,0.12),rgba(33,150,243,0.04));border-color:rgba(79,195,247,0.3); cursor: pointer;" title="Click to download Excel of all eligible Agniveers">
           <div class="dept-stat-value" style="color:#0288D1;">${data.total_eligible.toLocaleString()}</div>
           <div class="dept-stat-label">Total Agniveer</div>
         </div>
-        <div class="dept-stat-card" style="background:linear-gradient(145deg,rgba(212,160,23,0.12),rgba(255,193,7,0.04));border-color:rgba(212,160,23,0.3);">
+        <div class="dept-stat-card" onclick="downloadExcelForTest('evaluated')" style="background:linear-gradient(145deg,rgba(212,160,23,0.12),rgba(255,193,7,0.04));border-color:rgba(212,160,23,0.3); cursor: pointer;" title="Click to download Excel of evaluated Agniveers">
           <div class="dept-stat-value" style="color:#F57F17;">${data.evaluated.toLocaleString()}</div>
           <div class="dept-stat-label">Evaluated Agniveer</div>
         </div>
-        <div class="dept-stat-card" style="background:linear-gradient(145deg,rgba(82,183,136,0.12),rgba(46,125,50,0.04));border-color:rgba(82,183,136,0.3);">
+        <div class="dept-stat-card" onclick="downloadExcelForTest('pass')" style="background:linear-gradient(145deg,rgba(82,183,136,0.12),rgba(46,125,50,0.04));border-color:rgba(82,183,136,0.3); cursor: pointer;" title="Click to download Excel of passed Agniveers">
           <div class="dept-stat-value" style="color:#2E7D32;">${data.passed.toLocaleString()}</div>
           <div class="dept-stat-label">Passed</div>
         </div>
-        <div class="dept-stat-card" style="background:linear-gradient(145deg,rgba(239,83,80,0.12),rgba(183,28,28,0.04));border-color:rgba(239,83,80,0.3);">
+        <div class="dept-stat-card" onclick="downloadExcelForTest('fail')" style="background:linear-gradient(145deg,rgba(239,83,80,0.12),rgba(183,28,28,0.04));border-color:rgba(239,83,80,0.3); cursor: pointer;" title="Click to download Excel of failed Agniveers">
           <div class="dept-stat-value" style="color:#C62828;">${data.failed.toLocaleString()}</div>
           <div class="dept-stat-label">Failed</div>
         </div>
@@ -1204,12 +1252,11 @@
     `;
   }
 
-  /* ── 5. Dept Category Chart (on button click) ────────── */
-  function buildDeptCategoryChart(dept) {
+  /* ── 5. Unified Dept Category Chart ──────────────────── */
+  function buildDeptCategoryChartCustom(label, total, evaluated, passed, failed) {
     kill('deptCat');
     const ctx = document.getElementById('deptSelectedCategoryChart');
     if (!ctx) return;
-    const stats = DATA.deptStats[dept];
     const s     = sb();
     const legEl = document.getElementById('deptCatLegend');
     if (legEl) {
@@ -1225,8 +1272,8 @@
       data: {
         labels  : ['Total Agniveer', 'Evaluated Agniveer', 'Passed', 'Failed'],
         datasets: [{
-          label          : DEPT_NAMES[dept],
-          data           : [stats.total_eligible, stats.evaluated, stats.passed, stats.failed],
+          label          : label,
+          data           : [total, evaluated, passed, failed],
           backgroundColor: ['rgba(79,195,247,0.75)','rgba(212,160,23,0.75)','rgba(76,175,80,0.75)','rgba(239,83,80,0.75)'],
           borderColor    : ['#4FC3F7','#D4A017','#4CAF50','#EF5350'],
           borderWidth    : 1.5,
@@ -1247,45 +1294,66 @@
     });
   }
 
-  /* ── Dept Sub Category Chart (on sub-dept click) ─────── */
+  function buildDeptCategoryChart(dept) {
+    const stats = DATA.deptStats[dept];
+    buildDeptCategoryChartCustom(DEPT_NAMES[dept], stats.total_eligible, stats.evaluated, stats.passed, stats.failed);
+  }
+
   function buildDeptSubCategoryChart(dept, subKey, subData) {
-    kill('deptCat');
-    const ctx = document.getElementById('deptSelectedCategoryChart');
-    if (!ctx) return;
-    const s     = sb();
-    const legEl = document.getElementById('deptCatLegend');
-    if (legEl) {
-      legEl.innerHTML = `
-        <span><span class="leg-sq" style="background:rgba(79,195,247,0.75)"></span>Total Agniveer</span>
-        <span><span class="leg-sq" style="background:rgba(212,160,23,0.75)"></span>Evaluated Agniveer</span>
-        <span><span class="leg-sq" style="background:rgba(76,175,80,0.75)"></span>Passed</span>
-        <span><span class="leg-sq" style="background:rgba(239,83,80,0.75)"></span>Failed</span>
-      `;
-    }
-    charts.deptCat = new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels  : ['Total Agniveer', 'Evaluated Agniveer', 'Passed', 'Failed'],
-        datasets: [{
-          label          : `${DEPT_NAMES[dept]} - ${subKey}`,
-          data           : [subData.total_eligible, subData.evaluated, subData.passed, subData.failed],
-          backgroundColor: ['rgba(79,195,247,0.75)','rgba(212,160,23,0.75)','rgba(76,175,80,0.75)','rgba(239,83,80,0.75)'],
-          borderColor    : ['#4FC3F7','#D4A017','#4CAF50','#EF5350'],
-          borderWidth    : 1.5,
-          borderRadius   : 6,
-        }]
-      },
-      options: {
-        responsive         : true,
-        maintainAspectRatio: false,
-        indexAxis          : 'y',
-        animation          : { duration: 700, easing: 'easeOutQuart' },
-        scales: {
-          x: { ...s, beginAtZero: true },
-          y: { ...s, grid: { display: false } }
-        },
-        plugins: { legend: { display: false } }
+    buildDeptCategoryChartCustom(`${DEPT_NAMES[dept]} - ${subKey}`, subData.total_eligible, subData.evaluated, subData.passed, subData.failed);
+  }
+
+  function buildDeptTestCategoryChart(dept, subKey, testKey, testData) {
+    const subLabel = (subKey && subKey !== 'all') ? ` - ${subKey}` : '';
+    buildDeptCategoryChartCustom(`${DEPT_NAMES[dept]}${subLabel} - ${testData.label}`, testData.total_eligible, testData.evaluated, testData.passed, testData.failed);
+  }
+
+  /* ── Render test categories ──────────────────────────── */
+  function updateTestCategories(dept, subKey) {
+    const testCategoryContainer = document.getElementById('testCategoryContainer');
+    if (!testCategoryContainer) return;
+    
+    const stats = DATA.deptStats[dept];
+    const scopeData = (subKey === 'all' || !stats.sub_depts[subKey]) ? stats : stats.sub_depts[subKey];
+    const testCategories = scopeData.test_categories || {};
+    
+    let html = '';
+    const keys = Object.keys(testCategories);
+    
+    if (keys.length > 0) {
+      html += `<button type="button" class="btn test-cat-btn active" data-test="overall">Overall stats</button>`;
+      for (const testKey of keys) {
+        const cat = testCategories[testKey];
+        html += `<button type="button" class="btn test-cat-btn" data-test="${testKey}">${cat.label}</button>`;
       }
+      testCategoryContainer.classList.remove('d-none');
+      testCategoryContainer.classList.add('d-flex');
+    } else {
+      testCategoryContainer.classList.add('d-none');
+      testCategoryContainer.classList.remove('d-flex');
+    }
+    
+    testCategoryContainer.innerHTML = html;
+    
+    testCategoryContainer.querySelectorAll('.test-cat-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        testCategoryContainer.querySelectorAll('.test-cat-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        
+        const testKey = this.getAttribute('data-test');
+        if (testKey === 'overall') {
+          renderStatsCards(scopeData);
+          if (subKey === 'all') {
+            buildDeptCategoryChart(dept);
+          } else {
+            buildDeptSubCategoryChart(dept, subKey, scopeData);
+          }
+        } else {
+          const testData = testCategories[testKey];
+          renderStatsCards(testData);
+          buildDeptTestCategoryChart(dept, subKey, testKey, testData);
+        }
+      });
     });
   }
 
@@ -1359,6 +1427,7 @@
               buildDeptSubCategoryChart(dept, subKey, subData);
               if (nameEl) nameEl.textContent = `${DEPT_NAMES[dept]} - ${subKey}`;
             }
+            updateTestCategories(dept, subKey);
           });
         });
       } else {
@@ -1366,6 +1435,7 @@
         subDeptContainer.classList.remove('d-flex');
         subDeptContainer.innerHTML = '';
       }
+      updateTestCategories(dept, 'all');
     });
   });
 
