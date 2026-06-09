@@ -2,6 +2,60 @@
 Evaluation Constants - Department Configurations
 """
 
+CS_CLERK_RESULT_TRADES = [
+    'CLK',
+    'CLERK',
+    'Clerk',
+    'SVY_TOPO',
+    'DTMN_TECH',
+    'TRADESMAN',
+    'Tradesman',
+    'TRADESMAN_TRADE',
+    'AFV',
+]
+
+CS_ASSESSMENT_EVENTS = [
+    'Progressive knowledge of trade (04)',
+    'Creativity during OJT (04)',
+    'Quality of work (04)',
+    'Decision making during GP task (06)',
+    'Initiative (04)',
+    'Willingness to learn (04)',
+    'Estimation of store list and eqpt (04)',
+    'Adherence to orders during work execution (04)',
+    'Timely completion of assigned task (02)',
+    'Handling of trade eqpt/tools in assigned task (02)',
+    'Grasping subject (03)',
+    'Practical Application (04)',
+    'Dedication to Org (06)',
+    'Level of Skills Achieved (08)',
+    'Motivation (04)',
+    'Courage (03)',
+    'Timely Completion of Task (06)',
+    'Carryout Task Unsupervised (02)',
+]
+
+CS_ASSESSMENT_MAX_MARKS = {
+    'Progressive knowledge of trade (04)': 4,
+    'Creativity during OJT (04)': 4,
+    'Quality of work (04)': 4,
+    'Decision making during GP task (06)': 6,
+    'Initiative (04)': 4,
+    'Willingness to learn (04)': 4,
+    'Estimation of store list and eqpt (04)': 4,
+    'Adherence to orders during work execution (04)': 4,
+    'Timely completion of assigned task (02)': 2,
+    'Handling of trade eqpt/tools in assigned task (02)': 2,
+    'Grasping subject (03)': 3,
+    'Practical Application (04)': 4,
+    'Dedication to Org (06)': 6,
+    'Level of Skills Achieved (08)': 8,
+    'Motivation (04)': 4,
+    'Courage (03)': 3,
+    'Timely Completion of Task (06)': 6,
+    'Carryout Task Unsupervised (02)': 2,
+}
+
 DEPT_CONFIG = {
     'A': {
         'name': 'Battalion',
@@ -151,16 +205,19 @@ DEPT_CONFIG = {
                 'categories': [
                     ('practical', 'Final Practical Test'),
                     ('driving', 'Final Driving Test'),
+                    ('assessment', 'Assessment'),
                     ('result', 'Final Result'),
                 ],
                 'test_types': [
                     ('DMV_PRACTICAL', 'Final Practical Test'),
                     ('DMV_DRIVING', 'Final Driving Test'),
+                    ('DMV_ASSESSMENT', 'Final Assessment'),
                     ('DMV_RESULT', 'Final Result Sheet'),
                 ],
                 'test_to_category': {
                     'DMV_PRACTICAL': 'practical',
                     'DMV_DRIVING': 'driving',
+                    'DMV_ASSESSMENT': 'assessment',
                     'DMV_RESULT': 'result',
                 },
                 'sub_events': {
@@ -177,6 +234,26 @@ DEPT_CONFIG = {
                         'GEAR SHIFTING (15)',
                         'ROAD SENSE (05)',
                         'HAULTING PROCEDURE (05)'
+                    ],
+                    'DMV_ASSESSMENT': [
+                        'Op of trde eqpt (10)',
+                        'Maint of trde eqpt (05)',
+                        'Initiatave (03)',
+                        'Willingness to learn (02)',
+                        'Willingness to take on additional respnsibilty (03)',
+                        'Handling of veh during/before & after using veh (06)',
+                        'Timely completion of work (03)',
+                        'Handling of basic eqpt/tools (03)',
+                        'A performance during diff type of task (04)',
+                        'A performance during diff trg conditions (03)',
+                        'Dedication of org (6)',
+                        'Degree proficiency achived during conduct progrss test (4)',
+                        'Degree proficiency achieved during conduct of practicals test (4)',
+                        'Motivation (04)',
+                        'Courage (03)',
+                        'Timely completion of task (03)',
+                        'Ability to carry out task unsupervised (03)',
+                        'Feedback after completion of task (02)'
                     ],
                     'DMV_RESULT': [
                         'Online Test (100)',
@@ -203,6 +280,26 @@ DEPT_CONFIG = {
                         'ROAD SENSE (05)': 5,
                         'HAULTING PROCEDURE (05)': 5
                     },
+                    'DMV_ASSESSMENT': {
+                        'Op of trde eqpt (10)': 10,
+                        'Maint of trde eqpt (05)': 5,
+                        'Initiatave (03)': 3,
+                        'Willingness to learn (02)': 2,
+                        'Willingness to take on additional respnsibilty (03)': 3,
+                        'Handling of veh during/before & after using veh (06)': 6,
+                        'Timely completion of work (03)': 3,
+                        'Handling of basic eqpt/tools (03)': 3,
+                        'A performance during diff type of task (04)': 4,
+                        'A performance during diff trg conditions (03)': 3,
+                        'Dedication of org (6)': 6,
+                        'Degree proficiency achived during conduct progrss test (4)': 4,
+                        'Degree proficiency achieved during conduct of practicals test (4)': 4,
+                        'Motivation (04)': 4,
+                        'Courage (03)': 3,
+                        'Timely completion of task (03)': 3,
+                        'Ability to carry out task unsupervised (03)': 3,
+                        'Feedback after completion of task (02)': 2
+                    },
                     'DMV_RESULT': {
                         'Online Test (100)': 100,
                         'Practical Test (50)': 50,
@@ -214,21 +311,21 @@ DEPT_CONFIG = {
             'OPEM': {
                 'name': 'TTS - OPEM',
                 'test_types': [
-                    ('OPEM_ASSESSMENT', 'Final Assessment'),
                     ('OPEM_MAINTENANCE', 'Maintenance Test'),
                     ('OPEM_PRACTICAL', 'Practical Test'),
+                    ('OPEM_ASSESSMENT', 'Final Assessment'),
                     ('OPEM_RESULT', 'Final Result')
                 ],
                 'categories': [
-                    ('assessment', 'Assessment'),
                     ('maintenance', 'Maintenance'),
                     ('practical', 'Practical'),
+                    ('assessment', 'Assessment'),
                     ('result', 'Result')
                 ],
                 'test_to_category': {
-                    'OPEM_ASSESSMENT': 'assessment',
                     'OPEM_MAINTENANCE': 'maintenance',
                     'OPEM_PRACTICAL': 'practical',
+                    'OPEM_ASSESSMENT': 'assessment',
                     'OPEM_RESULT': 'result'
                 },
                 'sub_events': {
@@ -391,17 +488,24 @@ DEPT_CONFIG = {
     },
     'C': {
         'name': 'CS',
-        'total_marks': 40,
+        'total_marks': 80,
         'categories': [
+            ('assessment', 'Assessment'),
             ('result', 'Final Result'),
+            ('clerk_result', 'Final Result (Clerk)'),
         ],
         'test_types': [
+            ('CS_ASSESSMENT', 'Assessment'),
             ('CS_RESULT', 'CS Final Result'),
+            ('CS_CLERK_RESULT', 'Final Result (Clerk)'),
         ],
         'test_to_category': {
+            'CS_ASSESSMENT': 'assessment',
             'CS_RESULT': 'result',
+            'CS_CLERK_RESULT': 'clerk_result',
         },
         'sub_events': {
+            'CS_ASSESSMENT': CS_ASSESSMENT_EVENTS,
             'CS_RESULT': [
                 'TOET-I (25)',
                 'TOET-II (25)',
@@ -416,8 +520,17 @@ DEPT_CONFIG = {
                 'TOTAL (160)',
                 'CONVERTED TO 40',
             ],
+            'CS_CLERK_RESULT': [
+                'Online (20)',
+                'TPrac (20)',
+                'Total (40)',
+            ],
         },
         'max_marks': {
+            'CS_ASSESSMENT': {
+                **CS_ASSESSMENT_MAX_MARKS,
+                'Total (40)': 40,
+            },
             'CS_RESULT': {
                 'TOET-I (25)': 25,
                 'TOET-II (25)': 25,
@@ -432,6 +545,15 @@ DEPT_CONFIG = {
                 'TOTAL (160)': 160,
                 'CONVERTED TO 40': 40,
             },
+            'CS_CLERK_RESULT': {
+                'Online (20)': 20,
+                'TPrac (20)': 20,
+                'Total (40)': 40,
+            },
+        },
+        'score_events': {
+            'CS_ASSESSMENT': 'Total (40)',
+            'CS_CLERK_RESULT': 'Total (40)',
         },
         'readonly_events': {
             'CS_RESULT': [
@@ -441,6 +563,9 @@ DEPT_CONFIG = {
                 'BR Total (65)',
                 'TOTAL (160)',
                 'CONVERTED TO 40',
+            ],
+            'CS_CLERK_RESULT': [
+                'Total (40)',
             ],
         }
     },

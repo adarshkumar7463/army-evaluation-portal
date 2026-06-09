@@ -213,43 +213,7 @@ def build_test_category_stats(dept, sub_dept_key, all_sheets, all_agniveers):
     return test_stats
 
 
-class DashboardView(LoginRequiredMixin, View):
-    """
-    Main dashboard - routes to role-specific dashboard.
-    """
-    def get(self, request):
-        user = request.user
-        if user.is_commander:
-            return CommanderDashboard().get(request)
-        elif user.is_g_head:
-            return GHeadDashboard().get(request)
-        elif user.is_department:
-            return DepartmentDashboard().get(request)
-        elif user.is_trainer:
-            return TrainerDashboard().get(request)
-        elif user.is_registration_office:
-            return redirect('departments:registration_dashboard')
-        return render(request, 'core/dashboard.html', {})
 
-
-class CommanderDashboard(LoginRequiredMixin, View):
-    def get(self, request):
-        # Key stats
-        total_agniveers = Agniveer.objects.count()
-        total_trainers = CustomUser.objects.filter(role__in=['trainer_nco', 'trainer_jco', 'trainer_officer']).count()
-        total_g_heads = CustomUser.objects.filter(role='g_head').count()
-        total_depts = CustomUser.objects.filter(role__in=['dept_a', 'dept_b', 'dept_c', 'dept_d']).count()
-
-        # Get sheets with marks or locked
-        sheets_with_marks_ids = Marks.objects.values_list('evaluation_sheet_id', flat=True).distinct()
-        all_sheets = EvaluationSheet.objects.filter(Q(is_locked=True) | Q(id__in=sheets_with_marks_ids)).prefetch_related('marks')
-        
-        all_agniveers_qs = Agniveer.objects.prefetch_related('evaluations__marks')
-        passed_agniveers, failed_agniveers = build_evaluated_result_lists(
-            all_agniveers_qs,
-            set(sheets_with_marks_ids),
-            ['A', 'B', 'C', 'D'],
-        )
 
 
 class DashboardView(LoginRequiredMixin, View):
@@ -647,9 +611,16 @@ class DepartmentDashboard(LoginRequiredMixin, View):
         elif dept == 'D':
             agniveers = agniveers.filter(trade__in=CLERK_TRADES)
 
+        if hasattr(user, 'company') and user.company:
+            agniveers = agniveers.filter(company=user.company)
+            trainers = trainers.filter(company=user.company)
+        if hasattr(user, 'platoon') and user.platoon:
+            agniveers = agniveers.filter(platoon=user.platoon)
+            trainers = trainers.filter(platoon=user.platoon)
+
         # Get department-specific config
-        from evaluation.constants import DEPT_CONFIG
-        config = DEPT_CONFIG.get(dept, DEPT_CONFIG['A'])
+        from evaluation.constants import get_dept_config
+        config = get_dept_config(dept, user)
         
         # Include all sheets with marks (not just locked ones)
         sheets_with_marks_ids = Marks.objects.values_list('evaluation_sheet_id', flat=True).distinct()
@@ -672,6 +643,11 @@ class DepartmentDashboard(LoginRequiredMixin, View):
                 all_dept_sheets = all_dept_sheets.exclude(agniveer__trade__in=['DMV', 'OPEM'])
         elif dept == 'D':
             all_dept_sheets = all_dept_sheets.filter(agniveer__trade__in=CLERK_TRADES)
+
+        if hasattr(user, 'company') and user.company:
+            all_dept_sheets = all_dept_sheets.filter(agniveer__company=user.company)
+        if hasattr(user, 'platoon') and user.platoon:
+            all_dept_sheets = all_dept_sheets.filter(agniveer__platoon=user.platoon)
         
         # Pass/Fail logic at Agniveer level for THIS department
         passed_agniveers = []
@@ -773,6 +749,10 @@ class DepartmentDashboard(LoginRequiredMixin, View):
             tts_names = {'DMV': 'DMV', 'OPEM': 'OPEM', 'OTHER': 'Other Trades'}
             dept_name = f"TTS {tts_names.get(user.tts_trade, user.tts_trade)}"
 
+        if hasattr(user, 'platoon') and user.platoon:
+            comp_str = f" {user.company}" if hasattr(user, 'company') and user.company else ""
+            dept_name = f"{dept_name}{comp_str} {user.platoon}"
+
         context = {
             'dept': dept,
             'dept_name': dept_name,
@@ -804,12 +784,41 @@ class TrainerDashboard(LoginRequiredMixin, View):
     def get(self, request):
         trainer = request.user
         agniveers = Agniveer.objects.all()
+        dept = trainer.get_department_code()
+
+        if trainer.is_battalion:
+            if trainer.battalion_unit:
+                agniveers = agniveers.filter(bn_desp=trainer.battalion_unit)
+        elif dept == 'B':
+            if trainer.tts_trade:
+                if trainer.tts_trade == 'DMV':
+                    agniveers = agniveers.filter(trade='DMV')
+                elif trainer.tts_trade == 'OPEM':
+                    agniveers = agniveers.filter(trade='OPEM')
+                elif trainer.tts_trade == 'OTHER':
+                    agniveers = agniveers.exclude(trade__in=['DMV', 'OPEM'])
+        elif dept == 'D':
+            agniveers = agniveers.filter(trade__in=CLERK_TRADES)
+
+        if hasattr(trainer, 'company') and trainer.company:
+            agniveers = agniveers.filter(company=trainer.company)
+        if hasattr(trainer, 'platoon') and trainer.platoon:
+            agniveers = agniveers.filter(platoon=trainer.platoon)
 
         # Evaluations done by this trainer
         my_marks = Marks.objects.filter(evaluator=trainer).select_related('evaluation_sheet__agniveer')
+        if hasattr(trainer, 'company') and trainer.company:
+            my_marks = my_marks.filter(evaluation_sheet__agniveer__company=trainer.company)
+        if hasattr(trainer, 'platoon') and trainer.platoon:
+            my_marks = my_marks.filter(evaluation_sheet__agniveer__platoon=trainer.platoon)
+
+        page_title = f'{trainer.get_role_display()} Dashboard'
+        if hasattr(trainer, 'platoon') and trainer.platoon:
+            comp_str = f" {trainer.company}" if hasattr(trainer, 'company') and trainer.company else ""
+            page_title = f'{trainer.get_role_display()}{comp_str} {trainer.platoon} Dashboard'
 
         context = {
-            'page_title': f'{trainer.get_role_display()} Dashboard',
+            'page_title': page_title,
             'total_assigned': agniveers.count(),
             'evaluations_done': my_marks.count(),
             'assigned_agniveers': agniveers[:10],

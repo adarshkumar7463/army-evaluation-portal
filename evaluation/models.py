@@ -28,6 +28,7 @@ class EvaluationSheet(models.Model):
         ('screening', 'Screening'),
         ('driving', 'Final Driving Test'),
         ('maintenance', 'Maintenance Test'),
+        ('clerk_result', 'Final Result (Clerk)'),
     ]
 
     TEST_TYPE_CHOICES = [
@@ -42,12 +43,16 @@ class EvaluationSheet(models.Model):
         ('MR', 'MR'),
         ('MR_III', 'MR-III'),
         ('FC_All', 'FC Practical, FC Online & Camp Trg'),
+        ('CS_ASSESSMENT', 'CS Assessment'),
         ('CS_RESULT', 'CS Final Result'),
+        ('CS_CLERK_RESULT', 'CS Final Result (Clerk)'),
         ('CLK_INITIAL', 'Clerk Initial Test'),
         ('CLK_WEEKLY_1', 'Clerk 1st Weekly Test'),
         ('CLK_WEEKLY_2', 'Clerk 2nd Weekly Progress Test'),
         ('CLK_FINAL', 'Clerk Final Test'),
         ('CMK_SHEET', 'Common Mil Knowledge Sheet'),
+        ('OPEM_ASSESSMENT', 'OPEM Final Assessment'),
+        ('DMV_ASSESSMENT', 'DMV Final Assessment'),
     ]
 
     agniveer = models.ForeignKey(Agniveer, on_delete=models.CASCADE, related_name='evaluations')
@@ -98,14 +103,27 @@ class EvaluationSheet(models.Model):
 
     def get_total_marks(self):
         # Admin marks supersede individual evaluator marks if present
-        admin_marks = self.get_admin_marks()
-        if admin_marks > 0:
-            return admin_marks
+        admin_mark = self.marks.filter(evaluator_type='admin').first()
+        if admin_mark is not None:
+            return admin_mark.marks
         return self.get_nco_marks() + self.get_jco_marks() + self.get_officer_marks()
 
     def get_max_marks(self):
         from .constants import get_dept_config
-        config = get_dept_config(self.department)
+        if self.department == 'B' and self.agniveer:
+            from .constants import DEPT_CONFIG
+            trade = getattr(self.agniveer, 'trade', None)
+            sub_depts = DEPT_CONFIG['B'].get('sub_departments', {})
+            if trade in sub_depts:
+                config = sub_depts[trade]
+            elif self.test_type.startswith('OPEM_') and 'OPEM' in sub_depts:
+                config = sub_depts['OPEM']
+            elif self.test_type.startswith('DMV_') and 'DMV' in sub_depts:
+                config = sub_depts['DMV']
+            else:
+                config = get_dept_config(self.department)
+        else:
+            config = get_dept_config(self.department)
         configured_max = config.get('max_marks', {}).get(self.test_type)
         if configured_max:
             score_event = config.get('score_events', {}).get(self.test_type)

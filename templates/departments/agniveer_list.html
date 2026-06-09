@@ -192,7 +192,7 @@
 
     <!-- Trade Filter (hidden for Clerk, OPEM, DMV) -->
     {% if dept_code != 'D' and request.user.tts_trade != 'OPEM' and request.user.tts_trade != 'DMV' %}
-    <div class="col-md-3">
+    <div class="col-md-2">
       <label class="form-label small text-muted mb-1">Trade</label>
       <select name="trade" class="filter-select" onchange="this.form.submit()">
         <option value="">All Trades</option>
@@ -205,7 +205,7 @@
 
     <!-- Battalion Filter (hidden for 1TB, 2TB, STB) -->
     {% if not request.user.is_battalion or not request.user.battalion_unit %}
-    <div class="col-md-3">
+    <div class="col-md-2">
       <label class="form-label small text-muted mb-1">Battalion</label>
       <select name="battalion" class="filter-select" onchange="this.form.submit()">
         <option value="">All Battalions</option>
@@ -216,13 +216,46 @@
     </div>
     {% endif %}
 
+    <!-- Batch No Filter -->
+    <div class="col-md-2">
+      <label class="form-label small text-muted mb-1">Batch No</label>
+      <select name="batch_no" class="filter-select" onchange="this.form.submit()">
+        <option value="">All Batches</option>
+        {% for val, label in batch_no_choices %}
+          <option value="{{ val }}" {% if request.GET.batch_no == val %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <!-- Company Filter -->
+    <div class="col-md-2">
+      <label class="form-label small text-muted mb-1">Company</label>
+      <select name="company" class="filter-select" onchange="this.form.submit()">
+        <option value="">All Companies</option>
+        {% for val, label in company_choices %}
+          <option value="{{ val }}" {% if request.GET.company == val %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <!-- Platoon Filter -->
+    <div class="col-md-2">
+      <label class="form-label small text-muted mb-1">Platoon</label>
+      <select name="platoon" class="filter-select" onchange="this.form.submit()">
+        <option value="">All Platoons</option>
+        {% for val, label in platoon_choices %}
+          <option value="{{ val }}" {% if request.GET.platoon == val %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
     <div class="col-md-auto">
       <button type="submit" class="btn btn-army px-4" style="height: 30px;">
         <i class="bi bi-funnel"></i> Filter
       </button>
     </div>
   </form>
-  {% if request.GET.search or request.GET.trade or request.GET.battalion %}
+  {% if request.GET.search or request.GET.trade or request.GET.battalion or request.GET.batch_no or request.GET.company or request.GET.platoon %}
   <div class="mt-2">
     <a href="?{% if request.GET.eval_status %}eval_status={{ request.GET.eval_status }}{% endif %}" class="btn btn-sm btn-army-outline">
       <i class="bi bi-x-circle"></i> Clear Filters
@@ -243,15 +276,15 @@
       {% if is_department %}
       <!-- Eval Status Filter -->
       <div class="d-flex gap-1">
-        <a href="?{% if request.GET.search %}search={{ request.GET.search }}&{% endif %}{% if request.GET.trade %}trade={{ request.GET.trade }}&{% endif %}eval_status="
+        <a href="?eval_status={% for key, value in request.GET.items %}{% if key != 'eval_status' and key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}"
           class="eval-filter-btn {% if not eval_filter %}active{% endif %}">
           All
         </a>
-        <a href="?{% if request.GET.search %}search={{ request.GET.search }}&{% endif %}{% if request.GET.trade %}trade={{ request.GET.trade }}&{% endif %}eval_status=evaluated"
+        <a href="?eval_status=evaluated{% for key, value in request.GET.items %}{% if key != 'eval_status' and key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}"
           class="eval-filter-btn {% if eval_filter == 'evaluated' %}active{% endif %}">
           <i class="bi bi-check-circle-fill" style="font-size:10px;"></i> Evaluated
         </a>
-        <a href="?{% if request.GET.search %}search={{ request.GET.search }}&{% endif %}{% if request.GET.trade %}trade={{ request.GET.trade }}&{% endif %}eval_status=not_evaluated"
+        <a href="?eval_status=not_evaluated{% for key, value in request.GET.items %}{% if key != 'eval_status' and key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}"
           class="eval-filter-btn {% if eval_filter == 'not_evaluated' %}active{% endif %}">
           <i class="bi bi-clock-fill" style="font-size:10px;"></i> Pending
         </a>
@@ -281,6 +314,10 @@
           <th>Agniveer No</th>
           <th>Name</th>
           <th>BN DESP</th>
+          <th>Platoon</th>
+          {% if request.GET.company %}
+          <th>Company</th>
+          {% endif %}
           <th>Trade</th>
           {% if is_trainer or is_department %}
           <th style="text-align:center;">Eval Progress</th>
@@ -303,6 +340,13 @@
             {% if a.phone %}<div style="font-size:11px; color: var(--text-muted);">{{ a.phone }}</div>{% endif %}
           </td>
           <td>{{ a.bn_desp|default:"—" }}</td>
+          <td>
+            <div>{{ a.platoon|default:"—" }}</div>
+            {% if a.company %}<small class="text-muted d-block" style="font-size: 10px;">{{ a.company }}</small>{% endif %}
+          </td>
+          {% if request.GET.company %}
+          <td><span class="badge bg-success" style="font-size: 10px;">{{ a.company }}</span></td>
+          {% endif %}
           <td>{{ a.trade|default:"—" }}</td>
           {% if is_trainer or is_department %}
           <td style="text-align:center;">

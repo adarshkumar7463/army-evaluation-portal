@@ -35,3 +35,10 @@ def department_name(code):
         'C': 'CS',
         'D': 'Clerk',
     }.get(code, code)
+
+@register.filter
+def split_str(val, delimiter=','):
+    if not val:
+        return []
+    return val.split(delimiter)
+

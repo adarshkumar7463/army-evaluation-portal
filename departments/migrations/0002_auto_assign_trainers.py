@@ -47,6 +47,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('departments', '0001_initial'),
+        ('evaluation', '0001_initial'),
     ]
 
     operations = [

@@ -234,6 +234,66 @@ class AgniveerEvaluateView(AnyStaffMixin, View):
             total_for_best = round(converted_40)
             evaluator_type = 'admin'
 
+        # ─── OPEM/DMV Practical & Maintenance/Driving Calculations ───
+        elif active_test in ('OPEM_PRACTICAL', 'DMV_PRACTICAL', 'OPEM_MAINTENANCE', 'DMV_DRIVING'):
+            results = {'Marks': {}}
+            total_marks = 0.0
+            for sub in sub_events:
+                val = request.POST.get(sub)
+                try:
+                    val_float = float(val) if val else 0.0
+                except (ValueError, TypeError):
+                    val_float = 0.0
+                
+                max_limit = config.get('max_marks', {}).get(active_test, {}).get(sub, 999)
+                if val_float > max_limit:
+                    val_float = max_limit
+                results['Marks'][sub] = val_float
+                total_marks += val_float
+            
+            results['Marks']['Total'] = round(total_marks, 2)
+            results['Marks']['Percentage'] = round((total_marks / 50.0) * 100.0, 2)
+            results['Marks']['Result'] = 'Pass' if total_marks >= 25.0 else 'Fail'
+            
+            total_for_best = round(total_marks)
+            evaluator_type = 'admin'
+
+        # ─── OPEM/DMV Final Assessment Specific Calculations ───
+        elif active_test in ('OPEM_ASSESSMENT', 'DMV_ASSESSMENT'):
+            results = {'Marks': {}}
+            total_average = 0.0
+            for event in sub_events:
+                results['Marks'][event] = {}
+                filled_weeks = []
+                for week in range(1, 9):
+                    val = request.POST.get(f"week_{week}_{event}")
+                    try:
+                        val_float = float(val) if val else None
+                    except (ValueError, TypeError):
+                        val_float = None
+                    
+                    results['Marks'][event][f"week_{week}"] = val_float
+                    if val_float is not None:
+                        filled_weeks.append(val_float)
+                
+                # Calculate week 9 as average of filled weeks
+                if filled_weeks:
+                    avg_val = round(sum(filled_weeks) / len(filled_weeks), 2)
+                else:
+                    avg_val = 0.0
+                results['Marks'][event]['week_9'] = avg_val
+                total_average += avg_val
+            
+            percentage = (total_average / 71.0 * 100.0) if total_average else 0.0
+            is_pass_status = 'Pass' if percentage >= 40 else 'Fail'
+            
+            results['Marks']['Total'] = round(total_average, 2)
+            results['Marks']['Percentage'] = round(percentage, 2)
+            results['Marks']['Result'] = is_pass_status
+            
+            total_for_best = round(total_average)
+            evaluator_type = 'admin'
+
         # ─── OTHER Trades Specific Calculations ───
         elif active_test == 'OTHER_ASSESSMENT':
             total_marks = 0
@@ -284,6 +344,81 @@ class AgniveerEvaluateView(AnyStaffMixin, View):
             results['Marks']['TOTAL (160)'] = round(min(total_160, max_config.get('TOTAL (160)', 160)), 2)
             results['Marks']['CONVERTED TO 40'] = round(min(converted_40, max_config.get('CONVERTED TO 40', 40)), 2)
             total_for_best = round(results['Marks']['CONVERTED TO 40'])
+            evaluator_type = 'admin'
+
+        elif department == 'C' and active_test == 'CS_CLERK_RESULT':
+            max_config = config.get('max_marks', {}).get(active_test, {})
+            results = {'Marks': {}}
+
+            for event in ['PL', 'EN']:
+                results['Marks'][event] = (request.POST.get(event) or '').strip()
+
+            online = 0
+            tprac = 0
+            for event in ['Online (20)', 'TPrac (20)']:
+                raw_value = request.POST.get(event)
+                try:
+                    value = float(raw_value) if raw_value else 0
+                except (ValueError, TypeError):
+                    value = 0
+
+                max_limit = max_config.get(event, 20)
+                if value > max_limit:
+                    messages.warning(request, f"Value {value} for {event} exceeds max marks {max_limit}. Capped at limit.")
+                    value = max_limit
+                if value < 0:
+                    value = 0
+                results['Marks'][event] = value
+                if event == 'Online (20)':
+                    online = value
+                else:
+                    tprac = value
+
+            total_40 = min(online + tprac, max_config.get('Total (40)', 40))
+            results['Marks']['Total (40)'] = round(total_40, 2)
+            results['Marks']['Percentage'] = round((total_40 / 40) * 100, 2) if total_40 else 0
+            results['Marks']['Result'] = 'Pass' if total_40 >= 20 else 'Fail'
+            total_for_best = round(total_40)
+            evaluator_type = 'admin'
+
+        elif department == 'C' and active_test == 'CS_ASSESSMENT':
+            max_config = config.get('max_marks', {}).get(active_test, {})
+            results = {'Marks': {}}
+            raw_total = 0
+
+            for event in sub_events:
+                raw_value = request.POST.get(event)
+                try:
+                    value = float(raw_value) if raw_value else 0
+                except (ValueError, TypeError):
+                    value = 0
+
+                max_limit = max_config.get(event, 999)
+                if value > max_limit:
+                    messages.warning(request, f"Value {value} for {event} exceeds max marks {max_limit}. Capped at limit.")
+                    value = max_limit
+                if value < 0:
+                    value = 0
+                results['Marks'][event] = value
+                raw_total += value
+
+            converted_40 = round((raw_total / 74) * 40, 2) if raw_total else 0
+            percentage = round((raw_total / 74) * 100, 2) if raw_total else 0
+            if percentage >= 80:
+                grading = 'A'
+            elif percentage >= 60:
+                grading = 'B'
+            elif percentage >= 46:
+                grading = 'C'
+            else:
+                grading = 'D'
+
+            results['Marks']['Raw Total (74)'] = round(raw_total, 2)
+            results['Marks']['Total (40)'] = min(converted_40, max_config.get('Total (40)', 40))
+            results['Marks']['Percentage'] = percentage
+            results['Marks']['Result'] = 'Pass' if percentage >= 50 else 'Fail'
+            results['Marks']['Grading'] = grading
+            total_for_best = round(results['Marks']['Total (40)'])
             evaluator_type = 'admin'
 
         elif department == 'D' and active_test.startswith('CLK_'):
@@ -597,12 +732,17 @@ class AgniveerEvaluateView(AnyStaffMixin, View):
             return redirect(reverse('departments:agniveer_detail', args=[pk]) + f"?test={active_test}")
 
         # Update JSONField
-        if department == 'A' or active_test == 'DMV_RESULT' or (department == 'C' and active_test == 'CS_RESULT') or (department == 'D' and active_test.startswith('CLK_')):
+        if (department == 'A' or 
+            active_test in ('DMV_RESULT', 'OPEM_RESULT', 'OPEM_ASSESSMENT', 'DMV_ASSESSMENT', 
+                            'OPEM_PRACTICAL', 'DMV_PRACTICAL', 'OPEM_MAINTENANCE', 'DMV_DRIVING') or 
+            (department == 'C' and active_test in ('CS_RESULT', 'CS_CLERK_RESULT', 'CS_ASSESSMENT')) or 
+            (department == 'D' and active_test.startswith('CLK_'))):
             sheet.sub_event_results = results
         else:
             if not sheet.sub_event_results:
                 sheet.sub_event_results = {}
             sheet.sub_event_results[evaluator_type] = results
+        sheet.remarks = remarks
         sheet.save()
 
         # Update/Create Marks

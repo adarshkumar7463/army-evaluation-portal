@@ -100,7 +100,7 @@
           </div>
         </div>
 
-        {% if form.role or form.battalion_unit or form.tts_trade %}
+        {% if form.role or form.battalion_unit or form.tts_trade or form.platoon %}
         <div class="section-divider" style="margin-bottom: 12px; font-weight: 700; border-bottom: 1px solid var(--portal-line); padding-bottom: 4px; text-transform: uppercase;">
           <i class="bi bi-gear-fill"></i> Assignment Details
         </div>
@@ -121,6 +121,20 @@
             <label class="form-label">TTS Scope</label>
             {{ form.tts_trade }}
           </div>
+
+          {% if form.company %}
+          <div class="col-md-4" id="company_container" style="display:none;">
+            <label class="form-label">Company Scope</label>
+            {{ form.company }}
+          </div>
+          {% endif %}
+
+          {% if form.platoon %}
+          <div class="col-md-4" id="platoon_container" style="display:none;">
+            <label class="form-label">Platoon Scope</label>
+            {{ form.platoon }}
+          </div>
+          {% endif %}
         </div>
         {% endif %}
 
@@ -169,15 +183,81 @@ document.addEventListener('DOMContentLoaded', function() {
     const roleSelect = document.getElementById('id_role_select') || document.querySelector('[name="role"]');
     const bnContainer = document.getElementById('battalion_container');
     const ttsContainer = document.getElementById('tts_container');
+    const companyContainer = document.getElementById('company_container');
+    const platoonContainer = document.getElementById('platoon_container');
+    const bnSelect = document.getElementById('id_battalion_select');
+    const companySelect = document.getElementById('id_company_select');
+    const platoonSelect = document.getElementById('id_platoon_select');
     
     const roleLabel = userForm.dataset.roleLabel;
     const deptCode = userForm.dataset.deptCode;
+
+    function updateCompanyChoices() {
+        if (!companySelect) return;
+        const bnVal = bnSelect ? bnSelect.value : "";
+        const currentCompanyVal = companySelect.value;
+        
+        companySelect.innerHTML = '<option value="">--- All Companies / No Company ---</option>';
+        
+        let allowed = [];
+        if (bnVal === '1TB') {
+            allowed = ['Company A', 'Company B', 'Company C'];
+        } else if (bnVal === '2TB') {
+            allowed = ['Company D', 'Company E', 'Company F'];
+        } else if (bnVal === 'STB') {
+            allowed = ['Company G', 'Company H', 'Company I'];
+        } else {
+            allowed = ['Company A', 'Company B', 'Company C', 'Company D', 'Company E', 'Company F', 'Company G', 'Company H', 'Company I'];
+        }
+        
+        allowed.forEach(opt => {
+            const el = document.createElement('option');
+            el.value = opt;
+            el.textContent = opt;
+            if (opt === currentCompanyVal) {
+                el.selected = true;
+            }
+            companySelect.appendChild(el);
+        });
+        updatePlatoonChoices();
+    }
+
+    function updatePlatoonChoices() {
+        if (!platoonSelect) return;
+        const compVal = companySelect ? companySelect.value : "";
+        const currentPlatoonVal = platoonSelect.value;
+        
+        platoonSelect.innerHTML = '<option value="">--- All Platoons / No Platoon ---</option>';
+        
+        let allowed = [];
+        if (compVal === 'Company A' || compVal === 'Company D' || compVal === 'Company G') {
+            allowed = ['P1', 'P2', 'P3'];
+        } else if (compVal === 'Company B' || compVal === 'Company E' || compVal === 'Company H') {
+            allowed = ['P4', 'P5', 'P6'];
+        } else if (compVal === 'Company C' || compVal === 'Company F' || compVal === 'Company I') {
+            allowed = ['P7', 'P8', 'P9'];
+        } else {
+            allowed = ['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'P8', 'P9'];
+        }
+        
+        allowed.forEach(opt => {
+            const el = document.createElement('option');
+            el.value = opt;
+            el.textContent = opt;
+            if (opt === currentPlatoonVal) {
+                el.selected = true;
+            }
+            platoonSelect.appendChild(el);
+        });
+    }
 
     function updateVisibility() {
         const role = roleSelect ? roleSelect.value : "";
         
         bnContainer.style.display = 'none';
         ttsContainer.style.display = 'none';
+        if (companyContainer) companyContainer.style.display = 'none';
+        if (platoonContainer) platoonContainer.style.display = 'none';
 
         if (role === 'dept_a' || (roleLabel === 'Trainer' && role.startsWith('trainer_'))) {
             bnContainer.style.display = 'block';
@@ -185,6 +265,14 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (role === 'dept_b' || (roleLabel === 'Trainer' && role.startsWith('trainer_'))) {
             ttsContainer.style.display = 'block';
+        }
+
+        if (companyContainer && (role.startsWith('dept_') || role.startsWith('trainer_') || roleLabel === 'Trainer' || roleLabel === 'Department' || deptCode)) {
+            companyContainer.style.display = 'block';
+        }
+
+        if (platoonContainer && (role.startsWith('dept_') || role.startsWith('trainer_') || roleLabel === 'Trainer' || roleLabel === 'Department' || deptCode)) {
+            platoonContainer.style.display = 'block';
         }
         
         if (deptCode) {
@@ -196,10 +284,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 bnContainer.style.display = 'none';
             }
         }
+        updateCompanyChoices();
     }
 
     if (roleSelect) {
         roleSelect.addEventListener('change', updateVisibility);
+    }
+    if (bnSelect) {
+        bnSelect.addEventListener('change', updateCompanyChoices);
+    }
+    if (companySelect) {
+        companySelect.addEventListener('change', updatePlatoonChoices);
     }
     updateVisibility();
 });

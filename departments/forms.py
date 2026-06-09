@@ -19,7 +19,7 @@ class AgniveerRegistrationForm(forms.ModelForm):
         model = Agniveer
         fields = [
             'agniveer_no', 'name', 'father_name',
-            'dor', 'trade', 'aros_bros', 'bn_desp', 'relationship',
+            'dor', 'trade', 'aros_bros', 'bn_desp', 'batch_no', 'company', 'platoon', 'relationship',
             'afmsf_2a', 'review_cert', 'edn_ql_enrollment',
             'higher_edn_qualification', 'edn_cert', 'verification_roll',
             'character_cert', 'unmarried_cert', 'caste_cert', 'class_field',
@@ -47,7 +47,10 @@ class AgniveerRegistrationForm(forms.ModelForm):
                 'class': 'form-control form-control-sm',
                 'placeholder': 'e.g. VISHAKHAPATNAM'
             }),
-            'bn_desp': forms.Select(attrs={'class': 'form-select form-select-sm'}),
+            'bn_desp': forms.Select(attrs={'class': 'form-select form-select-sm', 'id': 'reg_bn_desp'}),
+            'batch_no': forms.Select(attrs={'class': 'form-select form-select-sm', 'id': 'reg_batch_no'}),
+            'company': forms.Select(attrs={'class': 'form-select form-select-sm', 'id': 'reg_company'}),
+            'platoon': forms.Select(attrs={'class': 'form-select form-select-sm', 'id': 'reg_platoon'}),
             'relationship': forms.TextInput(attrs={
                 'class': 'form-control form-control-sm',
                 'placeholder': 'e.g. 2'
@@ -104,7 +107,7 @@ class AgniveerEditForm(forms.ModelForm):
         model = Agniveer
         fields = [
             'agniveer_no', 'name', 'father_name',
-            'dor', 'trade', 'aros_bros', 'bn_desp', 'relationship',
+            'dor', 'trade', 'aros_bros', 'bn_desp', 'batch_no', 'company', 'platoon', 'relationship',
             'afmsf_2a', 'review_cert', 'edn_ql_enrollment',
             'higher_edn_qualification', 'edn_cert', 'verification_roll',
             'character_cert', 'unmarried_cert', 'caste_cert', 'class_field',
@@ -119,7 +122,10 @@ class AgniveerEditForm(forms.ModelForm):
             'dor': forms.DateInput(attrs={'class': 'form-control form-control-sm', 'type': 'date'}),
             'trade': forms.Select(attrs={'class': 'form-select form-select-sm'}),
             'aros_bros': forms.TextInput(attrs={'class': 'form-control form-control-sm'}),
-            'bn_desp': forms.Select(attrs={'class': 'form-select form-select-sm'}),
+            'bn_desp': forms.Select(attrs={'class': 'form-select form-select-sm', 'id': 'edit_bn_desp'}),
+            'batch_no': forms.Select(attrs={'class': 'form-select form-select-sm', 'id': 'edit_batch_no'}),
+            'company': forms.Select(attrs={'class': 'form-select form-select-sm', 'id': 'edit_company'}),
+            'platoon': forms.Select(attrs={'class': 'form-select form-select-sm', 'id': 'edit_platoon'}),
             'relationship': forms.TextInput(attrs={'class': 'form-control form-control-sm'}),
             'afmsf_2a': forms.Select(attrs={'class': 'form-select form-select-sm'}, choices=YES_NO_CHOICES),
             'review_cert': forms.Select(attrs={'class': 'form-select form-select-sm'}, choices=YES_NO_CHOICES),

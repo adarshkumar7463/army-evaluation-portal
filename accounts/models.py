@@ -65,10 +65,36 @@ class CustomUser(AbstractUser):
         ('D', 'Clerk'),
     ]
 
+    PLATOON_CHOICES = [
+        ('P1', 'P1'),
+        ('P2', 'P2'),
+        ('P3', 'P3'),
+        ('P4', 'P4'),
+        ('P5', 'P5'),
+        ('P6', 'P6'),
+        ('P7', 'P7'),
+        ('P8', 'P8'),
+        ('P9', 'P9'),
+    ]
+
+    COMPANY_CHOICES = [
+        ('Company A', 'Company A'),
+        ('Company B', 'Company B'),
+        ('Company C', 'Company C'),
+        ('Company D', 'Company D'),
+        ('Company E', 'Company E'),
+        ('Company F', 'Company F'),
+        ('Company G', 'Company G'),
+        ('Company H', 'Company H'),
+        ('Company I', 'Company I'),
+    ]
+
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default=ROLE_TRAINER_NCO)
     department = models.CharField(max_length=1, choices=DEPARTMENT_CHOICES, blank=True, null=True)
     battalion_unit = models.CharField(max_length=10, choices=BATTALION_CHOICES, blank=True, null=True)
     tts_trade = models.CharField(max_length=10, choices=TTS_TRADE_CHOICES, blank=True, null=True)
+    company = models.CharField(max_length=20, choices=COMPANY_CHOICES, blank=True, null=True)
+    platoon = models.CharField(max_length=10, choices=PLATOON_CHOICES, blank=True, null=True)
     phone = models.CharField(max_length=15, blank=True, null=True)
     service_number = models.CharField(max_length=30, unique=True, blank=True, null=True)
     rank = models.CharField(max_length=50, blank=True, null=True)

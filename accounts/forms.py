@@ -80,10 +80,22 @@ class CreateDepartmentUserForm(forms.ModelForm):
         required=False,
         widget=forms.Select(attrs={'class': 'form-control', 'id': 'id_tts_select'})
     )
+    
+    platoon = forms.ChoiceField(
+        choices=[('', '--- All Platoons / No Platoon ---')] + CustomUser.PLATOON_CHOICES,
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-control', 'id': 'id_platoon_select'})
+    )
+    
+    company = forms.ChoiceField(
+        choices=[('', '--- All Companies / No Company ---')] + CustomUser.COMPANY_CHOICES,
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-control', 'id': 'id_company_select'})
+    )
 
     class Meta:
         model = CustomUser
-        fields = ['first_name', 'last_name', 'username', 'email', 'service_number', 'rank', 'phone', 'role', 'battalion_unit', 'tts_trade']
+        fields = ['first_name', 'last_name', 'username', 'email', 'service_number', 'rank', 'phone', 'role', 'battalion_unit', 'tts_trade', 'company', 'platoon']
         widgets = {
             'first_name': forms.TextInput(attrs={'class': 'form-control'}),
             'last_name': forms.TextInput(attrs={'class': 'form-control'}),
@@ -106,6 +118,8 @@ class CreateDepartmentUserForm(forms.ModelForm):
         user.role = self.cleaned_data['role']
         dept_map = {'dept_a': 'A', 'dept_b': 'B', 'dept_c': 'C', 'dept_d': 'D'}
         user.department = dept_map.get(user.role)
+        user.company = self.cleaned_data.get('company')
+        user.platoon = self.cleaned_data.get('platoon')
         
         if user.role == 'dept_a':
             user.battalion_unit = self.cleaned_data.get('battalion_unit')
@@ -142,10 +156,22 @@ class CreateTrainerForm(forms.ModelForm):
         required=False,
         widget=forms.Select(attrs={'class': 'form-control', 'id': 'id_tts_select'})
     )
+    
+    platoon = forms.ChoiceField(
+        choices=[('', '--- All Platoons / No Platoon ---')] + CustomUser.PLATOON_CHOICES,
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-control', 'id': 'id_platoon_select'})
+    )
+    
+    company = forms.ChoiceField(
+        choices=[('', '--- All Companies / No Company ---')] + CustomUser.COMPANY_CHOICES,
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-control', 'id': 'id_company_select'})
+    )
 
     class Meta:
         model = CustomUser
-        fields = ['first_name', 'last_name', 'username', 'email', 'service_number', 'rank', 'phone', 'role', 'battalion_unit', 'tts_trade']
+        fields = ['first_name', 'last_name', 'username', 'email', 'service_number', 'rank', 'phone', 'role', 'battalion_unit', 'tts_trade', 'company', 'platoon']
         widgets = {
             'first_name': forms.TextInput(attrs={'class': 'form-control'}),
             'last_name': forms.TextInput(attrs={'class': 'form-control'}),
@@ -168,6 +194,8 @@ class CreateTrainerForm(forms.ModelForm):
         user.role = self.cleaned_data['role']
         user.battalion_unit = self.cleaned_data.get('battalion_unit')
         user.tts_trade = self.cleaned_data.get('tts_trade')
+        user.company = self.cleaned_data.get('company')
+        user.platoon = self.cleaned_data.get('platoon')
         if commit:
             user.save()
         return user

@@ -37,6 +37,41 @@ BN_DESP_CHOICES = [
     ('STB', 'STB'),
 ]
 
+BATCH_NO_CHOICES = [
+    ('2023', '2023'),
+    ('2024', '2024'),
+    ('2025', '2025'),
+    ('2026', '2026'),
+    ('2027', '2027'),
+    ('2028', '2028'),
+    ('2029', '2029'),
+    ('2030', '2030'),
+]
+
+PLATOON_CHOICES = [
+    ('P1', 'P1'),
+    ('P2', 'P2'),
+    ('P3', 'P3'),
+    ('P4', 'P4'),
+    ('P5', 'P5'),
+    ('P6', 'P6'),
+    ('P7', 'P7'),
+    ('P8', 'P8'),
+    ('P9', 'P9'),
+]
+
+COMPANY_CHOICES = [
+    ('Company A', 'Company A'),
+    ('Company B', 'Company B'),
+    ('Company C', 'Company C'),
+    ('Company D', 'Company D'),
+    ('Company E', 'Company E'),
+    ('Company F', 'Company F'),
+    ('Company G', 'Company G'),
+    ('Company H', 'Company H'),
+    ('Company I', 'Company I'),
+]
+
 
 def generate_enrollment_number():
     """Auto-generate a unique enrollment number in format AGN-YYYYMMDD-XXXX."""
@@ -200,6 +235,9 @@ class Agniveer(models.Model):
     address = models.TextField(blank=True, null=True)
     photo = models.ImageField(upload_to='agniveers/', blank=True, null=True)
     batch = models.CharField(max_length=30, blank=True, null=True)
+    batch_no = models.CharField(max_length=10, choices=BATCH_NO_CHOICES, blank=True, null=True)
+    company = models.CharField(max_length=20, choices=COMPANY_CHOICES, blank=True, null=True)
+    platoon = models.CharField(max_length=10, choices=PLATOON_CHOICES, blank=True, null=True)
     joining_date = models.DateField(blank=True, null=True)
 
     created_at = models.DateTimeField(auto_now_add=True)

@@ -80,6 +80,33 @@
     text-align: center !important;
   }
 
+  /* Rounded white inputs for marks */
+  .marks-input {
+    background: #FFFFFF !important;
+    color: #1A1D20 !important;
+    border: 1.5px solid #BDC6D0 !important;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+    font-family: 'Rajdhani', sans-serif !important;
+    font-size: 13px !important;
+    text-align: center !important;
+    width: 65px !important;
+    height: 32px !important;
+    padding: 2px 5px !important;
+    transition: all 0.2s ease-in-out !important;
+  }
+  .marks-input:focus {
+    background: #FFFFFF !important;
+    border-color: #52B788 !important;
+    box-shadow: 0 0 0 3px rgba(82, 183, 136, 0.2) !important;
+    outline: none !important;
+  }
+  .marks-input::placeholder {
+    color: #495057 !important;
+    opacity: 0.85 !important;
+    font-weight: 600 !important;
+  }
+
   .evaluation-workspace textarea {
     font-size: 11px !important;
     padding: 4px 6px !important;
@@ -90,13 +117,13 @@
   }
 
   /* Evaluation sheet source styling: fixed action footer and unified section layout */
-  .evaluation-workspace > .army-card {
+  .evaluation-workspace>.army-card {
     max-height: calc(100vh - 30px) !important;
     background: linear-gradient(180deg, var(--card-bg), rgba(220, 238, 248, 0.92)) !important;
     border: 1px solid var(--border-color) !important;
   }
 
-  [data-bs-theme="dark"] .evaluation-workspace > .army-card {
+  [data-bs-theme="dark"] .evaluation-workspace>.army-card {
     background: linear-gradient(180deg, var(--card-bg), rgba(31, 42, 50, 0.94)) !important;
   }
 
@@ -122,12 +149,12 @@
     overflow: hidden !important;
   }
 
-  .test-tab-pane > h5,
-  .test-tab-pane > h6 {
+  .test-tab-pane>h5,
+  .test-tab-pane>h6 {
     flex: 0 0 auto !important;
   }
 
-  .test-tab-pane > form {
+  .test-tab-pane>form {
     flex: 1 1 auto !important;
     display: flex !important;
     flex-direction: column !important;
@@ -236,14 +263,14 @@
     background: rgba(37, 48, 57, 0.96) !important;
   }
 
-  .evaluation-sticky-footer > .d-flex {
+  .evaluation-sticky-footer>.d-flex {
     min-width: 0 !important;
     display: grid !important;
     grid-template-columns: repeat(auto-fit, minmax(135px, 1fr)) !important;
     gap: 8px !important;
   }
 
-  .evaluation-sticky-footer > div:last-child {
+  .evaluation-sticky-footer>div:last-child {
     justify-self: end !important;
   }
 
@@ -280,10 +307,10 @@
   }
 
   /* Normalize Clerk and Battalion Screening custom cards to the same sheet language */
-  [id*="tab-CLK_"] > .row,
-  [id*="tab-CLK_"] > form > .row,
-  #tab-BN_SCREENING > .row,
-  #tab-BN_SCREENING > form > .row {
+  [id*="tab-CLK_"]>.row,
+  [id*="tab-CLK_"]>form>.row,
+  #tab-BN_SCREENING>.row,
+  #tab-BN_SCREENING>form>.row {
     display: grid !important;
     grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)) !important;
     gap: 10px !important;
@@ -293,10 +320,10 @@
     padding-right: 2px;
   }
 
-  [id*="tab-CLK_"] > .row > [class*="col"],
-  [id*="tab-CLK_"] > form > .row > [class*="col"],
-  #tab-BN_SCREENING > .row > [class*="col"],
-  #tab-BN_SCREENING > form > .row > [class*="col"] {
+  [id*="tab-CLK_"]>.row>[class*="col"],
+  [id*="tab-CLK_"]>form>.row>[class*="col"],
+  #tab-BN_SCREENING>.row>[class*="col"],
+  #tab-BN_SCREENING>form>.row>[class*="col"] {
     width: 100% !important;
     max-width: none !important;
     padding: 0 !important;
@@ -378,7 +405,7 @@
       overflow: visible !important;
     }
 
-    .evaluation-workspace > .army-card {
+    .evaluation-workspace>.army-card {
       max-height: none !important;
       height: auto !important;
     }
@@ -389,7 +416,7 @@
       height: auto !important;
     }
 
-    .test-tab-pane > form {
+    .test-tab-pane>form {
       overflow: visible !important;
     }
 
@@ -397,7 +424,7 @@
       grid-template-columns: 1fr !important;
     }
 
-    .evaluation-sticky-footer > div:last-child {
+    .evaluation-sticky-footer>div:last-child {
       justify-self: stretch !important;
     }
 
@@ -592,7 +619,8 @@
                       </div>
                       <div
                         style="font-family: 'Rajdhani', sans-serif; font-size: 24px; font-weight: 700; color: #52B788; margin-top: 4px;">
-                        <span id="initial_academic_conv">{% if current_sheet %}{{ current_sheet.sub_event_results.Marks|get_item:'Academic Converted (40)' }}{% else %}0.00{% endif %}</span> / 40
+                        <span id="initial_academic_conv">{% if current_sheet %}{{
+                          current_sheet.sub_event_results.Marks|get_item:'Academic Converted (40)' }}{% else %}0.00{%                           endif %}</span> / 40
                       </div>
                     </div>
                   </div>
@@ -633,14 +661,15 @@
                       </div>
                       <div
                         style="font-family: 'Rajdhani', sans-serif; font-size: 24px; font-weight: 700; color: #52B788; margin-top: 4px;">
-                        <span id="initial_computer_conv">{% if current_sheet %}{{ current_sheet.sub_event_results.Marks|get_item:'Computer Converted (10)' }}{% else %}0.00{% endif %}</span> / 10
+                        <span id="initial_computer_conv">{% if current_sheet %}{{
+                          current_sheet.sub_event_results.Marks|get_item:'Computer Converted (10)' }}{% else %}0.00{%                           endif %}</span> / 10
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-            
+
             {% elif code == 'CLK_WEEKLY_1' %}
             <div class="row g-3">
               <!-- Tech Section Card -->
@@ -675,7 +704,8 @@
                       <div style="font-size: 10px; color: #8B9BB4; text-transform: uppercase;">Converted (40%)</div>
                       <div
                         style="font-family: 'Rajdhani', sans-serif; font-size: 18px; font-weight: 700; color: #52B788; margin-top: 2px;">
-                        <span id="w1_tech_conv">{% if current_sheet %}{{ current_sheet.sub_event_results.Marks|get_item:'Tech Converted (20)' }}{% else %}0.00{% endif %}</span> / 20
+                        <span id="w1_tech_conv">{% if current_sheet %}{{
+                          current_sheet.sub_event_results.Marks|get_item:'Tech Converted (20)' }}{% else %}0.00{% endif                           %}</span> / 20
                       </div>
                     </div>
                   </div>
@@ -714,7 +744,8 @@
                       <div style="font-size: 10px; color: #8B9BB4; text-transform: uppercase;">Converted (40%)</div>
                       <div
                         style="font-family: 'Rajdhani', sans-serif; font-size: 18px; font-weight: 700; color: #52B788; margin-top: 2px;">
-                        <span id="w1_academic_conv">{% if current_sheet %}{{ current_sheet.sub_event_results.Marks|get_item:'Academic Converted (20)' }}{% else %}0.00{% endif %}</span> / 20
+                        <span id="w1_academic_conv">{% if current_sheet %}{{
+                          current_sheet.sub_event_results.Marks|get_item:'Academic Converted (20)' }}{% else %}0.00{%                           endif %}</span> / 20
                       </div>
                     </div>
                   </div>
@@ -770,7 +801,8 @@
                       </div>
                       <div
                         style="font-family: 'Rajdhani', sans-serif; font-size: 18px; font-weight: 700; color: #52B788; margin-top: 1px;">
-                        <span id="w1_comp_total_conv">{% if current_sheet %}{{ current_sheet.sub_event_results.Marks|get_item:'Computer Total Converted (20)' }}{% else %}0.00{% endif %}</span> / 20
+                        <span id="w1_comp_total_conv">{% if current_sheet %}{{
+                          current_sheet.sub_event_results.Marks|get_item:'Computer Total Converted (20)' }}{% else                           %}0.00{% endif %}</span> / 20
                       </div>
                     </div>
                   </div>
@@ -862,11 +894,13 @@
                       style="background: rgba(82,183,136,0.1); border-radius: 6px; padding: 6px 10px; text-align: left; border: 1px dashed rgba(82,183,136,0.2); font-size: 11px;">
                       <div class="d-flex justify-content-between">
                         <span style="color: #8B9BB4;">Online (46):</span>
-                        <span style="font-weight:700; color: #52B788;" id="w2_tech_online_conv">{% if current_sheet %}{{ current_sheet.sub_event_results.Marks|get_item:'Tech Online Converted (46)' }}{% else %}0.00{% endif %}</span>
+                        <span style="font-weight:700; color: #52B788;" id="w2_tech_online_conv">{% if current_sheet %}{{
+                          current_sheet.sub_event_results.Marks|get_item:'Tech Online Converted (46)' }}{% else %}0.00{%                           endif %}</span>
                       </div>
                       <div class="d-flex justify-content-between mt-1">
                         <span style="color: #8B9BB4;">Proj (10):</span>
-                        <span style="font-weight:700; color: #52B788;" id="w2_tech_proj_conv">{% if current_sheet %}{{ current_sheet.sub_event_results.Marks|get_item:'Tech Proj Converted (10)' }}{% else %}0.00{% endif %}</span>
+                        <span style="font-weight:700; color: #52B788;" id="w2_tech_proj_conv">{% if current_sheet %}{{
+                          current_sheet.sub_event_results.Marks|get_item:'Tech Proj Converted (10)' }}{% else %}0.00{%                           endif %}</span>
                       </div>
                     </div>
                   </div>
@@ -905,7 +939,8 @@
                       <div style="font-size: 10px; color: #8B9BB4; text-transform: uppercase;">Converted (34)</div>
                       <div
                         style="font-family: 'Rajdhani', sans-serif; font-size: 18px; font-weight: 700; color: #52B788; margin-top: 2px;">
-                        <span id="w2_academic_conv">{% if current_sheet %}{{ current_sheet.sub_event_results.Marks|get_item:'Academic Converted (34)' }}{% else %}0.00{% endif %}</span> / 34
+                        <span id="w2_academic_conv">{% if current_sheet %}{{
+                          current_sheet.sub_event_results.Marks|get_item:'Academic Converted (34)' }}{% else %}0.00{%                           endif %}</span> / 34
                       </div>
                     </div>
                   </div>
@@ -959,15 +994,18 @@
                       style="background: rgba(82,183,136,0.1); border-radius: 6px; padding: 6px 10px; text-align: left; border: 1px dashed rgba(82,183,136,0.2); font-size: 11px;">
                       <div class="d-flex justify-content-between">
                         <span style="color: #8B9BB4;">Online (10):</span>
-                        <span style="font-weight:700; color: #52B788;" id="w2_comp_online_conv">{% if current_sheet %}{{ current_sheet.sub_event_results.Marks|get_item:'Computer Online Converted (10)' }}{% else %}0.00{% endif %}</span>
+                        <span style="font-weight:700; color: #52B788;" id="w2_comp_online_conv">{% if current_sheet %}{{
+                          current_sheet.sub_event_results.Marks|get_item:'Computer Online Converted (10)' }}{% else                           %}0.00{% endif %}</span>
                       </div>
                       <div class="d-flex justify-content-between mt-1">
                         <span style="color: #8B9BB4;">Prac (10):</span>
-                        <span style="font-weight:700; color: #52B788;" id="w2_comp_prac_conv">{% if current_sheet %}{{ current_sheet.sub_event_results.Marks|get_item:'Computer Prac Converted (10)' }}{% else %}0.00{% endif %}</span>
+                        <span style="font-weight:700; color: #52B788;" id="w2_comp_prac_conv">{% if current_sheet %}{{
+                          current_sheet.sub_event_results.Marks|get_item:'Computer Prac Converted (10)' }}{% else                           %}0.00{% endif %}</span>
                       </div>
                       <div class="d-flex justify-content-between mt-1 border-top border-secondary pt-1">
                         <span style="font-weight: 600; color: #E0E6F0;">Total (20):</span>
-                        <span style="font-weight:700; color: #52B788;" id="w2_comp_total_conv">{% if current_sheet %}{{ current_sheet.sub_event_results.Marks|get_item:'Computer Total Converted (20)' }}{% else %}0.00{% endif %}</span>
+                        <span style="font-weight:700; color: #52B788;" id="w2_comp_total_conv">{% if current_sheet %}{{
+                          current_sheet.sub_event_results.Marks|get_item:'Computer Total Converted (20)' }}{% else                           %}0.00{% endif %}</span>
                       </div>
                     </div>
                   </div>
@@ -1059,11 +1097,13 @@
                       style="background: rgba(82,183,136,0.1); border-radius: 6px; padding: 6px 10px; text-align: left; border: 1px dashed rgba(82,183,136,0.2); font-size: 11px;">
                       <div class="d-flex justify-content-between">
                         <span style="color: #8B9BB4;">Online (46):</span>
-                        <span style="font-weight:700; color: #52B788;" id="f_tech_online_conv">{% if current_sheet %}{{ current_sheet.sub_event_results.Marks|get_item:'Tech Online Converted (46)' }}{% else %}0.00{% endif %}</span>
+                        <span style="font-weight:700; color: #52B788;" id="f_tech_online_conv">{% if current_sheet %}{{
+                          current_sheet.sub_event_results.Marks|get_item:'Tech Online Converted (46)' }}{% else %}0.00{%                           endif %}</span>
                       </div>
                       <div class="d-flex justify-content-between mt-1">
                         <span style="color: #8B9BB4;">Proj (10):</span>
-                        <span style="font-weight:700; color: #52B788;" id="f_tech_proj_conv">{% if current_sheet %}{{ current_sheet.sub_event_results.Marks|get_item:'Tech Proj Converted (10)' }}{% else %}0.00{% endif %}</span>
+                        <span style="font-weight:700; color: #52B788;" id="f_tech_proj_conv">{% if current_sheet %}{{
+                          current_sheet.sub_event_results.Marks|get_item:'Tech Proj Converted (10)' }}{% else %}0.00{%                           endif %}</span>
                       </div>
                     </div>
                   </div>
@@ -1102,7 +1142,8 @@
                       <div style="font-size: 10px; color: #8B9BB4; text-transform: uppercase;">Converted (34)</div>
                       <div
                         style="font-family: 'Rajdhani', sans-serif; font-size: 18px; font-weight: 700; color: #52B788; margin-top: 2px;">
-                        <span id="f_academic_conv">{% if current_sheet %}{{ current_sheet.sub_event_results.Marks|get_item:'Academic Converted (34)' }}{% else %}0.00{% endif %}</span> / 34
+                        <span id="f_academic_conv">{% if current_sheet %}{{
+                          current_sheet.sub_event_results.Marks|get_item:'Academic Converted (34)' }}{% else %}0.00{%                           endif %}</span> / 34
                       </div>
                     </div>
                   </div>
@@ -1156,15 +1197,18 @@
                       style="background: rgba(82,183,136,0.1); border-radius: 6px; padding: 6px 10px; text-align: left; border: 1px dashed rgba(82,183,136,0.2); font-size: 11px;">
                       <div class="d-flex justify-content-between">
                         <span style="color: #8B9BB4;">Online (10):</span>
-                        <span style="font-weight:700; color: #52B788;" id="f_comp_online_conv">{% if current_sheet %}{{ current_sheet.sub_event_results.Marks|get_item:'Computer Online Converted (10)' }}{% else %}0.00{% endif %}</span>
+                        <span style="font-weight:700; color: #52B788;" id="f_comp_online_conv">{% if current_sheet %}{{
+                          current_sheet.sub_event_results.Marks|get_item:'Computer Online Converted (10)' }}{% else                           %}0.00{% endif %}</span>
                       </div>
                       <div class="d-flex justify-content-between mt-1">
                         <span style="color: #8B9BB4;">Prac (10):</span>
-                        <span style="font-weight:700; color: #52B788;" id="f_comp_prac_conv">{% if current_sheet %}{{ current_sheet.sub_event_results.Marks|get_item:'Computer Prac Converted (10)' }}{% else %}0.00{% endif %}</span>
+                        <span style="font-weight:700; color: #52B788;" id="f_comp_prac_conv">{% if current_sheet %}{{
+                          current_sheet.sub_event_results.Marks|get_item:'Computer Prac Converted (10)' }}{% else                           %}0.00{% endif %}</span>
                       </div>
                       <div class="d-flex justify-content-between mt-1 border-top border-secondary pt-1">
                         <span style="font-weight: 600; color: #E0E6F0;">Total (20):</span>
-                        <span style="font-weight:700; color: #52B788;" id="f_comp_total_conv">{% if current_sheet %}{{ current_sheet.sub_event_results.Marks|get_item:'Computer Total Converted (20)' }}{% else %}0.00{% endif %}</span>
+                        <span style="font-weight:700; color: #52B788;" id="f_comp_total_conv">{% if current_sheet %}{{
+                          current_sheet.sub_event_results.Marks|get_item:'Computer Total Converted (20)' }}{% else                           %}0.00{% endif %}</span>
                       </div>
                     </div>
                   </div>
@@ -1203,7 +1247,8 @@
                       <div style="font-size: 10px; color: #8B9BB4; text-transform: uppercase;">Converted (10)</div>
                       <div
                         style="font-family: 'Rajdhani', sans-serif; font-size: 18px; font-weight: 700; color: #52B788; margin-top: 2px;">
-                        <span id="f_extempore_conv">{% if current_sheet %}{{ current_sheet.sub_event_results.Marks|get_item:'Extempore Converted (10)' }}{% else %}0.00{% endif %}</span> / 10
+                        <span id="f_extempore_conv">{% if current_sheet %}{{
+                          current_sheet.sub_event_results.Marks|get_item:'Extempore Converted (10)' }}{% else %}0.00{%                           endif %}</span> / 10
                       </div>
                     </div>
                   </div>
@@ -1257,20 +1302,21 @@
               <div class="compact-score-card">
                 <span class="card-label">Marks Obtained</span>
                 <span class="card-val text-success">
-                  <span id="live_total_obtained">{% if current_sheet %}{{ current_sheet.get_total_marks|floatformat:2 }}{% else %}0.00{% endif %}</span>
-                  <span style="font-size: 9px; color: var(--text-muted);">/{% if code == 'CLK_INITIAL' %}50{% elif code == 'CLK_WEEKLY_1' %}69{% elif code == 'CLK_WEEKLY_2' %}126.50{% else %}120.00{% endif %}</span>
+                  <span id="live_total_obtained">{% if current_sheet %}{{ current_sheet.get_total_marks|floatformat:2
+                    }}{% else %}0.00{% endif %}</span>
+                  <span style="font-size: 9px; color: var(--text-muted);">/{% if code == 'CLK_INITIAL' %}50{% elif code                     == 'CLK_WEEKLY_1' %}69{% elif code == 'CLK_WEEKLY_2' %}126.50{% else %}120.00{% endif %}</span>
                 </span>
               </div>
               <div class="compact-score-card">
                 <span class="card-label">Overall Percentage</span>
                 <span class="card-val text-info">
-                  <span id="live_percentage">{% if current_sheet %}{{ current_sheet.get_percentage|floatformat:2 }}{% else %}0.00{% endif %}</span>%
+                  <span id="live_percentage">{% if current_sheet %}{{ current_sheet.get_percentage|floatformat:2 }}{%                     else %}0.00{% endif %}</span>%
                 </span>
               </div>
               <div class="compact-score-card">
                 <span class="card-label">Performance Grade</span>
                 <span class="card-val" id="live_grade" style="color: var(--text-primary);">
-                  {% if current_sheet %}{{ current_sheet.sub_event_results.Marks.Grading|default:"—" }}{% else %}—{% endif %}
+                  {% if current_sheet %}{{ current_sheet.sub_event_results.Marks.Grading|default:"—" }}{% else %}—{%                   endif %}
                 </span>
               </div>
               <div class="compact-score-card">
@@ -1299,6 +1345,351 @@
             {% endif %}
           </div>
 
+          {% elif code == 'OPEM_ASSESSMENT' or code == 'DMV_ASSESSMENT' %}
+          {# Beautiful custom OPEM/DMV Assessment! #}
+          <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+            <h5
+              style="color: #D4A017; margin: 0; font-family: 'Rajdhani', sans-serif; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; font-size: 15px;">
+              <i class="bi bi-clipboard2-check-fill me-2"></i> {% if code == 'OPEM_ASSESSMENT' %}OPEM{% else %}DMV{%               endif %} Final Assessment Workspace
+            </h5>
+          </div>
+
+          <!-- Category Selectors for OPEM/DMV Assessment -->
+          <div class="d-flex justify-content-center gap-3 mb-4 no-print">
+            <button type="button" class="btn opem-category-btn active py-1 px-3"
+              style="font-size: 12px; font-weight: 600; background: #1B4332; color: #52B788; border: 1px solid #52B788; border-radius: 20px; padding: 6px 16px; transition: all 0.3s ease;"
+              onclick="window.showOpemCategory(this, 'TRG_JCO')">
+              <i class="bi bi-person-badge-fill me-2"></i> TRG JCO (23 Mks)
+            </button>
+            <button type="button" class="btn opem-category-btn py-1 px-3"
+              style="font-size: 12px; font-weight: 600; background: rgba(15, 20, 25, 0.6); color: #8B9BB4; border: 1px solid rgba(82, 183, 136, 0.2); border-radius: 20px; padding: 6px 16px; transition: all 0.3s ease;"
+              onclick="window.showOpemCategory(this, 'MTO')">
+              <i class="bi bi-truck me-2"></i> MTO (19 Mks)
+            </button>
+            <button type="button" class="btn opem-category-btn py-1 px-3"
+              style="font-size: 12px; font-weight: 600; background: rgba(15, 20, 25, 0.6); color: #8B9BB4; border: 1px solid rgba(82, 183, 136, 0.2); border-radius: 20px; padding: 6px 16px; transition: all 0.3s ease;"
+              onclick="window.showOpemCategory(this, 'CIMT')">
+              <i class="bi bi-building-fill-gear me-2"></i> CIMT (29 Mks)
+            </button>
+          </div>
+
+          {% if can_evaluate %}
+          <form id="form-{{ code }}" method="post" action="{% url 'evaluation:evaluate_agniveer' agniveer.pk %}">
+            {% csrf_token %}
+            <input type="hidden" name="active_test" value="{{ code }}">
+            {% endif %}
+
+            {% with event_marks=current_sheet.sub_event_results.Marks %}
+
+            <!-- TRG JCO CATEGORY PANE -->
+            <div class="opem-category-pane" data-category="TRG_JCO" style="display: block;">
+              <div class="table-responsive mb-4">
+                <table class="army-table">
+                  <thead>
+                    <tr>
+                      <th style="min-width: 150px;">Event / Sub-Event</th>
+                      {% for w in "12345678" %}
+                      <th style="text-align: center; min-width: 65px;">W{{ w }}</th>
+                      {% endfor %}
+                      <th style="color: #52B788; text-align: center; min-width: 85px;">Avg (W9)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for event in "Op of trde eqpt (10)|10,Maint of trde eqpt (05)|5,Initiatave (03)|3,Willingness to learn (02)|2,Willingness to take on additional respnsibilty (03)|3"|split_str:"," %}
+                    {% with parts=event|split_str:"|" %}
+                    {% with ev=parts.0 max_val=parts.1 %}
+                    {% if forloop.counter0 == 0 %}
+                    <tr style="background: rgba(82, 183, 136, 0.15);">
+                      <td colspan="10" style="font-weight: 700; color: #52B788; text-transform: uppercase; font-size: 12px; font-family: 'Rajdhani', sans-serif; padding: 6px 12px;">
+                        Handling of trade eqpt
+                      </td>
+                    </tr>
+                    {% elif forloop.counter0 == 2 %}
+                    <tr style="background: rgba(82, 183, 136, 0.15);">
+                      <td colspan="10" style="font-weight: 700; color: #52B788; text-transform: uppercase; font-size: 12px; font-family: 'Rajdhani', sans-serif; padding: 6px 12px;">
+                        Initiative & Drive
+                      </td>
+                    </tr>
+                    {% endif %}
+                    <tr>
+                      <td
+                        style="font-weight: 600; color: #E0E6F0; font-size: 13px; font-family: 'Rajdhani', sans-serif;">
+                        {{ ev }}</td>
+                      {% for w in "12345678" %}
+                      <td style="text-align: center;">
+                        {% with key="week_"|add:w %}
+                        {% with val=event_marks|get_item:ev|get_item:key %}
+                        {% if can_evaluate %}
+                        <input type="number" name="week_{{ w }}_{{ ev }}" value="{{ val|default_if_none:'' }}"
+                          class="form-control marks-input text-center mx-auto week-input"
+                          style="background: rgba(15,20,25,0.6); color: #E0E6F0; border: 1px solid rgba(82,183,136,0.3); width: 55px; height: 30px; padding: 2px 5px; font-size: 13px; border-radius: 4px;"
+                          min="0" max="{{ max_val }}" step="0.01" data-week="{{ w }}" data-event="{{ ev }}"
+                          placeholder="0-{{ max_val }}" title="Max marks: {{ max_val }}">
+                        {% else %}
+                        {{ val|default:"—" }}
+                        {% endif %}
+                        {% endwith %}
+                        {% endwith %}
+                      </td>
+                      {% endfor %}
+                      <td style="text-align: center;">
+                        <input type="number" name="week_9_{{ ev }}"
+                          value="{% if current_sheet %}{{ event_marks|get_item:ev|get_item:'week_9'|default:'0.00' }}{% else %}0.00{% endif %}"
+                          class="form-control text-center mx-auto week-9-output"
+                          style="background: rgba(15,20,25,0.8); color: #52B788; border: 1px solid rgba(82,183,136,0.5); width: 60px; height: 30px; padding: 2px 5px; font-size: 13px; border-radius: 4px; font-weight: 700;"
+                          readonly data-event="{{ ev }}">
+                      </td>
+                    </tr>
+                    {% endwith %}
+                    {% endwith %}
+                    {% endfor %}
+                  </tbody>
+                  <tfoot>
+                    <tr style="background: rgba(82, 183, 136, 0.05); border-top: 1px solid rgba(82, 183, 136, 0.2);">
+                      <td style="font-weight: 700; color: #52B788; font-family: 'Rajdhani', sans-serif;">Total (23)</td>
+                      {% for w in "12345678" %}
+                      <td
+                        style="text-align: center; font-weight: 700; color: #52B788; font-family: 'Rajdhani', sans-serif;"
+                        class="week-total-col" data-week="{{ w }}">0.00</td>
+                      {% endfor %}
+                      <td
+                        style="text-align: center; font-weight: 700; color: #52B788; font-family: 'Rajdhani', sans-serif;"
+                        class="week-total-avg">0.00</td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+
+            <!-- MTO CATEGORY PANE -->
+            <div class="opem-category-pane" data-category="MTO" style="display: none;">
+              <div class="table-responsive mb-4">
+                <table class="army-table">
+                  <thead>
+                    <tr>
+                      <th style="min-width: 150px;">Event / Sub-Event</th>
+                      {% for w in "12345678" %}
+                      <th style="text-align: center; min-width: 65px;">W{{ w }}</th>
+                      {% endfor %}
+                      <th style="color: #52B788; text-align: center; min-width: 85px;">Avg (W9)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for event in "Handling of veh during/before & after using veh (06)|6,Timely completion of work (03)|3,Handling of basic eqpt/tools (03)|3,A performance during diff type of task (04)|4,A performance during diff trg conditions (03)|3"|split_str:"," %}
+                    {% with parts=event|split_str:"|" %}
+                    {% with ev=parts.0 max_val=parts.1 %}
+                    {% if forloop.counter0 == 0 %}
+                    <tr style="background: rgba(82, 183, 136, 0.15);">
+                      <td colspan="10" style="font-weight: 700; color: #52B788; text-transform: uppercase; font-size: 12px; font-family: 'Rajdhani', sans-serif; padding: 6px 12px;">
+                        Op dply & uses of trade eqpt
+                      </td>
+                    </tr>
+                    {% elif forloop.counter0 == 3 %}
+                    <tr style="background: rgba(82, 183, 136, 0.15);">
+                      <td colspan="10" style="font-weight: 700; color: #52B788; text-transform: uppercase; font-size: 12px; font-family: 'Rajdhani', sans-serif; padding: 6px 12px;">
+                        Adaptability
+                      </td>
+                    </tr>
+                    {% endif %}
+                    <tr>
+                      <td
+                        style="font-weight: 600; color: #E0E6F0; font-size: 13px; font-family: 'Rajdhani', sans-serif;">
+                        {{ ev }}</td>
+                      {% for w in "12345678" %}
+                      <td style="text-align: center;">
+                        {% with key="week_"|add:w %}
+                        {% with val=event_marks|get_item:ev|get_item:key %}
+                        {% if can_evaluate %}
+                        <input type="number" name="week_{{ w }}_{{ ev }}" value="{{ val|default_if_none:'' }}"
+                          class="form-control marks-input text-center mx-auto week-input"
+                          style="background: rgba(15,20,25,0.6); color: #E0E6F0; border: 1px solid rgba(82,183,136,0.3); width: 55px; height: 30px; padding: 2px 5px; font-size: 13px; border-radius: 4px;"
+                          min="0" max="{{ max_val }}" step="0.01" data-week="{{ w }}" data-event="{{ ev }}"
+                          placeholder="0-{{ max_val }}" title="Max marks: {{ max_val }}">
+                        {% else %}
+                        {{ val|default:"—" }}
+                        {% endif %}
+                        {% endwith %}
+                        {% endwith %}
+                      </td>
+                      {% endfor %}
+                      <td style="text-align: center;">
+                        <input type="number" name="week_9_{{ ev }}"
+                          value="{% if current_sheet %}{{ event_marks|get_item:ev|get_item:'week_9'|default:'0.00' }}{% else %}0.00{% endif %}"
+                          class="form-control text-center mx-auto week-9-output"
+                          style="background: rgba(15,20,25,0.8); color: #52B788; border: 1px solid rgba(82,183,136,0.5); width: 60px; height: 30px; padding: 2px 5px; font-size: 13px; border-radius: 4px; font-weight: 700;"
+                          readonly data-event="{{ ev }}">
+                      </td>
+                    </tr>
+                    {% endwith %}
+                    {% endwith %}
+                    {% endfor %}
+                  </tbody>
+                  <tfoot>
+                    <tr style="background: rgba(82, 183, 136, 0.05); border-top: 1px solid rgba(82, 183, 136, 0.2);">
+                      <td style="font-weight: 700; color: #52B788; font-family: 'Rajdhani', sans-serif;">Total (19)</td>
+                      {% for w in "12345678" %}
+                      <td
+                        style="text-align: center; font-weight: 700; color: #52B788; font-family: 'Rajdhani', sans-serif;"
+                        class="week-total-col" data-week="{{ w }}">0.00</td>
+                      {% endfor %}
+                      <td
+                        style="text-align: center; font-weight: 700; color: #52B788; font-family: 'Rajdhani', sans-serif;"
+                        class="week-total-avg">0.00</td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+
+            <!-- CIMT CATEGORY PANE -->
+            <div class="opem-category-pane" data-category="CIMT" style="display: none;">
+              <div class="table-responsive mb-4">
+                <table class="army-table">
+                  <thead>
+                    <tr>
+                      <th style="min-width: 150px;">Event / Sub-Event</th>
+                      {% for w in "12345678" %}
+                      <th style="text-align: center; min-width: 65px;">W{{ w }}</th>
+                      {% endfor %}
+                      <th style="color: #52B788; text-align: center; min-width: 85px;">Avg (W9)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for event in "Dedication of org (6)|6,Degree proficiency achived during conduct progrss test (4)|4,Degree proficiency achieved during conduct of practicals test (4)|4,Motivation (04)|4,Courage (03)|3,Timely completion of task (03)|3,Ability to carry out task unsupervised (03)|3,Feedback after completion of task (02)|2"|split_str:"," %}
+                    {% with parts=event|split_str:"|" %}
+                    {% with ev=parts.0 max_val=parts.1 %}
+                    {% if forloop.counter0 == 0 %}
+                    <tr style="background: rgba(82, 183, 136, 0.15);">
+                      <td colspan="10" style="font-weight: 700; color: #52B788; text-transform: uppercase; font-size: 12px; font-family: 'Rajdhani', sans-serif; padding: 6px 12px;">
+                        Dedication of Org
+                      </td>
+                    </tr>
+                    {% elif forloop.counter0 == 1 %}
+                    <tr style="background: rgba(82, 183, 136, 0.15);">
+                      <td colspan="10" style="font-weight: 700; color: #52B788; text-transform: uppercase; font-size: 12px; font-family: 'Rajdhani', sans-serif; padding: 6px 12px;">
+                        Spl achievement
+                      </td>
+                    </tr>
+                    {% elif forloop.counter0 == 3 %}
+                    <tr style="background: rgba(82, 183, 136, 0.15);">
+                      <td colspan="10" style="font-weight: 700; color: #52B788; text-transform: uppercase; font-size: 12px; font-family: 'Rajdhani', sans-serif; padding: 6px 12px;">
+                        Motivation & courage
+                      </td>
+                    </tr>
+                    {% elif forloop.counter0 == 5 %}
+                    <tr style="background: rgba(82, 183, 136, 0.15);">
+                      <td colspan="10" style="font-weight: 700; color: #52B788; text-transform: uppercase; font-size: 12px; font-family: 'Rajdhani', sans-serif; padding: 6px 12px;">
+                        Dependability
+                      </td>
+                    </tr>
+                    {% endif %}
+                    <tr>
+                      <td
+                        style="font-weight: 600; color: #E0E6F0; font-size: 13px; font-family: 'Rajdhani', sans-serif;">
+                        {{ ev }}</td>
+                      {% for w in "12345678" %}
+                      <td style="text-align: center;">
+                        {% with key="week_"|add:w %}
+                        {% with val=event_marks|get_item:ev|get_item:key %}
+                        {% if can_evaluate %}
+                        <input type="number" name="week_{{ w }}_{{ ev }}" value="{{ val|default_if_none:'' }}"
+                          class="form-control marks-input text-center mx-auto week-input"
+                          style="background: rgba(15,20,25,0.6); color: #E0E6F0; border: 1px solid rgba(82,183,136,0.3); width: 55px; height: 30px; padding: 2px 5px; font-size: 13px; border-radius: 4px;"
+                          min="0" max="{{ max_val }}" step="0.01" data-week="{{ w }}" data-event="{{ ev }}"
+                          placeholder="0-{{ max_val }}" title="Max marks: {{ max_val }}">
+                        {% else %}
+                        {{ val|default:"—" }}
+                        {% endif %}
+                        {% endwith %}
+                        {% endwith %}
+                      </td>
+                      {% endfor %}
+                      <td style="text-align: center;">
+                        <input type="number" name="week_9_{{ ev }}"
+                          value="{% if current_sheet %}{{ event_marks|get_item:ev|get_item:'week_9'|default:'0.00' }}{% else %}0.00{% endif %}"
+                          class="form-control text-center mx-auto week-9-output"
+                          style="background: rgba(15,20,25,0.8); color: #52B788; border: 1px solid rgba(82,183,136,0.5); width: 60px; height: 30px; padding: 2px 5px; font-size: 13px; border-radius: 4px; font-weight: 700;"
+                          readonly data-event="{{ ev }}">
+                      </td>
+                    </tr>
+                    {% endwith %}
+                    {% endwith %}
+                    {% endfor %}
+                  </tbody>
+                  <tfoot>
+                    <tr style="background: rgba(82, 183, 136, 0.05); border-top: 1px solid rgba(82, 183, 136, 0.2);">
+                      <td style="font-weight: 700; color: #52B788; font-family: 'Rajdhani', sans-serif;">Total (29)</td>
+                      {% for w in "12345678" %}
+                      <td
+                        style="text-align: center; font-weight: 700; color: #52B788; font-family: 'Rajdhani', sans-serif;"
+                        class="week-total-col" data-week="{{ w }}">0.00</td>
+                      {% endfor %}
+                      <td
+                        style="text-align: center; font-weight: 700; color: #52B788; font-family: 'Rajdhani', sans-serif;"
+                        class="week-total-avg">0.00</td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+
+            {% endwith %}
+
+            {% if can_evaluate %}
+          </form>
+          {% endif %}
+
+          <!-- OPEM/DMV Assessment Sticky Bottom Summary Panel -->
+          <div class="evaluation-sticky-footer no-print" style="display: flex !important; flex-flow: row nowrap !important; align-items: center !important; justify-content: space-between !important; gap: 12px !important; padding: 10px 20px !important;">
+            <div class="compact-score-card" style="flex: 1.2 1 160px !important; margin: 0 !important; max-width: 220px !important;">
+              <span class="card-label">Total Marks (Out of 71)</span>
+              <span class="card-val text-success">
+                <span id="score-{{ code }}">{% if current_sheet %}{{ current_sheet.sub_event_results.Marks.Total|floatformat:2 }}{% else %}0.00{% endif %}</span> / 71
+              </span>
+            </div>
+            <div class="compact-score-card" style="flex: 1.2 1 160px !important; margin: 0 !important; max-width: 220px !important;">
+              <span class="card-label">Overall Percentage</span>
+              <span class="card-val text-info">
+                <span id="perc-{{ code }}">{% if current_sheet %}{{ current_sheet.sub_event_results.Marks.Percentage|floatformat:2 }}{% else %}0.00{% endif %}%</span>
+              </span>
+            </div>
+            <div class="compact-score-card" style="flex: 1.2 1 160px !important; margin: 0 !important; max-width: 220px !important;">
+              <span class="card-label">Assessment Status</span>
+              <span class="card-val" id="status-{{ code }}">
+                {% if current_sheet %}
+                {% if current_sheet.sub_event_results.Marks.Result == 'Pass' %}
+                <span style="color: #52B788;">✓ PASS</span>
+                {% else %}
+                <span style="color: #EF5350;">✗ FAIL</span>
+                {% endif %}
+                {% else %}
+                <span style="color: #8B9BB4;">PENDING</span>
+                {% endif %}
+              </span>
+            </div>
+
+            {% if can_evaluate %}
+            <div style="flex: 1 1 220px !important; min-width: 180px !important; max-width: 320px !important; display: flex !important; align-items: center !important; gap: 8px !important;">
+              <textarea name="remarks" form="form-{{ code }}" class="form-control" rows="1" placeholder="Add remarks..."
+                style="background: rgba(15,20,25,0.6); color: #E0E6F0; border: 1px solid rgba(82,183,136,0.3); border-radius: 6px; height: 42px; resize: none; font-size: 13px; padding-top: 10px; margin: 0 !important;">{% if current_sheet %}{{ current_sheet.remarks|default:current_sheet.marks.first.remarks|default_if_none:'' }}{% endif %}</textarea>
+              <button type="submit" form="form-{{ code }}" class="btn btn-army"
+                style="font-weight:700; font-family:'Rajdhani',sans-serif; letter-spacing:1px; font-size:12px; height: 42px; white-space: nowrap; margin: 0 !important; min-width: 130px !important; width: auto !important; border-radius: 8px !important;">
+                <i class="bi bi-cloud-arrow-up-fill me-2"></i> Save
+              </button>
+            </div>
+            {% else %}
+            {% if current_sheet %}
+            {% if current_sheet.remarks or current_sheet.marks.first.remarks %}
+            <div class="compact-score-card" style="flex: 1 1 220px !important; max-width: 320px !important; height: auto !important; min-height: 42px !important; display: flex !important; flex-direction: column !important; justify-content: center !important;">
+              <span class="card-label">Remarks</span>
+              <span class="card-val" style="color: #E0E6F0; font-size: 12px; word-break: break-all; line-height: 1.2;">
+                {{ current_sheet.remarks|default:current_sheet.marks.first.remarks }}
+              </span>
+            </div>
+            {% endif %}
+            {% endif %}
+            {% endif %}
+          </div>
           {% else %}
           {# Standard dynamic tabs for Battalion, TTS, CS, etc. #}
           <h6 style="color: #52B788; margin-bottom: 20px; font-family: 'Rajdhani', sans-serif;">{{ name }} Detailed
@@ -1341,12 +1732,13 @@
                             min="0" max="8" step="0.01" placeholder="0-8" title="Maximum marks: 8"
                             oninput="if(this.value && parseInt(this.value) > parseInt(this.max)) this.value = this.max;">
                           {% else %}
-                          {% if val is not None %}{{ val }}{% else %}{% if col == '1st Attempt' %}{{ current_sheet.sub_event_results|get_item:'nco'|get_item:sub|default:"—" }}{% elif col == '2nd Attempt' %}{{ current_sheet.sub_event_results|get_item:'jco'|get_item:sub|default:"—" }}{% endif %}{% endif %}
+                          {% if val is not None %}{{ val }}{% else %}{% if col == '1st Attempt' %}{{
+                          current_sheet.sub_event_results|get_item:'nco'|get_item:sub|default:"—" }}{% elif col == '2nd                           Attempt' %}{{ current_sheet.sub_event_results|get_item:'jco'|get_item:sub|default:"—" }}{%                           endif %}{% endif %}
                           {% endif %}
                           {% endwith %}
-                         </td>
+                        </td>
                         {% endfor %}
-                       </tr>
+                      </tr>
                       {% endfor %}
                     </tbody>
                   </table>
@@ -1381,12 +1773,13 @@
                             min="0" max="8" step="0.01" placeholder="0-8" title="Maximum marks: 8"
                             oninput="if(this.value && parseInt(this.value) > parseInt(this.max)) this.value = this.max;">
                           {% else %}
-                          {% if val is not None %}{{ val }}{% else %}{% if col == '1st Attempt' %}{{ current_sheet.sub_event_results|get_item:'nco'|get_item:sub|default:"—" }}{% elif col == '2nd Attempt' %}{{ current_sheet.sub_event_results|get_item:'jco'|get_item:sub|default:"—" }}{% endif %}{% endif %}
+                          {% if val is not None %}{{ val }}{% else %}{% if col == '1st Attempt' %}{{
+                          current_sheet.sub_event_results|get_item:'nco'|get_item:sub|default:"—" }}{% elif col == '2nd                           Attempt' %}{{ current_sheet.sub_event_results|get_item:'jco'|get_item:sub|default:"—" }}{%                           endif %}{% endif %}
                           {% endif %}
                           {% endwith %}
-                         </td>
+                        </td>
                         {% endfor %}
-                       </tr>
+                      </tr>
                       {% endfor %}
                     </tbody>
                   </table>
@@ -1405,10 +1798,11 @@
                       style="text-align:center; font-weight: 700; color: #52B788; font-family: 'Rajdhani', sans-serif;">
                       {% if current_sheet %}
                       {% with total=current_sheet.sub_event_results|get_item:col|get_item:'TOTAL POINT' %}
-                      {% if total is not None %}{{ total }}{% else %}{% if col == '1st Attempt' %}{{ current_sheet.get_nco_marks }}{% elif col == '2nd Attempt' %}{{ current_sheet.get_jco_marks }}{% else %}—{% endif %}{% endif %}
+                      {% if total is not None %}{{ total }}{% else %}{% if col == '1st Attempt' %}{{
+                      current_sheet.get_nco_marks }}{% elif col == '2nd Attempt' %}{{ current_sheet.get_jco_marks }}{%                       else %}—{% endif %}{% endif %}
                       {% endwith %}
                       {% else %}—{% endif %}
-                     </td>
+                    </td>
                     {% endfor %}
                   </tr>
                   <tr style="background: rgba(82, 183, 136, 0.1);">
@@ -1422,7 +1816,7 @@
                       {% if conv is not None %}{{ conv }}{% else %}—{% endif %}
                       {% endwith %}
                       {% else %}—{% endif %}
-                     </td>
+                    </td>
                     {% endfor %}
                   </tr>
                 </tbody>
@@ -1433,50 +1827,63 @@
             <div class="row g-3">
               <!-- Screening Board Card -->
               <div class="col-md-4">
-                <div class="army-card h-100" style="background: rgba(27,67,50,0.1); border: 1px solid rgba(82,183,136,0.3); border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
-                  <div class="army-card-header" style="background: rgba(82,183,136,0.15); border-bottom: 1px solid rgba(82,183,136,0.2);">
-                    <h6 class="army-card-title" style="color: #52B788; font-family: 'Rajdhani', sans-serif; font-weight: 700;">SCREENING BOARD (80)</h6>
+                <div class="army-card h-100"
+                  style="background: rgba(27,67,50,0.1); border: 1px solid rgba(82,183,136,0.3); border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+                  <div class="army-card-header"
+                    style="background: rgba(82,183,136,0.15); border-bottom: 1px solid rgba(82,183,136,0.2);">
+                    <h6 class="army-card-title"
+                      style="color: #52B788; font-family: 'Rajdhani', sans-serif; font-weight: 700;">SCREENING BOARD
+                      (80)</h6>
                   </div>
                   <div class="army-card-body" style="padding: 16px;">
                     <!-- Input fields -->
                     <div class="mb-3">
-                      <label class="form-label" style="font-weight: 600; color: #E0E6F0; font-size: 11px;">COMMN MIL KNOWLEDGE (20)</label>
+                      <label class="form-label" style="font-weight: 600; color: #E0E6F0; font-size: 11px;">COMMN MIL
+                        KNOWLEDGE (20)</label>
                       {% if can_evaluate %}
                       <input type="number" name="COMMN MIL KNOWLEDGE (20)" id="bn_in_cmk"
                         value="{% with stored=current_sheet.sub_event_results.Marks|get_item:'COMMN MIL KNOWLEDGE (20)' %}{% if stored is not None %}{{ stored }}{% else %}{{ current_sheet.sub_event_results|get_item:'COMMN MIL KNOWLEDGE (20)'|default_if_none:'' }}{% endif %}{% endwith %}"
                         class="form-control text-center bn-input"
                         style="background: rgba(15,20,25,0.8); color: #E0E6F0; border: 1px solid rgba(82,183,136,0.4); height: 32px; border-radius: 6px;"
-                        min="0" max="20" step="0.01" oninput="if(this.value && parseFloat(this.value) > parseFloat(this.max)) this.value = this.max; calculateBNScreeningLive();">
+                        min="0" max="20" step="0.01"
+                        oninput="if(this.value && parseFloat(this.value) > parseFloat(this.max)) this.value = this.max; calculateBNScreeningLive();">
                       {% else %}
-                      <div style="background: rgba(15,20,25,0.6); padding: 4px; border-radius: 6px; text-align: center; font-weight: 600; color: #E0E6F0; font-size: 13px;">
+                      <div
+                        style="background: rgba(15,20,25,0.6); padding: 4px; border-radius: 6px; text-align: center; font-weight: 600; color: #E0E6F0; font-size: 13px;">
                         {{ current_sheet.sub_event_results.Marks|get_item:'COMMN MIL KNOWLEDGE (20)'|default:"—" }}
                       </div>
                       {% endif %}
                     </div>
                     <div class="mb-3">
-                      <label class="form-label" style="font-weight: 600; color: #E0E6F0; font-size: 11px;">WPN & EQPT HANDLING (20)</label>
+                      <label class="form-label" style="font-weight: 600; color: #E0E6F0; font-size: 11px;">WPN & EQPT
+                        HANDLING (20)</label>
                       {% if can_evaluate %}
                       <input type="number" name="WPN & EQPT HANDLING (20)" id="bn_in_wpn"
                         value="{% with stored=current_sheet.sub_event_results.Marks|get_item:'WPN & EQPT HANDLING (20)' %}{% if stored is not None %}{{ stored }}{% else %}{{ current_sheet.sub_event_results|get_item:'WPN & EQPT HANDLING (20)'|default_if_none:'' }}{% endif %}{% endwith %}"
                         class="form-control text-center bn-input"
                         style="background: rgba(15,20,25,0.8); color: #E0E6F0; border: 1px solid rgba(82,183,136,0.4); height: 32px; border-radius: 6px;"
-                        min="0" max="20" step="0.01" oninput="if(this.value && parseFloat(this.value) > parseFloat(this.max)) this.value = this.max; calculateBNScreeningLive();">
+                        min="0" max="20" step="0.01"
+                        oninput="if(this.value && parseFloat(this.value) > parseFloat(this.max)) this.value = this.max; calculateBNScreeningLive();">
                       {% else %}
-                      <div style="background: rgba(15,20,25,0.6); padding: 4px; border-radius: 6px; text-align: center; font-weight: 600; color: #E0E6F0; font-size: 13px;">
+                      <div
+                        style="background: rgba(15,20,25,0.6); padding: 4px; border-radius: 6px; text-align: center; font-weight: 600; color: #E0E6F0; font-size: 13px;">
                         {{ current_sheet.sub_event_results.Marks|get_item:'WPN & EQPT HANDLING (20)'|default:"—" }}
                       </div>
                       {% endif %}
                     </div>
                     <div class="mb-3">
-                      <label class="form-label" style="font-weight: 600; color: #E0E6F0; font-size: 11px;">BASIC TAC (40)</label>
+                      <label class="form-label" style="font-weight: 600; color: #E0E6F0; font-size: 11px;">BASIC TAC
+                        (40)</label>
                       {% if can_evaluate %}
                       <input type="number" name="BASIC TAC (40)" id="bn_in_tac"
                         value="{% with stored=current_sheet.sub_event_results.Marks|get_item:'BASIC TAC (40)' %}{% if stored is not None %}{{ stored }}{% else %}{{ current_sheet.sub_event_results|get_item:'BASIC TAC (40)'|default_if_none:'' }}{% endif %}{% endwith %}"
                         class="form-control text-center bn-input"
                         style="background: rgba(15,20,25,0.8); color: #E0E6F0; border: 1px solid rgba(82,183,136,0.4); height: 32px; border-radius: 6px;"
-                        min="0" max="40" step="0.01" oninput="if(this.value && parseFloat(this.value) > parseFloat(this.max)) this.value = this.max; calculateBNScreeningLive();">
+                        min="0" max="40" step="0.01"
+                        oninput="if(this.value && parseFloat(this.value) > parseFloat(this.max)) this.value = this.max; calculateBNScreeningLive();">
                       {% else %}
-                      <div style="background: rgba(15,20,25,0.6); padding: 4px; border-radius: 6px; text-align: center; font-weight: 600; color: #E0E6F0; font-size: 13px;">
+                      <div
+                        style="background: rgba(15,20,25,0.6); padding: 4px; border-radius: 6px; text-align: center; font-weight: 600; color: #E0E6F0; font-size: 13px;">
                         {{ current_sheet.sub_event_results.Marks|get_item:'BASIC TAC (40)'|default:"—" }}
                       </div>
                       {% endif %}
@@ -1487,63 +1894,79 @@
 
               <!-- Physical Board Card -->
               <div class="col-md-4">
-                <div class="army-card h-100" style="background: rgba(27,67,50,0.1); border: 1px solid rgba(82,183,136,0.3); border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
-                  <div class="army-card-header" style="background: rgba(82,183,136,0.15); border-bottom: 1px solid rgba(82,183,136,0.2);">
-                    <h6 class="army-card-title" style="color: #52B788; font-family: 'Rajdhani', sans-serif; font-weight: 700;">PHYSICAL BOARD (50)</h6>
+                <div class="army-card h-100"
+                  style="background: rgba(27,67,50,0.1); border: 1px solid rgba(82,183,136,0.3); border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+                  <div class="army-card-header"
+                    style="background: rgba(82,183,136,0.15); border-bottom: 1px solid rgba(82,183,136,0.2);">
+                    <h6 class="army-card-title"
+                      style="color: #52B788; font-family: 'Rajdhani', sans-serif; font-weight: 700;">PHYSICAL BOARD (50)
+                    </h6>
                   </div>
                   <div class="army-card-body" style="padding: 16px;">
                     <div class="mb-3">
-                      <label class="form-label" style="font-weight: 600; color: #E0E6F0; font-size: 11px;">PPT (10)</label>
+                      <label class="form-label" style="font-weight: 600; color: #E0E6F0; font-size: 11px;">PPT
+                        (10)</label>
                       {% if can_evaluate %}
                       <input type="number" name="PPT (10)" id="bn_in_ppt"
                         value="{% with stored=current_sheet.sub_event_results.Marks|get_item:'PPT (10)' %}{% if stored is not None %}{{ stored }}{% else %}{{ current_sheet.sub_event_results|get_item:'PPT (10)'|default_if_none:'' }}{% endif %}{% endwith %}"
                         class="form-control text-center bn-input"
                         style="background: rgba(15,20,25,0.8); color: #E0E6F0; border: 1px solid rgba(82,183,136,0.4); height: 32px; border-radius: 6px;"
-                        min="0" max="10" step="0.01" oninput="if(this.value && parseFloat(this.value) > parseFloat(this.max)) this.value = this.max; calculateBNScreeningLive();">
+                        min="0" max="10" step="0.01"
+                        oninput="if(this.value && parseFloat(this.value) > parseFloat(this.max)) this.value = this.max; calculateBNScreeningLive();">
                       {% else %}
-                      <div style="background: rgba(15,20,25,0.6); padding: 4px; border-radius: 6px; text-align: center; font-weight: 600; color: #E0E6F0; font-size: 13px;">
+                      <div
+                        style="background: rgba(15,20,25,0.6); padding: 4px; border-radius: 6px; text-align: center; font-weight: 600; color: #E0E6F0; font-size: 13px;">
                         {{ current_sheet.sub_event_results.Marks|get_item:'PPT (10)'|default:"—" }}
                       </div>
                       {% endif %}
                     </div>
                     <div class="mb-3">
-                      <label class="form-label" style="font-weight: 600; color: #E0E6F0; font-size: 11px;">FIRE (10)</label>
+                      <label class="form-label" style="font-weight: 600; color: #E0E6F0; font-size: 11px;">FIRE
+                        (10)</label>
                       {% if can_evaluate %}
                       <input type="number" name="FIRE (10)" id="bn_in_fire"
                         value="{% with stored=current_sheet.sub_event_results.Marks|get_item:'FIRE (10)' %}{% if stored is not None %}{{ stored }}{% else %}{{ current_sheet.sub_event_results|get_item:'FIRE (10)'|default_if_none:'' }}{% endif %}{% endwith %}"
                         class="form-control text-center bn-input"
                         style="background: rgba(15,20,25,0.8); color: #E0E6F0; border: 1px solid rgba(82,183,136,0.4); height: 32px; border-radius: 6px;"
-                        min="0" max="10" step="0.01" oninput="if(this.value && parseFloat(this.value) > parseFloat(this.max)) this.value = this.max; calculateBNScreeningLive();">
+                        min="0" max="10" step="0.01"
+                        oninput="if(this.value && parseFloat(this.value) > parseFloat(this.max)) this.value = this.max; calculateBNScreeningLive();">
                       {% else %}
-                      <div style="background: rgba(15,20,25,0.6); padding: 4px; border-radius: 6px; text-align: center; font-weight: 600; color: #E0E6F0; font-size: 13px;">
+                      <div
+                        style="background: rgba(15,20,25,0.6); padding: 4px; border-radius: 6px; text-align: center; font-weight: 600; color: #E0E6F0; font-size: 13px;">
                         {{ current_sheet.sub_event_results.Marks|get_item:'FIRE (10)'|default:"—" }}
                       </div>
                       {% endif %}
                     </div>
                     <div class="mb-3">
-                      <label class="form-label" style="font-weight: 600; color: #E0E6F0; font-size: 11px;">DRILL (20)</label>
+                      <label class="form-label" style="font-weight: 600; color: #E0E6F0; font-size: 11px;">DRILL
+                        (20)</label>
                       {% if can_evaluate %}
                       <input type="number" name="DRILL (20)" id="bn_in_drill"
                         value="{% with stored=current_sheet.sub_event_results.Marks|get_item:'DRILL (20)' %}{% if stored is not None %}{{ stored }}{% else %}{{ current_sheet.sub_event_results|get_item:'DRILL (20)'|default_if_none:'' }}{% endif %}{% endwith %}"
                         class="form-control text-center bn-input"
                         style="background: rgba(15,20,25,0.8); color: #E0E6F0; border: 1px solid rgba(82,183,136,0.4); height: 32px; border-radius: 6px;"
-                        min="0" max="20" step="0.01" oninput="if(this.value && parseFloat(this.value) > parseFloat(this.max)) this.value = this.max; calculateBNScreeningLive();">
+                        min="0" max="20" step="0.01"
+                        oninput="if(this.value && parseFloat(this.value) > parseFloat(this.max)) this.value = this.max; calculateBNScreeningLive();">
                       {% else %}
-                      <div style="background: rgba(15,20,25,0.6); padding: 4px; border-radius: 6px; text-align: center; font-weight: 600; color: #E0E6F0; font-size: 13px;">
+                      <div
+                        style="background: rgba(15,20,25,0.6); padding: 4px; border-radius: 6px; text-align: center; font-weight: 600; color: #E0E6F0; font-size: 13px;">
                         {{ current_sheet.sub_event_results.Marks|get_item:'DRILL (20)'|default:"—" }}
                       </div>
                       {% endif %}
                     </div>
                     <div class="mb-3">
-                      <label class="form-label" style="font-weight: 600; color: #E0E6F0; font-size: 11px;">BPET (10)</label>
+                      <label class="form-label" style="font-weight: 600; color: #E0E6F0; font-size: 11px;">BPET
+                        (10)</label>
                       {% if can_evaluate %}
                       <input type="number" name="BPET (10)" id="bn_in_bpet"
                         value="{% with stored=current_sheet.sub_event_results.Marks|get_item:'BPET (10)' %}{% if stored is not None %}{{ stored }}{% else %}{{ current_sheet.sub_event_results|get_item:'BPET (10)'|default_if_none:'' }}{% endif %}{% endwith %}"
                         class="form-control text-center bn-input"
                         style="background: rgba(15,20,25,0.8); color: #E0E6F0; border: 1px solid rgba(82,183,136,0.4); height: 32px; border-radius: 6px;"
-                        min="0" max="10" step="0.01" oninput="if(this.value && parseFloat(this.value) > parseFloat(this.max)) this.value = this.max; calculateBNScreeningLive();">
+                        min="0" max="10" step="0.01"
+                        oninput="if(this.value && parseFloat(this.value) > parseFloat(this.max)) this.value = this.max; calculateBNScreeningLive();">
                       {% else %}
-                      <div style="background: rgba(15,20,25,0.6); padding: 4px; border-radius: 6px; text-align: center; font-weight: 600; color: #E0E6F0; font-size: 13px;">
+                      <div
+                        style="background: rgba(15,20,25,0.6); padding: 4px; border-radius: 6px; text-align: center; font-weight: 600; color: #E0E6F0; font-size: 13px;">
                         {{ current_sheet.sub_event_results.Marks|get_item:'BPET (10)'|default:"—" }}
                       </div>
                       {% endif %}
@@ -1554,35 +1977,60 @@
 
               <!-- Output Board Card -->
               <div class="col-md-4">
-                <div class="army-card h-100" style="background: rgba(82,183,136,0.05); border: 1px solid rgba(82,183,136,0.3); border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
-                  <div class="army-card-header" style="background: rgba(82,183,136,0.2); border-bottom: 1px solid rgba(82,183,136,0.2);">
-                    <h6 class="army-card-title" style="color: #52B788; font-family: 'Rajdhani', sans-serif; font-weight: 700;">AV MERIT LIST 7TH BATCH</h6>
+                <div class="army-card h-100"
+                  style="background: rgba(82,183,136,0.05); border: 1px solid rgba(82,183,136,0.3); border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+                  <div class="army-card-header"
+                    style="background: rgba(82,183,136,0.2); border-bottom: 1px solid rgba(82,183,136,0.2);">
+                    <h6 class="army-card-title"
+                      style="color: #52B788; font-family: 'Rajdhani', sans-serif; font-weight: 700;">AV MERIT LIST 7TH
+                      BATCH</h6>
                   </div>
                   <div class="army-card-body" style="padding: 16px;">
                     <!-- The calculated fields -->
-                    <div class="mb-2 d-flex justify-content-between align-items-center" style="border-bottom: 1px dashed rgba(82,183,136,0.2); padding-bottom: 8px;">
+                    <div class="mb-2 d-flex justify-content-between align-items-center"
+                      style="border-bottom: 1px dashed rgba(82,183,136,0.2); padding-bottom: 8px;">
                       <span style="color: #8B9BB4; font-size: 11px; font-weight: 600;">COMMON MIL KNOWLEDGE (20)</span>
-                      <span style="font-weight:700; color: #52B788; font-family: 'Rajdhani', sans-serif;" id="bn_out_cmk">{% if current_sheet %}{{ current_sheet.sub_event_results.Marks|get_item:'COMMON MIL KNOWLEDGE (20)'|default:"0" }}{% else %}0{% endif %}</span>
+                      <span style="font-weight:700; color: #52B788; font-family: 'Rajdhani', sans-serif;"
+                        id="bn_out_cmk">{% if current_sheet %}{{ current_sheet.sub_event_results.Marks|get_item:'COMMON
+                        MIL KNOWLEDGE (20)'|default:"0" }}{% else %}0{% endif %}</span>
                     </div>
-                    <div class="mb-2 d-flex justify-content-between align-items-center" style="border-bottom: 1px dashed rgba(82,183,136,0.2); padding-bottom: 8px;">
+                    <div class="mb-2 d-flex justify-content-between align-items-center"
+                      style="border-bottom: 1px dashed rgba(82,183,136,0.2); padding-bottom: 8px;">
                       <span style="color: #8B9BB4; font-size: 11px; font-weight: 600;">BASIC TACTICE (CES) (40)</span>
-                      <span style="font-weight:700; color: #52B788; font-family: 'Rajdhani', sans-serif;" id="bn_out_ces">{% if current_sheet %}{{ current_sheet.sub_event_results.Marks|get_item:'BASIC TACTICE (CES) (40)'|default:"0" }}{% else %}0{% endif %}</span>
+                      <span style="font-weight:700; color: #52B788; font-family: 'Rajdhani', sans-serif;"
+                        id="bn_out_ces">{% if current_sheet %}{{ current_sheet.sub_event_results.Marks|get_item:'BASIC
+                        TACTICE (CES) (40)'|default:"0" }}{% else %}0{% endif %}</span>
                     </div>
-                    <div class="mb-2 d-flex justify-content-between align-items-center" style="border-bottom: 1px dashed rgba(82,183,136,0.2); padding-bottom: 8px;">
-                      <span style="color: #8B9BB4; font-size: 11px; font-weight: 600;">TRADE PROFICIENCY (BTT) (40)</span>
-                      <span style="font-weight:700; color: #52B788; font-family: 'Rajdhani', sans-serif;" id="bn_out_btt">{% if current_sheet %}{{ current_sheet.sub_event_results.Marks|get_item:'TRADE PROFICIENCY (BTT) (40)'|default:"0" }}{% else %}0{% endif %}</span>
+                    <div class="mb-2 d-flex justify-content-between align-items-center"
+                      style="border-bottom: 1px dashed rgba(82,183,136,0.2); padding-bottom: 8px;">
+                      <span style="color: #8B9BB4; font-size: 11px; font-weight: 600;">TRADE PROFICIENCY (BTT)
+                        (40)</span>
+                      <span style="font-weight:700; color: #52B788; font-family: 'Rajdhani', sans-serif;"
+                        id="bn_out_btt">{% if current_sheet %}{{ current_sheet.sub_event_results.Marks|get_item:'TRADE
+                        PROFICIENCY (BTT) (40)'|default:"0" }}{% else %}0{% endif %}</span>
                     </div>
-                    <div class="mb-2 d-flex justify-content-between align-items-center" style="border-bottom: 1px dashed rgba(82,183,136,0.2); padding-bottom: 8px;">
+                    <div class="mb-2 d-flex justify-content-between align-items-center"
+                      style="border-bottom: 1px dashed rgba(82,183,136,0.2); padding-bottom: 8px;">
                       <span style="color: #8B9BB4; font-size: 11px; font-weight: 600;">WPN & EQPT HANDLING (20)</span>
-                      <span style="font-weight:700; color: #52B788; font-family: 'Rajdhani', sans-serif;" id="bn_out_wpn">{% if current_sheet %}{{ current_sheet.sub_event_results.Marks|get_item:'WPN & EQPT HANDLING (20)'|default:"0" }}{% else %}0{% endif %}</span>
+                      <span style="font-weight:700; color: #52B788; font-family: 'Rajdhani', sans-serif;"
+                        id="bn_out_wpn">{% if current_sheet %}{{ current_sheet.sub_event_results.Marks|get_item:'WPN &
+                        EQPT HANDLING (20)'|default:"0" }}{% else %}0{% endif %}</span>
                     </div>
-                    <div class="mb-2 d-flex justify-content-between align-items-center" style="background: rgba(82,183,136,0.1); padding: 8px; border-radius: 6px;">
+                    <div class="mb-2 d-flex justify-content-between align-items-center"
+                      style="background: rgba(82,183,136,0.1); padding: 8px; border-radius: 6px;">
                       <span style="color: #52B788; font-size: 12px; font-weight: 700;">TOTAL (120)</span>
-                      <span style="font-weight:800; color: #E0E6F0; font-family: 'Rajdhani', sans-serif; font-size: 14px;" id="bn_out_tot">{% if current_sheet %}{{ current_sheet.sub_event_results.Marks|get_item:'TOTAL (120)'|default:"0" }}{% else %}0{% endif %}</span>
+                      <span
+                        style="font-weight:800; color: #E0E6F0; font-family: 'Rajdhani', sans-serif; font-size: 14px;"
+                        id="bn_out_tot">{% if current_sheet %}{{ current_sheet.sub_event_results.Marks|get_item:'TOTAL
+                        (120)'|default:"0" }}{% else %}0{% endif %}</span>
                     </div>
-                    <div class="mb-0 d-flex justify-content-between align-items-center" style="background: rgba(82,183,136,0.15); padding: 8px; border-radius: 6px;">
+                    <div class="mb-0 d-flex justify-content-between align-items-center"
+                      style="background: rgba(82,183,136,0.15); padding: 8px; border-radius: 6px;">
                       <span style="color: #52B788; font-size: 12px; font-weight: 700;">ROUND FIGURE(120)</span>
-                      <span style="font-weight:800; color: #E0E6F0; font-family: 'Rajdhani', sans-serif; font-size: 14px;" id="bn_out_round">{% if current_sheet %}{{ current_sheet.sub_event_results.Marks|get_item:'ROUND FIGURE(120)'|default:"0" }}{% else %}0{% endif %}</span>
+                      <span
+                        style="font-weight:800; color: #E0E6F0; font-family: 'Rajdhani', sans-serif; font-size: 14px;"
+                        id="bn_out_round">{% if current_sheet %}{{ current_sheet.sub_event_results.Marks|get_item:'ROUND
+                        FIGURE(120)'|default:"0" }}{% else %}0{% endif %}</span>
                     </div>
                   </div>
                 </div>
@@ -1621,8 +2069,9 @@
                     <td
                       style="text-align:center; font-weight: 700; color: #52B788; font-family: 'Rajdhani', sans-serif;"
                       id="fc-practical-total">
-                      {% if current_sheet %}{{ current_sheet.sub_event_results.Marks|get_item:'FC Practical Total'|default:"—" }}{% else %}—{% endif %}
-                     </td>
+                      {% if current_sheet %}{{ current_sheet.sub_event_results.Marks|get_item:'FC Practical
+                      Total'|default:"—" }}{% else %}—{% endif %}
+                    </td>
                   </tr>
                   <tr style="background: rgba(82, 183, 136, 0.15);">
                     <td colspan="100%"
@@ -1824,49 +2273,55 @@
                       {% if val is not None %}
                       {{ val }}
                       {% else %}
-                      {% if col == '1st Attempt' %}{{ current_sheet.sub_event_results|get_item:'nco'|get_item:sub|default:"—" }}
-                      {% elif col == '2nd Attempt' %}{{ current_sheet.sub_event_results|get_item:'jco'|get_item:sub|default:"—" }}
-                      {% elif col == '3rd Attempt' %}{{ current_sheet.sub_event_results|get_item:'officer'|get_item:sub|default:"—" }}
+                      {% if col == '1st Attempt' %}{{
+                      current_sheet.sub_event_results|get_item:'nco'|get_item:sub|default:"—" }}
+                      {% elif col == '2nd Attempt' %}{{
+                      current_sheet.sub_event_results|get_item:'jco'|get_item:sub|default:"—" }}
+                      {% elif col == '3rd Attempt' %}{{
+                      current_sheet.sub_event_results|get_item:'officer'|get_item:sub|default:"—" }}
                       {% else %}—{% endif %}
                       {% endif %}
                       {% endif %}
                       {% endif %}
                       {% endwith %}
-                     </td>
+                    </td>
                     {% endfor %}
                     {% else %}
                     <td style="text-align:center; font-family: 'Rajdhani', sans-serif;">
                       {% if can_evaluate %}
-                      <input type="number" name="{{ sub }}"
+                      <input
+                        type="{% if code == 'CS_CLERK_RESULT' and sub == 'PL' or code == 'CS_CLERK_RESULT' and sub == 'EN' %}text{% else %}number{% endif %}"
+                        name="{{ sub }}"
                         value="{% with stored=current_sheet.sub_event_results.Marks|get_item:sub %}{% if stored is not None %}{{ stored }}{% else %}{{ current_sheet.sub_event_results|get_item:sub|default_if_none:'' }}{% endif %}{% endwith %}"
                         class="form-control marks-input text-center mx-auto"
-                        style="background: rgba(15,20,25,0.6); color: #E0E6F0; border: 1px solid rgba(82,183,136,0.3); width: 60px; height: 30px; padding: 2px 5px; font-size: 14px; border-radius: 4px;"
+                        style="background: rgba(15,20,25,0.6); color: #E0E6F0; border: 1px solid rgba(82,183,136,0.3); width: {% if code == 'CS_CLERK_RESULT' and sub == 'PL' or code == 'CS_CLERK_RESULT' and sub == 'EN' %}90px{% else %}60px{% endif %}; height: 30px; padding: 2px 5px; font-size: 14px; border-radius: 4px;"
                         min="0"
                         max="{% with m=dept_config.max_marks|get_item:code|get_item:sub %}{% if m %}{{ m }}{% else %}{% if code == 'MR_III' %}{% if sub == 'Outdoor Test' %}50{% elif sub == 'Indoor Test Written' %}90{% else %}10{% endif %}{% elif code == 'PDP' %}50{% elif code == 'FC_All' %}{% if 'Attempt' in sub %}40{% else %}10{% endif %}{% else %}40{% endif %}{% endif %}{% endwith %}"
                         step="0.01"
                         placeholder="0-{% with m=dept_config.max_marks|get_item:code|get_item:sub %}{% if m %}{{ m }}{% else %}{% if code == 'MR_III' %}{% if sub == 'Outdoor Test' %}50{% elif sub == 'Indoor Test Written' %}90{% else %}10{% endif %}{% elif code == 'PDP' %}50{% elif code == 'FC_All' %}{% if 'Attempt' in sub %}40{% else %}10{% endif %}{% else %}40{% endif %}{% endif %}{% endwith %}"
                         title="Maximum marks: {% with m=dept_config.max_marks|get_item:code|get_item:sub %}{% if m %}{{ m }}{% else %}{% if code == 'MR_III' %}{% if sub == 'Outdoor Test' %}50{% elif sub == 'Indoor Test Written' %}90{% else %}10{% endif %}{% elif code == 'PDP' %}50{% elif code == 'FC_All' %}{% if 'Attempt' in sub %}40{% else %}10{% endif %}{% else %}40{% endif %}{% endif %}{% endwith %}"
-                        {% if code == 'DMV_RESULT' and sub != 'Online Test (100)' %}readonly{% elif code == 'OPEM_RESULT' and sub != 'Written Test (100)' %}readonly{% elif code == 'CS_RESULT' and sub == 'TOTAL TOET (50)' %}readonly{% elif code == 'CS_RESULT' and sub == '25% OF TOET (25)' %}readonly{% elif code == 'CS_RESULT' and sub == 'FE Total (70)' %}readonly{% elif code == 'CS_RESULT' and sub == 'BR Total (65)' %}readonly{% elif code == 'CS_RESULT' and sub == 'TOTAL (160)' %}readonly{% elif code == 'CS_RESULT' and sub == 'CONVERTED TO 40' %}readonly{% elif code == 'BN_SCREENING' and 'COMMON MIL KNOWLEDGE (20)' == sub or 'BASIC TACTICE (CES) (40)' == sub or 'TRADE PROFICIENCY (BTT) (40)' == sub or 'WPN & EQPT HANDLING (20)' == sub or 'TOTAL (120)' == sub or 'ROUND FIGURE(120)' == sub %}readonly{% endif %}
-                        oninput="if(this.value && parseInt(this.value) > parseInt(this.max)) this.value = this.max;">
+                        {% if code == 'DMV_RESULT' and sub != 'Online Test (100)' %}readonly{% elif code == 'OPEM_RESULT' and                         sub != 'Written Test (100)' %}readonly{% elif code == 'CS_RESULT' and sub == 'TOTAL TOET (50)'                         %}readonly{% elif code == 'CS_RESULT' and sub == '25% OF TOET (25)' %}readonly{% elif                         code == 'CS_RESULT' and sub == 'FE Total (70)' %}readonly{% elif code == 'CS_RESULT' and                         sub == 'BR Total (65)' %}readonly{% elif code == 'CS_RESULT' and sub == 'TOTAL (160)' %}readonly{%                         elif code == 'CS_RESULT' and sub == 'CONVERTED TO 40' %}readonly{% elif code == 'CS_CLERK_RESULT' and                         sub == 'Total (40)' %}readonly{% elif code == 'BN_SCREENING' and 'COMMON MIL KNOWLEDGE (20)' == sub                         or 'BASIC TACTICE (CES) (40)' == sub or 'TRADE PROFICIENCY (BTT) (40)' == sub                         or 'WPN & EQPT HANDLING (20)' == sub or 'TOTAL (120)' == sub or 'ROUND FIGURE(120)' == sub                         %}readonly{% endif %}
+                        oninput="if(this.type === 'number' && this.value && parseFloat(this.value) > parseFloat(this.max)) this.value = this.max; if('{{ code }}' === 'CS_RESULT') calculateCSResult(); if('{{ code }}' === 'CS_CLERK_RESULT') calculateCSClerkResult(); if('{{ code }}' === 'CS_ASSESSMENT') calculateCSAssessment(); if(['OPEM_PRACTICAL', 'DMV_PRACTICAL', 'OPEM_MAINTENANCE', 'DMV_DRIVING'].includes('{{ code }}')) calculateOpemDmvPracticalLive('{{ code }}'); if('{{ code }}' === 'OPEM_RESULT') calculateOPEMResult(); if('{{ code }}' === 'DMV_RESULT') calculateDMVResult();">
                       {% else %}
                       {% if current_sheet %}
                       {% with val=current_sheet.sub_event_results.Marks|get_item:sub %}
-                      {% if val is not None %}{{ val }}{% else %}{{ current_sheet.sub_event_results|get_item:'nco'|get_item:sub|default:"—" }}{% endif %}
+                      {% if val is not None %}{{ val }}{% else %}{{
+                      current_sheet.sub_event_results|get_item:'nco'|get_item:sub|default:"—" }}{% endif %}
                       {% endwith %}
                       {% else %}
                       —
                       {% endif %}
                       {% endif %}
-                     </td>
+                    </td>
                     {% endif %}
-                   </tr>
+                  </tr>
                   {% empty %}
                   <tr>
                     <td style="font-weight: 600; color: #E0E6F0;">Performance Score</td>
                     <td style="text-align:center; font-family: 'Rajdhani', sans-serif;">
                       {% if current_sheet %}{{ current_sheet.get_total_marks|default:"—" }}{% else %}—{% endif %}
-                     </td>
-                   </tr>
+                    </td>
+                  </tr>
                   {% endfor %}
                   <tr style="background: rgba(82, 183, 136, 0.05);">
                     <td style="font-weight: 700; color: #52B788; font-size:13px;">TOTAL</td>
@@ -1888,13 +2343,13 @@
                       {% else %}
                       —
                       {% endif %}
-                     </td>
+                    </td>
                     {% endfor %}
                     {% else %}
                     <td
                       style="text-align:center; font-weight: 700; color: #52B788; font-family: 'Rajdhani', sans-serif;">
                       {% if current_sheet %}{{ current_sheet.get_total_marks }}{% else %}—{% endif %}
-                     </td>
+                    </td>
                     {% endif %}
                   </tr>
 
@@ -1904,17 +2359,18 @@
                     <td
                       style="text-align:center; font-weight: 800; color: #52B788; font-family: 'Rajdhani', sans-serif;"
                       data-converted-mriii="true">
-                      {% if current_sheet %}{{ current_sheet.sub_event_results.Marks|get_item:'CONVERTED 100 MKS'|default:"—" }}{% else %}—{% endif %}
-                     </td>
+                      {% if current_sheet %}{{ current_sheet.sub_event_results.Marks|get_item:'CONVERTED 100
+                      MKS'|default:"—" }}{% else %}—{% endif %}
+                    </td>
                   </tr>
                   <tr>
                     <td style="font-weight: 600; color: #E0E6F0; font-size:13px;">REMARKS</td>
                     <td style="text-align:center;">
                       <input type="text" name="remarks"
-                        value="{{ current_sheet.marks.first.remarks|default_if_none:'' }}"
+                        value="{% if current_sheet %}{{ current_sheet.marks.first.remarks|default_if_none:'' }}{% endif %}"
                         class="form-control text-center mx-auto"
                         style="background: rgba(15,20,25,0.6); color: #E0E6F0; border: 1px solid rgba(82,183,136,0.3); width: 100%; height: 30px; padding: 2px 5px; font-size: 14px; border-radius: 4px;">
-                     </td>
+                    </td>
                   </tr>
                   {% elif code == 'BFC' %}
                   <tr style="background: rgba(82, 183, 136, 0.1);">
@@ -1931,7 +2387,7 @@
                       {% else %}—{% endif %}
                       {% endwith %}
                       {% else %}—{% endif %}
-                     </td>
+                    </td>
                     {% endfor %}
                     {% endif %}
                   </tr>
@@ -1940,10 +2396,10 @@
                     <td style="font-weight: 600; color: #E0E6F0; font-size:13px;">REMARKS</td>
                     <td style="text-align:center;">
                       <input type="text" name="remarks"
-                        value="{{ current_sheet.marks.first.remarks|default_if_none:'' }}"
+                        value="{% if current_sheet %}{{ current_sheet.marks.first.remarks|default_if_none:'' }}{% endif %}"
                         class="form-control text-center mx-auto"
                         style="background: rgba(15,20,25,0.6); color: #E0E6F0; border: 1px solid rgba(82,183,136,0.3); width: 100%; height: 30px; padding: 2px 5px; font-size: 14px; border-radius: 4px;">
-                     </td>
+                    </td>
                   </tr>
                   {% endif %}
                 </tbody>
@@ -1952,11 +2408,11 @@
             {% endif %}
 
             {% if can_evaluate %}
-            {% if code == 'CS_RESULT' %}
+            {% if code == 'CS_RESULT' or code == 'CS_CLERK_RESULT' or code == 'CS_ASSESSMENT' %}
             <div class="mt-3">
               <label class="form-label" style="font-weight: 600; color: #52B788;">Remarks</label>
               <textarea name="remarks" class="form-control" rows="2" placeholder="Optional remarks"
-                style="background: rgba(15,20,25,0.6); color: #E0E6F0; border: 1px solid rgba(82,183,136,0.3); border-radius: 8px;">{{ current_sheet.marks.first.remarks|default_if_none:'' }}</textarea>
+                style="background: rgba(15,20,25,0.6); color: #E0E6F0; border: 1px solid rgba(82,183,136,0.3); border-radius: 8px;">{% if current_sheet %}{{ current_sheet.marks.first.remarks|default_if_none:'' }}{% endif %}</textarea>
             </div>
             {% endif %}
           </form>
@@ -2011,6 +2467,128 @@
 </div>
 
 <script>
+  window.showOpemCategory = function (btn, catName) {
+    const tabPane = btn.closest('.test-tab-pane');
+    if (!tabPane) return;
+
+    tabPane.querySelectorAll('.opem-category-btn').forEach(b => {
+      b.classList.remove('active');
+      b.style.background = 'rgba(15, 20, 25, 0.6)';
+      b.style.color = '#8B9BB4';
+      b.style.borderColor = 'rgba(82, 183, 136, 0.2)';
+    });
+
+    btn.classList.add('active');
+    btn.style.background = '#1B4332';
+    btn.style.color = '#52B788';
+    btn.style.borderColor = '#52B788';
+
+    // Toggle display of the category panes
+    tabPane.querySelectorAll('.opem-category-pane').forEach(pane => {
+      if (pane.getAttribute('data-category') === catName) {
+        pane.style.display = 'block';
+      } else {
+        pane.style.display = 'none';
+      }
+    });
+  };
+
+  window.calculateOpemAssessmentLive = function (testCode) {
+    const tab = document.getElementById('tab-' + testCode);
+    if (!tab) return;
+
+    const getWeekValue = (row, w) => {
+      const cell = row.cells[w];
+      if (!cell) return NaN;
+      const input = cell.querySelector('input');
+      if (input) {
+        return parseFloat(input.value);
+      } else {
+        const text = cell.textContent.trim();
+        if (text === '—' || text === '') return NaN;
+        return parseFloat(text);
+      }
+    };
+
+    const panes = tab.querySelectorAll('.opem-category-pane');
+    let overallAvgTotal = 0;
+
+    panes.forEach(pane => {
+      const table = pane.querySelector('.army-table');
+      if (!table) return;
+
+      // Find all event rows (tbody tr) that contain week-9-output (average column)
+      const eventRows = Array.from(table.querySelectorAll('tbody tr')).filter(tr => tr.querySelector('.week-9-output'));
+
+      // 1. Calculate row averages (Week 9 Avg) for each event row
+      eventRows.forEach(row => {
+        let sumOfWeeks = 0;
+        let filledCount = 0;
+        for (let w = 1; w <= 8; w++) {
+          const val = getWeekValue(row, w);
+          if (!isNaN(val)) {
+            sumOfWeeks += val;
+            filledCount++;
+          }
+        }
+        const avg = filledCount > 0 ? (sumOfWeeks / filledCount) : 0.0;
+        const avgOutput = row.querySelector('.week-9-output');
+        if (avgOutput) {
+          avgOutput.value = avg.toFixed(2);
+        }
+      });
+
+      // 2. Calculate column totals for Weeks 1 to 8 (footer row)
+      for (let w = 1; w <= 8; w++) {
+        let colSum = 0;
+        let hasVal = false;
+        eventRows.forEach(row => {
+          const val = getWeekValue(row, w);
+          if (!isNaN(val)) {
+            colSum += val;
+            hasVal = true;
+          }
+        });
+        const totalCell = table.querySelector(`.week-total-col[data-week="${w}"]`);
+        if (totalCell) {
+          totalCell.textContent = hasVal ? colSum.toFixed(2) : '0.00';
+        }
+      }
+
+      // 3. Calculate total of averages for the table (footer week-total-avg cell)
+      let tableAvgSum = 0;
+      eventRows.forEach(row => {
+        const avgOutput = row.querySelector('.week-9-output');
+        if (avgOutput) {
+          tableAvgSum += parseFloat(avgOutput.value) || 0;
+        }
+      });
+      const avgTotalCell = table.querySelector('.week-total-avg');
+      if (avgTotalCell) {
+        avgTotalCell.textContent = tableAvgSum.toFixed(2);
+      }
+
+      overallAvgTotal += tableAvgSum;
+    });
+
+    // Update sticky bottom footer stats
+    const percentage = (overallAvgTotal / 71.0) * 100.0;
+
+    const scoreEl = document.getElementById(`score-${testCode}`);
+    const percEl = document.getElementById(`perc-${testCode}`);
+    const statusEl = document.getElementById(`status-${testCode}`);
+
+    if (scoreEl) scoreEl.textContent = overallAvgTotal.toFixed(2);
+    if (percEl) percEl.textContent = percentage.toFixed(2) + '%';
+    if (statusEl) {
+      if (percentage >= 40) {
+        statusEl.innerHTML = '<span style="color: #52B788;">✓ PASS</span>';
+      } else {
+        statusEl.innerHTML = '<span style="color: #EF5350;">✗ FAIL</span>';
+      }
+    }
+  };
+
   function showTab(testCode) {
     // Hide all tabs
     document.querySelectorAll('.test-tab-pane').forEach(el => el.style.display = 'none');
@@ -2023,7 +2601,14 @@
 
     // Show active tab
     const activeTab = document.getElementById('tab-' + testCode);
-    if (activeTab) activeTab.style.display = 'block';
+    if (activeTab) {
+      activeTab.style.display = 'block';
+      // Trigger first category click if it exists
+      const firstCatBtn = activeTab.querySelector('.opem-category-btn');
+      if (firstCatBtn) {
+        window.showOpemCategory(firstCatBtn, 'TRG_JCO');
+      }
+    }
 
     // Activate button
     const btn = Array.from(document.querySelectorAll('.eval-tab-btn')).find(el => el.textContent.trim() === testCode);
@@ -2049,7 +2634,7 @@
       }
     }
 
-    
+
     // Auto-calculation logic
     const tables = document.querySelectorAll('.army-table');
     tables.forEach(table => {
@@ -2065,10 +2650,10 @@
           const row = e.target.closest('tr');
           calculateRowBest(row);
 
-          if (input.name.includes('_')) {
+          if (input.name.includes('_') && !input.name.startsWith('week_')) {
             calculateColumnTotal(table, input.name.split('_')[0]);
             calculateColumnTotal(table, 'Event Wise Best');
-          } else {
+          } else if (!input.name.startsWith('week_')) {
             calculateSingleColumnTotal(table);
           }
 
@@ -2078,6 +2663,8 @@
           calculateOPEMResult();
           calculateOtherResult();
           if (document.getElementById('tab-CS_RESULT')) calculateCSResult();
+          if (document.getElementById('tab-CS_CLERK_RESULT')) calculateCSClerkResult();
+          if (document.getElementById('tab-CS_ASSESSMENT')) calculateCSAssessment();
 
           if (e.target.closest('[id^="tab-CLK_"]')) {
             calculateClerkResult(e.target.closest('.test-tab-pane').id.replace('tab-', ''));
@@ -2088,6 +2675,12 @@
           if (tabId) {
             const code = tabId.replace('tab-', '');
             calculateBattalionResult(code);
+            if (code === 'OPEM_ASSESSMENT' || code === 'DMV_ASSESSMENT') {
+              calculateOpemAssessmentLive(code);
+            }
+            if (['OPEM_PRACTICAL', 'DMV_PRACTICAL', 'OPEM_MAINTENANCE', 'DMV_DRIVING'].includes(code)) {
+              calculateOpemDmvPracticalLive(code);
+            }
           }
         });
       });
@@ -2098,7 +2691,7 @@
 
       const headers = Array.from(table.querySelectorAll('thead th')).map(th => th.textContent.trim());
       headers.forEach(h => {
-        if (h && h !== 'Event Wise Best') calculateColumnTotal(table, h);
+        if (h && h !== 'Event Wise Best' && h !== 'W1' && h !== 'W2' && h !== 'W3' && h !== 'W4' && h !== 'W5' && h !== 'W6' && h !== 'W7' && h !== 'W8' && h !== 'W9 (Avg)') calculateColumnTotal(table, h);
       });
       calculateColumnTotal(table, 'Event Wise Best');
       calculateSingleColumnTotal(table);
@@ -2107,6 +2700,14 @@
       calculateOPEMResult();
       calculateOtherResult();
       calculateCSResult();
+      calculateCSClerkResult();
+      calculateCSAssessment();
+      calculateOpemAssessmentLive('OPEM_ASSESSMENT');
+      calculateOpemAssessmentLive('DMV_ASSESSMENT');
+      calculateOpemDmvPracticalLive('OPEM_PRACTICAL');
+      calculateOpemDmvPracticalLive('DMV_PRACTICAL');
+      calculateOpemDmvPracticalLive('OPEM_MAINTENANCE');
+      calculateOpemDmvPracticalLive('DMV_DRIVING');
     });
     ['CLK_INITIAL', 'CLK_WEEKLY_1', 'CLK_WEEKLY_2', 'CLK_FINAL'].forEach(calculateClerkResult);
     ['PPT', 'BPET', 'Firing', 'DST', 'MR_III', 'BFC', 'PDP', 'FC_All'].forEach(calculateBattalionResult);
@@ -2232,6 +2833,66 @@
         totalRow.cells[1].textContent = converted40 ? converted40.toFixed(2) : '—';
         totalRow.cells[1].style.fontWeight = '700';
       }
+      updateStandardSummary('CS_RESULT', converted40, (converted40 / 40) * 100);
+    }
+
+    function updateStandardSummary(testCode, total, percentage) {
+      const scoreEl = document.getElementById(`score-${testCode}`);
+      const percEl = document.getElementById(`perc-${testCode}`);
+      const statusEl = document.getElementById(`status-${testCode}`);
+
+      if (scoreEl) scoreEl.textContent = total ? total.toFixed(2) : '0.00';
+      if (percEl) percEl.textContent = percentage ? percentage.toFixed(2) + '%' : '0.00%';
+      if (statusEl) {
+        const isPass = percentage >= 50;
+        statusEl.textContent = isPass ? 'PASS' : 'FAIL';
+        statusEl.style.color = isPass ? '#52B788' : '#EF5350';
+      }
+    }
+
+    function calculateCSClerkResult() {
+      const resultTab = document.getElementById('tab-CS_CLERK_RESULT');
+      if (!resultTab) return;
+
+      const online = parseFloat(resultTab.querySelector('input[name="Online (20)"]')?.value) || 0;
+      const tprac = parseFloat(resultTab.querySelector('input[name="TPrac (20)"]')?.value) || 0;
+      const total = Math.min(online + tprac, 40);
+      const percentage = (total / 40) * 100;
+
+      const totalInput = resultTab.querySelector('input[name="Total (40)"]');
+      if (totalInput) totalInput.value = total ? total.toFixed(2) : '';
+
+      const totalRow = Array.from(resultTab.querySelectorAll('tbody tr'))
+        .find(row => row.cells[0] && row.cells[0].textContent.trim() === 'TOTAL');
+      if (totalRow && totalRow.cells[1]) {
+        totalRow.cells[1].textContent = total ? total.toFixed(2) : '0.00';
+        totalRow.cells[1].style.color = '#52B788';
+        totalRow.cells[1].style.fontWeight = '700';
+      }
+
+      updateStandardSummary('CS_CLERK_RESULT', total, percentage);
+    }
+
+    function calculateCSAssessment() {
+      const resultTab = document.getElementById('tab-CS_ASSESSMENT');
+      if (!resultTab) return;
+
+      const inputs = Array.from(resultTab.querySelectorAll('input[type="number"]:not([readonly])'));
+      let rawTotal = 0;
+      inputs.forEach(input => rawTotal += parseFloat(input.value) || 0);
+
+      const converted40 = rawTotal ? Math.min((rawTotal / 74) * 40, 40) : 0;
+      const percentage = rawTotal ? (rawTotal / 74) * 100 : 0;
+
+      const totalRow = Array.from(resultTab.querySelectorAll('tbody tr'))
+        .find(row => row.cells[0] && row.cells[0].textContent.trim() === 'TOTAL');
+      if (totalRow && totalRow.cells[1]) {
+        totalRow.cells[1].textContent = converted40 ? converted40.toFixed(2) : '0.00';
+        totalRow.cells[1].style.color = '#52B788';
+        totalRow.cells[1].style.fontWeight = '700';
+      }
+
+      updateStandardSummary('CS_ASSESSMENT', converted40, percentage);
     }
 
     function calculateBattalionResult(testCode) {
@@ -2631,6 +3292,28 @@
       }
     }
 
+    function calculateOpemDmvPracticalLive(testCode) {
+      const tab = document.getElementById('tab-' + testCode);
+      if (!tab) return;
+      const table = tab.querySelector('.army-table');
+      if (!table) return;
+
+      const inputs = Array.from(table.querySelectorAll('input:not([readonly])')).filter(i => i.type === 'number');
+      let total = 0.0;
+      inputs.forEach(input => {
+        total += parseFloat(input.value) || 0.0;
+      });
+
+      const percentage = (total / 50.0) * 100.0;
+      updateStandardSummary(testCode, total, percentage);
+
+      if (testCode.startsWith('OPEM_')) {
+        calculateOPEMResult();
+      } else if (testCode.startsWith('DMV_')) {
+        calculateDMVResult();
+      }
+    }
+
     function calculateOPEMResult() {
       const writtenInput = document.querySelector('input[name="Written Test (100)"]');
       if (!writtenInput) return;
@@ -2749,7 +3432,7 @@
       });
 
       const rows = Array.from(table.querySelectorAll('tbody tr'));
-      
+
       const totalRow = rows.find(r => r.cells[0] && r.cells[0].textContent.trim() === 'TOTAL');
       if (totalRow && totalRow.cells[1]) {
         totalRow.cells[1].textContent = total;

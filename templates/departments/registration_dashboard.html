@@ -287,11 +287,38 @@
                             </div>
                             <div class="col-md-3">
                                 <label class="form-group-label">BN DESP</label>
-                                <select name="bn_desp" class="form-select">
+                                <select name="bn_desp" id="edit_bn_desp" class="form-select">
                                     <option value="">---</option>
                                     <option value="1TB">1TB</option>
                                     <option value="2TB">2TB</option>
                                     <option value="STB">STB</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-group-label">Batch No</label>
+                                <select name="batch_no" id="edit_batch_no" class="form-select">
+                                    <option value="">---</option>
+                                    {% for val, label in batch_no_choices %}
+                                    <option value="{{ val }}">{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-group-label">Company</label>
+                                <select name="company" id="edit_company" class="form-select">
+                                    <option value="">---</option>
+                                    {% for val, label in company_choices %}
+                                    <option value="{{ val }}">{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-group-label">Platoon</label>
+                                <select name="platoon" id="edit_platoon" class="form-select">
+                                    <option value="">---</option>
+                                    {% for val, label in platoon_choices %}
+                                    <option value="{{ val }}">{{ label }}</option>
+                                    {% endfor %}
                                 </select>
                             </div>
                             <div class="col-md-3">
@@ -395,17 +422,29 @@
             
 
                 <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h5 class="m-0" style="font-family:'Rajdhani'; font-weight:700;">Total Records: {{ total_count }}</h5>
+                    <h5 class="m-0" style="font-family:'Rajdhani'; font-weight:700;">Total Records: {{ total_count }} {% if company_filter %}({{ company_filter }}){% endif %}</h5>
                 <form method="GET" class="d-flex gap-2">
-                    <input type="text" name="search" value="{{ search }}" class="form-control form-control-sm" style="width:250px;" placeholder="Search Enrollment, No, Name...">
-                    <select name="trade" class="form-select form-select-sm" style="width:120px;">
+                    <input type="text" name="search" value="{{ search }}" class="form-control form-control-sm" style="width:200px;" placeholder="Search...">
+                    <select name="trade" class="form-select form-select-sm" style="width:110px;">
                         <option value="">All Trades</option>
                         {% for code, label in trade_choices %}
                         <option value="{{ code }}" {% if trade_filter == code %}selected{% endif %}>{{ label }}</option>
                         {% endfor %}
                     </select>
+                    <select name="company" class="form-select form-select-sm" style="width:120px;">
+                        <option value="">All Companies</option>
+                        {% for val, label in company_choices %}
+                        <option value="{{ val }}" {% if company_filter == val %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                    <select name="platoon" class="form-select form-select-sm" style="width:110px;">
+                        <option value="">All Platoons</option>
+                        {% for val, label in platoon_choices %}
+                        <option value="{{ val }}" {% if platoon_filter == val %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
                     <button type="submit" class="btn btn-army btn-sm">Search</button>
-                    {% if search or trade_filter %}
+                    {% if search or trade_filter or company_filter or platoon_filter %}
                     <a href="{% url 'departments:registration_dashboard' %}" class="btn btn-outline-secondary btn-sm">Clear</a>
                     {% endif %}
                 </form>
@@ -420,6 +459,10 @@
                             <th>Name</th>
                             <th>Father Name</th>
                             <th>DOR</th>
+                            <th>Platoon</th>
+                            {% if company_filter %}
+                            <th>Company</th>
+                            {% endif %}
                             <th>Trade</th>
                             <th>AROs/BROs</th>
                             <th style="text-align: center;">Action</th>
@@ -433,6 +476,13 @@
                             <td>{{ ag.name }}</td>
                             <td>{{ ag.father_name }}</td>
                             <td>{{ ag.dor|date:"d M Y" }}</td>
+                            <td>
+                                <div>{{ ag.platoon|default:"—" }}</div>
+                                {% if ag.company %}<small class="text-muted d-block" style="font-size: 10px;">{{ ag.company }}</small>{% endif %}
+                            </td>
+                            {% if company_filter %}
+                            <td><span class="badge bg-success" style="font-size: 10px;">{{ ag.company }}</span></td>
+                            {% endif %}
                             <td>{{ ag.trade }}</td>
                             <td>{{ ag.aros_bros }}</td>
                             <td style="text-align: center; vertical-align: middle;">
@@ -527,11 +577,23 @@
                                     <label class="form-group-label">AROs/BROs</label>
                                     {{ reg_form.aros_bros }}
                                 </div>
-                                <div class="col-md-6">
+                                <div class="col-md-3">
                                     <label class="form-group-label">BN DESP</label>
                                     {{ reg_form.bn_desp }}
                                 </div>
-                                <div class="col-md-6">
+                                <div class="col-md-3">
+                                    <label class="form-group-label">Batch No</label>
+                                    {{ reg_form.batch_no }}
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-group-label">Company</label>
+                                    {{ reg_form.company }}
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-group-label">Platoon</label>
+                                    {{ reg_form.platoon }}
+                                </div>
+                                <div class="col-md-3">
                                     <label class="form-group-label">Relationship</label>
                                     {{ reg_form.relationship }}
                                 </div>
@@ -755,6 +817,80 @@
             document.getElementById('formErrors').classList.add('d-none');
         }
 
+        function updateCompanyOptions(bnVal, companySelect, currentCompanyVal = '') {
+            companySelect.innerHTML = '<option value="">---</option>';
+            let options = [];
+            if (bnVal === '1TB') {
+                options = ['Company A', 'Company B', 'Company C'];
+            } else if (bnVal === '2TB') {
+                options = ['Company D', 'Company E', 'Company F'];
+            } else if (bnVal === 'STB') {
+                options = ['Company G', 'Company H', 'Company I'];
+            } else {
+                options = ['Company A', 'Company B', 'Company C', 'Company D', 'Company E', 'Company F', 'Company G', 'Company H', 'Company I'];
+            }
+            options.forEach(opt => {
+                const optionEl = document.createElement('option');
+                optionEl.value = opt;
+                optionEl.textContent = opt;
+                if (opt === currentCompanyVal) {
+                    optionEl.selected = true;
+                }
+                companySelect.appendChild(optionEl);
+            });
+        }
+
+        function updatePlatoonOptions(compVal, platoonSelect, currentPlatoonVal = '') {
+            platoonSelect.innerHTML = '<option value="">---</option>';
+            let options = [];
+            if (compVal === 'Company A' || compVal === 'Company D' || compVal === 'Company G') {
+                options = ['P1', 'P2', 'P3'];
+            } else if (compVal === 'Company B' || compVal === 'Company E' || compVal === 'Company H') {
+                options = ['P4', 'P5', 'P6'];
+            } else if (compVal === 'Company C' || compVal === 'Company F' || compVal === 'Company I') {
+                options = ['P7', 'P8', 'P9'];
+            } else {
+                options = ['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'P8', 'P9'];
+            }
+            options.forEach(opt => {
+                const optionEl = document.createElement('option');
+                optionEl.value = opt;
+                optionEl.textContent = opt;
+                if (opt === currentPlatoonVal) {
+                    optionEl.selected = true;
+                }
+                platoonSelect.appendChild(optionEl);
+            });
+        }
+
+        const regBnDesp = document.getElementById('reg_bn_desp');
+        const regCompany = document.getElementById('reg_company');
+        const regPlatoon = document.getElementById('reg_platoon');
+        if (regBnDesp && regCompany && regPlatoon) {
+            regBnDesp.addEventListener('change', function() {
+                updateCompanyOptions(this.value, regCompany);
+                updatePlatoonOptions(regCompany.value, regPlatoon);
+            });
+            regCompany.addEventListener('change', function() {
+                updatePlatoonOptions(this.value, regPlatoon);
+            });
+            updateCompanyOptions(regBnDesp.value, regCompany, regCompany.value);
+            updatePlatoonOptions(regCompany.value, regPlatoon, regPlatoon.value);
+        }
+
+        const editBnDesp = document.getElementById('edit_bn_desp');
+        const editCompany = document.getElementById('edit_company');
+        const editPlatoon = document.getElementById('edit_platoon');
+        if (editBnDesp && editCompany && editPlatoon) {
+            editBnDesp.addEventListener('change', function() {
+                updateCompanyOptions(this.value, editCompany);
+                updatePlatoonOptions(editCompany.value, editPlatoon);
+            });
+            editCompany.addEventListener('change', function() {
+                updatePlatoonOptions(this.value, editPlatoon);
+            });
+        }
+
         document.getElementById('closeInlineEditBtn').addEventListener('click', hideInlineEdit);
         document.getElementById('cancelInlineEditBtn').addEventListener('click', hideInlineEdit);
 
@@ -777,6 +913,10 @@
                                     input.value = data[key];
                                 }
                             }
+                        }
+                        if (editBnDesp && editCompany && editPlatoon) {
+                            updateCompanyOptions(data.bn_desp, editCompany, data.company);
+                            updatePlatoonOptions(data.company, editPlatoon, data.platoon);
                         }
                         showInlineEdit();
                     })

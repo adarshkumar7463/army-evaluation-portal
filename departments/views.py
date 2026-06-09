@@ -15,7 +15,7 @@ from django.core.paginator import Paginator
 import json
 import io
 
-from .models import Agniveer, TRADE_CHOICES
+from .models import Agniveer, TRADE_CHOICES, BATCH_NO_CHOICES, COMPANY_CHOICES, PLATOON_CHOICES, BN_DESP_CHOICES
 from .forms import (
     AgniveerForm, AgniveerRegistrationForm, AgniveerEditForm,
     AgniveerExcelUploadForm, AssignTrainerForm
@@ -48,6 +48,8 @@ class RegistrationDashboardView(RegistrationOfficeMixin, View):
         # Search / filter
         search = request.GET.get('search', '').strip()
         trade_filter = request.GET.get('trade', '')
+        company_filter = request.GET.get('company', '')
+        platoon_filter = request.GET.get('platoon', '')
         if search:
             agniveers = agniveers.filter(
                 Q(enrollment_number__icontains=search) |
@@ -58,6 +60,10 @@ class RegistrationDashboardView(RegistrationOfficeMixin, View):
             )
         if trade_filter:
             agniveers = agniveers.filter(trade=trade_filter)
+        if company_filter:
+            agniveers = agniveers.filter(company=company_filter)
+        if platoon_filter:
+            agniveers = agniveers.filter(platoon=platoon_filter)
 
         
         cert_fields = [
@@ -108,7 +114,12 @@ class RegistrationDashboardView(RegistrationOfficeMixin, View):
             'total_count': Agniveer.objects.count(),
             'search': search,
             'trade_filter': trade_filter,
+            'company_filter': company_filter,
+            'platoon_filter': platoon_filter,
             'trade_choices': TRADE_CHOICES,
+            'batch_no_choices': BATCH_NO_CHOICES,
+            'company_choices': COMPANY_CHOICES,
+            'platoon_choices': PLATOON_CHOICES,
             'cert_fields': cert_fields,
             'status_choices': Agniveer.STATUS_CHOICES,
             'uploaded_files': uploaded_files,
@@ -159,6 +170,9 @@ class RegistrationDashboardView(RegistrationOfficeMixin, View):
                     'agniveers': agniveers,
                     'total_count': Agniveer.objects.count(),
                     'trade_choices': TRADE_CHOICES,
+                    'batch_no_choices': BATCH_NO_CHOICES,
+                    'company_choices': COMPANY_CHOICES,
+                    'platoon_choices': PLATOON_CHOICES,
                     'active_tab': 'register',
                     'cert_fields': cert_fields,
                     'status_choices': Agniveer.STATUS_CHOICES,
@@ -274,6 +288,9 @@ class AgniveerEditAjaxView(RegistrationOfficeMixin, View):
             'trade': ag.trade,
             'aros_bros': ag.aros_bros or '',
             'bn_desp': ag.bn_desp or '',
+            'batch_no': ag.batch_no or '',
+            'company': ag.company or '',
+            'platoon': ag.platoon or '',
             'relationship': ag.relationship or '',
             'afmsf_2a': ag.afmsf_2a,
             'review_cert': ag.review_cert,
@@ -344,17 +361,29 @@ class AgniveerListView(AnyStaffMixin, ListView):
         if user.is_battalion and user.battalion_unit:
             queryset = queryset.filter(bn_desp=user.battalion_unit)
 
+        # Company/Platoon Level Isolation
+        if not user.can_view_all:
+            if hasattr(user, 'company') and user.company:
+                queryset = queryset.filter(company=user.company)
+            if hasattr(user, 'platoon') and user.platoon:
+                queryset = queryset.filter(platoon=user.platoon)
+
         status = self.request.GET.get('status')
         search = self.request.GET.get('search')
         batch = self.request.GET.get('batch')
+        batch_no = self.request.GET.get('batch_no')
         eval_filter = self.request.GET.get('eval_status')
         trade_param = self.request.GET.get('trade')
         battalion_param = self.request.GET.get('battalion')
+        company_param = self.request.GET.get('company')
+        platoon_param = self.request.GET.get('platoon')
 
         if status:
             queryset = queryset.filter(status=status)
         if batch:
             queryset = queryset.filter(batch__icontains=batch)
+        if batch_no:
+            queryset = queryset.filter(batch_no=batch_no)
         if search:
             queryset = queryset.filter(
                 Q(enrollment_number__icontains=search) |
@@ -368,6 +397,10 @@ class AgniveerListView(AnyStaffMixin, ListView):
                 queryset = queryset.filter(trade=trade_param)
         if battalion_param:
             queryset = queryset.filter(bn_desp=battalion_param)
+        if company_param:
+            queryset = queryset.filter(company=company_param)
+        if platoon_param:
+            queryset = queryset.filter(platoon=platoon_param)
 
         if eval_filter and (user.is_trainer or user.is_department):
             from evaluation.models import Marks
@@ -403,6 +436,11 @@ class AgniveerListView(AnyStaffMixin, ListView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx['status_choices'] = Agniveer.STATUS_CHOICES
+        ctx['batch_no_choices'] = BATCH_NO_CHOICES
+        ctx['bn_choices'] = BN_DESP_CHOICES
+        ctx['trade_choices'] = TRADE_CHOICES
+        ctx['company_choices'] = COMPANY_CHOICES
+        ctx['platoon_choices'] = PLATOON_CHOICES
         user = self.request.user
         dept = user.get_department_code() or 'A'
 
@@ -516,9 +554,16 @@ class AgniveerDetailView(AnyStaffMixin, DetailView):
 
         ctx['evaluations'] = evaluations
 
-        from evaluation.constants import get_dept_total_marks, get_dept_config, get_overall_total_marks
+        from evaluation.constants import CS_CLERK_RESULT_TRADES, get_dept_total_marks, get_dept_config, get_overall_total_marks
 
         config = get_dept_config(department, user)
+        test_type_choices = config['test_types']
+        if department == 'C':
+            if agniveer.trade in CS_CLERK_RESULT_TRADES:
+                hidden_tests = {'CS_RESULT'}
+            else:
+                hidden_tests = {'CS_CLERK_RESULT'}
+            test_type_choices = [test for test in test_type_choices if test[0] not in hidden_tests]
 
         if user.is_commander or user.is_g_head:
             max_marks = get_overall_total_marks(user)
@@ -546,7 +591,7 @@ class AgniveerDetailView(AnyStaffMixin, DetailView):
         import json
         ctx['dept_config'] = config
         ctx['category_choices'] = config['categories']
-        ctx['test_type_choices'] = config['test_types']
+        ctx['test_type_choices'] = test_type_choices
         ctx['test_to_category_json'] = json.dumps(config['test_to_category'])
         ctx['evaluation_form'] = AgniveerEvaluationForm(department=department)
         return ctx

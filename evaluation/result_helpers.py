@@ -69,10 +69,17 @@ def build_tts_result_row(agniveer, sheets):
 
 
 def build_cs_result_row(agniveer, sheets):
+    from .constants import CS_CLERK_RESULT_TRADES
+
     sheet_map = {sheet.test_type: sheet for sheet in sheets}
-    sheet = sheet_map.get('CS_RESULT')
+    if agniveer.trade in CS_CLERK_RESULT_TRADES:
+        sheet = sheet_map.get('CS_CLERK_RESULT')
+        score_key = 'Total (40)'
+    else:
+        sheet = sheet_map.get('CS_RESULT')
+        score_key = 'CONVERTED TO 40'
     marks = _marks_from_sheet(sheet)
-    total = _num(marks.get('CONVERTED TO 40')) or _num(sheet.get_total_marks() if sheet else 0)
+    total = _num(marks.get(score_key)) or _num(sheet.get_total_marks() if sheet else 0)
     percentage = round((total / 40) * 100, 2) if total else 0
     return {
         'agniveer': agniveer,
