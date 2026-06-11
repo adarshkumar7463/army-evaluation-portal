@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from django.contrib.auth import views as auth_views
 
 app_name = 'accounts'
 
@@ -15,4 +16,7 @@ urlpatterns = [
     path('my-team/', views.MyTeamListView.as_view(), name='my_team'),
     path('my-team/create/', views.CreateTrainerView.as_view(), name='create_my_team_trainer'),
     path('users/<int:pk>/toggle/', views.ToggleUserActiveView.as_view(), name='toggle_user'),
+    # Password change for users (visible link for commanders)
+    path('password_change/', auth_views.PasswordChangeView.as_view(template_name='registration/password_change_form.html'), name='password_change'),
+    path('password_change/done/', auth_views.PasswordChangeDoneView.as_view(template_name='registration/password_change_done.html'), name='password_change_done'),
 ]

@@ -15,7 +15,7 @@ from django.urls import reverse_lazy
 from datetime import date
 
 from .models import EvaluationSheet, Marks
-from .result_helpers import build_department_result_row
+from .result_helpers import build_department_result_row, get_grade
 from .forms import EvaluationSheetForm, MarksForm, EvaluationFilterForm, AgniveerEvaluationForm, SubEventEvaluationForm
 from departments.models import Agniveer
 from accounts.mixins import AnyStaffMixin, CommanderOrDeptMixin, TrainerMixin
@@ -32,8 +32,6 @@ class EvaluationListView(AnyStaffMixin, ListView):
     paginate_by = 20
 
     def get(self, request, *args, **kwargs):
-        if request.user.is_trainer:
-            return redirect('core:dashboard')
         return super().get(request, *args, **kwargs)
 
     def get_queryset(self):
@@ -180,10 +178,13 @@ class AgniveerEvaluateView(AnyStaffMixin, View):
             total_200 = online_val + prac_total + drive_total
             percentage = (total_200 / 200 * 100) if total_200 else 0
             
-            # Grading Logic: A(70%+), B(60-70%), C(<60%)
-            if percentage >= 70: grading = 'A'
-            elif percentage >= 60: grading = 'B'
-            else: grading = 'C'
+            # Detailed Subject-wise Grading
+            subjects = [
+                (online_val, 100),
+                (prac_total, 50),
+                (drive_total, 50)
+            ]
+            grading = get_grade(percentage, subjects)
             
             converted_40 = (total_200 / 200 * 40) if total_200 else 0
             
@@ -215,10 +216,13 @@ class AgniveerEvaluateView(AnyStaffMixin, View):
             total_200 = written_val + prac_total + maint_total
             percentage = (total_200 / 200 * 100) if total_200 else 0
             
-            # Grading Logic: A(70%+), B(60-70%), C(<60%)
-            if percentage >= 70: grading = 'A'
-            elif percentage >= 60: grading = 'B'
-            else: grading = 'C'
+            # Detailed Subject-wise Grading
+            subjects = [
+                (written_val, 100),
+                (prac_total, 50),
+                (maint_total, 50)
+            ]
+            grading = get_grade(percentage, subjects)
             
             converted_40 = (total_200 / 200 * 40) if total_200 else 0
             
@@ -258,8 +262,8 @@ class AgniveerEvaluateView(AnyStaffMixin, View):
             total_for_best = round(total_marks)
             evaluator_type = 'admin'
 
-        # ─── OPEM/DMV Final Assessment Specific Calculations ───
-        elif active_test in ('OPEM_ASSESSMENT', 'DMV_ASSESSMENT'):
+        # ─── Weekly Assessment Specific Calculations (OPEM, DMV, OTHER, CS) ───
+        elif active_test in ('OPEM_ASSESSMENT', 'DMV_ASSESSMENT', 'OTHER_ASSESSMENT', 'CS_ASSESSMENT'):
             results = {'Marks': {}}
             total_average = 0.0
             for event in sub_events:
@@ -284,29 +288,105 @@ class AgniveerEvaluateView(AnyStaffMixin, View):
                 results['Marks'][event]['week_9'] = avg_val
                 total_average += avg_val
             
-            percentage = (total_average / 71.0 * 100.0) if total_average else 0.0
-            is_pass_status = 'Pass' if percentage >= 40 else 'Fail'
+            if active_test == 'CS_ASSESSMENT':
+                max_val = 86.0
+                percentage = (total_average / max_val * 100.0) if total_average else 0.0
+                is_pass_status = 'Pass' if percentage >= 50.0 else 'Fail'
+                
+                # Detailed Subject-wise Grading
+                subjects = []
+                max_config = config.get('max_marks', {}).get(active_test, {})
+                for event in sub_events:
+                    val = results['Marks'][event]['week_9']
+                    max_limit = max_config.get(event, 999)
+                    subjects.append((val, max_limit))
+                grading = get_grade(percentage, subjects)
+                
+                converted_40 = round((total_average / max_val) * 40.0, 2)
+                results['Marks']['Raw Total (86)'] = round(total_average, 2)
+                results['Marks']['Total (40)'] = converted_40
+                results['Marks']['Percentage'] = round(percentage, 2)
+                results['Marks']['Result'] = is_pass_status
+                results['Marks']['Grading'] = grading
+                total_for_best = round(converted_40)
+            else:
+                max_val = 74.0 if active_test == 'OTHER_ASSESSMENT' else 71.0
+                percentage = (total_average / max_val * 100.0) if total_average else 0.0
+                is_pass_status = 'Pass' if percentage >= 40.0 else 'Fail'
+                
+                # Detailed Subject-wise Grading
+                subjects = []
+                max_config = config.get('max_marks', {}).get(active_test, {})
+                for event in sub_events:
+                    val = results['Marks'][event]['week_9']
+                    max_limit = max_config.get(event, 999)
+                    subjects.append((val, max_limit))
+                grading = get_grade(percentage, subjects)
+                
+                results['Marks']['Total'] = round(total_average, 2)
+                results['Marks']['Percentage'] = round(percentage, 2)
+                results['Marks']['Result'] = is_pass_status
+                results['Marks']['Grading'] = grading
+                
+                if active_test == 'OTHER_ASSESSMENT':
+                    total_for_best = round((total_average / max_val) * 40.0)
+                else:
+                    total_for_best = round(total_average)
             
-            results['Marks']['Total'] = round(total_average, 2)
-            results['Marks']['Percentage'] = round(percentage, 2)
-            results['Marks']['Result'] = is_pass_status
-            
-            total_for_best = round(total_average)
             evaluator_type = 'admin'
 
-        # ─── OTHER Trades Specific Calculations ───
-        elif active_test == 'OTHER_ASSESSMENT':
-            total_marks = 0
-            for sub in sub_events:
-                val = request.POST.get(sub)
-                if val:
-                    try:
-                        total_marks += int(val)
-                    except (ValueError, TypeError):
-                        pass
-            
-            # Convert 74 marks total to 40 scale
-            total_for_best = round((total_marks / 74 * 40)) if total_marks else 0
+        # ─── Screen Board Specific Calculations ───
+        elif active_test in ('DMV_SCREEN_BOARD', 'OPEM_SCREEN_BOARD', 'OTHER_SCREEN_BOARD'):
+            try:
+                mid_term = float(request.POST.get('Mid Term Test (50)', 0) or 0)
+            except (ValueError, TypeError):
+                mid_term = 0.0
+            try:
+                online = float(request.POST.get('Online Test (100)', 0) or 0)
+            except (ValueError, TypeError):
+                online = 0.0
+            try:
+                job = float(request.POST.get('Job (40)', 0) or 0)
+            except (ValueError, TypeError):
+                job = 0.0
+            try:
+                practical = float(request.POST.get('Practical (60)', 0) or 0)
+            except (ValueError, TypeError):
+                practical = 0.0
+
+            # Conversions
+            mid_term_conv = round(mid_term / 5.0, 2)
+            online_conv = round(online * 0.15, 2)
+            job_conv = round(job / 8.0, 2)
+            practical_conv = round(practical / 6.0, 2)
+
+            grand_total = round(mid_term_conv + online_conv + job_conv + practical_conv, 2)
+            percentage = round(grand_total * 2.5, 2)
+
+            subjects = [
+                (mid_term, 50),
+                (online, 100),
+                (job, 40),
+                (practical, 60)
+            ]
+            grading = get_grade(percentage, subjects)
+            result_status = 'Fail' if grading == 'Fail' else 'Pass'
+
+            results = {
+                'Mid Term Test (50)': mid_term,
+                'Convert In 10 Mks (Mid Term)': mid_term_conv,
+                'Online Test (100)': online,
+                'Convert In 15 Mks': online_conv,
+                'Job (40)': job,
+                'Convert In 05 Mks': job_conv,
+                'Practical (60)': practical,
+                'Convert In 10 Mks (Practical)': practical_conv,
+                'Grand Total (40)': grand_total,
+                '% Age': percentage,
+                'Grading': grading,
+                'Result': result_status
+            }
+            total_for_best = round(grand_total)
             evaluator_type = 'admin'
 
         elif department == 'C' and active_test == 'CS_RESULT':
@@ -381,45 +461,7 @@ class AgniveerEvaluateView(AnyStaffMixin, View):
             total_for_best = round(total_40)
             evaluator_type = 'admin'
 
-        elif department == 'C' and active_test == 'CS_ASSESSMENT':
-            max_config = config.get('max_marks', {}).get(active_test, {})
-            results = {'Marks': {}}
-            raw_total = 0
 
-            for event in sub_events:
-                raw_value = request.POST.get(event)
-                try:
-                    value = float(raw_value) if raw_value else 0
-                except (ValueError, TypeError):
-                    value = 0
-
-                max_limit = max_config.get(event, 999)
-                if value > max_limit:
-                    messages.warning(request, f"Value {value} for {event} exceeds max marks {max_limit}. Capped at limit.")
-                    value = max_limit
-                if value < 0:
-                    value = 0
-                results['Marks'][event] = value
-                raw_total += value
-
-            converted_40 = round((raw_total / 74) * 40, 2) if raw_total else 0
-            percentage = round((raw_total / 74) * 100, 2) if raw_total else 0
-            if percentage >= 80:
-                grading = 'A'
-            elif percentage >= 60:
-                grading = 'B'
-            elif percentage >= 46:
-                grading = 'C'
-            else:
-                grading = 'D'
-
-            results['Marks']['Raw Total (74)'] = round(raw_total, 2)
-            results['Marks']['Total (40)'] = min(converted_40, max_config.get('Total (40)', 40))
-            results['Marks']['Percentage'] = percentage
-            results['Marks']['Result'] = 'Pass' if percentage >= 50 else 'Fail'
-            results['Marks']['Grading'] = grading
-            total_for_best = round(results['Marks']['Total (40)'])
-            evaluator_type = 'admin'
 
         elif department == 'D' and active_test.startswith('CLK_'):
             max_config = config.get('max_marks', {}).get(active_test, {})
@@ -448,18 +490,13 @@ class AgniveerEvaluateView(AnyStaffMixin, View):
                 academic = results['Marks'].get('Academic Written (100)', 0)
                 computer = results['Marks'].get('Computer Project Work (25)', 0)
                 
-                academic_conv = round(academic * 0.40, 2)
-                computer_conv = round(computer * 0.40, 2)
+                raw_total = academic + computer
+                max_total = 125
+                score_event = 'Marks Obtained (125)'
+                marks_obtained = raw_total
                 
-                results['Marks']['Academic Converted (40)'] = academic_conv
-                results['Marks']['Computer Converted (10)'] = computer_conv
-                
-                marks_obtained = academic_conv + computer_conv
-                max_total = 50
-                score_event = 'Marks Obtained (50)'
-                
-                percentage = ((academic + computer) / 125) * 100 if (academic + computer) else 0
-                is_pass_status = 'Pass' if (academic >= 40 and computer >= 10) else 'Fail'
+                percentage = (raw_total / max_total) * 100 if raw_total else 0
+                is_pass_status = 'Pass' if (academic >= 40 and computer >= 10 and percentage >= 46) else 'Fail'
 
             elif active_test == 'CLK_WEEKLY_1':
                 tech = results['Marks'].get('Tech Written (50)', 0)
@@ -471,21 +508,13 @@ class AgniveerEvaluateView(AnyStaffMixin, View):
                 comp_total = comp_obj + comp_prac
                 results['Marks']['Computer Total (50)'] = comp_total
                 
-                tech_conv = round(tech * 0.40, 2)
-                academic_conv = round(academic * 0.40, 2)
-                comp_total_conv = round(comp_total * 0.40, 2)
-                
-                results['Marks']['Tech Converted (20)'] = tech_conv
-                results['Marks']['Academic Converted (20)'] = academic_conv
-                results['Marks']['Computer Total Converted (20)'] = comp_total_conv
-                
                 raw_total = tech + academic + comp_total
-                marks_obtained = round(raw_total * 0.46, 2)
-                max_total = 69
-                score_event = 'Marks Obtained (69)'
+                max_total = 150
+                score_event = 'Marks Obtained (150)'
+                marks_obtained = raw_total
                 
-                percentage = (raw_total / 150) * 100 if raw_total else 0
-                is_pass_status = 'Pass' if (tech >= 20 and academic >= 20 and comp_total >= 20 and typing >= 70) else 'Fail'
+                percentage = (raw_total / max_total) * 100 if raw_total else 0
+                is_pass_status = 'Pass' if (tech >= 20 and academic >= 20 and comp_total >= 20 and typing >= 70 and percentage >= 46) else 'Fail'
 
             elif active_test == 'CLK_WEEKLY_2':
                 tech_online = results['Marks'].get('Tech Online (115)', 0)
@@ -498,27 +527,13 @@ class AgniveerEvaluateView(AnyStaffMixin, View):
                 comp_total = comp_online + comp_prac
                 results['Marks']['Computer Total (50)'] = comp_total
                 
-                tech_online_conv = round(tech_online * 0.40, 2)
-                tech_proj_conv = round(tech_proj * 0.40, 2)
-                academic_conv = round(academic * 0.40, 2)
-                comp_online_conv = round(comp_online * 0.40, 2)
-                comp_prac_conv = round(comp_prac * 0.40, 2)
-                comp_total_conv = round(comp_total * 0.40, 2)
-                
-                results['Marks']['Tech Online Converted (46)'] = tech_online_conv
-                results['Marks']['Tech Proj Converted (10)'] = tech_proj_conv
-                results['Marks']['Academic Converted (34)'] = academic_conv
-                results['Marks']['Computer Online Converted (10)'] = comp_online_conv
-                results['Marks']['Computer Prac Converted (10)'] = comp_prac_conv
-                results['Marks']['Computer Total Converted (20)'] = comp_total_conv
-                
                 raw_total = tech_online + tech_proj + academic + comp_total
-                marks_obtained = round(raw_total * 0.46, 2)
-                max_total = 126.50
-                score_event = 'Marks Obtained (126.50)'
+                max_total = 275
+                score_event = 'Marks Obtained (275)'
+                marks_obtained = raw_total
                 
-                percentage = (raw_total / 275) * 100 if raw_total else 0
-                is_pass_status = 'Pass' if (tech_online >= 46 and tech_proj >= 10 and academic >= 34 and comp_total >= 20 and typing >= 70) else 'Fail'
+                percentage = (raw_total / max_total) * 100 if raw_total else 0
+                is_pass_status = 'Pass' if (tech_online >= 46 and tech_proj >= 10 and academic >= 34 and comp_total >= 20 and typing >= 70 and percentage >= 46) else 'Fail'
 
             else: # CLK_FINAL
                 tech_online = results['Marks'].get('Tech Online (115)', 0)
@@ -532,38 +547,48 @@ class AgniveerEvaluateView(AnyStaffMixin, View):
                 comp_total = comp_online + comp_prac
                 results['Marks']['Computer Total (50)'] = comp_total
                 
-                tech_online_conv = round(tech_online * 0.40, 2)
-                tech_proj_conv = round(tech_proj * 0.40, 2)
-                academic_conv = round(academic * 0.40, 2)
-                comp_online_conv = round(comp_online * 0.40, 2)
-                comp_prac_conv = round(comp_prac * 0.40, 2)
-                comp_total_conv = round(comp_total * 0.40, 2)
-                extempore_conv = round(extempore * 0.40, 2)
-                
-                results['Marks']['Tech Online Converted (46)'] = tech_online_conv
-                results['Marks']['Tech Proj Converted (10)'] = tech_proj_conv
-                results['Marks']['Academic Converted (34)'] = academic_conv
-                results['Marks']['Computer Online Converted (10)'] = comp_online_conv
-                results['Marks']['Computer Prac Converted (10)'] = comp_prac_conv
-                results['Marks']['Computer Total Converted (20)'] = comp_total_conv
-                results['Marks']['Extempore Converted (10)'] = extempore_conv
-                
                 raw_total = tech_online + tech_proj + academic + comp_total + extempore
-                marks_obtained = round(raw_total * 0.40, 2)
-                max_total = 120.00
-                score_event = 'Marks Obtained (120.00)'
+                converted_score = (raw_total / 300) * 40
+                max_total = 40
+                score_event = 'Marks Obtained (40)'
+                marks_obtained = converted_score
+                results['Marks']['raw_total'] = round(raw_total, 2)
                 
                 percentage = (raw_total / 300) * 100 if raw_total else 0
-                is_pass_status = 'Pass' if (tech_online >= 46 and tech_proj >= 10 and academic >= 34 and comp_total >= 20 and extempore >= 10 and typing >= 70) else 'Fail'
+                is_pass_status = 'Pass' if (tech_online >= 46 and tech_proj >= 10 and academic >= 34 and comp_total >= 20 and extempore >= 10 and typing >= 70 and percentage >= 46) else 'Fail'
 
-            if percentage >= 80:
-                grading = 'A'
-            elif percentage >= 60:
-                grading = 'B'
-            elif percentage >= 46:
-                grading = 'C'
-            else:
-                grading = 'D'
+            # Detailed Subject-wise Grading for Clerk tests
+            subjects = []
+            if active_test == 'CLK_INITIAL':
+                subjects = [
+                    (results['Marks'].get('Academic Written (100)', 0), 100),
+                    (results['Marks'].get('Computer Project Work (25)', 0), 25)
+                ]
+            elif active_test == 'CLK_WEEKLY_1':
+                subjects = [
+                    (results['Marks'].get('Tech Written (50)', 0), 50),
+                    (results['Marks'].get('Academic Written (50)', 0), 50),
+                    (results['Marks'].get('Computer Obj (25)', 0), 25),
+                    (results['Marks'].get('Computer Prac (25)', 0), 25)
+                ]
+            elif active_test == 'CLK_WEEKLY_2':
+                subjects = [
+                    (results['Marks'].get('Tech Online (115)', 0), 115),
+                    (results['Marks'].get('Tech Proj HRMS (25)', 0), 25),
+                    (results['Marks'].get('Academic Online (85)', 0), 85),
+                    (results['Marks'].get('Computer Online (25)', 0), 25),
+                    (results['Marks'].get('Computer Prac (25)', 0), 25)
+                ]
+            elif active_test == 'CLK_FINAL':
+                subjects = [
+                    (results['Marks'].get('Tech Online (115)', 0), 115),
+                    (results['Marks'].get('Tech Proj HRMS (25)', 0), 25),
+                    (results['Marks'].get('Academic Online (85)', 0), 85),
+                    (results['Marks'].get('Computer Online (25)', 0), 25),
+                    (results['Marks'].get('Computer Prac (25)', 0), 25),
+                    (results['Marks'].get('Extempore (25)', 0), 25)
+                ]
+            grading = get_grade(percentage, subjects)
 
             results['Marks'][score_event] = min(marks_obtained, max_total)
             results['Marks']['Percentage'] = round(percentage, 2)
@@ -574,69 +599,25 @@ class AgniveerEvaluateView(AnyStaffMixin, View):
             total_for_best = round(marks_obtained)
             evaluator_type = 'admin'
         
-        # ─── Battalion Screening Calculations ───
-        elif department == 'A' and active_test == 'BN_SCREENING':
-            max_config = config.get('max_marks', {}).get(active_test, {})
-            readonly_events = set(config.get('readonly_events', {}).get(active_test, []))
-            mark_events = [event for event in sub_events if event not in readonly_events]
-
-            results = {'Marks': {}}
-            for event in mark_events:
-                raw_value = request.POST.get(event)
-                try:
-                    value = float(raw_value) if raw_value else 0
-                except (ValueError, TypeError):
-                    value = 0
-
-                max_limit = max_config.get(event, 999)
-                if value > max_limit:
-                    messages.warning(request, f"Value {value} for {event} exceeds max marks {max_limit}. Capped at limit.")
-                    value = max_limit
-                if value < 0:
-                    value = 0
-                results['Marks'][event] = value
-
-            cmk = results['Marks'].get('COMMN MIL KNOWLEDGE (20)', 0)
-            wpn = results['Marks'].get('WPN & EQPT HANDLING (20)', 0)
-            ces = results['Marks'].get('BASIC TAC (40)', 0)
-            ppt = results['Marks'].get('PPT (10)', 0)
-            fire = results['Marks'].get('FIRE (10)', 0)
-            drill = results['Marks'].get('DRILL (20)', 0)
-            bpet = results['Marks'].get('BPET (10)', 0)
-
-            out_cmk = cmk
-            out_ces = ces
-            out_btt = round(ppt + drill + bpet, 2)
-            out_wpn = round(wpn + fire, 2)
-
-            total_120 = out_cmk + out_ces + out_btt + out_wpn
-            round_figure = round(total_120)
-
-            results['Marks']['COMMON MIL KNOWLEDGE (20)'] = out_cmk
-            results['Marks']['BASIC TACTICE (CES) (40)'] = out_ces
-            results['Marks']['TRADE PROFICIENCY (BTT) (40)'] = out_btt
-            results['Marks']['WPN & EQPT HANDLING (20)'] = out_wpn
-            results['Marks']['TOTAL (120)'] = round(total_120, 2)
-            results['Marks']['ROUND FIGURE(120)'] = round_figure
-
-            total_for_best = round_figure
-            evaluator_type = 'admin'
-
         elif department == 'A':
             for col in columns:
                 results[col] = {}
                 col_total = 0
                 for event in sub_events:
                     val = request.POST.get(f"{col}_{event}")
+                    val_txt = request.POST.get(f"{col}_{event}_txt")
                     if val:
                         try:
-                            val = int(val)
-                            results[col][event] = val
-                            col_total += val
+                            val_num = float(val) if '.' in val else int(val)
+                            results[col][event] = val_num
+                            col_total += val_num
                         except ValueError:
                             results[col][event] = None
                     else:
                         results[col][event] = None
+                    
+                    if val_txt:
+                        results[col][f"{event}_txt"] = val_txt
                 results[col]['TOTAL POINT'] = col_total
                 
                 # Firing test conversion (out of 56, converted to 100)
@@ -665,33 +646,54 @@ class AgniveerEvaluateView(AnyStaffMixin, View):
                     val = request.POST.get(event)
                     if val:
                         try:
-                            results['Marks'][event] = int(val)
+                            results['Marks'][event] = float(val) if '.' in val else int(val)
                         except ValueError:
                             results['Marks'][event] = None
                     else:
                         results['Marks'][event] = None
                 
                 if active_test == 'MR_III':
-                    col_total = sum(filter(None, results['Marks'].values()))
+                    col_total = sum(float(x) for x in results['Marks'].values() if x is not None)
                     converted = round((col_total / 150) * 100) if col_total else 0
                     results['Marks']['CONVERTED 100 MKS'] = converted
                     total_for_best = converted
                 elif active_test == 'FC_All':
-                    prac_total = sum(filter(None, [results['Marks'].get('TGT IDEN'), results['Marks'].get('JUDGING DIST'), results['Marks'].get('OBSN TRG')]))
+                    prac_total = sum(float(x) for x in [results['Marks'].get('TGT IDEN'), results['Marks'].get('JUDGING DIST'), results['Marks'].get('OBSN TRG')] if x is not None)
                     results['Marks']['FC Practical Total'] = prac_total
                     
-                    attempt1 = results['Marks'].get('FC Online 1st Attempt') or 0
-                    attempt2 = results['Marks'].get('FC Online 2nd Attempt') or 0
+                    attempt1 = float(results['Marks'].get('FC Online 1st Attempt') or 0)
+                    attempt2 = float(results['Marks'].get('FC Online 2nd Attempt') or 0)
                     best_online = max(attempt1, attempt2)
                     results['Marks']['FC Online Best Attempt'] = best_online
                     
-                    camp_trg = results['Marks'].get('CAMP TRG') or 0
+                    camp_trg = float(results['Marks'].get('CAMP TRG') or 0)
                     
                     total_for_best = prac_total + best_online + camp_trg
                 else:
-                    total_for_best = sum(filter(None, results['Marks'].values()))
+                    total_for_best = sum(float(x) for x in results['Marks'].values() if x is not None)
+            
+            # Calculate overall percentage and grading for Department A
+            max_marks_map = {
+                'PPT': 100,
+                'BPET': 100,
+                'Firing': 100,
+                'DST': 100,
+                'MR_III': 100,
+                'BFC': 240,
+                'PDP': 50,
+                'FC_All': 90,
+            }
+            sheet_max_marks = max_marks_map.get(active_test, 100)
+            percentage = (total_for_best / sheet_max_marks * 100) if sheet_max_marks else 0
+            grading = get_grade(percentage, passing_pct=40)
+            
+            if not columns:
+                results['Marks']['Grading'] = grading
+            else:
+                results['Grading'] = grading
                 
             evaluator_type = 'admin'
+
         else:
             evaluator_type = self.get_evaluator_type(request.user)
             # Legacy NCO/JCO/Officer logic fallback
@@ -731,10 +733,10 @@ class AgniveerEvaluateView(AnyStaffMixin, View):
             from django.urls import reverse
             return redirect(reverse('departments:agniveer_detail', args=[pk]) + f"?test={active_test}")
 
-        # Update JSONField
         if (department == 'A' or 
             active_test in ('DMV_RESULT', 'OPEM_RESULT', 'OPEM_ASSESSMENT', 'DMV_ASSESSMENT', 
-                            'OPEM_PRACTICAL', 'DMV_PRACTICAL', 'OPEM_MAINTENANCE', 'DMV_DRIVING') or 
+                            'OPEM_PRACTICAL', 'DMV_PRACTICAL', 'OPEM_MAINTENANCE', 'DMV_DRIVING',
+                            'OTHER_ASSESSMENT', 'DMV_SCREEN_BOARD', 'OPEM_SCREEN_BOARD', 'OTHER_SCREEN_BOARD') or 
             (department == 'C' and active_test in ('CS_RESULT', 'CS_CLERK_RESULT', 'CS_ASSESSMENT')) or 
             (department == 'D' and active_test.startswith('CLK_'))):
             sheet.sub_event_results = results

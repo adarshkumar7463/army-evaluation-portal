@@ -198,18 +198,4 @@ class AgniveerForm(forms.ModelForm):
 
 
 class AssignTrainerForm(forms.ModelForm):
-    def __init__(self, *args, **kwargs):
-        self.user = kwargs.pop('user', None)
-        super().__init__(*args, **kwargs)
-        trainers_qs = CustomUser.objects.filter(
-            role__in=['trainer_nco', 'trainer_jco', 'trainer_officer'],
-            is_active=True
-        )
-        if self.user and self.user.is_department:
-            trainers_qs = trainers_qs.filter(department=self.user.get_department_code())
-        self.fields['assigned_trainers'].queryset = trainers_qs
-        self.fields['assigned_trainers'].widget.attrs.update({'class': 'form-control', 'size': 8})
-
-    class Meta:
-        model = Agniveer
-        fields = ['assigned_trainers']
+    pass

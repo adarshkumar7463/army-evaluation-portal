@@ -29,6 +29,7 @@ class EvaluationSheet(models.Model):
         ('driving', 'Final Driving Test'),
         ('maintenance', 'Maintenance Test'),
         ('clerk_result', 'Final Result (Clerk)'),
+        ('screen_board', 'Screen Board'),
     ]
 
     TEST_TYPE_CHOICES = [
@@ -53,6 +54,10 @@ class EvaluationSheet(models.Model):
         ('CMK_SHEET', 'Common Mil Knowledge Sheet'),
         ('OPEM_ASSESSMENT', 'OPEM Final Assessment'),
         ('DMV_ASSESSMENT', 'DMV Final Assessment'),
+        ('OTHER_ASSESSMENT', 'OTHER Final Assessment'),
+        ('DMV_SCREEN_BOARD', 'DMV Screen Board'),
+        ('OPEM_SCREEN_BOARD', 'OPEM Screen Board'),
+        ('OTHER_SCREEN_BOARD', 'OTHER Screen Board'),
     ]
 
     agniveer = models.ForeignKey(Agniveer, on_delete=models.CASCADE, related_name='evaluations')
@@ -109,6 +114,18 @@ class EvaluationSheet(models.Model):
         return self.get_nco_marks() + self.get_jco_marks() + self.get_officer_marks()
 
     def get_max_marks(self):
+        if self.department == 'A':
+            max_marks_map = {
+                'PPT': 100,
+                'BPET': 100,
+                'Firing': 100,
+                'DST': 100,
+                'MR_III': 100,
+                'BFC': 240,
+                'PDP': 50,
+                'FC_All': 90,
+            }
+            return max_marks_map.get(self.test_type, 100)
         from .constants import get_dept_config
         if self.department == 'B' and self.agniveer:
             from .constants import DEPT_CONFIG
@@ -146,7 +163,8 @@ class EvaluationSheet(models.Model):
         return round((total / max_marks) * 100, 2) if max_marks else 0
 
     def is_pass(self):
-        return self.get_percentage() >= 50
+        passing_percentage = 40 if self.department == 'A' else 50
+        return self.get_percentage() >= passing_percentage
 
     def is_complete(self):
         return self.marks.count() >= 3

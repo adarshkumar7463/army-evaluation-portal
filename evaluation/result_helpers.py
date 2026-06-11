@@ -1,9 +1,50 @@
-def get_grade(percentage):
-    if percentage >= 70:
-        return 'A'
-    if percentage >= 60:
-        return 'B'
-    return 'C'
+def get_grade(percentage, subjects=None, passing_pct=46):
+    if percentage >= 80:
+        tentative_grade = 'Distinction'
+    elif percentage >= 70:
+        tentative_grade = 'A'
+    elif percentage >= 60:
+        tentative_grade = 'B'
+    elif percentage >= passing_pct:
+        tentative_grade = 'C'
+    else:
+        return 'Fail'
+
+    if not subjects:
+        return tentative_grade
+
+    def check_subjects_min(min_pct):
+        for score, max_val in subjects:
+            if max_val > 0:
+                if (score / max_val) * 100 < (min_pct - 1e-9):
+                    return False
+        return True
+
+    if tentative_grade == 'Distinction':
+        if check_subjects_min(75):
+            return 'Distinction'
+        else:
+            tentative_grade = 'A'
+
+    if tentative_grade == 'A':
+        if check_subjects_min(60):
+            return 'A'
+        else:
+            tentative_grade = 'B'
+
+    if tentative_grade == 'B':
+        if check_subjects_min(50):
+            return 'B'
+        else:
+            tentative_grade = 'C'
+
+    if tentative_grade == 'C':
+        if check_subjects_min(35):
+            return 'C'
+        else:
+            return 'Fail'
+
+    return 'Fail'
 
 
 def _marks_from_sheet(sheet):
@@ -48,6 +89,20 @@ def build_tts_result_row(agniveer, sheets):
     grand_total = round(online_conv + job_conv + practical_conv, 2)
     percentage = round((grand_total / 40) * 100, 2) if grand_total else 0
 
+    subjects = []
+    if trade == 'DMV':
+        subjects = [
+            (online, 100),
+            (practical, 50),
+            (job, 50)
+        ]
+    elif trade == 'OPEM':
+        subjects = [
+            (online, 100),
+            (practical, 50),
+            (job, 50)
+        ]
+
     return {
         'agniveer': agniveer,
         'army_no': agniveer.agniveer_no or agniveer.enrollment_number,
@@ -63,7 +118,7 @@ def build_tts_result_row(agniveer, sheets):
         'practical_conv': practical_conv,
         'grand_total': grand_total,
         'percentage': percentage,
-        'grading': get_grade(percentage),
+        'grading': get_grade(percentage, subjects),
         'is_pass': percentage >= 50,
     }
 
@@ -99,14 +154,70 @@ def build_clerk_result_row(agniveer, sheets):
     sheet_map = {sheet.test_type: sheet for sheet in sheets}
     sheet = sheet_map.get('CLK_FINAL') or sheet_map.get('CLK_WEEKLY_2') or sheet_map.get('CLK_WEEKLY_1') or sheet_map.get('CLK_INITIAL')
     marks = _marks_from_sheet(sheet)
-    total = (
-        _num(marks.get('Marks Obtained (120.00)')) or
-        _num(marks.get('Marks Obtained (126.50)')) or
-        _num(marks.get('Marks Obtained (69)')) or
-        _num(marks.get('Marks Obtained (50)')) or
-        _num(sheet.get_total_marks() if sheet else 0)
-    )
-    max_total = _num(sheet.get_max_marks() if sheet else 0) or 40
+    total = 0
+    max_total = 40
+    subjects = []
+    if sheet:
+        test_type = sheet.test_type
+        if test_type == 'CLK_INITIAL':
+            academic = _num(marks.get('Academic Written (100)'))
+            comp_proj = _num(marks.get('Computer Project Work (25)'))
+            total = academic + comp_proj
+            max_total = 125
+            subjects = [
+                (academic, 100),
+                (comp_proj, 25)
+            ]
+        elif test_type == 'CLK_WEEKLY_1':
+            tech = _num(marks.get('Tech Written (50)'))
+            academic = _num(marks.get('Academic Written (50)'))
+            comp_obj = _num(marks.get('Computer Obj (25)'))
+            comp_prac = _num(marks.get('Computer Prac (25)'))
+            total = tech + academic + comp_obj + comp_prac
+            max_total = 150
+            subjects = [
+                (tech, 50),
+                (academic, 50),
+                (comp_obj, 25),
+                (comp_prac, 25)
+            ]
+        elif test_type == 'CLK_WEEKLY_2':
+            tech_online = _num(marks.get('Tech Online (115)'))
+            tech_proj = _num(marks.get('Tech Proj HRMS (25)'))
+            academic = _num(marks.get('Academic Online (85)'))
+            comp_online = _num(marks.get('Computer Online (25)'))
+            comp_prac = _num(marks.get('Computer Prac (25)'))
+            total = tech_online + tech_proj + academic + comp_online + comp_prac
+            max_total = 275
+            subjects = [
+                (tech_online, 115),
+                (tech_proj, 25),
+                (academic, 85),
+                (comp_online, 25),
+                (comp_prac, 25)
+            ]
+        elif test_type == 'CLK_FINAL':
+            tech_online = _num(marks.get('Tech Online (115)'))
+            tech_proj = _num(marks.get('Tech Proj HRMS (25)'))
+            academic = _num(marks.get('Academic Online (85)'))
+            comp_online = _num(marks.get('Computer Online (25)'))
+            comp_prac = _num(marks.get('Computer Prac (25)'))
+            extempore = _num(marks.get('Extempore (25)'))
+            raw_total = tech_online + tech_proj + academic + comp_online + comp_prac + extempore
+            total = (raw_total / 300) * 40
+            max_total = 40
+            subjects = [
+                (tech_online, 115),
+                (tech_proj, 25),
+                (academic, 85),
+                (comp_online, 25),
+                (comp_prac, 25),
+                (extempore, 25)
+            ]
+    else:
+        total = 0
+        max_total = 40
+
     percentage = round((total / max_total) * 100, 2) if max_total else 0
     return {
         'agniveer': agniveer,
@@ -118,8 +229,8 @@ def build_clerk_result_row(agniveer, sheets):
         'grand_total': round(total, 2),
         'max_total': max_total,
         'percentage': percentage,
-        'grading': get_grade(percentage),
-        'is_pass': percentage >= 50,
+        'grading': get_grade(percentage, subjects),
+        'is_pass': percentage >= 46,
     }
 
 
@@ -158,8 +269,8 @@ def build_battalion_result_row(agniveer, sheets):
         'grand_total': conv_20,
         'max_total': 20,
         'percentage': percentage,
-        'grading': get_grade(percentage),
-        'is_pass': percentage >= 50,
+        'grading': get_grade(percentage, passing_pct=40),
+        'is_pass': percentage >= 40,
     }
 
 

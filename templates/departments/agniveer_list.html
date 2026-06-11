@@ -319,7 +319,7 @@
           <th>Company</th>
           {% endif %}
           <th>Trade</th>
-          {% if is_trainer or is_department %}
+          {% if is_department %}
           <th style="text-align:center;">Eval Progress</th>
           {% endif %}
           <th>Actions</th>
@@ -348,7 +348,7 @@
           <td><span class="badge bg-success" style="font-size: 10px;">{{ a.company }}</span></td>
           {% endif %}
           <td>{{ a.trade|default:"—" }}</td>
-          {% if is_trainer or is_department %}
+          {% if is_department %}
           <td style="text-align:center;">
             <span class="badge {% if a.eval_count == 0 %}bg-secondary{% elif a.is_fully_evaluated %}bg-success{% else %}bg-warning text-dark{% endif %}" style="font-size: 11px;">
               {{ a.eval_count|default:0 }}/{{ a.eval_total|default:0 }} Evaluated
@@ -362,7 +362,7 @@
                 <i class="bi bi-file-earmark-text"></i>
               </a>
               {% endif %}
-              {% if is_trainer or is_department or is_commander or is_g_head %}
+              {% if is_department or is_commander or is_g_head %}
               <a href="{% url 'evaluation:evaluate_agniveer' a.pk %}" class="btn btn-army-outline" style="padding:4px 8px;font-size:12px;" title="Evaluation Sheet">
                 <i class="bi bi-clipboard-check"></i>
               </a>
@@ -372,12 +372,17 @@
                 <i class="bi bi-pencil-fill"></i>
               </a>
               {% endif %}
+              {% if is_commander or is_g_head or is_department %}
+              <a href="{% url 'accounts:profile' %}?agniveer={{ a.pk }}" class="btn btn-army" style="padding:4px 8px;font-size:12px;" title="View Profile">
+                <i class="bi bi-person-circle"></i>
+              </a>
+              {% endif %}
             </div>
           </td>
         </tr>
         {% empty %}
         <tr>
-          <td colspan="{% if is_trainer or is_department %}8{% else %}7{% endif %}">
+          <td colspan="{% if is_department %}8{% else %}7{% endif %}">
             <div class="empty-state text-center py-5">
               <i class="bi bi-people" style="font-size: 40px; opacity: 0.5;"></i>
               <p class="mt-2" style="color: var(--text-muted);">No Agniveers found. {% if is_registration_office %}<a href="{% url 'departments:registration_dashboard' %}" style="color: var(--army-olive);">Go to Registration Dashboard →</a>{% endif %}</p>

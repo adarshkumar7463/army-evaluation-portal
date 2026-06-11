@@ -142,8 +142,8 @@ class Command(BaseCommand):
                         status='active',
                         registered_by=dept_user,
                     )
-                    # Assign trainers if available
-                    if dept in trainers:
+                    # Assign trainers if available (guarded — field may be removed)
+                    if dept in trainers and hasattr(a, 'assigned_trainers'):
                         a.assigned_trainers.set(trainers[dept])
                     created_agniveers[dept].append(a)
                     agniveer_count += 1

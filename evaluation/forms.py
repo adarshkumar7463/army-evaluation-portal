@@ -31,13 +31,8 @@ class EvaluationSheetForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
 
         if self.user:
-            if self.user.is_department:
-                # Allow all agniveers for department users to evaluate
-                self.fields['agniveer'].queryset = Agniveer.objects.all()
-            elif self.user.is_trainer:
-                self.fields['agniveer'].queryset = self.user.assigned_agniveers.all()
-            else:
-                self.fields['agniveer'].queryset = Agniveer.objects.all()
+            # Hide trainer-specific assigned_agniveers logic — treat trainers like department users
+            self.fields['agniveer'].queryset = Agniveer.objects.all()
 
         # Limit test_type choices by category
         on_field_types = ['physical', 'weapon', 'field']

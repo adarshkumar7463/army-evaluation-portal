@@ -15,45 +15,27 @@ CS_CLERK_RESULT_TRADES = [
 ]
 
 CS_ASSESSMENT_EVENTS = [
-    'Progressive knowledge of trade (04)',
-    'Creativity during OJT (04)',
-    'Quality of work (04)',
-    'Decision making during GP task (06)',
-    'Initiative (04)',
-    'Willingness to learn (04)',
-    'Estimation of store list and eqpt (04)',
-    'Adherence to orders during work execution (04)',
-    'Timely completion of assigned task (02)',
-    'Handling of trade eqpt/tools in assigned task (02)',
-    'Grasping subject (03)',
-    'Practical Application (04)',
-    'Dedication to Org (06)',
-    'Level of Skills Achieved (08)',
-    'Motivation (04)',
-    'Courage (03)',
-    'Timely Completion of Task (06)',
-    'Carryout Task Unsupervised (02)',
+    'Initiative & Drive (09)',
+    'OP Orientation (15)',
+    'Team Spirit (10)',
+    'OP Dply & Uses of Trade Eqpt (08)',
+    'Adaptibility (10)',
+    'Dedication to Org (07)',
+    'Spl Achievement (07)',
+    'Motivation and Courage (08)',
+    'Dependability (12)',
 ]
 
 CS_ASSESSMENT_MAX_MARKS = {
-    'Progressive knowledge of trade (04)': 4,
-    'Creativity during OJT (04)': 4,
-    'Quality of work (04)': 4,
-    'Decision making during GP task (06)': 6,
-    'Initiative (04)': 4,
-    'Willingness to learn (04)': 4,
-    'Estimation of store list and eqpt (04)': 4,
-    'Adherence to orders during work execution (04)': 4,
-    'Timely completion of assigned task (02)': 2,
-    'Handling of trade eqpt/tools in assigned task (02)': 2,
-    'Grasping subject (03)': 3,
-    'Practical Application (04)': 4,
-    'Dedication to Org (06)': 6,
-    'Level of Skills Achieved (08)': 8,
-    'Motivation (04)': 4,
-    'Courage (03)': 3,
-    'Timely Completion of Task (06)': 6,
-    'Carryout Task Unsupervised (02)': 2,
+    'Initiative & Drive (09)': 9,
+    'OP Orientation (15)': 15,
+    'Team Spirit (10)': 10,
+    'OP Dply & Uses of Trade Eqpt (08)': 8,
+    'Adaptibility (10)': 10,
+    'Dedication to Org (07)': 7,
+    'Spl Achievement (07)': 7,
+    'Motivation and Courage (08)': 8,
+    'Dependability (12)': 12,
 }
 
 DEPT_CONFIG = {
@@ -76,7 +58,6 @@ DEPT_CONFIG = {
             ('BFC', 'BFC Test'),
             ('PDP', 'PDP Test'),
             ('FC_All', 'FC Practical, FC Online & Camp Trg'),
-            ('BN_SCREENING', 'Battalion Screening'),
         ],
 
 
@@ -90,7 +71,6 @@ DEPT_CONFIG = {
             'BFC': 'assessment',
             'PDP': 'assessment',
             'FC_All': 'field',
-            'BN_SCREENING': 'screening',
         },
         'test_config': {
             'PPT': {
@@ -123,56 +103,63 @@ DEPT_CONFIG = {
             'BFC': ['Hindi (Theory)', 'Hindi (TMA)', 'English (Theory)', 'English (TMA)'],
             'PDP': ['PDP Test'],
             'FC_All': ['TGT IDEN', 'JUDGING DIST', 'OBSN TRG', 'FC Online 1st Attempt', 'FC Online 2nd Attempt', 'FC Online Best Attempt', 'CAMP TRG'],
-            'BN_SCREENING': [
-                'COMMN MIL KNOWLEDGE (20)',
-                'WPN & EQPT HANDLING (20)',
-                'BASIC TAC (40)',
-                'PPT (10)',
-                'FIRE (10)',
-                'DRILL (20)',
-                'BPET (10)',
-                'COMMON MIL KNOWLEDGE (20)',
-                'BASIC TACTICE (CES) (40)',
-                'TRADE PROFICIENCY (BTT) (40)',
-                'WPN & EQPT HANDLING (20)',
-                'TOTAL (120)',
-                'ROUND FIGURE(120)',
-            ],
         },
         'max_marks': {
-            'BN_SCREENING': {
-                'COMMN MIL KNOWLEDGE (20)': 20,
-                'WPN & EQPT HANDLING (20)': 20,
-                'BASIC TAC (40)': 40,
-                'PPT (10)': 10,
-                'FIRE (10)': 10,
-                'DRILL (20)': 20,
-                'BPET (10)': 10,
-                'COMMON MIL KNOWLEDGE (20)': 20,
-                'BASIC TACTICE (CES) (40)': 40,
-                'TRADE PROFICIENCY (BTT) (40)': 40,
-                'WPN & EQPT HANDLING (20)': 20,
-                'TOTAL (120)': 120,
-                'ROUND FIGURE(120)': 120,
+            'PPT': {
+                '2.4 KM Run': 20,
+                '100M Sprint': 20,
+                'Chin Up': 20,
+                'Sit Up': 10,
+                'Toe Touch': 20,
+                '5 Mtr Shuttle': 10,
+            },
+            'BPET': {
+                '5 KM Run': 40,
+                '60M Sprint': 20,
+                "9' Ditch": 10,
+                "H' Rope": 20,
+                "V' Rope": 10,
+            },
+            'Firing': {
+                '300M SFTS': 4,
+                '100M Reflex': 12,
+                '50M SU': 9,
+                '200M SFTS': 12,
+                '100M LU': 10,
+                '100M SFTS (Night)': 4,
+                '15M BC': 5,
+            },
+            'DST': {
+                'Turn Out & Bearing': 20,
+                'WOC': 20,
+                'DST W/O Arm': 60,
+                'DST with Arm': 60,
+            },
+            'BFC': {
+                'Hindi (Theory)': 100,
+                'Hindi (TMA)': 20,
+                'English (Theory)': 100,
+                'English (TMA)': 20,
+            },
+            'PDP': {
+                'PDP Test': 50,
+            },
+            'MR_III': {
+                'Outdoor Test': 50,
+                'Indoor Test Written': 90,
+                'Project Wks': 10,
+            },
+            'FC_All': {
+                'TGT IDEN': 10,
+                'JUDGING DIST': 10,
+                'OBSN TRG': 10,
+                'FC Online 1st Attempt': 30,
+                'FC Online 2nd Attempt': 30,
+                'FC Online Best Attempt': 30,
+                'CAMP TRG': 30,
             }
         },
         'readonly_events': {
-            'BN_SCREENING': [
-                'COMMON MIL KNOWLEDGE (20)',
-                'BASIC TACTICE (CES) (40)',
-                'TRADE PROFICIENCY (BTT) (40)',
-                'WPN & EQPT HANDLING (20)',
-                'TOTAL (120)',
-                'ROUND FIGURE(120)',
-            ]
-        },
-        # Screening output mapping: maps existing tests → screening categories
-        # Used by build_battalion_result_row() to auto-calculate the screening sheet
-        'screening_mapping': {
-            'COMMON MIL KNOWLEDGE (20)': {'tests': ['MR_III', 'BFC'], 'max_out': 20},
-            'BASIC TACTICE (CES) (40)': {'tests': ['DST', 'FC_All'], 'max_out': 40},
-            'TRADE PROFICIENCY (BTT) (40)': {'tests': ['PPT', 'BPET', 'PDP'], 'max_out': 40},
-            'WPN & EQPT HANDLING (20)': {'tests': ['Firing'], 'max_out': 20},
         }
     },
     'B': {
@@ -206,18 +193,21 @@ DEPT_CONFIG = {
                     ('practical', 'Final Practical Test'),
                     ('driving', 'Final Driving Test'),
                     ('assessment', 'Assessment'),
+                    ('screen_board', 'Screen Board'),
                     ('result', 'Final Result'),
                 ],
                 'test_types': [
                     ('DMV_PRACTICAL', 'Final Practical Test'),
                     ('DMV_DRIVING', 'Final Driving Test'),
                     ('DMV_ASSESSMENT', 'Final Assessment'),
+                    ('DMV_SCREEN_BOARD', 'Screen Board'),
                     ('DMV_RESULT', 'Final Result Sheet'),
                 ],
                 'test_to_category': {
                     'DMV_PRACTICAL': 'practical',
                     'DMV_DRIVING': 'driving',
                     'DMV_ASSESSMENT': 'assessment',
+                    'DMV_SCREEN_BOARD': 'screen_board',
                     'DMV_RESULT': 'result',
                 },
                 'sub_events': {
@@ -254,6 +244,19 @@ DEPT_CONFIG = {
                         'Timely completion of task (03)',
                         'Ability to carry out task unsupervised (03)',
                         'Feedback after completion of task (02)'
+                    ],
+                    'DMV_SCREEN_BOARD': [
+                        'Mid Term Test (50)',
+                        'Convert In 10 Mks (Mid Term)',
+                        'Online Test (100)',
+                        'Convert In 15 Mks',
+                        'Job (40)',
+                        'Convert In 05 Mks',
+                        'Practical (60)',
+                        'Convert In 10 Mks (Practical)',
+                        'Grand Total (40)',
+                        '% Age',
+                        'Grading'
                     ],
                     'DMV_RESULT': [
                         'Online Test (100)',
@@ -300,12 +303,35 @@ DEPT_CONFIG = {
                         'Ability to carry out task unsupervised (03)': 3,
                         'Feedback after completion of task (02)': 2
                     },
+                    'DMV_SCREEN_BOARD': {
+                        'Mid Term Test (50)': 50,
+                        'Convert In 10 Mks (Mid Term)': 10,
+                        'Online Test (100)': 100,
+                        'Convert In 15 Mks': 15,
+                        'Job (40)': 40,
+                        'Convert In 05 Mks': 5,
+                        'Practical (60)': 60,
+                        'Convert In 10 Mks (Practical)': 10,
+                        'Grand Total (40)': 40,
+                        '% Age': 100
+                    },
                     'DMV_RESULT': {
                         'Online Test (100)': 100,
                         'Practical Test (50)': 50,
                         'Driving Test (50)': 50,
                         'Total (200)': 200
                     }
+                },
+                'readonly_events': {
+                    'DMV_SCREEN_BOARD': [
+                        'Convert In 10 Mks (Mid Term)',
+                        'Convert In 15 Mks',
+                        'Convert In 05 Mks',
+                        'Convert In 10 Mks (Practical)',
+                        'Grand Total (40)',
+                        '% Age',
+                        'Grading'
+                    ]
                 }
             },
             'OPEM': {
@@ -314,18 +340,21 @@ DEPT_CONFIG = {
                     ('OPEM_MAINTENANCE', 'Maintenance Test'),
                     ('OPEM_PRACTICAL', 'Practical Test'),
                     ('OPEM_ASSESSMENT', 'Final Assessment'),
+                    ('OPEM_SCREEN_BOARD', 'Screen Board'),
                     ('OPEM_RESULT', 'Final Result')
                 ],
                 'categories': [
                     ('maintenance', 'Maintenance'),
                     ('practical', 'Practical'),
                     ('assessment', 'Assessment'),
+                    ('screen_board', 'Screen Board'),
                     ('result', 'Result')
                 ],
                 'test_to_category': {
                     'OPEM_MAINTENANCE': 'maintenance',
                     'OPEM_PRACTICAL': 'practical',
                     'OPEM_ASSESSMENT': 'assessment',
+                    'OPEM_SCREEN_BOARD': 'screen_board',
                     'OPEM_RESULT': 'result'
                 },
                 'sub_events': {
@@ -367,6 +396,19 @@ DEPT_CONFIG = {
                         'JCB - CHECK BEFORE START (02 MKS)',
                         'JCB - CONSTR OF DITCH 10X12 MTR (04 MKS)',
                         'JCB - LOADING OF LOOSE SOIL IN TIPPER (04 MKS)'
+                    ],
+                    'OPEM_SCREEN_BOARD': [
+                        'Mid Term Test (50)',
+                        'Convert In 10 Mks (Mid Term)',
+                        'Online Test (100)',
+                        'Convert In 15 Mks',
+                        'Job (40)',
+                        'Convert In 05 Mks',
+                        'Practical (60)',
+                        'Convert In 10 Mks (Practical)',
+                        'Grand Total (40)',
+                        '% Age',
+                        'Grading'
                     ],
                     'OPEM_RESULT': [
                         'Written Test (100)',
@@ -418,6 +460,18 @@ DEPT_CONFIG = {
                         'JCB - CONSTR OF DITCH 10X12 MTR (04 MKS)': 4,
                         'JCB - LOADING OF LOOSE SOIL IN TIPPER (04 MKS)': 4
                     },
+                    'OPEM_SCREEN_BOARD': {
+                        'Mid Term Test (50)': 50,
+                        'Convert In 10 Mks (Mid Term)': 10,
+                        'Online Test (100)': 100,
+                        'Convert In 15 Mks': 15,
+                        'Job (40)': 40,
+                        'Convert In 05 Mks': 5,
+                        'Practical (60)': 60,
+                        'Convert In 10 Mks (Practical)': 10,
+                        'Grand Total (40)': 40,
+                        '% Age': 100
+                    },
                     'OPEM_RESULT': {
                         'Written Test (100)': 100,
                         'Practical Test (50)': 50,
@@ -425,18 +479,32 @@ DEPT_CONFIG = {
                         'Total (200)': 200
                     }
                 },
+                'readonly_events': {
+                    'OPEM_SCREEN_BOARD': [
+                        'Convert In 10 Mks (Mid Term)',
+                        'Convert In 15 Mks',
+                        'Convert In 05 Mks',
+                        'Convert In 10 Mks (Practical)',
+                        'Grand Total (40)',
+                        '% Age',
+                        'Grading'
+                    ]
+                },
                 'total_marks': 40
             },
             'OTHER': {
                 'name': 'TTS - Other Trades',
                 'test_types': [
-                    ('OTHER_ASSESSMENT', 'Final Assessment')
+                    ('OTHER_ASSESSMENT', 'Final Assessment'),
+                    ('OTHER_SCREEN_BOARD', 'Screen Board'),
                 ],
                 'categories': [
-                    ('assessment', 'Assessment')
+                    ('assessment', 'Assessment'),
+                    ('screen_board', 'Screen Board'),
                 ],
                 'test_to_category': {
-                    'OTHER_ASSESSMENT': 'assessment'
+                    'OTHER_ASSESSMENT': 'assessment',
+                    'OTHER_SCREEN_BOARD': 'screen_board',
                 },
                 'sub_events': {
                     'OTHER_ASSESSMENT': [
@@ -458,6 +526,19 @@ DEPT_CONFIG = {
                         'Courage (03)',
                         'Timely Completion of Task (06)',
                         'Carryout Task Unsupervised (02)'
+                    ],
+                    'OTHER_SCREEN_BOARD': [
+                        'Mid Term Test (50)',
+                        'Convert In 10 Mks (Mid Term)',
+                        'Online Test (100)',
+                        'Convert In 15 Mks',
+                        'Job (40)',
+                        'Convert In 05 Mks',
+                        'Practical (60)',
+                        'Convert In 10 Mks (Practical)',
+                        'Grand Total (40)',
+                        '% Age',
+                        'Grading'
                     ]
                 },
                 'max_marks': {
@@ -480,7 +561,30 @@ DEPT_CONFIG = {
                         'Courage (03)': 3,
                         'Timely Completion of Task (06)': 6,
                         'Carryout Task Unsupervised (02)': 2
+                    },
+                    'OTHER_SCREEN_BOARD': {
+                        'Mid Term Test (50)': 50,
+                        'Convert In 10 Mks (Mid Term)': 10,
+                        'Online Test (100)': 100,
+                        'Convert In 15 Mks': 15,
+                        'Job (40)': 40,
+                        'Convert In 05 Mks': 5,
+                        'Practical (60)': 60,
+                        'Convert In 10 Mks (Practical)': 10,
+                        'Grand Total (40)': 40,
+                        '% Age': 100
                     }
+                },
+                'readonly_events': {
+                    'OTHER_SCREEN_BOARD': [
+                        'Convert In 10 Mks (Mid Term)',
+                        'Convert In 15 Mks',
+                        'Convert In 05 Mks',
+                        'Convert In 10 Mks (Practical)',
+                        'Grand Total (40)',
+                        '% Age',
+                        'Grading'
+                    ]
                 },
                 'total_marks': 40
             }
@@ -593,7 +697,7 @@ DEPT_CONFIG = {
             'CLK_INITIAL': [
                 'Academic Written (100)',
                 'Computer Project Work (25)',
-                'Marks Obtained (50)',
+                'Marks Obtained (125)',
                 'Percentage',
                 'Pass/Fail',
             ],
@@ -604,7 +708,7 @@ DEPT_CONFIG = {
                 'Computer Prac (25)',
                 'Computer Total (50)',
                 'Typing 20 WPM',
-                'Marks Obtained (69)',
+                'Marks Obtained (150)',
                 'Percentage',
                 'Result',
                 'Grading',
@@ -617,7 +721,7 @@ DEPT_CONFIG = {
                 'Computer Prac (25)',
                 'Computer Total (50)',
                 'Typing 20 WPM',
-                'Marks Obtained (126.50)',
+                'Marks Obtained (275)',
                 'Percentage',
                 'Result',
                 'Grading',
@@ -631,7 +735,7 @@ DEPT_CONFIG = {
                 'Computer Total (50)',
                 'Extempore (25)',
                 'Typing 20 WPM',
-                'Marks Obtained (120.00)',
+                'Marks Obtained (40)',
                 'Percentage',
                 'Result',
                 'Grading',
@@ -641,7 +745,7 @@ DEPT_CONFIG = {
             'CLK_INITIAL': {
                 'Academic Written (100)': 100,
                 'Computer Project Work (25)': 25,
-                'Marks Obtained (50)': 50,
+                'Marks Obtained (125)': 125,
                 'Percentage': 100,
             },
             'CLK_WEEKLY_1': {
@@ -651,7 +755,7 @@ DEPT_CONFIG = {
                 'Computer Prac (25)': 25,
                 'Computer Total (50)': 50,
                 'Typing 20 WPM': 200,
-                'Marks Obtained (69)': 69,
+                'Marks Obtained (150)': 150,
                 'Percentage': 100,
             },
             'CLK_WEEKLY_2': {
@@ -662,7 +766,7 @@ DEPT_CONFIG = {
                 'Computer Prac (25)': 25,
                 'Computer Total (50)': 50,
                 'Typing 20 WPM': 200,
-                'Marks Obtained (126.50)': 126.50,
+                'Marks Obtained (275)': 275,
                 'Percentage': 100,
             },
             'CLK_FINAL': {
@@ -674,27 +778,27 @@ DEPT_CONFIG = {
                 'Computer Total (50)': 50,
                 'Extempore (25)': 25,
                 'Typing 20 WPM': 200,
-                'Marks Obtained (120.00)': 120.00,
+                'Marks Obtained (40)': 40,
                 'Percentage': 100,
             },
         },
         'readonly_events': {
-            'CLK_INITIAL': ['Marks Obtained (50)', 'Percentage', 'Pass/Fail'],
-            'CLK_WEEKLY_1': ['Computer Total (50)', 'Marks Obtained (69)', 'Percentage', 'Result', 'Grading'],
-            'CLK_WEEKLY_2': ['Computer Total (50)', 'Marks Obtained (126.50)', 'Percentage', 'Result', 'Grading'],
-            'CLK_FINAL': ['Computer Total (50)', 'Marks Obtained (120.00)', 'Percentage', 'Result', 'Grading'],
+            'CLK_INITIAL': ['Marks Obtained (125)', 'Percentage', 'Pass/Fail'],
+            'CLK_WEEKLY_1': ['Computer Total (50)', 'Marks Obtained (150)', 'Percentage', 'Result', 'Grading'],
+            'CLK_WEEKLY_2': ['Computer Total (50)', 'Marks Obtained (275)', 'Percentage', 'Result', 'Grading'],
+            'CLK_FINAL': ['Computer Total (50)', 'Marks Obtained (40)', 'Percentage', 'Result', 'Grading'],
         },
         'pass_marks': {
-            'CLK_INITIAL': 23,
+            'CLK_INITIAL': 57.5,
             'CLK_WEEKLY_1': 69,
             'CLK_WEEKLY_2': 126.5,
-            'CLK_FINAL': 120.00,
+            'CLK_FINAL': 18.4,
         },
         'score_events': {
-            'CLK_INITIAL': 'Marks Obtained (50)',
-            'CLK_WEEKLY_1': 'Marks Obtained (69)',
-            'CLK_WEEKLY_2': 'Marks Obtained (126.50)',
-            'CLK_FINAL': 'Marks Obtained (120.00)',
+            'CLK_INITIAL': 'Marks Obtained (125)',
+            'CLK_WEEKLY_1': 'Marks Obtained (150)',
+            'CLK_WEEKLY_2': 'Marks Obtained (275)',
+            'CLK_FINAL': 'Marks Obtained (40)',
         },
     }
 }

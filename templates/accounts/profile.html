@@ -90,46 +90,19 @@
       </div>
     </div>
   </div>
-
-  <!-- Edit Profile -->
+  <!-- Profile edit form -->
   <div class="col-xl-8">
     <div class="army-card">
-      <div class="army-card-header">
-        <h6 class="army-card-title"><i class="bi bi-pencil-square text-army"></i> Edit Profile</h6>
-      </div>
+      <div class="army-card-header"><h6 class="army-card-title">Edit Profile</h6></div>
       <div class="army-card-body">
         <form method="post" enctype="multipart/form-data">
           {% csrf_token %}
-          <div class="row g-3">
-            <div class="col-md-6">
-              <label class="form-label">First Name</label>
-              {{ form.first_name }}
-            </div>
-            <div class="col-md-6">
-              <label class="form-label">Last Name</label>
-              {{ form.last_name }}
-            </div>
-            <div class="col-md-6">
-              <label class="form-label">Email</label>
-              {{ form.email }}
-            </div>
-            <div class="col-md-6">
-              <label class="form-label">Phone</label>
-              {{ form.phone }}
-            </div>
-            <div class="col-md-6">
-              <label class="form-label">Rank</label>
-              {{ form.rank }}
-            </div>
-            <div class="col-md-6">
-              <label class="form-label">Profile Photo</label>
-              {{ form.profile_photo }}
-            </div>
-          </div>
-          <div class="d-flex justify-content-end gap-2 mt-4 pt-3" style="border-top:1px solid rgba(27,67,50,0.3);">
-            <button type="submit" class="btn btn-army">
-              <i class="bi bi-check-circle-fill me-2"></i> Save Changes
-            </button>
+          {{ form.as_p }}
+          <div class="mt-2">
+            <button class="btn btn-army" type="submit">Save</button>
+            {% if request.user.is_commander %}
+            <a href="{% url 'accounts:password_change' %}" class="btn btn-outline-secondary ms-2">Change Password</a>
+            {% endif %}
           </div>
         </form>
       </div>

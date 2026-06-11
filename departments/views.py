@@ -402,29 +402,19 @@ class AgniveerListView(AnyStaffMixin, ListView):
         if platoon_param:
             queryset = queryset.filter(platoon=platoon_param)
 
-        if eval_filter and (user.is_trainer or user.is_department):
+        if eval_filter and user.is_department:
             from evaluation.models import Marks
             from evaluation.constants import get_dept_config
             config = get_dept_config(dept or 'A', user)
             test_types = [test[0] for test in config['test_types']]
 
-            if user.is_trainer:
-                sheet_ids = Marks.objects.filter(evaluator=user).values_list('evaluation_sheet_id', flat=True)
-                evaluated_ids = EvaluationSheet.objects.filter(
-                    department=dept,
-                    id__in=sheet_ids,
-                    test_type__in=test_types,
-                ).values('agniveer_id').annotate(
-                    completed=Count('test_type', distinct=True)
-                ).filter(completed__gte=len(test_types)).values_list('agniveer_id', flat=True)
-            else:
-                evaluated_ids = EvaluationSheet.objects.filter(
-                    department=dept,
-                    test_type__in=test_types,
-                    marks__isnull=False,
-                ).values('agniveer_id').annotate(
-                    completed=Count('test_type', distinct=True)
-                ).filter(completed__gte=len(test_types)).values_list('agniveer_id', flat=True)
+            evaluated_ids = EvaluationSheet.objects.filter(
+                department=dept,
+                test_type__in=test_types,
+                marks__isnull=False,
+            ).values('agniveer_id').annotate(
+                completed=Count('test_type', distinct=True)
+            ).filter(completed__gte=len(test_types)).values_list('agniveer_id', flat=True)
 
             if eval_filter == 'evaluated':
                 queryset = queryset.filter(pk__in=evaluated_ids)
@@ -451,27 +441,18 @@ class AgniveerListView(AnyStaffMixin, ListView):
             ctx['portal_title'] = "Agniveer Registration Dashboard"
             ctx['portal_subtitle'] = "Manage individual and bulk Agniveer registrations"
 
-        if user.is_trainer or user.is_department:
+        if user.is_department:
             from evaluation.models import EvaluationSheet, Marks
             from evaluation.constants import get_dept_config
 
             config = get_dept_config(dept, user)
             total_test_types = len(config['test_types'])
 
-            if user.is_trainer:
-                marked_sheet_ids = set(
-                    Marks.objects.filter(evaluator=user)
-                    .values_list('evaluation_sheet_id', flat=True)
-                )
-                sheets = EvaluationSheet.objects.filter(
-                    department=dept, id__in=marked_sheet_ids
-                ).values('agniveer_id', 'test_type').distinct()
-            else:
-                sheets = EvaluationSheet.objects.filter(
-                    department=dept,
-                    test_type__in=[test[0] for test in config['test_types']],
-                    marks__isnull=False,
-                ).values('agniveer_id', 'test_type').distinct()
+            sheets = EvaluationSheet.objects.filter(
+                department=dept,
+                test_type__in=[test[0] for test in config['test_types']],
+                marks__isnull=False,
+            ).values('agniveer_id', 'test_type').distinct()
 
             from collections import defaultdict
             eval_count = defaultdict(int)
@@ -549,7 +530,7 @@ class AgniveerDetailView(AnyStaffMixin, DetailView):
             agniveer=agniveer
         ).prefetch_related('marks')
 
-        if user.is_department or user.is_trainer:
+        if user.is_department:
             evaluations = evaluations.filter(department=department)
 
         ctx['evaluations'] = evaluations
@@ -566,11 +547,15 @@ class AgniveerDetailView(AnyStaffMixin, DetailView):
             test_type_choices = [test for test in test_type_choices if test[0] not in hidden_tests]
 
         if user.is_commander or user.is_g_head:
-            max_marks = get_overall_total_marks(user)
             total_score = sum(e.get_total_marks() for e in evaluations)
+            max_marks = sum(e.get_max_marks() for e in evaluations)
+            if max_marks == 0:
+                max_marks = get_overall_total_marks(user)
         else:
-            max_marks = config.get('total_marks', 300)
             total_score = sum(e.get_total_marks() for e in evaluations.filter(department=department))
+            max_marks = sum(e.get_max_marks() for e in evaluations.filter(department=department))
+            if max_marks == 0:
+                max_marks = config.get('total_marks', 300)
 
         percentage = (total_score / max_marks * 100) if max_marks > 0 else 0
 
@@ -586,7 +571,7 @@ class AgniveerDetailView(AnyStaffMixin, DetailView):
         ctx['percentage'] = round(percentage, 1)
         ctx['score_color'] = score_color
         ctx['score_color_dark'] = score_color_dark
-        ctx['can_evaluate'] = user.is_trainer or user.is_department
+        ctx['can_evaluate'] = user.is_department
 
         import json
         ctx['dept_config'] = config

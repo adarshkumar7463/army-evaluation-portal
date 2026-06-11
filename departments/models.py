@@ -220,10 +220,8 @@ class Agniveer(models.Model):
         CustomUser, on_delete=models.SET_NULL, null=True,
         related_name='registered_agniveers'
     )
-    assigned_trainers = models.ManyToManyField(
-        CustomUser, related_name='assigned_agniveers', blank=True,
-        limit_choices_to={'role__in': ['trainer_nco', 'trainer_jco', 'trainer_officer']}
-    )
+    # Note: trainer assignment field removed from active model per 'hide-only' policy.
+    # Historical migrations may still reference `assigned_trainers`.
 
     # ── Legacy / Optional fields (kept for backward compat) ───────────────────
     first_name = models.CharField(max_length=50, blank=True, null=True)

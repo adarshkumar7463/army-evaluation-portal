@@ -1,338 +1,147 @@
 {% extends 'base.html' %}
 {% load custom_filters %}
-{% block title %}Profile – {{ agniveer.get_full_name }}{% endblock %}
-{% block page_title %}Agniveer Profile{% endblock %}
-{% block page_subtitle %}{{ agniveer.enrollment_number }}{% endblock %}
+{% block title %}My Profile – Army Portal{% endblock %}
+{% block page_title %}My Profile{% endblock %}
+{% block page_subtitle %}Account Settings{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-  <div class="col-xl-10">
-
-    <!-- Action Bar -->
-    <div class="d-flex justify-content-between align-items-center mb-3 no-print">
-      {% if is_commander or is_g_head %}
-      <a href="{% url 'core:search' %}" class="btn btn-army-outline">
-        <i class="bi bi-arrow-left"></i> Back to Search
-      </a>
-      {% else %}
-      <a href="{% url 'departments:agniveer_list' %}" class="btn btn-army-outline">
-        <i class="bi bi-arrow-left"></i> Back to List
-      </a>
-      {% endif %}
-      <div class="d-flex gap-2">
-        {% if is_commander or is_g_head  %}
-        <a href="{% url 'evaluation:report_card' agniveer.pk %}" class="btn btn-gold d-flex align-items-center gap-2">
-          <i class="bi bi-file-earmark-pdf-fill"></i> Full Report Card
-        </a>
-        {% endif %}
-        <button onclick="window.print()" class="btn btn-army-outline d-flex align-items-center gap-2">
-          <i class="bi bi-printer-fill"></i> Print
-        </button>
-      </div>
-    </div>
-
-    <!-- Profile Card -->
-    <div class="army-card" id="profileCard">
-      <!-- Header Banner -->
-      <div style="background:linear-gradient(135deg,#1B4332 0%,#2D6A4F 60%,#40916C 100%);padding:18px 24px;display:flex;align-items:center;justify-content:space-between;position:relative;overflow:hidden;">
-        <div style="position:absolute;top:0;right:0;width:200px;height:100%;background:rgba(255,255,255,0.03);clip-path:polygon(30% 0,100% 0,100% 100%,0% 100%);"></div>
-        <div style="display:flex;align-items:center;gap:12px;">
-          <div style="font-size:28px;">⚔️</div>
-          <div>
-            <div style="font-family:Rajdhani,sans-serif;font-size:16px;font-weight:700;color:white;letter-spacing:1.5px;line-height:1.2;">ARMY EVALUATION PORTAL</div>
-            <div style="font-size:10px;color:rgba(255,255,255,0.6);letter-spacing:2px;text-transform:uppercase;margin-top:2px;">Agniveer Profile & Performance Report</div>
-          </div>
-        </div>
-        <div style="text-align:right;">
-          <div style="font-family:Rajdhani,sans-serif;font-size:11px;color:rgba(255,255,255,0.5);letter-spacing:1px;text-transform:uppercase;">Enrollment</div>
-          <div style="font-family:Rajdhani,sans-serif;font-size:18px;font-weight:700;color:#52B788;letter-spacing:1px;">{{ agniveer.enrollment_number }}</div>
-        </div>
-      </div>
-
-      <!-- Agniveer Info -->
-      <div style="padding:20px 24px;border-bottom:1px solid rgba(27,67,50,0.3);background:rgba(15,26,41,0.4);">
-        <div style="display:flex;gap:20px;align-items:flex-start;">
-          <!-- Avatar -->
-          <div style="flex-shrink:0;">
-            {% if agniveer.photo %}
-            <img src="{{ agniveer.photo.url }}" style="width:100px;height:100px;border-radius:12px;object-fit:cover;border:2px solid rgba(82,183,136,0.4);">
-            {% else %}
-            <div style="width:100px;height:100px;border-radius:12px;background:linear-gradient(135deg,#1B4332,#40916C);display:flex;align-items:center;justify-content:center;font-family:Rajdhani,sans-serif;font-size:32px;font-weight:700;color:white;border:2px solid rgba(82,183,136,0.3);">
-              {{ agniveer.first_name.0|upper }}{{ agniveer.last_name.0|upper }}
-            </div>
-            {% endif %}
-          </div>
-
-          <!-- Info Grid -->
-          <div style="flex:1;">
-            <div class="mb-3">
-              <div style="font-size:10px;color:#8B9BB4;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:3px;">Full Name</div>
-              <div style="font-family:Rajdhani,sans-serif;font-size:18px;font-weight:700;color:#E0E6F0;line-height:1.2;">{{ agniveer.get_full_name }}</div>
-            </div>
-            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px 20px;">
-                <div>
-                    <div style="font-size:10px;color:#8B9BB4;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:3px;">Batch</div>
-                    <div style="font-size:14px;font-weight:600;color:#E0E6F0;">{{ agniveer.batch }}</div>
-                </div>
-                <div>
-                    <div style="font-size:10px;color:#8B9BB4;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:3px;">Date of Birth</div>
-                    <div style="font-size:14px;font-weight:600;color:#E0E6F0;">{{ agniveer.date_of_birth|date:"d M Y" }}</div>
-                </div>
-                <div>
-                    <div style="font-size:10px;color:#8B9BB4;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:3px;">Gender</div>
-                    <div style="font-size:14px;font-weight:600;color:#E0E6F0;">{{ agniveer.get_gender_display }}</div>
-                </div>
-                <div>
-                    <div style="font-size:10px;color:#8B9BB4;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:3px;">Joining Date</div>
-                    <div style="font-size:14px;font-weight:600;color:#E0E6F0;">{{ agniveer.joining_date|date:"d M Y" }}</div>
-                </div>
-                {% if agniveer.phone %}
-                <div>
-                    <div style="font-size:10px;color:#8B9BB4;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:3px;">Phone</div>
-                    <div style="font-size:14px;font-weight:600;color:#E0E6F0;">{{ agniveer.phone }}</div>
-                </div>
-                {% endif %}
-                {% if agniveer.email %}
-                <div>
-                    <div style="font-size:10px;color:#8B9BB4;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:3px;">Email</div>
-                    <div style="font-size:14px;font-weight:600;color:#E0E6F0;">{{ agniveer.email }}</div>
-                </div>
-                {% endif %}
-                {% if agniveer.address %}
-                <div style="grid-column:1/-1;">
-                    <div style="font-size:10px;color:#8B9BB4;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:3px;">Address</div>
-                    <div style="font-size:14px;font-weight:600;color:#E0E6F0;">{{ agniveer.address }}</div>
-                </div>
-                {% endif %}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Department Evaluations -->
-      {% for dept, data in dept_evaluations.items %}
-      <div style="padding:20px 32px;">
-        <div style="font-family:Rajdhani,sans-serif;font-size:14px;font-weight:700;color:#D4A017;margin-bottom:12px;display:flex;align-items:center;gap:8px;">
-          <i class="bi bi-building"></i> {{ dept|department_name|upper }} EVALUATIONS
-        </div>
-
-        <!-- On Field Training -->
-        {% if data.on_field %}
-        <div style="margin-bottom:20px;">
-          <div style="font-family:Rajdhani,sans-serif;font-size:12px;font-weight:600;color:#D4A017;margin-bottom:8px;">
-            <i class="bi bi-shield-fill"></i> On Field Training
-          </div>
-          <div style="overflow-x:auto;">
-            <table class="army-table">
-              <thead>
-                <tr>
-                  <th>Test Type</th>
-                  <th style="text-align:center;">NCO (20)</th>
-                  <th style="text-align:center;">JCO (20)</th>
-                  <th style="text-align:center;">Officer (20)</th>
-                  <th style="text-align:center;">Total (60)</th>
-                  <th style="text-align:center;">%</th>
-                  <th style="text-align:center;">Result</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for ev in data.on_field %}
-                <tr>
-                  <td style="font-weight:600;color:#E0E6F0;">{{ ev.get_test_type_display }}</td>
-                  <td class="marks-cell">{{ ev.get_nco_marks }}</td>
-                  <td class="marks-cell">{{ ev.get_jco_marks }}</td>
-                  <td class="marks-cell">{{ ev.get_officer_marks }}</td>
-                  <td class="marks-cell" style="font-size:12px;color:#E0E6F0;">{{ ev.get_total_marks }}</td>
-                  <td style="text-align:center;">{{ ev.get_percentage }}%</td>
-                  <td style="text-align:center;">
-                    {% if ev.get_total_marks > 0 %}
-                      {% if ev.is_pass %}
-                      <span class="badge-pass px-2 py-1 rounded">PASS</span>
-                      {% else %}
-                      <span class="badge-fail px-2 py-1 rounded">FAIL</span>
-                      {% endif %}
-                    {% else %}
-                      <span class="badge-pending px-2 py-1 rounded">Pending</span>
-                    {% endif %}
-                  </td>
-                </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
+<div class="row g-3">
+  <!-- Profile Card -->
+  <div class="col-xl-4">
+    <div class="army-card">
+      <div class="army-card-body text-center" style="padding:32px 20px;">
+        {% if user.profile_photo %}
+        <img src="{{ user.profile_photo.url }}" alt="Profile" class="rounded-circle mb-3"
+          style="width:100px;height:100px;object-fit:cover;border:3px solid #1B4332;">
+        {% else %}
+        <div class="mx-auto mb-3"
+          style="width:100px;height:100px;border-radius:50%;background:linear-gradient(135deg,#1B4332,#40916C);display:flex;align-items:center;justify-content:center;font-family:Rajdhani,sans-serif;font-size:38px;font-weight:700;color:white;border:3px solid rgba(82,183,136,0.3);">
+          {{ user.first_name.0|upper|default:"U" }}{{ user.last_name.0|upper|default:"" }}
         </div>
         {% endif %}
 
-        <!-- Trade Training -->
-        {% if data.trade %}
-        <div style="margin-bottom:20px;">
-          <div style="font-family:Rajdhani,sans-serif;font-size:12px;font-weight:600;color:#42A5F5;margin-bottom:8px;">
-            <i class="bi bi-tools"></i> Basic Trade Training
-          </div>
-          <div style="overflow-x:auto;">
-            <table class="army-table">
-              <thead>
-                <tr>
-                  <th>Test Type</th>
-                  <th style="text-align:center;">NCO (20)</th>
-                  <th style="text-align:center;">JCO (20)</th>
-                  <th style="text-align:center;">Officer (20)</th>
-                  <th style="text-align:center;">Total (60)</th>
-                  <th style="text-align:center;">%</th>
-                  <th style="text-align:center;">Result</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for ev in data.trade %}
-                <tr>
-                  <td style="font-weight:600;color:#E0E6F0;">{{ ev.get_test_type_display }}</td>
-                  <td class="marks-cell">{{ ev.get_nco_marks }}</td>
-                  <td class="marks-cell">{{ ev.get_jco_marks }}</td>
-                  <td class="marks-cell">{{ ev.get_officer_marks }}</td>
-                  <td class="marks-cell" style="font-size:12px;color:#E0E6F0;">{{ ev.get_total_marks }}</td>
-                  <td style="text-align:center;">{{ ev.get_percentage }}%</td>
-                  <td style="text-align:center;">
-                    {% if ev.get_total_marks > 0 %}
-                      {% if ev.is_pass %}
-                      <span class="badge-pass px-2 py-1 rounded">PASS</span>
-                      {% else %}
-                      <span class="badge-fail px-2 py-1 rounded">FAIL</span>
-                      {% endif %}
-                    {% else %}
-                      <span class="badge-pending px-2 py-1 rounded">Pending</span>
-                    {% endif %}
-                  </td>
-                </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
+        <h5 style="font-family:Rajdhani,sans-serif;font-weight:700;font-size:22px;color:#E0E6F0;margin-bottom:4px;">
+          {{ user.get_full_name|default:user.username }}
+        </h5>
+        <div class="mb-3">
+          <span class="role-badge" style="background:rgba(27,67,50,0.4);color:#52B788;font-size:12px;padding:5px 14px;">
+            {{ user.get_role_display }}
+          </span>
+        </div>
+
+        {% if user.service_number %}
+        <div style="font-size:13px;color:#8B9BB4;margin-bottom:4px;">
+          <i class="bi bi-shield-fill me-2 text-army"></i>{{ user.service_number }}
         </div>
         {% endif %}
+        {% if agniveer %}
+          <!-- Reused one-screen Agniveer profile UI -->
+          <div class="row g-3">
+            <div class="col-xl-12">
+              <div class="army-card">
+                <div class="army-card-header">
+                  <h6 class="army-card-title"><i class="bi bi-person-lines-fill text-army"></i> Agniveer Profile & Results</h6>
+                </div>
+                <div class="army-card-body">
+                  {% with person=agniveer %}
+                  <div class="row g-3">
+                    <div class="col-12 mb-3">
+                      <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                          <h5 style="margin:0;font-family:Rajdhani,sans-serif;font-weight:700;color:#E0E6F0;">{{ person.get_full_name|default:person.enrollment_number|default:person.agniveer_no|default:'' }}</h5>
+                          <div style="font-size:13px;color:#8B9BB4;">Service No: {{ person.enrollment_number|default:person.agniveer_no|default:'—' }}</div>
+                        </div>
+                        <div class="text-end">
+                          <div style="font-size:13px;color:#8B9BB4;">Department</div>
+                          <div style="font-weight:700;color:#52B788;">{{ person.department|department_name|default:'—' }}</div>
+                        </div>
+                      </div>
+                    </div>
 
-        <!-- Department Total -->
-        {% if data.total_locked > 0 %}
-        <div style="background:linear-gradient(135deg,rgba(27,67,50,0.2),rgba(27,67,50,0.1));padding:16px 24px;border-radius:8px;margin-top:16px;text-align:center;">
-          <div style="font-size:11px;color:#8B9BB4;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">{{ dept|department_name }} Total</div>
-          <div style="font-family:Rajdhani,sans-serif;font-size:20px;font-weight:700;color:#E0E6F0;">
-            {{ data.total_locked }}<span style="font-size:12px;color:#8B9BB4;">/{{ data.max_total }}</span>
+                    <div class="col-md-6">
+                      <div class="army-card" style="padding:12px;">
+                        <h6 class="army-card-title" style="font-size:14px;">Summary</h6>
+                        <div class="army-card-body p-0">
+                          <ul class="list-unstyled mb-0" id="summary-stats">
+                            <li>Exams: <strong id="summary-exams">—</strong></li>
+                            <li>Average Score: <strong id="summary-avg">—</strong></li>
+                            <li>Best Exam: <strong id="summary-best">—</strong></li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="col-md-6">
+                      <div class="army-card" style="padding:12px;">
+                        <h6 class="army-card-title" style="font-size:14px;">Marks Trend</h6>
+                        <div class="army-card-body p-0"><canvas id="trend-chart" height="120"></canvas></div>
+                      </div>
+                    </div>
+
+                    <div class="col-12">
+                      <div class="army-card">
+                        <div class="army-card-header"><h6 class="army-card-title">Exams & Evaluation Sheet</h6></div>
+                        <div class="army-card-body">
+                          <div class="mb-3 d-flex justify-content-between align-items-center">
+                            <div><small class="text-muted">All test fields are read-only.</small></div>
+                            <div><label class="form-label mb-0">Select Exam</label><select id="exam-select" class="form-select form-select-sm"></select></div>
+                          </div>
+                          <div id="exams-container">
+                            {% for ev in evaluations %}
+                              <div class="exam-row mb-3" data-department="{{ ev.department|default:'' }}" data-exam="{{ ev.test_type|default:'' }}" data-date="{{ ev.evaluation_date }}" data-total="{{ ev.total_marks }}" data-marks='{{ ev.data|escapejs }}'>
+                                <div class="p-3 border rounded" style="background:rgba(255,255,255,0.02);">
+                                  <div class="d-flex justify-content-between mb-2">
+                                    <div><strong>{{ ev.test_type_display|default:ev.test_type }}</strong><div class="text-muted" style="font-size:12px;">{{ ev.evaluation_date }}</div></div>
+                                    <div class="text-end"><div style="font-weight:700;color:#D4A017;">Total: {{ ev.total_marks }}</div><div style="font-size:12px;color:#8B9BB4;">{{ ev.percentage }}%</div></div>
+                                  </div>
+                                  <div class="row g-2" style="font-size:13px;">
+                                    {% if ev.data %}{% for key,value in ev.data.items %}
+                                    <div class="col-md-4"><div style="color:#8B9BB4;font-size:12px;">{{ key }}</div><div style="font-weight:700;color:#E0E6F0;">{{ value }}</div></div>
+                                    {% endfor %}{% else %}<div class="col-12 text-muted">No test fields available.</div>{% endif %}
+                                  </div>
+                                </div>
+                              </div>
+                            {% endfor %}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="col-12">
+                      <div class="army-card"><div class="army-card-header"><h6 class="army-card-title">Exam Details</h6></div><div class="army-card-body"><canvas id="marks-chart" height="140"></canvas></div></div>
+                    </div>
+                  </div>
+                  {% endwith %}
+                </div>
+              </div>
+            </div>
           </div>
-          <div style="font-size:12px;font-weight:600;color:#52B788;">
-            {{ data.total_locked|floatformat:2 }}%
-          </div>
-        </div>
         {% endif %}
-      </div>
-      {% endfor %}
 
-      <!-- Graphical Representation -->
-      <div style="padding:20px 32px;border-top:1px solid rgba(27,67,50,0.3);">
-        <div style="font-family:Rajdhani,sans-serif;font-size:14px;font-weight:700;color:#D4A017;margin-bottom:16px;display:flex;align-items:center;gap:8px;">
-          <i class="bi bi-bar-chart-line"></i> PERFORMANCE ANALYSIS
-        </div>
-        <div style="background:rgba(15,22,41,0.5);padding:20px;border-radius:12px;">
-          <canvas id="performanceChart" width="400" height="200"></canvas>
-        </div>
-      </div>
+        {% endblock %}
 
-      <!-- Grand Total -->
-      <div style="background:linear-gradient(135deg,rgba(27,67,50,0.3),rgba(27,67,50,0.1));padding:20px 24px;border-top:2px solid rgba(27,67,50,0.5);text-align:center;">
-        <div class="row align-items-center justify-content-center">
-          <div class="col-auto text-center">
-            <div style="font-size:12px;color:#8B9BB4;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Grand Total</div>
-            <div style="font-family:Rajdhani,sans-serif;font-size:32px;font-weight:700;color:#E0E6F0;line-height:1;">
-              {{ grand_total }}<span style="font-size:20px;color:#8B9BB4;">/{{ max_total }}</span>
-            </div>
-            <div style="font-size:14px;font-weight:600;color:#52B788;margin-top:4px;">{{ percentage }}% Overall</div>
-          </div>
-          <div class="col-auto">
-            {% if overall_pass %}
-            <div style="font-family:Rajdhani,sans-serif;font-size:18px;font-weight:700;color:#4CAF50;background:rgba(76,175,80,0.1);border:2px solid rgba(76,175,80,0.4);border-radius:10px;padding:8px 24px;">
-              ✓ PASSED
-            </div>
-            {% else %}
-            <div style="font-family:Rajdhani,sans-serif;font-size:18px;font-weight:700;color:#EF5350;background:rgba(239,83,80,0.1);border:2px solid rgba(239,83,80,0.4);border-radius:10px;padding:8px 24px;">
-              ✗ FAILED
-            </div>
-            {% endif %}
-          </div>
-        </div>
-      </div>
+        {% block extra_js %}
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script>
+        (function(){
+          const trendLabels = {{ chart_trend_labels_json|default:'[]' }};
+          const trendData = {{ chart_trend_data_json|default:'[]' }};
+          const examDetails = {{ exam_details_json|default:'[]' }};
+          const examSelect = document.getElementById('exam-select');
+          const deptFilter = document.getElementById('dept-filter');
+          const summaryExams = document.getElementById('summary-exams');
+          const summaryAvg = document.getElementById('summary-avg');
+          const summaryBest = document.getElementById('summary-best');
 
-      <!-- Footer -->
-      <div style="padding:16px 32px;border-top:1px solid rgba(27,67,50,0.3);text-align:center;font-size:11px;color:#8B9BB4;">
-        Generated by Army Evaluation Portal · {{ request.user.get_full_name }} · Report Date: {% now "d M Y, H:i" %}
-      </div>
-    </div>
-  </div>
-</div>
-{% endblock %}
+          function populateExamSelect(list) { if(!examSelect) return; examSelect.innerHTML=''; list.forEach((e,i)=>{const opt=document.createElement('option');opt.value=i;opt.text=e.name+(e.date?(' — '+e.date):'');examSelect.appendChild(opt);}); }
+          function computeSummary(list){ if(!summaryExams) return; const examsCount=list.length; const totals=list.map(e=>e.total||0); const avg=totals.length?(totals.reduce((a,b)=>a+b,0)/totals.length).toFixed(1):'—'; const bestIdx=totals.length?totals.indexOf(Math.max(...totals)):-1; summaryExams.textContent=examsCount; summaryAvg.textContent=avg; summaryBest.textContent=bestIdx>=0?list[bestIdx].name:'—'; }
 
-{% block extra_js %}
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const ctx = document.getElementById('performanceChart').getContext('2d');
-    const chartData = {{ chart_data|safe }};
+          populateExamSelect(examDetails); computeSummary(examDetails);
+          const trendCtx = document.getElementById('trend-chart')?.getContext('2d'); let trendChart=null; if(trendCtx){ trendChart=new Chart(trendCtx,{type:'line',data:{labels:trendLabels,datasets:[{label:'Total Marks',data:trendData,borderColor:'#52B788',backgroundColor:'rgba(82,183,136,0.2)',tension:0.3}]},options:{plugins:{legend:{display:false}},responsive:true,maintainAspectRatio:false}}); }
 
-    new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: chartData.departments,
-            datasets: [
-                {
-                    label: 'On Field Training',
-                    data: chartData.on_field_totals,
-                    backgroundColor: 'rgba(212, 160, 23, 0.8)',
-                    borderColor: 'rgba(212, 160, 23, 1)',
-                    borderWidth: 1
-                },
-                {
-                    label: 'Trade Training',
-                    data: chartData.trade_totals,
-                    backgroundColor: 'rgba(66, 165, 245, 0.8)',
-                    borderColor: 'rgba(66, 165, 245, 1)',
-                    borderWidth: 1
-                },
-                {
-                    label: 'Overall Total',
-                    data: chartData.overall_totals,
-                    backgroundColor: 'rgba(82, 183, 136, 0.8)',
-                    borderColor: 'rgba(82, 183, 136, 1)',
-                    borderWidth: 1
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    max: 240, // Max possible marks per department (4 tests * 60)
-                    grid: {
-                        color: 'rgba(139, 155, 180, 0.1)'
-                    },
-                    ticks: {
-                        color: '#E0E6F0'
-                    }
-                },
-                x: {
-                    grid: {
-                        color: 'rgba(139, 155, 180, 0.1)'
-                    },
-                    ticks: {
-                        color: '#E0E6F0'
-                    }
-                }
-            },
-            plugins: {
-                legend: {
-                    labels: {
-                        color: '#E0E6F0'
-                    }
-                }
-            }
-        }
-    });
-});
-</script>
-{% endblock %}
+          const marksCtx=document.getElementById('marks-chart')?.getContext('2d'); let marksChart=null; function showExam(idx){ const e=examDetails[idx]; if(!e||!marksCtx) return; const labels=Object.keys(e.data||{}); const data=labels.map(k=>parseFloat(e.data[k])||0); if(marksChart) marksChart.destroy(); marksChart=new Chart(marksCtx,{type:'bar',data:{labels,datasets:[{label:'Marks',data,backgroundColor:'#D4A017'}]},options:{plugins:{legend:{display:false}},responsive:true,maintainAspectRatio:false}}); }
+
+          if(examDetails.length) showExam(0); if(examSelect) examSelect.addEventListener('change',function(){showExam(parseInt(this.value));}); if(deptFilter){deptFilter.addEventListener('change',function(){const filtered=examDetails.filter(e=> this.value==='all' || e.department===this.value); populateExamSelect(filtered); computeSummary(filtered); if(trendChart){ trendChart.data.labels=filtered.map(e=>e.name+(e.date?(' - '+e.date):'')); trendChart.data.datasets[0].data=filtered.map(e=>e.total); trendChart.update(); } if(filtered.length) showExam(0); else { if(marksChart){marksChart.destroy();marksChart=null;} } }); }
+        })();
+        </script>
+        {% endblock %}

@@ -42,3 +42,23 @@ def split_str(val, delimiter=','):
         return []
     return val.split(delimiter)
 
+@register.filter
+def to_float(val):
+    try:
+        return float(val)
+    except (ValueError, TypeError):
+        return 0.0
+
+@register.filter
+def contains_str(val, search_str):
+    if not val:
+        return False
+    return search_str in str(val)
+
+import re
+
+@register.filter
+def has_parenthesized_number(val):
+    if not val:
+        return False
+    return bool(re.search(r'\(\d+\)', str(val)))

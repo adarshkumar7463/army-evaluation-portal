@@ -100,7 +100,9 @@ def pass_fail_counts_for_scope(user, dept=None):
             max_marks += result_row.get('max_total') or 40
         if max_marks <= 0:
             continue
-        if (total_marks / max_marks) * 100 >= 50:
+        percentage = (total_marks / max_marks) * 100
+        passing_threshold = 40 if 'A' in departments and len(departments) == 1 else 50
+        if percentage >= passing_threshold:
             passed += 1
         else:
             failed += 1
@@ -203,15 +205,13 @@ class ReportDashboardView(AnyStaffMixin, View):
             context['pass_count'] = counts['passed']
             context['fail_count'] = counts['failed']
         else:
-            # Trainer users
+            # Non-department users (trainers hidden): provide empty/default report data
             context['user_role'] = 'trainer'
             context['report_departments'] = []
-            agniveers = user.assigned_agniveers.all()
-            sheets = EvaluationSheet.objects.filter(agniveer__in=agniveers, is_locked=True)
-            context['total_agniveers'] = agniveers.count()
+            context['total_agniveers'] = 0
             context['total_trainers'] = 0
-            context['pass_count'] = sheets.count()
-            context['evaluated_agniveers'] = sheets.values('agniveer').distinct().count()
+            context['pass_count'] = 0
+            context['evaluated_agniveers'] = 0
 
         context['fail_count'] = context.get('fail_count', 0)
 
@@ -341,10 +341,6 @@ class ReportCardDetailView(AnyStaffMixin, View):
         elif user.is_department:
             user_dept = user.get_department_code()
             has_access = user_can_access_agniveer(user, agniveer, user_dept)
-        elif user.is_trainer:
-            # Trainers can only see their assigned agniveers
-            if agniveer in user.assigned_agniveers.all():
-                has_access = True
         
         if not has_access:
             return HttpResponse("You don't have permission to view this report card.", status=403)
@@ -382,7 +378,8 @@ class ReportCardDetailView(AnyStaffMixin, View):
         grand_total = sum(e.get_total_marks() for e in evaluations)
         max_total = get_dept_total_marks(user_dept) if is_department_view else get_overall_total_marks()
         percentage = round((grand_total / max_total * 100), 2) if max_total > 0 else 0
-        overall_pass = percentage >= 50
+        passing_threshold = 40 if is_department_view and user_dept == 'A' else 50
+        overall_pass = percentage >= passing_threshold
         
         # For TTS department, also build TTS result row
         tts_result_row = None
@@ -418,7 +415,7 @@ class ExportAgniveersCSVView(AnyStaffMixin, View):
         elif user.is_department:
             agniveers = scoped_agniveers(Agniveer.objects.all(), user)
         else:
-            agniveers = user.assigned_agniveers.all()
+            agniveers = Agniveer.objects.none()
 
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename="agniveers.csv"'
@@ -456,8 +453,8 @@ class ExportEvaluationsCSVView(AnyStaffMixin, View):
 
         if user.is_department:
             sheets = scoped_sheets(sheets, user)
-        elif user.is_trainer:
-            sheets = sheets.filter(agniveer__in=user.assigned_agniveers.all())
+        else:
+            sheets = EvaluationSheet.objects.none()
 
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename="evaluations.csv"'

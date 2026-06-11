@@ -55,7 +55,8 @@ def build_evaluated_result_lists(agniveers, valid_sheet_ids, departments):
             'percentage': round(percentage, 1),
             'id': agniveer.pk
         }
-        if percentage >= 50:
+        passing_threshold = 40 if 'A' in departments and len(departments) == 1 else 50
+        if percentage >= passing_threshold:
             passed_agniveers.append(info)
         else:
             failed_agniveers.append(info)
@@ -672,7 +673,8 @@ class DepartmentDashboard(LoginRequiredMixin, View):
                     'percentage': percentage,
                     'id': agniveer.pk
                 }
-                if percentage >= 50:
+                passing_threshold = 40 if dept == 'A' else 50
+                if percentage >= passing_threshold:
                     passed_agniveers.append(info)
                 else:
                     failed_agniveers.append(info)
@@ -821,7 +823,7 @@ class TrainerDashboard(LoginRequiredMixin, View):
             'page_title': page_title,
             'total_assigned': agniveers.count(),
             'evaluations_done': my_marks.count(),
-            'assigned_agniveers': agniveers[:10],
+            # 'assigned_agniveers' removed (trainer assignment deprecated)
         }
         return render(request, 'core/trainer_dashboard.html', context)
 

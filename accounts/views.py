@@ -12,6 +12,10 @@ from django.utils import timezone
 from django.db.models import Q
 
 from .models import CustomUser
+import json
+from django.utils.safestring import mark_safe
+from departments.models import Agniveer
+from evaluation.models import EvaluationSheet
 from .forms import (
     ArmyLoginForm, CreateGHeadForm,
     CreateDepartmentUserForm, CreateTrainerForm, CreateRegistrationOfficeForm,
@@ -81,7 +85,80 @@ class ProfileView(LoginRequiredMixin, View):
 
     def get(self, request):
         form = ProfileUpdateForm(instance=request.user)
-        return render(request, self.template_name, {'form': form})
+        context = {'form': form}
+
+        # If an agniveer id is provided, render the agniveer profile + results (read-only)
+        agn_id = request.GET.get('agniveer')
+        if agn_id:
+            agn = get_object_or_404(Agniveer, pk=agn_id)
+            # Permission: only commanders, g-heads, department heads or superusers may view agniveer profiles here
+            allowed = getattr(request.user, 'is_commander', False) or getattr(request.user, 'is_g_head', False) or getattr(request.user, 'is_department', False) or request.user.is_superuser
+            if not allowed:
+                messages.error(request, "You don't have permission to view this profile.")
+                return redirect('departments:agniveer_list')
+            # Prepare evaluations according to permission scope
+            sheets = EvaluationSheet.objects.filter(agniveer=agn, is_locked=True).order_by('-evaluation_date')
+            # Department heads see only their department's results
+            if getattr(request.user, 'is_department', False):
+                dept_code = request.user.department
+                sheets = sheets.filter(department=dept_code)
+
+            evals = []
+            for s in sheets:
+                # Prepare display data: prefer sub_event_results, else breakdown by evaluator marks
+                data = s.sub_event_results or {
+                    'NCO': s.get_nco_marks(),
+                    'JCO': s.get_jco_marks(),
+                    'Officer': s.get_officer_marks(),
+                    'Admin': s.get_admin_marks(),
+                }
+                evals.append({
+                    'test_type': s.test_type,
+                    'test_type_display': s.get_test_type_display(),
+                    'evaluation_date': s.evaluation_date.strftime('%d %b %Y'),
+                    'department': s.department,
+                    'total_marks': s.get_total_marks(),
+                    'percentage': s.get_percentage(),
+                    'data': data,
+                })
+
+            # Prepare chart JSON (server-side) to avoid DOM parsing in template JS
+            trend_labels = [f"{e['test_type_display']} - {e['evaluation_date']}" for e in evals]
+            trend_data = [e['total_marks'] for e in evals]
+            # Ensure exam details are serializable
+            exam_details = []
+            for e in evals:
+                exam_details.append({
+                    'name': e['test_type_display'],
+                    'date': e['evaluation_date'],
+                    'total': e['total_marks'],
+                    'percentage': e['percentage'],
+                    'data': e['data'],
+                    'department': e['department'],
+                })
+
+            context.update({
+                'chart_trend_labels_json': mark_safe(json.dumps(trend_labels)),
+                'chart_trend_data_json': mark_safe(json.dumps(trend_data)),
+                'exam_details_json': mark_safe(json.dumps(exam_details)),
+            })
+
+            # Departments list for filter (for ghead/commander)
+            departments = [{'id': c[0], 'name': c[1]} for c in CustomUser.DEPARTMENT_CHOICES]
+            is_ghead_flag = getattr(request.user, 'is_g_head', False) or getattr(request.user, 'is_commander', False)
+
+            context.update({
+                'agniveer': agn,
+                'evaluations': evals,
+                'departments': departments,
+                'is_ghead': is_ghead_flag,
+                'is_department': getattr(request.user, 'is_department', False),
+            })
+
+        # If an agniveer profile was requested, render the dedicated agniveer profile template
+        if agn_id:
+            return render(request, 'core/agniveer_profile.html', context)
+        return render(request, self.template_name, context)
 
     def post(self, request):
         form = ProfileUpdateForm(request.POST, request.FILES, instance=request.user)
