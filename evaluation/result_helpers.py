@@ -61,47 +61,231 @@ def _num(value):
         return 0
 
 
+def get_sheet_total_marks(sheet):
+    if not sheet:
+        return 0.0
+    
+    # 1. Check related Marks objects (standard Django model way)
+    total = sheet.get_total_marks()
+    if total > 0:
+        return float(total)
+        
+    # 2. Check sub_event_results JSON
+    res = sheet.sub_event_results or {}
+    if not isinstance(res, dict):
+        return 0.0
+        
+    # Check root Total
+    if 'Total' in res:
+        return _num(res.get('Total'))
+    if 'total' in res:
+        return _num(res.get('total'))
+        
+    # Check 'Marks' dict
+    if isinstance(res.get('Marks'), dict):
+        m_dict = res['Marks']
+        if 'Total' in m_dict:
+            return _num(m_dict.get('Total'))
+        for k, v in m_dict.items():
+            if 'total' in k.lower():
+                return _num(v)
+                
+    # Check evaluator keys: 'admin', 'nco', 'jco', 'officer'
+    for ev in ['admin', 'nco', 'jco', 'officer']:
+        if isinstance(res.get(ev), dict):
+            ev_dict = res[ev]
+            if 'Total' in ev_dict:
+                return _num(ev_dict.get('Total'))
+            for k, v in ev_dict.items():
+                if 'total' in k.lower():
+                    return _num(v)
+            # Sum up all numeric values
+            ev_total = 0.0
+            for k, v in ev_dict.items():
+                if k not in ['Total', 'Percentage', 'Result', 'Grading']:
+                    try:
+                        ev_total += float(v or 0)
+                    except (ValueError, TypeError):
+                        pass
+            if ev_total > 0:
+                return ev_total
+                
+    # Sum flat values in res
+    flat_total = 0.0
+    for k, v in res.items():
+        if k not in ['Total', 'Percentage', 'Result', 'Grading', 'Marks', 'admin', 'nco', 'jco', 'officer']:
+            try:
+                flat_total += float(v or 0)
+            except (ValueError, TypeError):
+                pass
+    return flat_total
+
+
+def is_sheet_evaluated(sheet):
+    if not sheet:
+        return False
+    if sheet.is_locked:
+        return True
+    if sheet.marks.exists():
+        return True
+    res = sheet.sub_event_results
+    if res and isinstance(res, dict):
+        if any(k not in ['admin', 'nco', 'jco', 'officer'] for k in res.keys()):
+            return True
+        for k in ['admin', 'nco', 'jco', 'officer']:
+            if isinstance(res.get(k), dict) and res[k]:
+                return True
+    return False
+
+
+def get_ces_final_marks(agniveer):
+    from evaluation.models import EvaluationSheet
+    
+    sheets = EvaluationSheet.objects.filter(agniveer=agniveer, department='C')
+    if not sheets.exists():
+        return 0.0
+    row = build_cs_result_row(agniveer, list(sheets))
+    return row.get('grand_total', 0.0)
+
+
+def get_btt_final_marks(agniveer):
+    from evaluation.models import EvaluationSheet
+    CLERK_TRADES = ['CLK', 'CLERK', 'Clerk', 'CLK_SD', 'CLK_IM']
+    
+    if agniveer.trade in CLERK_TRADES:
+        sheets = EvaluationSheet.objects.filter(agniveer=agniveer, department='D')
+        if not sheets.exists():
+            return 0.0
+        row = build_clerk_result_row(agniveer, list(sheets))
+        return row.get('grand_total', 0.0)
+    else:
+        # TTS departments
+        sheets = EvaluationSheet.objects.filter(agniveer=agniveer, department='B')
+        if not sheets.exists():
+            return 0.0
+        row = build_tts_result_row(agniveer, list(sheets))
+        return row.get('grand_total', 0.0)
+
+
 def build_tts_result_row(agniveer, sheets):
     sheet_map = {sheet.test_type: sheet for sheet in sheets}
     trade = agniveer.trade
+
+    mid_term = 0
+    mid_term_conv = 0
+    online = 0
+    online_conv = 0
+    job = 0
+    job_conv = 0
+    practical = 0
+    practical_conv = 0
 
     if trade == 'DMV':
         result_sheet = sheet_map.get('DMV_RESULT')
         marks = _marks_from_sheet(result_sheet)
         online = _num(marks.get('Online Test (100)'))
-        job = _num(marks.get('Driving Test (50)')) or _num(sheet_map.get('DMV_DRIVING').get_total_marks() if sheet_map.get('DMV_DRIVING') else 0)
-        practical = _num(marks.get('Practical Test (50)')) or _num(sheet_map.get('DMV_PRACTICAL').get_total_marks() if sheet_map.get('DMV_PRACTICAL') else 0)
+        job = _num(marks.get('Driving Test (50)')) or get_sheet_total_marks(sheet_map.get('DMV_DRIVING'))
+        practical = _num(marks.get('Practical Test (50)')) or get_sheet_total_marks(sheet_map.get('DMV_PRACTICAL'))
+        total_200 = _num(marks.get('Total (200)')) or (online + practical + job)
+        
+        # Assessment fallback if final/driving/practical marks are all 0
+        if total_200 == 0:
+            assessment_sheet = sheet_map.get('DMV_ASSESSMENT')
+            if assessment_sheet:
+                total_assess = get_sheet_total_marks(assessment_sheet)
+                grand_total = round((total_assess / 71) * 40, 2)
+                percentage = round((total_assess / 71) * 100, 2)
+                grading = get_grade(percentage)
+            else:
+                grand_total = 0.0
+                percentage = 0.0
+                grading = 'Fail'
+        else:
+            grand_total = _num(marks.get('Convert 40 Marks')) or round(total_200 * 0.2, 2)
+            percentage = _num(marks.get('% Age')) or round((total_200 / 200) * 100, 2)
+            subjects = [
+                (online, 100),
+                (practical, 50),
+                (job, 50)
+            ]
+            grading = marks.get('Grading') or get_grade(percentage, subjects)
+            
+        online_conv = round(online * 0.2, 2)
+        job_conv = round(job * 0.25, 2)
+        practical_conv = round(practical / 6, 2)
+
     elif trade == 'OPEM':
         result_sheet = sheet_map.get('OPEM_RESULT')
         marks = _marks_from_sheet(result_sheet)
         online = _num(marks.get('Written Test (100)'))
-        job = _num(marks.get('Maintenance Test (50)')) or _num(sheet_map.get('OPEM_MAINTENANCE').get_total_marks() if sheet_map.get('OPEM_MAINTENANCE') else 0)
-        practical = _num(marks.get('Practical Test (50)')) or _num(sheet_map.get('OPEM_PRACTICAL').get_total_marks() if sheet_map.get('OPEM_PRACTICAL') else 0)
+        job = _num(marks.get('Maintenance Test (50)')) or get_sheet_total_marks(sheet_map.get('OPEM_MAINTENANCE'))
+        practical = _num(marks.get('Practical Test (50)')) or get_sheet_total_marks(sheet_map.get('OPEM_PRACTICAL'))
+        total_200 = _num(marks.get('Total (200)')) or (online + practical + job)
+        
+        # Assessment fallback if final/maintenance/practical marks are all 0
+        if total_200 == 0:
+            assessment_sheet = sheet_map.get('OPEM_ASSESSMENT')
+            if assessment_sheet:
+                total_assess = get_sheet_total_marks(assessment_sheet)
+                grand_total = round((total_assess / 71) * 40, 2)
+                percentage = round((total_assess / 71) * 100, 2)
+                grading = get_grade(percentage)
+            else:
+                grand_total = 0.0
+                percentage = 0.0
+                grading = 'Fail'
+        else:
+            grand_total = _num(marks.get('Convert 40 Marks')) or round(total_200 * 0.2, 2)
+            percentage = _num(marks.get('% Age')) or round((total_200 / 200) * 100, 2)
+            subjects = [
+                (online, 100),
+                (practical, 50),
+                (job, 50)
+            ]
+            grading = marks.get('Grading') or get_grade(percentage, subjects)
+            
+        online_conv = round(online * 0.2, 2)
+        job_conv = round(job * 0.25, 2)
+        practical_conv = round(practical / 6, 2)
+
     else:
-        result_sheet = sheet_map.get('OTHER_ASSESSMENT')
-        online = _num(result_sheet.get_total_marks() if result_sheet else 0)
-        job = 0
-        practical = 0
-
-    online_conv = round(online * 0.2, 2)
-    job_conv = round(job * 0.25, 2)
-    practical_conv = round(practical / 6, 2)
-    grand_total = round(online_conv + job_conv + practical_conv, 2)
-    percentage = round((grand_total / 40) * 100, 2) if grand_total else 0
-
-    subjects = []
-    if trade == 'DMV':
-        subjects = [
-            (online, 100),
-            (practical, 50),
-            (job, 50)
-        ]
-    elif trade == 'OPEM':
-        subjects = [
-            (online, 100),
-            (practical, 50),
-            (job, 50)
-        ]
+        result_sheet = sheet_map.get('OTHER_SCREEN_BOARD')
+        if result_sheet:
+            marks = _marks_from_sheet(result_sheet)
+            mid_term = _num(marks.get('Mid Term Test (50)'))
+            mid_term_conv = _num(marks.get('Convert In 10 Mks (Mid Term)')) or round(mid_term / 5.0, 2)
+            online = _num(marks.get('Online Test (100)'))
+            online_conv = _num(marks.get('Convert In 15 Mks')) or round(online * 0.15, 2)
+            job = _num(marks.get('Job (40)'))
+            job_conv = _num(marks.get('Convert In 05 Mks')) or round(job / 8.0, 2)
+            practical = _num(marks.get('Practical (60)'))
+            practical_conv = _num(marks.get('Convert In 10 Mks (Practical)')) or round(practical / 6.0, 2)
+            grand_total = _num(marks.get('Grand Total (40)')) or round(mid_term_conv + online_conv + job_conv + practical_conv, 2)
+            percentage = _num(marks.get('% Age')) or round(grand_total * 2.5, 2)
+            subjects = [
+                (mid_term, 50),
+                (online, 100),
+                (job, 40),
+                (practical, 60)
+            ]
+            grading = marks.get('Grading') or get_grade(percentage, subjects)
+        else:
+            assessment_sheet = sheet_map.get('OTHER_ASSESSMENT')
+            if assessment_sheet:
+                total_assess = get_sheet_total_marks(assessment_sheet)
+                grand_total = round((total_assess / 70) * 40, 2)
+                percentage = round((total_assess / 70) * 100, 2)
+                grading = get_grade(percentage)
+            else:
+                grand_total = 0.0
+                percentage = 0.0
+                grading = 'Fail'
+            online = 0
+            job = 0
+            practical = 0
+            online_conv = 0
+            job_conv = 0
+            practical_conv = 0
 
     return {
         'agniveer': agniveer,
@@ -110,6 +294,8 @@ def build_tts_result_row(agniveer, sheets):
         'trade': trade or '',
         'name': agniveer.get_full_name(),
         'unit': agniveer.bn_desp or '',
+        'mid_term': mid_term,
+        'mid_term_conv': mid_term_conv,
         'online': online,
         'online_conv': online_conv,
         'job': job,
@@ -118,7 +304,7 @@ def build_tts_result_row(agniveer, sheets):
         'practical_conv': practical_conv,
         'grand_total': grand_total,
         'percentage': percentage,
-        'grading': get_grade(percentage, subjects),
+        'grading': grading,
         'is_pass': percentage >= 50,
     }
 
@@ -133,8 +319,13 @@ def build_cs_result_row(agniveer, sheets):
     else:
         sheet = sheet_map.get('CS_RESULT')
         score_key = 'CONVERTED TO 40'
+        
+    if not sheet:
+        sheet = sheet_map.get('CS_ASSESSMENT')
+        score_key = 'Total (40)'
+        
     marks = _marks_from_sheet(sheet)
-    total = _num(marks.get(score_key)) or _num(sheet.get_total_marks() if sheet else 0)
+    total = _num(marks.get(score_key)) or get_sheet_total_marks(sheet)
     percentage = round((total / 40) * 100, 2) if total else 0
     return {
         'agniveer': agniveer,
@@ -235,21 +426,32 @@ def build_clerk_result_row(agniveer, sheets):
 
 
 def build_battalion_result_row(agniveer, sheets):
-    """Build result row from CMK master sheet (Common Mil Knowledge)."""
+    """Build result row from Final Result sheet."""
+    from evaluation.models import EvaluationSheet
     sheet_map = {sheet.test_type: sheet for sheet in sheets}
-    sheet = sheet_map.get('CMK_SHEET')
+    sheet = sheet_map.get('FINAL_RESULT')
     marks = _marks_from_sheet(sheet)
 
-    fc_prac   = _num(marks.get('FC/BC PRAC (30)'))
-    fc_online = _num(marks.get('FC/BC ONLINE TEST (30)'))
-    camp_trg  = _num(marks.get('CAMP TRG (30)'))
-    mr_conv   = _num(marks.get('CONVERTED TO 40'))
-    bfc_conv  = _num(marks.get('BFC CONVERTED TO 15'))
-    pdp_conv  = _num(marks.get('PDP CONVERTED TO 15'))
-    total_160 = _num(marks.get('TOTAL (160)')) or round(fc_prac + fc_online + camp_trg + mr_conv + bfc_conv + pdp_conv, 2)
-    conv_20   = _num(marks.get('CONVERTED TO 20')) or round(total_160 * 20 / 160, 2) if total_160 else 0
+    cmk_20 = _num(marks.get('COMMON MIL KNOWLEDGE (20)'))
+    if cmk_20 == 0.0:
+        cmk_sheet = sheet_map.get('CMK_SHEET') or EvaluationSheet.objects.filter(agniveer=agniveer, test_type='CMK_SHEET').first()
+        if cmk_sheet:
+            cmk_marks = _marks_from_sheet(cmk_sheet)
+            cmk_20 = _num(cmk_marks.get('CONVERTED (20)'))
 
-    percentage = round((conv_20 / 20) * 100, 2) if conv_20 else 0
+    basic_tac_40 = get_ces_final_marks(agniveer)
+    trade_prof_40 = get_btt_final_marks(agniveer)
+
+    wpn_handling_20 = _num(marks.get('WPN & EQPT HANDLING (20)'))
+    if wpn_handling_20 == 0.0:
+        wpn_sheet = sheet_map.get('WPN_HANDLING') or EvaluationSheet.objects.filter(agniveer=agniveer, test_type='WPN_HANDLING').first()
+        if wpn_sheet:
+            wpn_marks = _marks_from_sheet(wpn_sheet)
+            wpn_handling_20 = _num(wpn_marks.get('CONVERTED (20)'))
+    total_120 = cmk_20 + basic_tac_40 + trade_prof_40 + wpn_handling_20
+    round_figure_120 = round(total_120)
+
+    percentage = round((total_120 / 120) * 100, 2) if total_120 else 0
 
     return {
         'agniveer': agniveer,
@@ -258,16 +460,14 @@ def build_battalion_result_row(agniveer, sheets):
         'trade': agniveer.trade or '',
         'name': agniveer.get_full_name(),
         'unit': agniveer.bn_desp or '',
-        'fc_prac': fc_prac,
-        'fc_online': fc_online,
-        'camp_trg': camp_trg,
-        'mr_conv': mr_conv,
-        'bfc_conv': bfc_conv,
-        'pdp_conv': pdp_conv,
-        'total_160': total_160,
-        'conv_20': conv_20,
-        'grand_total': conv_20,
-        'max_total': 20,
+        'cmk_20': cmk_20,
+        'basic_tac_40': basic_tac_40,
+        'trade_prof_40': trade_prof_40,
+        'wpn_handling_20': wpn_handling_20,
+        'total_120': total_120,
+        'round_figure_120': round_figure_120,
+        'grand_total': total_120,
+        'max_total': 120,
         'percentage': percentage,
         'grading': get_grade(percentage, passing_pct=40),
         'is_pass': percentage >= 40,

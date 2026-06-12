@@ -519,13 +519,24 @@
 <div class="modal fade custom-modal" id="agniveerModal" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
-      <div class="modal-header">
+      <div class="modal-header d-flex justify-content-between align-items-center w-100">
         <h5 class="modal-title" id="modalTitle">Agniveer List</h5>
         <div class="d-flex align-items-center gap-2">
-          <a id="modalDownloadBtn" href="#" class="btn btn-download"
-             style="background:var(--army-green);color:white;border:none;">
-            <i class="bi bi-download"></i> Download All
-          </a>
+          {% if dept == 'C' %}
+            <a id="modalDownloadBtn" href="#" class="btn btn-download"
+               style="background:var(--army-green);color:white;border:none;">
+              <i class="bi bi-download"></i> CES Final
+            </a>
+            <a id="modalDownloadBtnClerk" href="#" class="btn btn-download"
+               style="background:var(--army-green);color:white;border:none;">
+              <i class="bi bi-download"></i> CES Final (Clerk)
+            </a>
+          {% else %}
+            <a id="modalDownloadBtn" href="#" class="btn btn-download"
+               style="background:var(--army-green);color:white;border:none;">
+              <i class="bi bi-download"></i> Download All
+            </a>
+          {% endif %}
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
       </div>
@@ -533,7 +544,7 @@
         <table class="modal-table">
           <thead>
             <tr>
-              <th>Enrollment No</th><th>Name</th><th>Score</th>
+              <th>Agniveer No</th><th>Name</th><th>Score</th>
               <th>Percentage</th><th>Action</th>
             </tr>
           </thead>
@@ -903,14 +914,32 @@
     const titleEl = document.getElementById('modalTitle');
     const tbody   = document.getElementById('modalTableBody');
     const dlBtn   = document.getElementById('modalDownloadBtn');
+    const dlBtnClerk = document.getElementById('modalDownloadBtnClerk');
 
     titleEl.innerHTML   = `<i class="bi ${icon} me-2"></i>${status} AGNIVEERS`;
     titleEl.style.color = color;
 
-    dlBtn.style.background = isPass ? 'var(--army-green)' : '#2d0000';
-    dlBtn.style.color      = isPass ? 'white'             : '#EF5350';
-    dlBtn.style.border     = isPass ? 'none'              : '1px solid #EF5350';
-    dlBtn.href = `{% url 'reports:export_dashboard_excel' %}?status=${isPass ? 'pass' : 'fail'}`;
+    const btnBg = isPass ? 'var(--army-green)' : '#2d0000';
+    const btnColor = isPass ? 'white' : '#EF5350';
+    const btnBorder = isPass ? 'none' : '1px solid #EF5350';
+
+    if (dlBtn) {
+      dlBtn.style.background = btnBg;
+      dlBtn.style.color      = btnColor;
+      dlBtn.style.border     = btnBorder;
+      {% if dept == 'C' %}
+        dlBtn.href = `{% url 'reports:export_dashboard_excel' %}?status=${isPass ? 'pass' : 'fail'}&dept=C&format=final`;
+      {% else %}
+        dlBtn.href = `{% url 'reports:export_dashboard_excel' %}?status=${isPass ? 'pass' : 'fail'}&dept={{ dept }}`;
+      {% endif %}
+    }
+
+    if (dlBtnClerk) {
+      dlBtnClerk.style.background = btnBg;
+      dlBtnClerk.style.color      = btnColor;
+      dlBtnClerk.style.border     = btnBorder;
+      dlBtnClerk.href = `{% url 'reports:export_dashboard_excel' %}?status=${isPass ? 'pass' : 'fail'}&dept=C&format=clerk`;
+    }
 
     tbody.innerHTML = list.length
       ? list.map(a => `

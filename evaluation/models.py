@@ -52,6 +52,8 @@ class EvaluationSheet(models.Model):
         ('CLK_WEEKLY_2', 'Clerk 2nd Weekly Progress Test'),
         ('CLK_FINAL', 'Clerk Final Test'),
         ('CMK_SHEET', 'Common Mil Knowledge Sheet'),
+        ('FINAL_MERIT', 'AV Merit List'),
+        ('FINAL_RESULT', 'Final Result'),
         ('OPEM_ASSESSMENT', 'OPEM Final Assessment'),
         ('DMV_ASSESSMENT', 'DMV Final Assessment'),
         ('OTHER_ASSESSMENT', 'OTHER Final Assessment'),
@@ -124,6 +126,10 @@ class EvaluationSheet(models.Model):
                 'BFC': 240,
                 'PDP': 50,
                 'FC_All': 90,
+                'CMK_SHEET': 20,
+                'WPN_HANDLING': 20,
+                'FINAL_MERIT': 130,
+                'FINAL_RESULT': 120,
             }
             return max_marks_map.get(self.test_type, 100)
         from .constants import get_dept_config

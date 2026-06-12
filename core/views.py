@@ -23,13 +23,14 @@ CLERK_TRADES = ['CLK', 'CLERK', 'Clerk', 'CLK_SD', 'CLK_IM']
 
 
 def build_evaluated_result_lists(agniveers, valid_sheet_ids, departments):
+    from evaluation.result_helpers import is_sheet_evaluated
     passed_agniveers = []
     failed_agniveers = []
 
     for agniveer in agniveers:
         valid_sheets = [
             sheet for sheet in agniveer.evaluations.all()
-            if sheet.department in departments and (sheet.id in valid_sheet_ids or sheet.is_locked)
+            if sheet.department in departments and is_sheet_evaluated(sheet)
         ]
         if not valid_sheets:
             continue
@@ -50,7 +51,7 @@ def build_evaluated_result_lists(agniveers, valid_sheet_ids, departments):
         percentage = (total_marks / max_marks) * 100
         info = {
             'name': agniveer.get_full_name(),
-            'enrollment': agniveer.enrollment_number,
+            'enrollment': agniveer.agniveer_no or agniveer.enrollment_number,
             'score': f"{total_marks:g}/{max_marks:g}",
             'percentage': round(percentage, 1),
             'id': agniveer.pk
@@ -244,21 +245,21 @@ class CommanderDashboard(LoginRequiredMixin, View):
         total_g_heads = CustomUser.objects.filter(role='g_head').count()
         total_depts = CustomUser.objects.filter(role__in=['dept_a', 'dept_b', 'dept_c', 'dept_d']).count()
 
-        # Get sheets with marks or locked
-        sheets_with_marks_ids = Marks.objects.values_list('evaluation_sheet_id', flat=True).distinct()
-        all_sheets = EvaluationSheet.objects.filter(Q(is_locked=True) | Q(id__in=sheets_with_marks_ids)).prefetch_related('marks')
+        from evaluation.result_helpers import is_sheet_evaluated
+        all_sheets = EvaluationSheet.objects.all().prefetch_related('marks')
         
         all_agniveers_qs = Agniveer.objects.prefetch_related('evaluations__marks')
         passed_agniveers, failed_agniveers = build_evaluated_result_lists(
             all_agniveers_qs,
-            set(sheets_with_marks_ids),
+            None,
             ['A', 'B', 'C', 'D'],
         )
 
         pass_count = len(passed_agniveers)
         fail_count = len(failed_agniveers)
         evaluated_agniveers = pass_count + fail_count
-        completion_rate = (all_sheets.count() / max(total_agniveers * 28, 1)) * 100 if total_agniveers > 0 else 0
+        evaluated_sheets_count = sum(1 for s in all_sheets if is_sheet_evaluated(s))
+        completion_rate = (evaluated_sheets_count / max(total_agniveers * 28, 1)) * 100 if total_agniveers > 0 else 0
 
         # Setup master test type label mapping
         from evaluation.constants import DEPT_CONFIG
@@ -342,7 +343,7 @@ class CommanderDashboard(LoginRequiredMixin, View):
             if sheets.exists():
                 avg_score = sum(s.get_total_marks() for s in sheets) / sheets.count()
                 agniveer_scores.append({
-                    'name': agniveer.enrollment_number,
+                    'name': agniveer.agniveer_no or agniveer.enrollment_number,
                     'score': round(avg_score, 1)
                 })
         
@@ -431,14 +432,13 @@ class CommanderDashboard(LoginRequiredMixin, View):
 class GHeadDashboard(LoginRequiredMixin, View):
     def get(self, request):
         total_agniveers = Agniveer.objects.count()
-        # Get sheets with marks or locked
-        sheets_with_marks_ids = Marks.objects.values_list('evaluation_sheet_id', flat=True).distinct()
-        all_sheets = EvaluationSheet.objects.filter(Q(is_locked=True) | Q(id__in=sheets_with_marks_ids)).prefetch_related('marks')
+        from evaluation.result_helpers import is_sheet_evaluated
+        all_sheets = EvaluationSheet.objects.all().prefetch_related('marks')
         
         all_agniveers_qs = Agniveer.objects.prefetch_related('evaluations__marks')
         passed_agniveers, failed_agniveers = build_evaluated_result_lists(
             all_agniveers_qs,
-            set(sheets_with_marks_ids),
+            None,
             ['A', 'B', 'C', 'D'],
         )
 
@@ -446,7 +446,8 @@ class GHeadDashboard(LoginRequiredMixin, View):
         fail_count = len(failed_agniveers)
         evaluated_agniveers = pass_count + fail_count
         total_trainers = CustomUser.objects.filter(role__in=['trainer_nco', 'trainer_jco', 'trainer_officer']).count()
-        completion_rate = (all_sheets.count() / max(total_agniveers * 28, 1)) * 100 if total_agniveers > 0 else 0
+        evaluated_sheets_count = sum(1 for s in all_sheets if is_sheet_evaluated(s))
+        completion_rate = (evaluated_sheets_count / max(total_agniveers * 28, 1)) * 100 if total_agniveers > 0 else 0
 
         # Setup master test type label mapping
         from evaluation.constants import DEPT_CONFIG
@@ -623,11 +624,10 @@ class DepartmentDashboard(LoginRequiredMixin, View):
         from evaluation.constants import get_dept_config
         config = get_dept_config(dept, user)
         
-        # Include all sheets with marks (not just locked ones)
-        sheets_with_marks_ids = Marks.objects.values_list('evaluation_sheet_id', flat=True).distinct()
+        from evaluation.result_helpers import is_sheet_evaluated
         all_dept_sheets = EvaluationSheet.objects.filter(
             department=dept
-        ).filter(Q(is_locked=True) | Q(id__in=sheets_with_marks_ids)).prefetch_related('marks')
+        ).prefetch_related('marks')
 
         if user.is_battalion:
             if user.battalion_unit:
@@ -656,24 +656,30 @@ class DepartmentDashboard(LoginRequiredMixin, View):
         
         all_agniveers = agniveers.prefetch_related('evaluations__marks')
         for agniveer in all_agniveers:
-            dept_evals = all_dept_sheets.filter(agniveer=agniveer)
-            if not dept_evals.exists():
+            dept_evals = [s for s in all_dept_sheets.filter(agniveer=agniveer) if is_sheet_evaluated(s)]
+            if not dept_evals:
                 continue
-            result_row = build_department_result_row(agniveer, list(dept_evals), dept)
+            result_row = build_department_result_row(agniveer, dept_evals, dept)
             raw_score = result_row.get('grand_total', 0) or 0
             raw_max = result_row.get('max_total') or 40
-            score_40 = round((raw_score / raw_max) * 40, 2) if raw_max else 0
+
+            if dept == 'A':
+                score_str = f"{result_row.get('round_figure_120', raw_score):g}/120"
+                percentage = result_row.get('percentage', 0)
+            else:
+                score_40 = round((raw_score / raw_max) * 40, 2) if raw_max else 0
+                score_str = f"{score_40:g}/40"
+                percentage = round((score_40 / 40) * 100, 1)
 
             if raw_max > 0:
-                percentage = round((score_40 / 40) * 100, 1)
                 info = {
                     'name': agniveer.get_full_name(),
-                    'enrollment': agniveer.enrollment_number,
-                    'score': f"{score_40:g}/40",
+                    'enrollment': agniveer.agniveer_no or agniveer.enrollment_number,
+                    'score': score_str,
                     'percentage': percentage,
                     'id': agniveer.pk
                 }
-                passing_threshold = 40 if dept == 'A' else 50
+                passing_threshold = 40 if dept == 'A' else (46 if dept == 'D' else 50)
                 if percentage >= passing_threshold:
                     passed_agniveers.append(info)
                 else:
@@ -684,7 +690,8 @@ class DepartmentDashboard(LoginRequiredMixin, View):
         evaluated_agniveers = pass_count + fail_count
         
         total_tests_expected = all_agniveers.count() * len(config['test_types'])
-        completion_rate = (all_dept_sheets.count() / max(total_tests_expected, 1)) * 100 if all_agniveers.count() > 0 else 0
+        evaluated_dept_sheets_count = sum(1 for s in all_dept_sheets if is_sheet_evaluated(s))
+        completion_rate = (evaluated_dept_sheets_count / max(total_tests_expected, 1)) * 100 if all_agniveers.count() > 0 else 0
 
         # Chart data for Pie Chart (Overall Pass/Fail in this Dept)
         pie_labels = ['Passed', 'Failed']

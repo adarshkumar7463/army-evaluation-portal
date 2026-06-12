@@ -62,3 +62,15 @@ def has_parenthesized_number(val):
     if not val:
         return False
     return bool(re.search(r'\(\d+\)', str(val)))
+
+@register.filter
+def clean_sub_event_name(val):
+    if not val:
+        return ""
+    val_str = str(val)
+    if val_str.startswith("BFC CONVERTED"):
+        return val_str[4:]
+    if val_str.startswith("PDP CONVERTED"):
+        return val_str[4:]
+    return val_str
+

@@ -579,6 +579,11 @@ class AgniveerDetailView(AnyStaffMixin, DetailView):
         ctx['test_type_choices'] = test_type_choices
         ctx['test_to_category_json'] = json.dumps(config['test_to_category'])
         ctx['evaluation_form'] = AgniveerEvaluationForm(department=department)
+        # Dynamic marks for Battalion Final Result
+        from evaluation.result_helpers import get_ces_final_marks, get_btt_final_marks
+        ctx['dynamic_ces_marks'] = get_ces_final_marks(agniveer)
+        ctx['dynamic_btt_marks'] = get_btt_final_marks(agniveer)
+
         return ctx
 
 

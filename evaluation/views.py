@@ -667,8 +667,29 @@ class AgniveerEvaluateView(AnyStaffMixin, View):
                     results['Marks']['FC Online Best Attempt'] = best_online
                     
                     camp_trg = float(results['Marks'].get('CAMP TRG') or 0)
-                    
                     total_for_best = prac_total + best_online + camp_trg
+                    
+                elif active_test == 'CMK_SHEET':
+                    total_for_best = float(results['Marks'].get('CONVERTED (20)') or 0)
+                elif active_test == 'WPN_HANDLING':
+                    total_for_best = float(results['Marks'].get('CONVERTED (20)') or 0)
+                elif active_test == 'FINAL_MERIT':
+                    total_for_best = float(results['Marks'].get('TOTAL POINT (130)') or 0)
+                elif active_test == 'FINAL_RESULT':
+                    from .result_helpers import get_ces_final_marks, get_btt_final_marks, _num
+                    basic_tac = get_ces_final_marks(agniveer)
+                    trade_prof = get_btt_final_marks(agniveer)
+                    results['Marks']['BASIC TACTICE (CES) (40)'] = basic_tac
+                    results['Marks']['TRADE PROFICIENCY (BTT) (40)'] = trade_prof
+                    
+                    cmk_20 = _num(results['Marks'].get('COMMON MIL KNOWLEDGE (20)'))
+                    wpn_handling_20 = _num(results['Marks'].get('WPN & EQPT HANDLING (20)'))
+                    total_120 = cmk_20 + basic_tac + trade_prof + wpn_handling_20
+                    round_figure_120 = round(total_120)
+                    
+                    results['Marks']['TOTAL (120)'] = round(total_120, 2)
+                    results['Marks']['ROUND FIGURE (120)'] = round_figure_120
+                    total_for_best = round_figure_120
                 else:
                     total_for_best = sum(float(x) for x in results['Marks'].values() if x is not None)
             
@@ -682,6 +703,10 @@ class AgniveerEvaluateView(AnyStaffMixin, View):
                 'BFC': 240,
                 'PDP': 50,
                 'FC_All': 90,
+                'CMK_SHEET': 20,
+                'WPN_HANDLING': 20,
+                'FINAL_MERIT': 130,
+                'FINAL_RESULT': 120,
             }
             sheet_max_marks = max_marks_map.get(active_test, 100)
             percentage = (total_for_best / sheet_max_marks * 100) if sheet_max_marks else 0
@@ -746,6 +771,37 @@ class AgniveerEvaluateView(AnyStaffMixin, View):
             sheet.sub_event_results[evaluator_type] = results
         sheet.remarks = remarks
         sheet.save()
+
+        if active_test == 'FINAL_MERIT':
+            merit_sheets = EvaluationSheet.objects.filter(
+                department=department,
+                test_type='FINAL_MERIT'
+            )
+            if sheet.agniveer.batch:
+                merit_sheets = merit_sheets.filter(agniveer__batch=sheet.agniveer.batch)
+            if sheet.agniveer.batch_no:
+                merit_sheets = merit_sheets.filter(agniveer__batch_no=sheet.agniveer.batch_no)
+            sheets_to_update = list(merit_sheets)
+            
+            def get_tp(s):
+                marks_dict = s.sub_event_results.get('Marks', {}) if isinstance(s.sub_event_results, dict) else {}
+                return float(marks_dict.get('TOTAL POINT (130)') or 0.0)
+                
+            sheets_to_update.sort(key=get_tp, reverse=True)
+            
+            rank = 0
+            prev_points = None
+            for idx, ms in enumerate(sheets_to_update):
+                tp = get_tp(ms)
+                if tp != prev_points:
+                    rank = idx + 1
+                    prev_points = tp
+                if not isinstance(ms.sub_event_results, dict):
+                    ms.sub_event_results = {}
+                if 'Marks' not in ms.sub_event_results:
+                    ms.sub_event_results['Marks'] = {}
+                ms.sub_event_results['Marks']['MERIT'] = rank
+                ms.save()
 
         # Update/Create Marks
         Marks.objects.update_or_create(

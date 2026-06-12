@@ -15,7 +15,7 @@ from django.db.models.functions import Coalesce
 
 from departments.models import Agniveer
 from evaluation.models import EvaluationSheet, Marks
-from evaluation.result_helpers import build_tts_result_row, build_battalion_result_row, build_department_result_row
+from evaluation.result_helpers import build_tts_result_row, build_battalion_result_row, build_department_result_row, build_cs_result_row, build_clerk_result_row
 from accounts.models import CustomUser
 from accounts.mixins import AnyStaffMixin, CommanderOrGHeadMixin
 from logs.utils import log_action
@@ -74,11 +74,9 @@ def user_can_access_agniveer(user, agniveer, dept=None):
 
 
 def pass_fail_counts_for_scope(user, dept=None):
+    from evaluation.result_helpers import is_sheet_evaluated
     departments = [dept] if dept else ['A', 'B', 'C', 'D']
-    sheets_with_marks_ids = Marks.objects.values_list('evaluation_sheet_id', flat=True).distinct()
-    all_sheets = EvaluationSheet.objects.filter(
-        Q(is_locked=True) | Q(id__in=sheets_with_marks_ids)
-    ).prefetch_related('marks')
+    all_sheets = EvaluationSheet.objects.all().prefetch_related('marks')
 
     if dept:
         all_sheets = scoped_sheets(all_sheets, user, dept)
@@ -92,7 +90,7 @@ def pass_fail_counts_for_scope(user, dept=None):
         total_marks = 0
         max_marks = 0
         for dept_code in departments:
-            dept_sheets = list(all_sheets.filter(agniveer=agniveer, department=dept_code))
+            dept_sheets = [s for s in all_sheets.filter(agniveer=agniveer, department=dept_code) if is_sheet_evaluated(s)]
             if not dept_sheets:
                 continue
             result_row = build_department_result_row(agniveer, dept_sheets, dept_code)
@@ -510,7 +508,7 @@ class ExportExcelView(AnyStaffMixin, View):
         center = Alignment(horizontal='center', vertical='center')
 
         # Title row
-        ws.merge_cells('A1:L1')
+        ws.merge_cells('A1:P1')
         title_cell = ws['A1']
         title_cell.value = "ARMY EVALUATION PORTAL - EVALUATION REPORT"
         title_cell.font = Font(bold=True, size=14, color="1B4332")
@@ -519,7 +517,7 @@ class ExportExcelView(AnyStaffMixin, View):
 
         # Headers
         headers = [
-            'S.No', 'Enrollment No', 'Name', 'Department', 'Category',
+            'S.No', 'ARMY NO', 'RANK', 'TRADE', 'NAME', 'UNIT', 'Enrollment No', 'Department', 'Category',
             'Test Type', 'NCO (20)', 'JCO (20)', 'Officer (20)',
             'Total (60)', 'Percentage', 'Result'
         ]
@@ -535,8 +533,12 @@ class ExportExcelView(AnyStaffMixin, View):
             row_fill = pass_fill if is_pass else fail_fill
             data = [
                 row_idx,
-                sheet.agniveer.enrollment_number,
+                sheet.agniveer.agniveer_no or sheet.agniveer.enrollment_number,
+                getattr(sheet.agniveer, 'rank', '') or '',
+                sheet.agniveer.trade or '',
                 sheet.agniveer.get_full_name(),
+                sheet.agniveer.bn_desp or '',
+                sheet.agniveer.enrollment_number,
                 DEPARTMENT_NAMES.get(sheet.department, sheet.department),
                 sheet.get_category_display(),
                 sheet.get_test_type_display(),
@@ -553,7 +555,7 @@ class ExportExcelView(AnyStaffMixin, View):
                 cell.alignment = center
 
         # Auto-size columns
-        col_widths = [5, 15, 20, 12, 18, 16, 10, 10, 12, 12, 12, 8]
+        col_widths = [5, 15, 10, 10, 20, 10, 15, 12, 18, 16, 10, 10, 12, 12, 12, 8]
         for i, width in enumerate(col_widths, 1):
             ws.column_dimensions[openpyxl.utils.get_column_letter(i)].width = width
 
@@ -571,31 +573,34 @@ class ExportExcelView(AnyStaffMixin, View):
 
 
 class ExportDashboardResultsExcelView(AnyStaffMixin, View):
-    def _export_battalion_results(self, request, status_filter):
+    def _export_battalion_results(self, request, status_filter, sub_dept=None):
         import openpyxl
         from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
         from django.db.models import Q
-        from evaluation.models import Marks
+        from evaluation.models import Marks, EvaluationSheet
         from evaluation.result_helpers import build_battalion_result_row
         from departments.models import Agniveer
-        from evaluation.models import EvaluationSheet
 
+        from evaluation.result_helpers import is_sheet_evaluated
         user = request.user
         is_pass_filter = status_filter == 'pass'
-        sheets_with_marks_ids = Marks.objects.values_list('evaluation_sheet_id', flat=True).distinct()
 
         agniveers = Agniveer.objects.all()
         sheets = EvaluationSheet.objects.filter(
             department='A'
-        ).filter(Q(is_locked=True) | Q(id__in=sheets_with_marks_ids)).select_related('agniveer').prefetch_related('marks')
+        ).select_related('agniveer').prefetch_related('marks')
 
-        if user.is_battalion and user.battalion_unit:
-            agniveers = agniveers.filter(bn_desp=user.battalion_unit)
-            sheets = sheets.filter(agniveer__bn_desp=user.battalion_unit)
+        unit_filter = sub_dept
+        if not unit_filter and user.is_battalion and user.battalion_unit:
+            unit_filter = user.battalion_unit
+
+        if unit_filter and unit_filter != 'all':
+            agniveers = agniveers.filter(bn_desp=unit_filter)
+            sheets = sheets.filter(agniveer__bn_desp=unit_filter)
 
         rows = []
         for agniveer in agniveers.order_by('agniveer_no', 'enrollment_number'):
-            ag_sheets = list(sheets.filter(agniveer=agniveer))
+            ag_sheets = [s for s in sheets.filter(agniveer=agniveer) if is_sheet_evaluated(s)]
             if not ag_sheets:
                 continue
             row = build_battalion_result_row(agniveer, ag_sheets)
@@ -606,19 +611,25 @@ class ExportDashboardResultsExcelView(AnyStaffMixin, View):
         ws = wb.active
         ws.title = f"BN {status_filter.upper()}"
 
+        pass_fill = PatternFill(start_color="DDF4E8", end_color="DDF4E8", fill_type="solid")
+        fail_fill = PatternFill(start_color="FCE4E4", end_color="FCE4E4", fill_type="solid")
+        row_fill = pass_fill if status_filter == 'pass' else fail_fill
+
         header_fill = PatternFill(start_color="D9EAF7", end_color="D9EAF7", fill_type="solid")
         title_fill = PatternFill(start_color="EAF2F8", end_color="EAF2F8", fill_type="solid")
         border = Border(
-            left=Side(style='thin'), right=Side(style='thin'),
-            top=Side(style='thin'), bottom=Side(style='thin')
+            left=Side(style='thin', color='B7C4B7'),
+            right=Side(style='thin', color='B7C4B7'),
+            top=Side(style='thin', color='B7C4B7'),
+            bottom=Side(style='thin', color='B7C4B7'),
         )
         center = Alignment(horizontal='center', vertical='center', wrap_text=True)
 
         headers = [
             'ARMY NO', 'RANK', 'TRADE', 'NAME',
-            'FC/BC PRAC (30)', 'FC/BC ONLINE TEST (30)', 'CAMP TRG (30)',
-            'MR CONVERTED TO 40', 'BFC CONVERTED TO 15', 'PDP CONVERTED TO 15',
-            'TOTAL (160)', 'CONVERTED TO 20', '%', 'GRADING'
+            'COMMON MIL KNOWLEDGE (20)', 'BASIC TACTICE (CES) (40)',
+            'TRADE PROFICIENCY (BTT) (40)', 'WPN & EQPT HANDLING (20)',
+            'TOTAL (120)', 'ROUND FIGURE (120)', '%', 'GRADING'
         ]
         
         ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=len(headers))
@@ -636,16 +647,17 @@ class ExportDashboardResultsExcelView(AnyStaffMixin, View):
         for index, row in enumerate(rows, 1):
             values = [
                 row['army_no'], row['rank'], row['trade'], row['name'],
-                row['fc_prac'], row['fc_online'], row['camp_trg'],
-                row['mr_conv'], row['bfc_conv'], row['pdp_conv'],
-                row['total_160'], row['conv_20'], row['percentage'], row['grading']
+                row['cmk_20'], row['basic_tac_40'], row['trade_prof_40'], row['wpn_handling_20'],
+                row['total_120'], row['round_figure_120'],
+                f"{row['percentage']}%" if row['percentage'] else '0%', row['grading']
             ]
             for col, value in enumerate(values, 1):
                 cell = ws.cell(row=index + 2, column=col, value=value)
+                cell.fill = row_fill
                 cell.alignment = center
                 cell.border = border
 
-        widths = [15, 10, 15, 25, 18, 22, 15, 20, 20, 20, 15, 16, 10, 12]
+        widths = [15, 10, 15, 25, 25, 25, 25, 25, 15, 18, 12, 15]
         for col, width in enumerate(widths, 1):
             ws.column_dimensions[openpyxl.utils.get_column_letter(col)].width = width
         ws.freeze_panes = 'A3'
@@ -664,63 +676,151 @@ class ExportDashboardResultsExcelView(AnyStaffMixin, View):
         )
         response['Content-Disposition'] = f'attachment; filename="bn_{status_filter}_results.xlsx"'
         return response
-    def _export_tts_results(self, request, status_filter):
+
+    def _export_tts_results(self, request, status_filter, sub_dept=None):
         import openpyxl
         from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
         from django.db.models import Q
-        from evaluation.models import Marks
+        from evaluation.models import Marks, EvaluationSheet
+        from evaluation.result_helpers import build_tts_result_row, _marks_from_sheet, _num, get_grade
+        from departments.models import Agniveer
 
         user = request.user
         is_pass_filter = status_filter == 'pass'
-        sheets_with_marks_ids = Marks.objects.values_list('evaluation_sheet_id', flat=True).distinct()
-
+        from evaluation.result_helpers import is_sheet_evaluated
         agniveers = Agniveer.objects.all()
         sheets = EvaluationSheet.objects.filter(
             department='B'
-        ).filter(Q(is_locked=True) | Q(id__in=sheets_with_marks_ids)).select_related('agniveer').prefetch_related('marks')
+        ).select_related('agniveer').prefetch_related('marks')
 
-        if getattr(user, 'tts_trade', None):
-            if user.tts_trade == 'DMV':
+        trade_filter = sub_dept
+        if not trade_filter and getattr(user, 'tts_trade', None):
+            trade_filter = user.tts_trade
+
+        if trade_filter and trade_filter != 'all':
+            if trade_filter == 'DMV':
                 agniveers = agniveers.filter(trade='DMV')
                 sheets = sheets.filter(agniveer__trade='DMV')
-            elif user.tts_trade == 'OPEM':
+            elif trade_filter == 'OPEM':
                 agniveers = agniveers.filter(trade='OPEM')
                 sheets = sheets.filter(agniveer__trade='OPEM')
-            elif user.tts_trade == 'OTHER':
+            elif trade_filter == 'OTHER':
                 agniveers = agniveers.exclude(trade__in=['DMV', 'OPEM'])
                 sheets = sheets.exclude(agniveer__trade__in=['DMV', 'OPEM'])
 
         rows = []
         for agniveer in agniveers.order_by('agniveer_no', 'enrollment_number'):
-            ag_sheets = list(sheets.filter(agniveer=agniveer))
+            ag_sheets = [s for s in sheets.filter(agniveer=agniveer) if is_sheet_evaluated(s)]
             if not ag_sheets:
                 continue
-            row = build_tts_result_row(agniveer, ag_sheets)
-            if row['is_pass'] == is_pass_filter:
-                rows.append(row)
+            sheet_map = {sheet.test_type: sheet for sheet in ag_sheets}
+
+            if trade_filter == 'DMV':
+                result_sheet = sheet_map.get('DMV_RESULT')
+                marks = _marks_from_sheet(result_sheet) if result_sheet else {}
+                online = _num(marks.get('Online Test (100)'))
+                driving = _num(marks.get('Driving Test (50)')) or _num(sheet_map.get('DMV_DRIVING').get_total_marks() if sheet_map.get('DMV_DRIVING') else 0)
+                practical = _num(marks.get('Practical Test (50)')) or _num(sheet_map.get('DMV_PRACTICAL').get_total_marks() if sheet_map.get('DMV_PRACTICAL') else 0)
+                total = _num(marks.get('Total (200)')) or (online + driving + practical)
+                pct = _num(marks.get('% Age')) or (round((total / 200) * 100, 2) if total else 0)
+                is_pass = pct >= 50
+                if is_pass == is_pass_filter:
+                    grading = marks.get('Grading') or get_grade(pct, [(online, 100), (practical, 50), (driving, 50)])
+                    convert_40 = _num(marks.get('Convert 40 Marks')) or round(total * 0.2, 2)
+                    rows.append({
+                        'army_no': agniveer.agniveer_no or agniveer.enrollment_number,
+                        'rank': getattr(agniveer, 'rank', '') or '',
+                        'trade': agniveer.trade or '',
+                        'name': agniveer.get_full_name(),
+                        'unit': agniveer.bn_desp or '',
+                        'online': online,
+                        'practical': practical,
+                        'driving': driving,
+                        'total': total,
+                        'percentage': pct,
+                        'grading': grading,
+                        'convert_40': convert_40,
+                        'remarks': result_sheet.remarks if result_sheet and result_sheet.remarks else ''
+                    })
+            elif trade_filter == 'OPEM':
+                result_sheet = sheet_map.get('OPEM_RESULT')
+                marks = _marks_from_sheet(result_sheet) if result_sheet else {}
+                online = _num(marks.get('Written Test (100)'))
+                maint = _num(marks.get('Maintenance Test (50)')) or _num(sheet_map.get('OPEM_MAINTENANCE').get_total_marks() if sheet_map.get('OPEM_MAINTENANCE') else 0)
+                practical = _num(marks.get('Practical Test (50)')) or _num(sheet_map.get('OPEM_PRACTICAL').get_total_marks() if sheet_map.get('OPEM_PRACTICAL') else 0)
+                total = _num(marks.get('Total (200)')) or (online + maint + practical)
+                pct = _num(marks.get('% Age')) or (round((total / 200) * 100, 2) if total else 0)
+                is_pass = pct >= 50
+                if is_pass == is_pass_filter:
+                    grading = marks.get('Grading') or get_grade(pct, [(online, 100), (practical, 50), (maint, 50)])
+                    convert_40 = _num(marks.get('Convert 40 Marks')) or round(total * 0.2, 2)
+                    rows.append({
+                        'army_no': agniveer.agniveer_no or agniveer.enrollment_number,
+                        'rank': getattr(agniveer, 'rank', '') or '',
+                        'trade': agniveer.trade or '',
+                        'name': agniveer.get_full_name(),
+                        'unit': agniveer.bn_desp or '',
+                        'online': online,
+                        'practical': practical,
+                        'maint': maint,
+                        'total': total,
+                        'percentage': pct,
+                        'grading': grading,
+                        'convert_40': convert_40,
+                        'remarks': result_sheet.remarks if result_sheet and result_sheet.remarks else ''
+                    })
+            else:
+                row = build_tts_result_row(agniveer, ag_sheets)
+                if row['is_pass'] == is_pass_filter:
+                    rows.append(row)
 
         wb = openpyxl.Workbook()
         ws = wb.active
-        ws.title = f"TTS {status_filter.upper()}"
+
+        pass_fill = PatternFill(start_color="DDF4E8", end_color="DDF4E8", fill_type="solid")
+        fail_fill = PatternFill(start_color="FCE4E4", end_color="FCE4E4", fill_type="solid")
+        row_fill = pass_fill if status_filter == 'pass' else fail_fill
 
         header_fill = PatternFill(start_color="D9EAF7", end_color="D9EAF7", fill_type="solid")
         title_fill = PatternFill(start_color="EAF2F8", end_color="EAF2F8", fill_type="solid")
         border = Border(
-            left=Side(style='thin'), right=Side(style='thin'),
-            top=Side(style='thin'), bottom=Side(style='thin')
+            left=Side(style='thin', color='B7C4B7'),
+            right=Side(style='thin', color='B7C4B7'),
+            top=Side(style='thin', color='B7C4B7'),
+            bottom=Side(style='thin', color='B7C4B7'),
         )
         center = Alignment(horizontal='center', vertical='center', wrap_text=True)
-        left = Alignment(horizontal='left', vertical='center', wrap_text=True)
 
-        headers = [
-            'S. No.', 'Army No', 'Rank', 'Trade', 'Name', 'Unit',
-            'Online Test-100', 'Convert in 20 Mks',
-            'JOB-40', 'Convert in 10 Mks',
-            'Practical-60', 'Convert in 10 Mks',
-            'Grand Total-40', '%', 'Grading',
-        ]
+        if trade_filter == 'DMV':
+            ws.title = f"DMV {status_filter.upper()}"
+            title_text = "Final Result sheet of Dmv"
+            headers = [
+                'ARMY NO', 'RANK', 'TRADE', 'NAME', 'UNIT',
+                'Online Test (100)', 'Practical Test (50)', 'Driving Test (50)',
+                'Total (200)', '% Age', 'Grading', 'Convert 40 Marks', 'REMARKS'
+            ]
+        elif trade_filter == 'OPEM':
+            ws.title = f"OPEM {status_filter.upper()}"
+            title_text = "Final Result sheet of opem"
+            headers = [
+                'ARMY NO', 'RANK', 'TRADE', 'NAME', 'UNIT',
+                'Written Test (100)', 'Practical Test (50)', 'Maintenance Test (50)',
+                'Total (200)', '% Age', 'Grading', 'Convert 40 Marks', 'REMARKS'
+            ]
+        else:
+            ws.title = f"TTS {status_filter.upper()}"
+            title_text = "Screen Board of Agniveer  (TTS Result)"
+            headers = [
+                'ARMY NO', 'RANK', 'TRADE', 'NAME', 'UNIT',
+                'Mid Term Test (50)', 'Convert In 10 Mks (Mid Term)',
+                'Online Test (100)', 'Convert In 15 Mks',
+                'Job (40)', 'Convert In 05 Mks',
+                'Practical (60)', 'Convert In 10 Mks (Practical)',
+                'Grand Total (40)', '% Age', 'Grading'
+            ]
+
         ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=len(headers))
-        ws.cell(row=1, column=1, value=f"SCREEN BOARD OF AGNIVEER: {status_filter.upper()} LIST").fill = title_fill
+        ws.cell(row=1, column=1, value=title_text).fill = title_fill
         ws.cell(row=1, column=1).font = Font(bold=True, size=13)
         ws.cell(row=1, column=1).alignment = center
 
@@ -731,33 +831,469 @@ class ExportDashboardResultsExcelView(AnyStaffMixin, View):
             cell.alignment = center
             cell.border = border
 
-        for index, row in enumerate(rows, 1):
-            values = [
-                index, row['army_no'], row['rank'], row['trade'], row['name'], row['unit'],
-                row['online'], row['online_conv'],
-                row['job'], row['job_conv'],
-                row['practical'], row['practical_conv'],
-                row['grand_total'], row['percentage'], row['grading'],
-            ]
+        for index, r in enumerate(rows, 1):
+            if trade_filter == 'DMV':
+                values = [
+                    r['army_no'], r['rank'], r['trade'], r['name'], r['unit'],
+                    r['online'], r['practical'], r['driving'],
+                    r['total'], f"{r['percentage']}%" if r['percentage'] else '0%', r['grading'], r['convert_40'],
+                    r['remarks']
+                ]
+            elif trade_filter == 'OPEM':
+                values = [
+                    r['army_no'], r['rank'], r['trade'], r['name'], r['unit'],
+                    r['online'], r['practical'], r['maint'],
+                    r['total'], f"{r['percentage']}%" if r['percentage'] else '0%', r['grading'], r['convert_40'],
+                    r['remarks']
+                ]
+            else:
+                values = [
+                    r['army_no'], r['rank'], r['trade'], r['name'], r['unit'],
+                    r['mid_term'], r['mid_term_conv'],
+                    r['online'], r['online_conv'],
+                    r['job'], r['job_conv'],
+                    r['practical'], r['practical_conv'],
+                    r['grand_total'], f"{r['percentage']}%" if r['percentage'] else '0%', r['grading']
+                ]
             for col, value in enumerate(values, 1):
                 cell = ws.cell(row=index + 2, column=col, value=value)
-                cell.alignment = left if col in [4, 5] else center
+                cell.fill = row_fill
+                cell.alignment = center
                 cell.border = border
 
-        widths = [7, 16, 10, 14, 28, 12, 15, 16, 10, 16, 14, 16, 16, 10, 12]
-        for col, width in enumerate(widths, 1):
-            ws.column_dimensions[openpyxl.utils.get_column_letter(col)].width = width
+        for col_idx in range(1, len(headers) + 1):
+            col_letter = openpyxl.utils.get_column_letter(col_idx)
+            max_len = max(len(str(ws.cell(row=r, column=col_idx).value or '')) for r in range(2, len(rows) + 3))
+            ws.column_dimensions[col_letter].width = max(max_len + 3, 10)
         ws.freeze_panes = 'A3'
+
+        import io
         buffer = io.BytesIO()
         wb.save(buffer)
         buffer.seek(0)
 
         log_action(user, 'EXPORT', f'Exported TTS {status_filter} dashboard results Excel', request)
+        from django.http import HttpResponse
         response = HttpResponse(
             buffer.getvalue(),
             content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         )
         response['Content-Disposition'] = f'attachment; filename="tts_{status_filter}_results.xlsx"'
+        return response
+
+    def _export_cs_results(self, request, status_filter, sub_dept=None):
+        import openpyxl
+        from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+        from django.db.models import Q
+        from evaluation.models import Marks, EvaluationSheet
+        from evaluation.result_helpers import build_cs_result_row, _marks_from_sheet, _num, get_grade
+        from departments.models import Agniveer
+        import io
+
+        user = request.user
+        is_pass_filter = status_filter == 'pass'
+        from evaluation.result_helpers import is_sheet_evaluated
+        agniveers = Agniveer.objects.all()
+        agniveers = scoped_agniveers(agniveers, user, 'C')
+        
+        sheets = EvaluationSheet.objects.filter(
+            department='C'
+        ).select_related('agniveer').prefetch_related('marks')
+
+        if sub_dept and sub_dept != 'all':
+            agniveers = agniveers.filter(bn_desp=sub_dept)
+            sheets = sheets.filter(agniveer__bn_desp=sub_dept)
+
+        cs_final_rows = []
+        cs_clerk_rows = []
+
+        from evaluation.constants import CS_CLERK_RESULT_TRADES
+
+        for agniveer in agniveers.order_by('agniveer_no', 'enrollment_number'):
+            ag_sheets = [s for s in sheets.filter(agniveer=agniveer) if is_sheet_evaluated(s)]
+            if not ag_sheets:
+                continue
+            
+            sheet_map = {s.test_type: s for s in ag_sheets}
+            
+            if agniveer.trade in CS_CLERK_RESULT_TRADES:
+                result_sheet = sheet_map.get('CS_CLERK_RESULT')
+                if not result_sheet:
+                    continue
+                marks = _marks_from_sheet(result_sheet)
+                online = _num(marks.get('Online (20)'))
+                prac = _num(marks.get('TPrac (20)'))
+                total = _num(marks.get('Total (40)')) or (online + prac)
+                percentage = round((total / 40) * 100, 2) if total else 0
+                is_pass = percentage >= 50
+                
+                if is_pass == is_pass_filter:
+                    cs_clerk_rows.append({
+                        'rank': getattr(agniveer, 'rank', '') or '',
+                        'trade': agniveer.trade or '',
+                        'name': agniveer.get_full_name(),
+                        'pl': agniveer.platoon or '',
+                        'bn': agniveer.bn_desp or '',
+                        'online': online,
+                        'prac': prac,
+                        'total': total,
+                        'remarks': result_sheet.remarks if result_sheet.remarks else ''
+                    })
+            else:
+                result_sheet = sheet_map.get('CS_RESULT')
+                if not result_sheet:
+                    continue
+                marks = _marks_from_sheet(result_sheet)
+                
+                toet_i = _num(marks.get('TOET-I (25)'))
+                toet_ii = _num(marks.get('TOET-II (25)'))
+                toet_total = _num(marks.get('TOTAL TOET (50)')) or (toet_i + toet_ii)
+                toet_25 = _num(marks.get('25% OF TOET (25)')) or round(toet_total * 0.5, 2)
+                fe_online = _num(marks.get('FE Online Exam (50)'))
+                fe_prac = _num(marks.get('FE Prac (20)'))
+                fe_total = _num(marks.get('FE Total (70)')) or (fe_online + fe_prac)
+                br_online = _num(marks.get('BR Online Exam (40)'))
+                br_prac = _num(marks.get('BR Prac (25)'))
+                br_total = _num(marks.get('BR Total (65)')) or (br_online + br_prac)
+                total_160 = _num(marks.get('TOTAL (160)')) or (toet_total + fe_total + br_total)
+                converted_40 = _num(marks.get('CONVERTED TO 40')) or round(total_160 * 0.25, 2)
+                percentage = round((converted_40 / 40) * 100, 2) if converted_40 else 0
+                is_pass = percentage >= 50
+                
+                if is_pass == is_pass_filter:
+                    cs_final_rows.append({
+                        'army_no': agniveer.agniveer_no or agniveer.enrollment_number,
+                        'rank': getattr(agniveer, 'rank', '') or '',
+                        'trade': agniveer.trade or '',
+                        'name': agniveer.get_full_name(),
+                        'unit': agniveer.bn_desp or '',
+                        'toet_i': toet_i,
+                        'toet_ii': toet_ii,
+                        'toet_total': toet_total,
+                        'toet_25': toet_25,
+                        'fe_online': fe_online,
+                        'fe_prac': fe_prac,
+                        'fe_total': fe_total,
+                        'br_online': br_online,
+                        'br_prac': br_prac,
+                        'br_total': br_total,
+                        'total_160': total_160,
+                        'converted_40': converted_40,
+                        'remarks': result_sheet.remarks if result_sheet.remarks else ''
+                    })
+
+        format_param = request.GET.get('format') # 'final' or 'clerk'
+        wb = openpyxl.Workbook()
+
+        pass_fill = PatternFill(start_color="DDF4E8", end_color="DDF4E8", fill_type="solid")
+        fail_fill = PatternFill(start_color="FCE4E4", end_color="FCE4E4", fill_type="solid")
+        row_fill = pass_fill if status_filter == 'pass' else fail_fill
+
+        header_fill = PatternFill(start_color="D9EAF7", end_color="D9EAF7", fill_type="solid")
+        title_fill = PatternFill(start_color="EAF2F8", end_color="EAF2F8", fill_type="solid")
+        border = Border(
+            left=Side(style='thin', color='B7C4B7'),
+            right=Side(style='thin', color='B7C4B7'),
+            top=Side(style='thin', color='B7C4B7'),
+            bottom=Side(style='thin', color='B7C4B7'),
+        )
+        center = Alignment(horizontal='center', vertical='center', wrap_text=True)
+
+        # Main Sheet
+        if not format_param or format_param == 'final':
+            ws1 = wb.active
+            ws1.title = "CES Final"
+            
+            headers1 = [
+                'ARMY NO', 'RANK', 'TRADE', 'NAME', 'UNIT',
+                'TOET-I (25)', 'TOET-II (25)', 'TOET TOTAL (50)', '25% OF TOET (25)',
+                'FE Online Exam (50)', 'FE Prac (20)', 'FE Total (70)',
+                'BR Online Exam (40)', 'BR Prac (25)', 'BR Total (65)',
+                'TOTAL (160)', 'CONVERTED TO 40', 'REMARKS'
+            ]
+            
+            ws1.merge_cells(start_row=1, start_column=1, end_row=1, end_column=len(headers1))
+            ws1.cell(row=1, column=1, value="FINAL RESULT OF CES").fill = title_fill
+            ws1.cell(row=1, column=1).font = Font(bold=True, size=13)
+            ws1.cell(row=1, column=1).alignment = center
+            
+            for col, header in enumerate(headers1, 1):
+                cell = ws1.cell(row=2, column=col, value=header)
+                cell.fill = header_fill
+                cell.font = Font(bold=True, size=10)
+                cell.alignment = center
+                cell.border = border
+                
+            for index, r in enumerate(cs_final_rows, 1):
+                values = [
+                    r['army_no'], r['rank'], r['trade'], r['name'], r['unit'],
+                    r['toet_i'], r['toet_ii'], r['toet_total'], r['toet_25'],
+                    r['fe_online'], r['fe_prac'], r['fe_total'],
+                    r['br_online'], r['br_prac'], r['br_total'],
+                    r['total_160'], r['converted_40'], r['remarks']
+                ]
+                for col, value in enumerate(values, 1):
+                    cell = ws1.cell(row=index + 2, column=col, value=value)
+                    cell.fill = row_fill
+                    cell.alignment = center
+                    cell.border = border
+                    
+            for col_idx in range(1, len(headers1) + 1):
+                col_letter = openpyxl.utils.get_column_letter(col_idx)
+                max_len = max(len(str(ws1.cell(row=r, column=col_idx).value or '')) for r in range(2, len(cs_final_rows) + 3))
+                ws1.column_dimensions[col_letter].width = max(max_len + 3, 10)
+            ws1.freeze_panes = 'A3'
+
+        # Clerk Sheet
+        if not format_param or format_param == 'clerk':
+            if not format_param:
+                ws2 = wb.create_sheet(title="CES Clerk Final")
+            else:
+                ws2 = wb.active
+                ws2.title = "CES Clerk Final"
+                
+            headers2 = [
+                'RANK', 'TRADE', 'NAME', 'PL', 'BN',
+                'Online (20)', 'Prac (20)', 'Total (40)', 'REMARKS'
+            ]
+            
+            ws2.merge_cells(start_row=1, start_column=1, end_row=1, end_column=len(headers2))
+            ws2.cell(row=1, column=1, value="FINAL RESULT OF CES").fill = title_fill
+            ws2.cell(row=1, column=1).font = Font(bold=True, size=13)
+            ws2.cell(row=1, column=1).alignment = center
+            
+            for col, header in enumerate(headers2, 1):
+                cell = ws2.cell(row=2, column=col, value=header)
+                cell.fill = header_fill
+                cell.font = Font(bold=True, size=10)
+                cell.alignment = center
+                cell.border = border
+                
+            for index, r in enumerate(cs_clerk_rows, 1):
+                values = [
+                    r['rank'], r['trade'], r['name'], r['pl'], r['bn'],
+                    r['online'], r['prac'], r['total'], r['remarks']
+                ]
+                for col, value in enumerate(values, 1):
+                    cell = ws2.cell(row=index + 2, column=col, value=value)
+                    cell.fill = row_fill
+                    cell.alignment = center
+                    cell.border = border
+                    
+            for col_idx in range(1, len(headers2) + 1):
+                col_letter = openpyxl.utils.get_column_letter(col_idx)
+                max_len = max(len(str(ws2.cell(row=r, column=col_idx).value or '')) for r in range(2, len(cs_clerk_rows) + 3))
+                ws2.column_dimensions[col_letter].width = max(max_len + 3, 10)
+            ws2.freeze_panes = 'A3'
+
+        buffer = io.BytesIO()
+        wb.save(buffer)
+        buffer.seek(0)
+
+        log_action(user, 'EXPORT', f'Exported CS {status_filter} dashboard results Excel', request)
+        suffix = f"_{format_param}" if format_param else ""
+        response = HttpResponse(
+            buffer.getvalue(),
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        response['Content-Disposition'] = f'attachment; filename="cs_{status_filter}_results{suffix}.xlsx"'
+        return response
+
+    def _export_clerk_results(self, request, status_filter, sub_dept=None):
+        import openpyxl
+        from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+        from django.db.models import Q
+        from evaluation.models import Marks, EvaluationSheet
+        from evaluation.result_helpers import build_clerk_result_row, _marks_from_sheet, _num, get_grade
+        from departments.models import Agniveer
+        import io
+
+        user = request.user
+        is_pass_filter = status_filter == 'pass'
+        from evaluation.result_helpers import is_sheet_evaluated
+        agniveers = Agniveer.objects.all()
+        agniveers = scoped_agniveers(agniveers, user, 'D')
+        
+        sheets = EvaluationSheet.objects.filter(
+            department='D'
+        ).select_related('agniveer').prefetch_related('marks')
+
+        if sub_dept and sub_dept != 'all':
+            agniveers = agniveers.filter(bn_desp=sub_dept)
+            sheets = sheets.filter(agniveer__bn_desp=sub_dept)
+
+        rows = []
+        for agniveer in agniveers.order_by('agniveer_no', 'enrollment_number'):
+            ag_sheets = [s for s in sheets.filter(agniveer=agniveer) if is_sheet_evaluated(s)]
+            if not ag_sheets:
+                continue
+            
+            sheet_map = {s.test_type: s for s in ag_sheets}
+            sheet = sheet_map.get('CLK_FINAL')
+            if not sheet:
+                if not is_pass_filter:
+                    rows.append({
+                        'army_no': agniveer.agniveer_no or agniveer.enrollment_number,
+                        'rank': getattr(agniveer, 'rank', '') or '',
+                        'trade': agniveer.trade or '',
+                        'name': agniveer.get_full_name(),
+                        'unit': agniveer.bn_desp or '',
+                        'tech_online': '',
+                        'tech_proj': '',
+                        'academic': '',
+                        'comp_online': '',
+                        'comp_prac': '',
+                        'comp_total': '',
+                        'extempore': '',
+                        'typing_20': '',
+                        'marks_obtained_300': 0,
+                        'percentage': 0,
+                        'result_str': 'FAIL',
+                        'grading': 'Fail',
+                        'converted_40': 0,
+                        'remarks': 'No final test evaluation'
+                    })
+                continue
+                
+            marks = _marks_from_sheet(sheet)
+            tech_online = _num(marks.get('Tech Online (115)'))
+            tech_proj = _num(marks.get('Tech Proj HRMS (25)'))
+            academic = _num(marks.get('Academic Online (85)'))
+            comp_online = _num(marks.get('Computer Online (25)'))
+            comp_prac = _num(marks.get('Computer Prac (25)'))
+            comp_total = _num(marks.get('Computer Total (50)')) or (comp_online + comp_prac)
+            extempore = _num(marks.get('Extempore (25)'))
+            typing_20 = marks.get('Typing 20 WPM', '')
+            marks_obtained_300 = _num(marks.get('Marks Obtained (300)')) or (tech_online + tech_proj + academic + comp_total + extempore)
+            percentage = round((marks_obtained_300 / 300) * 100, 2) if marks_obtained_300 else 0
+            converted_40 = _num(marks.get('Marks Obtained (40)')) or round((marks_obtained_300 / 300) * 40, 2)
+            is_pass = percentage >= 46
+            
+            if is_pass == is_pass_filter:
+                rows.append({
+                    'army_no': agniveer.agniveer_no or agniveer.enrollment_number,
+                    'rank': getattr(agniveer, 'rank', '') or '',
+                    'trade': agniveer.trade or '',
+                    'name': agniveer.get_full_name(),
+                    'unit': agniveer.bn_desp or '',
+                    'tech_online': tech_online,
+                    'tech_proj': tech_proj,
+                    'academic': academic,
+                    'comp_online': comp_online,
+                    'comp_prac': comp_prac,
+                    'comp_total': comp_total,
+                    'extempore': extempore,
+                    'typing_20': typing_20,
+                    'marks_obtained_300': marks_obtained_300,
+                    'percentage': percentage,
+                    'result_str': 'PASS' if is_pass else 'FAIL',
+                    'grading': get_grade(percentage, [(tech_online, 115), (tech_proj, 25), (academic, 85), (comp_online, 25), (comp_prac, 25), (extempore, 25)], passing_pct=46),
+                    'converted_40': converted_40,
+                    'remarks': sheet.remarks if sheet.remarks else ''
+                })
+
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = f"CTS {status_filter.upper()}"
+
+        pass_fill = PatternFill(start_color="DDF4E8", end_color="DDF4E8", fill_type="solid")
+        fail_fill = PatternFill(start_color="FCE4E4", end_color="FCE4E4", fill_type="solid")
+        row_fill = pass_fill if status_filter == 'pass' else fail_fill
+
+        header_fill = PatternFill(start_color="D9EAF7", end_color="D9EAF7", fill_type="solid")
+        title_fill = PatternFill(start_color="EAF2F8", end_color="EAF2F8", fill_type="solid")
+        border = Border(
+            left=Side(style='thin', color='B7C4B7'),
+            right=Side(style='thin', color='B7C4B7'),
+            top=Side(style='thin', color='B7C4B7'),
+            bottom=Side(style='thin', color='B7C4B7'),
+        )
+        center = Alignment(horizontal='center', vertical='center', wrap_text=True)
+
+        # Merge row 1 for title
+        ws.merge_cells('A1:S1')
+        ws.cell(row=1, column=1, value="FINAL RESULT OF CTS").fill = title_fill
+        ws.cell(row=1, column=1).font = Font(bold=True, size=13)
+        ws.cell(row=1, column=1).alignment = center
+        ws.row_dimensions[1].height = 30
+
+        # Row 2 Category Headers
+        ws.cell(row=2, column=1, value='ARMY NO')
+        ws.cell(row=2, column=2, value='RANK')
+        ws.cell(row=2, column=3, value='TRADE')
+        ws.cell(row=2, column=4, value='NAME')
+        ws.cell(row=2, column=5, value='UNIT')
+        ws.cell(row=2, column=6, value='Tech')
+        ws.cell(row=2, column=8, value='Academic')
+        ws.cell(row=2, column=9, value='CMPTR')
+        ws.cell(row=2, column=12, value='Extempore (25/10)')
+        ws.cell(row=2, column=13, value='Typing 20 WPM')
+        ws.cell(row=2, column=14, value='Marks Obtained (MM 300) 46%/138')
+        ws.cell(row=2, column=15, value='%AGE')
+        ws.cell(row=2, column=16, value='Result')
+        ws.cell(row=2, column=17, value='Grading')
+        ws.cell(row=2, column=18, value='Converted Out of 40')
+        ws.cell(row=2, column=19, value='Remarks')
+
+        # Row 3 Sub-headers
+        ws.cell(row=3, column=6, value='Online (115/46)')
+        ws.cell(row=3, column=7, value='Tech Proj (HRMS) (25/10)')
+        ws.cell(row=3, column=8, value='Online (85/34)')
+        ws.cell(row=3, column=9, value='Online (25/10)')
+        ws.cell(row=3, column=10, value='Prac (25/10)')
+        ws.cell(row=3, column=11, value='Total (50/20)')
+
+        # Apply header styling to all cells in Row 2 and Row 3 first
+        for r in [2, 3]:
+            ws.row_dimensions[r].height = 25
+            for col in range(1, 20):
+                cell = ws.cell(row=r, column=col)
+                cell.fill = header_fill
+                cell.font = Font(bold=True, size=10)
+                cell.alignment = center
+                cell.border = border
+
+        # Merges
+        # Vertical merges
+        for col in [1, 2, 3, 4, 5, 12, 13, 14, 15, 16, 17, 18, 19]:
+            ws.merge_cells(start_row=2, start_column=col, end_row=3, end_column=col)
+
+        # Horizontal merges
+        ws.merge_cells('F2:G2') # Tech
+        ws.merge_cells('I2:K2') # CMPTR
+
+        # Insert data starting at Row 4
+        for index, r in enumerate(rows, 1):
+            values = [
+                r['army_no'], r['rank'], r['trade'], r['name'], r['unit'],
+                r['tech_online'], r['tech_proj'], r['academic'],
+                r['comp_online'], r['comp_prac'], r['comp_total'],
+                r['extempore'], r['typing_20'], r['marks_obtained_300'],
+                f"{r['percentage']}%" if r['percentage'] else '0%', r['result_str'], r['grading'],
+                r['converted_40'], r['remarks']
+            ]
+            for col, value in enumerate(values, 1):
+                cell = ws.cell(row=index + 3, column=col, value=value)
+                cell.fill = row_fill
+                cell.alignment = center
+                cell.border = border
+
+        for col_idx in range(1, 20):
+            col_letter = openpyxl.utils.get_column_letter(col_idx)
+            max_len = max(len(str(ws.cell(row=r, column=col_idx).value or '')) for r in range(2, len(rows) + 4))
+            ws.column_dimensions[col_letter].width = max(max_len + 3, 10)
+        ws.freeze_panes = 'A4'
+
+        buffer = io.BytesIO()
+        wb.save(buffer)
+        buffer.seek(0)
+
+        log_action(user, 'EXPORT', f'Exported Clerk {status_filter} dashboard results Excel', request)
+        response = HttpResponse(
+            buffer.getvalue(),
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        response['Content-Disposition'] = f'attachment; filename="clerk_{status_filter}_results.xlsx"'
         return response
 
     def _export_specific_test_results(self, request, dept_code, sub_dept_key, test_type, status_filter):
@@ -977,19 +1513,26 @@ class ExportDashboardResultsExcelView(AnyStaffMixin, View):
         if dept_code and test_type:
             return self._export_specific_test_results(request, dept_code, sub_dept_key, test_type, status_filter)
 
-        if user.is_department and user.get_department_code() == 'A':
-            return self._export_battalion_results(request, status_filter)
-        if user.is_department and user.get_department_code() == 'B':
-            return self._export_tts_results(request, status_filter)
-        
-        sheets_with_marks_ids = Marks.objects.values_list('evaluation_sheet_id', flat=True).distinct()
+        # Resolve target department (GET parameter takes precedence)
+        target_dept = dept_code
+        if not target_dept and user.is_department:
+            target_dept = user.get_department_code()
+
+        if target_dept == 'A':
+            return self._export_battalion_results(request, status_filter, sub_dept=sub_dept_key)
+        if target_dept == 'B':
+            return self._export_tts_results(request, status_filter, sub_dept=sub_dept_key)
+        if target_dept == 'C':
+            return self._export_cs_results(request, status_filter, sub_dept=sub_dept_key)
+        if target_dept == 'D':
+            return self._export_clerk_results(request, status_filter, sub_dept=sub_dept_key)
+
+        from evaluation.result_helpers import is_sheet_evaluated
         is_dept = user.is_department
         dept_code = user.get_department_code() if is_dept else None
         departments = [dept_code] if is_dept else ['A', 'B', 'C', 'D']
 
-        all_sheets = EvaluationSheet.objects.filter(
-            Q(is_locked=True) | Q(id__in=sheets_with_marks_ids)
-        ).prefetch_related('marks')
+        all_sheets = EvaluationSheet.objects.all().prefetch_related('marks')
 
         if is_dept:
             all_sheets = scoped_sheets(all_sheets, user, dept_code)
@@ -1005,7 +1548,7 @@ class ExportDashboardResultsExcelView(AnyStaffMixin, View):
             evaluated_departments = []
 
             for dept in departments:
-                dept_sheets = list(all_sheets.filter(agniveer=agniveer, department=dept))
+                dept_sheets = [s for s in all_sheets.filter(agniveer=agniveer, department=dept) if is_sheet_evaluated(s)]
                 if not dept_sheets:
                     continue
                 result_row = build_department_result_row(agniveer, dept_sheets, dept)
@@ -1022,6 +1565,7 @@ class ExportDashboardResultsExcelView(AnyStaffMixin, View):
                 filtered_agniveers.append({
                     'enrollment_number': agniveer.enrollment_number,
                     'army_no': agniveer.agniveer_no or agniveer.enrollment_number,
+                    'rank': getattr(agniveer, 'rank', '') or '',
                     'name': agniveer.get_full_name(),
                     'trade': agniveer.trade or '',
                     'unit': agniveer.bn_desp or '',
@@ -1053,7 +1597,7 @@ class ExportDashboardResultsExcelView(AnyStaffMixin, View):
         left = Alignment(horizontal='left', vertical='center', wrap_text=True)
 
         # Title
-        ws.merge_cells('A1:I1')
+        ws.merge_cells('A1:H1')
         title_cell = ws['A1']
         dept_text = f" - DEPARTMENT {dept_code}" if is_dept else ""
         title_cell.value = f"ARMY EVALUATION PORTAL{dept_text} - {status_filter.upper()} AGNIVEERS"
@@ -1063,7 +1607,7 @@ class ExportDashboardResultsExcelView(AnyStaffMixin, View):
         ws.row_dimensions[1].height = 30
 
         # Headers
-        headers = ['S.No', 'Enrollment No', 'Army No', 'Name', 'Trade', 'Unit', 'Departments', 'Score', 'Percentage']
+        headers = ['ARMY NO', 'RANK', 'TRADE', 'NAME', 'UNIT', 'DEPARTMENTS', 'SCORE', 'PERCENTAGE']
         for col, header in enumerate(headers, 1):
             cell = ws.cell(row=2, column=col, value=header)
             cell.fill = header_fill
@@ -1075,11 +1619,10 @@ class ExportDashboardResultsExcelView(AnyStaffMixin, View):
         row_fill = pass_fill if is_pass_filter else fail_fill
         for row_idx, data in enumerate(filtered_agniveers, 1):
             values = [
-                row_idx,
-                data['enrollment_number'],
                 data['army_no'],
-                data['name'],
+                data['rank'],
                 data['trade'],
+                data['name'],
                 data['unit'],
                 data['departments'],
                 data['score'],
@@ -1088,14 +1631,14 @@ class ExportDashboardResultsExcelView(AnyStaffMixin, View):
             for col, value in enumerate(values, 1):
                 cell = ws.cell(row=row_idx + 2, column=col, value=value)
                 cell.fill = row_fill
-                cell.alignment = left if col in [4, 7] else center
+                cell.alignment = left if col == 4 else center
                 cell.border = border
 
-        widths = [8, 18, 18, 28, 14, 12, 24, 15, 14]
+        widths = [18, 10, 14, 28, 12, 24, 15, 14]
         for col, width in enumerate(widths, 1):
             ws.column_dimensions[openpyxl.utils.get_column_letter(col)].width = width
         ws.freeze_panes = 'A3'
-        ws.auto_filter.ref = f"A2:I{max(len(filtered_agniveers) + 2, 2)}"
+        ws.auto_filter.ref = f"A2:H{max(len(filtered_agniveers) + 2, 2)}"
 
         buffer = io.BytesIO()
         wb.save(buffer)

@@ -2048,8 +2048,7 @@
                             min="0" max="{% with m=dept_config.max_marks|get_item:code|get_item:sub %}{% if m %}{{ m }}{% else %}8{% endif %}{% endwith %}" step="0.01" placeholder="0-{% with m=dept_config.max_marks|get_item:code|get_item:sub %}{% if m %}{{ m }}{% else %}8{% endif %}{% endwith %}" title="Maximum marks: {% with m=dept_config.max_marks|get_item:code|get_item:sub %}{% if m %}{{ m }}{% else %}8{% endif %}{% endwith %}"
                             oninput="if(this.value && parseFloat(this.value) > parseFloat(this.max)) this.value = this.max;">
                           {% else %}
-                          {% if val is not None %}{{ val }}{% else %}{% if col == '1st Attempt' %}{{
-                          current_sheet.sub_event_results|get_item:'nco'|get_item:sub|default:"—" }}{% elif col == '2nd                           Attempt' %}{{ current_sheet.sub_event_results|get_item:'jco'|get_item:sub|default:"—" }}{%                           endif %}{% endif %}
+                          {% if val is not None %}{{ val }}{% else %}{% if col == '1st Attempt' %}{{ current_sheet.sub_event_results|get_item:'nco'|get_item:sub|default:"—" }}{% elif col == '2nd                           Attempt' %}{{ current_sheet.sub_event_results|get_item:'jco'|get_item:sub|default:"—" }}{%                           endif %}{% endif %}
                           {% endif %}
                           {% endwith %}
                         </td>
@@ -2089,8 +2088,7 @@
                             min="0" max="{% with m=dept_config.max_marks|get_item:code|get_item:sub %}{% if m %}{{ m }}{% else %}8{% endif %}{% endwith %}" step="0.01" placeholder="0-{% with m=dept_config.max_marks|get_item:code|get_item:sub %}{% if m %}{{ m }}{% else %}8{% endif %}{% endwith %}" title="Maximum marks: {% with m=dept_config.max_marks|get_item:code|get_item:sub %}{% if m %}{{ m }}{% else %}8{% endif %}{% endwith %}"
                             oninput="if(this.value && parseFloat(this.value) > parseFloat(this.max)) this.value = this.max;">
                           {% else %}
-                          {% if val is not None %}{{ val }}{% else %}{% if col == '1st Attempt' %}{{
-                          current_sheet.sub_event_results|get_item:'nco'|get_item:sub|default:"—" }}{% elif col == '2nd                           Attempt' %}{{ current_sheet.sub_event_results|get_item:'jco'|get_item:sub|default:"—" }}{%                           endif %}{% endif %}
+                          {% if val is not None %}{{ val }}{% else %}{% if col == '1st Attempt' %}{{ current_sheet.sub_event_results|get_item:'nco'|get_item:sub|default:"—" }}{% elif col == '2nd                           Attempt' %}{{ current_sheet.sub_event_results|get_item:'jco'|get_item:sub|default:"—" }}{%                           endif %}{% endif %}
                           {% endif %}
                           {% endwith %}
                         </td>
@@ -2117,11 +2115,11 @@
                     </td>
                     {% endfor %}
                   </tr>
-                  <tr style="background: rgba(82, 183, 136, 0.1);">
-                    <td style="font-weight: 800; color: #52B788; font-size:13px; width: 30%;">CONVERTED (100) MKS</td>
+                  <tr style="background: #D2E8F6 !important;">
+                    <td style="font-weight: 800; color: #1B4332 !important; font-size:13px; width: 30%;">CONVERTED (100) MKS</td>
                     {% for col in t_config.columns %}
                     <td
-                      style="text-align:center; font-weight: 800; color: #52B788; font-family: 'Rajdhani', sans-serif;"
+                      style="text-align:center; font-weight: 800; color: #1B4332 !important; font-family: 'Rajdhani', sans-serif;"
                       data-converted-col="{{ col }}">
                       {{ col }}: <span class="val">{% if current_sheet %}{% with conv=current_sheet.sub_event_results|get_item:col|get_item:'CONVERTED 100 MKS' %}{% if conv is not None %}{{ conv }}{% else %}—{% endif %}{% endwith %}{% else %}—{% endif %}</span>
                     </td>
@@ -2764,11 +2762,39 @@
                       FINAL RESULT</td>
                   </tr>
                   {% endif %}
+                  {% elif code == 'WPN_HANDLING' %}
+                  {% if forloop.counter0 == 0 %}
+                  <tr style="background: rgba(82, 183, 136, 0.15);">
+                    <td colspan="100%"
+                      style="font-weight: 700; color: #52B788; text-align: center; font-size: 12px; letter-spacing: 1px; text-transform: uppercase;">
+                      WT Practical</td>
+                  </tr>
+                  {% elif forloop.counter0 == 9 %}
+                  <tr style="background: rgba(82, 183, 136, 0.15);">
+                    <td colspan="100%"
+                      style="font-weight: 700; color: #52B788; text-align: center; font-size: 12px; letter-spacing: 1px; text-transform: uppercase;">
+                      WT Online Test</td>
+                  </tr>
+                  {% endif %}
+                  {% elif code == 'FINAL_MERIT' %}
+                  {% if forloop.counter0 == 0 %}
+                  <tr style="background: rgba(82, 183, 136, 0.15);">
+                    <td colspan="100%"
+                      style="font-weight: 700; color: #52B788; text-align: center; font-size: 12px; letter-spacing: 1px; text-transform: uppercase;">
+                      Screening Board (80)</td>
+                  </tr>
+                  {% elif forloop.counter0 == 3 %}
+                  <tr style="background: rgba(82, 183, 136, 0.15);">
+                    <td colspan="100%"
+                      style="font-weight: 700; color: #52B788; text-align: center; font-size: 12px; letter-spacing: 1px; text-transform: uppercase;">
+                      Physical Board (50)</td>
+                  </tr>
+                  {% endif %}
                   {% endif %}
 
-                  <tr>
+                  <tr data-sub-event-raw="{{ sub }}">
                     <td style="font-weight: 600; color: #E0E6F0; font-size:13px; white-space:nowrap;">
-                      {{ sub }}
+                      {{ sub|clean_sub_event_name }}
                       {% with max_val=dept_config.max_marks|get_item:code|get_item:sub %}
                         {% if max_val is not None and not sub|has_parenthesized_number %}
                           <span style="font-size: 11px; color: #8B9BB4;">({{ max_val }})</span>
@@ -2847,25 +2873,15 @@
                       {% elif code == 'DST' and sub == 'DST with Arm' and col == '1st Attempt' %}—
                       {% else %}
                       {% if code == 'PPT' or code == 'BPET' %}
-                        {% with txt_suffix="_txt" %}
-                        {% with txt_key=sub|add:txt_suffix %}
-                        {% with val_txt=current_sheet.sub_event_results|get_item:col|get_item:txt_key %}
+                        {% with txt_suffix="_txt" %}{% with txt_key=sub|add:txt_suffix %}{% with val_txt=current_sheet.sub_event_results|get_item:col|get_item:txt_key %}
                           {% if val is not None %}{{ val }}{% else %}—{% endif %}
                           {% if val_txt %}({{ val_txt }}){% endif %}
-                        {% endwith %}
-                        {% endwith %}
-                        {% endwith %}
+                        {% endwith %}{% endwith %}{% endwith %}
                       {% else %}
                         {% if val is not None %}
                         {{ val }}
                         {% else %}
-                        {% if col == '1st Attempt' %}{{
-                        current_sheet.sub_event_results|get_item:'nco'|get_item:sub|default:"—" }}
-                        {% elif col == '2nd Attempt' %}{{
-                        current_sheet.sub_event_results|get_item:'jco'|get_item:sub|default:"—" }}
-                        {% elif col == '3rd Attempt' %}{{
-                        current_sheet.sub_event_results|get_item:'officer'|get_item:sub|default:"—" }}
-                        {% else %}—{% endif %}
+                        {% if col == '1st Attempt' %}{{ current_sheet.sub_event_results|get_item:'nco'|get_item:sub|default:"—" }}{% elif col == '2nd Attempt' %}{{ current_sheet.sub_event_results|get_item:'jco'|get_item:sub|default:"—" }}{% elif col == '3rd Attempt' %}{{ current_sheet.sub_event_results|get_item:'officer'|get_item:sub|default:"—" }}{% else %}—{% endif %}
                         {% endif %}
                       {% endif %}
                       {% endif %}
@@ -2879,7 +2895,7 @@
                       <input
                         type="{% if code == 'CS_CLERK_RESULT' and sub == 'PL' or code == 'CS_CLERK_RESULT' and sub == 'EN' %}text{% else %}number{% endif %}"
                         name="{{ sub }}"
-                        value="{% with stored=current_sheet.sub_event_results.Marks|get_item:sub %}{% if stored is not None %}{{ stored }}{% else %}{{ current_sheet.sub_event_results|get_item:sub|default_if_none:'' }}{% endif %}{% endwith %}"
+                        value="{% if code == 'FINAL_RESULT' and sub == 'BASIC TACTICE (CES) (40)' %}{{ dynamic_ces_marks|default_if_none:'0' }}{% elif code == 'FINAL_RESULT' and sub == 'TRADE PROFICIENCY (BTT) (40)' %}{{ dynamic_btt_marks|default_if_none:'0' }}{% else %}{% with stored=current_sheet.sub_event_results.Marks|get_item:sub %}{% if stored is not None %}{{ stored }}{% else %}{{ current_sheet.sub_event_results|get_item:sub|default_if_none:'' }}{% endif %}{% endwith %}{% endif %}"
                         class="form-control marks-input text-center mx-auto"
                         style="background: rgba(15,20,25,0.6); color: #E0E6F0; border: 1px solid rgba(82,183,136,0.3); width: {% if code == 'CS_CLERK_RESULT' and sub == 'PL' or code == 'CS_CLERK_RESULT' and sub == 'EN' %}90px{% else %}60px{% endif %}; height: 30px; padding: 2px 5px; font-size: 14px; border-radius: 4px;"
                         min="0"
@@ -2887,14 +2903,11 @@
                         step="0.01"
                         placeholder="0-{% with m=dept_config.max_marks|get_item:code|get_item:sub %}{% if m %}{{ m }}{% else %}{% if code == 'MR_III' %}{% if sub == 'Outdoor Test' %}50{% elif sub == 'Indoor Test Written' %}90{% else %}10{% endif %}{% elif code == 'PDP' %}50{% elif code == 'FC_All' %}{% if 'Attempt' in sub %}40{% else %}10{% endif %}{% else %}40{% endif %}{% endif %}{% endwith %}"
                         title="Maximum marks: {% with m=dept_config.max_marks|get_item:code|get_item:sub %}{% if m %}{{ m }}{% else %}{% if code == 'MR_III' %}{% if sub == 'Outdoor Test' %}50{% elif sub == 'Indoor Test Written' %}90{% else %}10{% endif %}{% elif code == 'PDP' %}50{% elif code == 'FC_All' %}{% if 'Attempt' in sub %}40{% else %}10{% endif %}{% else %}40{% endif %}{% endif %}{% endwith %}"
-                        {% if code == 'DMV_RESULT' and sub != 'Online Test (100)' %}readonly{% elif code == 'OPEM_RESULT' and                         sub != 'Written Test (100)' %}readonly{% elif code == 'CS_RESULT' and sub == 'TOTAL TOET (50)'                         %}readonly{% elif code == 'CS_RESULT' and sub == '25% OF TOET (25)' %}readonly{% elif                         code == 'CS_RESULT' and sub == 'FE Total (70)' %}readonly{% elif code == 'CS_RESULT' and                         sub == 'BR Total (65)' %}readonly{% elif code == 'CS_RESULT' and sub == 'TOTAL (160)' %}readonly{%                         elif code == 'CS_RESULT' and sub == 'CONVERTED TO 40' %}readonly{% elif code == 'CS_CLERK_RESULT' and                         sub == 'Total (40)' %}readonly{% elif 'SCREEN_BOARD' in code and sub in 'Convert In 10 Mks (Mid Term),Convert In 15 Mks,Convert In 05 Mks,Convert In 10 Mks (Practical),Grand Total (40),% Age,Grading' %}readonly{% endif %}
-                        oninput="if(this.type === 'number' && this.value && parseFloat(this.value) > parseFloat(this.max)) this.value = this.max; if('{{ code }}' === 'CS_RESULT') calculateCSResult(); if('{{ code }}' === 'CS_CLERK_RESULT') calculateCSClerkResult(); if('{{ code }}' === 'CS_ASSESSMENT') calculateCSAssessment(); if(['OPEM_PRACTICAL', 'DMV_PRACTICAL', 'OPEM_MAINTENANCE', 'DMV_DRIVING'].includes('{{ code }}')) calculateOpemDmvPracticalLive('{{ code }}'); if('{{ code }}' === 'OPEM_RESULT') calculateOPEMResult(); if('{{ code }}' === 'DMV_RESULT') calculateDMVResult(); if('{{ code }}'.includes('SCREEN_BOARD')) calculateScreenBoardLive('{{ code }}');">
+                        {% if code == 'DMV_RESULT' and sub != 'Online Test (100)' %}readonly{% elif code == 'OPEM_RESULT' and sub != 'Written Test (100)' %}readonly{% elif code == 'CS_RESULT' and sub == 'TOTAL TOET (50)' %}readonly{% elif code == 'CS_RESULT' and sub == '25% OF TOET (25)' %}readonly{% elif code == 'CS_RESULT' and sub == 'FE Total (70)' %}readonly{% elif code == 'CS_RESULT' and sub == 'BR Total (65)' %}readonly{% elif code == 'CS_RESULT' and sub == 'TOTAL (160)' %}readonly{% elif code == 'CS_RESULT' and sub == 'CONVERTED TO 40' %}readonly{% elif code == 'CS_CLERK_RESULT' and sub == 'Total (40)' %}readonly{% elif 'SCREEN_BOARD' in code and sub in 'Convert In 10 Mks (Mid Term),Convert In 15 Mks,Convert In 05 Mks,Convert In 10 Mks (Practical),Grand Total (40),% Age,Grading' %}readonly{% elif code == 'CMK_SHEET' %}readonly{% elif code == 'WPN_HANDLING' and sub in 'TOTAL (100),BEST ATTEMPT (60),TOTAL (160),CONVERTED (20)' %}readonly{% elif code == 'FINAL_MERIT' and sub != 'BASIC TAC (40)' %}readonly{% elif code == 'FINAL_RESULT' %}readonly{% endif %}
+                        oninput="if(this.type === 'number' && this.value && parseFloat(this.value) > parseFloat(this.max)) this.value = this.max; if('{{ code }}' === 'CS_RESULT') calculateCSResult(); if('{{ code }}' === 'CS_CLERK_RESULT') calculateCSClerkResult(); if('{{ code }}' === 'CS_ASSESSMENT') calculateCSAssessment(); if(['OPEM_PRACTICAL', 'DMV_PRACTICAL', 'OPEM_MAINTENANCE', 'DMV_DRIVING'].includes('{{ code }}')) calculateOpemDmvPracticalLive('{{ code }}'); if('{{ code }}' === 'OPEM_RESULT') calculateOPEMResult(); if('{{ code }}' === 'DMV_RESULT') calculateDMVResult(); if('{{ code }}'.includes('SCREEN_BOARD')) calculateScreenBoardLive('{{ code }}'); if('{{ code }}' === 'WPN_HANDLING') calculateWpnHandlingLive(); if('{{ code }}' === 'FINAL_MERIT') calculateFinalMeritLive(); if('{{ code }}' === 'FINAL_RESULT') calculateFinalResultLive();">
                       {% else %}
                       {% if current_sheet %}
-                      {% with val=current_sheet.sub_event_results.Marks|get_item:sub %}
-                      {% if val is not None %}{{ val }}{% else %}{{
-                      current_sheet.sub_event_results|get_item:'nco'|get_item:sub|default:"—" }}{% endif %}
-                      {% endwith %}
+                      {% with val=current_sheet.sub_event_results.Marks|get_item:sub %}{% if val is not None %}{{ val }}{% else %}{{ current_sheet.sub_event_results|get_item:'nco'|get_item:sub|default:"—" }}{% endif %}{% endwith %}
                       {% else %}
                       —
                       {% endif %}
@@ -2910,6 +2923,7 @@
                     </td>
                   </tr>
                   {% endfor %}
+                  {% if code != 'CMK_SHEET' and code != 'WPN_HANDLING' and code != 'FINAL_MERIT' %}
                   <tr style="background: rgba(82, 183, 136, 0.05);">
                     <td style="font-weight: 700; color: #52B788; font-size:13px;">TOTAL</td>
                     {% if t_config.columns %}
@@ -2939,12 +2953,13 @@
                     </td>
                     {% endif %}
                   </tr>
+                  {% endif %}
 
                   {% if code == 'MR_III' %}
-                  <tr style="background: rgba(82, 183, 136, 0.1);">
-                    <td style="font-weight: 800; color: #52B788; font-size:13px;">CONVERTED (100) MKS</td>
+                  <tr style="background: #D2E8F6 !important;">
+                    <td style="font-weight: 800; color: #1B4332 !important; font-size:13px; text-align: left; padding-left: 12px;">CONVERTED (100) MKS</td>
                     <td
-                      style="text-align:center; font-weight: 800; color: #52B788; font-family: 'Rajdhani', sans-serif;"
+                      style="text-align: right; padding-right: 15px; font-weight: 800; color: #1B4332 !important; font-family: 'Rajdhani', sans-serif;"
                       data-converted-mriii="true">
                       {% if current_sheet %}{{ current_sheet.sub_event_results.Marks|get_item:'CONVERTED 100 MKS'|default:"—" }}{% else %}—{% endif %}
                     </td>
@@ -3018,7 +3033,7 @@
           {% endif %}
 
           <!-- Sticky Bottom Summary Panel for Standard Dynamic Tabs -->
-          <div class="evaluation-sticky-footer no-print" data-sheet-code="{{ code }}" data-max-marks="{% if code == 'CS_RESULT' %}160{% elif code == 'CS_CLERK_RESULT' or 'SCREEN_BOARD' in code %}40{% elif code == 'BFC' %}240{% elif code == 'PDP' %}50{% elif code == 'FC_All' %}90{% else %}100{% endif %}" data-evaluated="{% if current_sheet %}true{% else %}false{% endif %}" style="display: flex !important; flex-flow: row nowrap !important; align-items: center !important; justify-content: space-between !important; gap: 12px !important; padding: 10px 20px !important;">
+          <div class="evaluation-sticky-footer no-print" data-sheet-code="{{ code }}" data-max-marks="{% if code == 'CS_RESULT' %}160{% elif code == 'CS_CLERK_RESULT' or 'SCREEN_BOARD' in code %}40{% elif code == 'BFC' %}240{% elif code == 'PDP' %}50{% elif code == 'FC_All' %}90{% elif code == 'CMK_SHEET' or code == 'WPN_HANDLING' %}20{% elif code == 'FINAL_MERIT' %}130{% elif code == 'FINAL_RESULT' %}120{% else %}100{% endif %}" data-evaluated="{% if current_sheet %}true{% else %}false{% endif %}" style="display: flex !important; flex-flow: row nowrap !important; align-items: center !important; justify-content: space-between !important; gap: 12px !important; padding: 10px 20px !important;">
             {% if code == 'CS_RESULT' %}
             <div class="compact-score-card" style="flex: 0.9 1 110px !important; margin: 0 !important; max-width: 140px !important;">
               <span class="card-label">Total Marks</span>
@@ -3131,8 +3146,8 @@
             <div class="compact-score-card" style="flex: 0.9 1 110px !important; margin: 0 !important; max-width: 140px !important;">
               <span class="card-label">Total Best Score</span>
               <span class="card-val text-success">
-                <span id="score-{{ code }}">{% if current_sheet %}{{ current_sheet.get_total_marks|floatformat:0 }}{% else %}0{% endif %}</span>
-                <span style="font-size: 9px; color: var(--text-muted);">/{% if code == 'BFC' %}240{% elif code == 'PDP' %}50{% elif code == 'FC_All' %}90{% else %}100{% endif %}</span>
+                <span id="score-{{ code }}">{% if current_sheet %}{% if code == 'CMK_SHEET' or code == 'WPN_HANDLING' or code == 'FINAL_MERIT' or code == 'FINAL_RESULT' %}{{ current_sheet.get_total_marks|floatformat:2 }}{% else %}{{ current_sheet.get_total_marks|floatformat:0 }}{% endif %}{% else %}0.00{% endif %}</span>
+                <span style="font-size: 9px; color: var(--text-muted);">/{% if code == 'BFC' %}240{% elif code == 'PDP' %}50{% elif code == 'FC_All' %}90{% elif code == 'CMK_SHEET' or code == 'WPN_HANDLING' %}20{% elif code == 'FINAL_MERIT' %}130{% elif code == 'FINAL_RESULT' %}120{% else %}100{% endif %}</span>
               </span>
             </div>
             <div class="compact-score-card" style="flex: 0.9 1 110px !important; margin: 0 !important; max-width: 140px !important;">
@@ -3409,6 +3424,10 @@
 
           // Re-trigger all specific tab calculations globally on any input
           calculateFCAll();
+          if (window.calculateCmkLive) window.calculateCmkLive();
+          if (window.calculateWpnHandlingLive) window.calculateWpnHandlingLive();
+          if (window.calculateFinalMeritLive) window.calculateFinalMeritLive();
+          if (window.calculateFinalResultLive) window.calculateFinalResultLive();
           calculateDMVResult();
           calculateOPEMResult();
           calculateOtherResult();
@@ -3449,59 +3468,10 @@
           }
         });
       });
-
-      // Initial Calculation on Load
-      const rows = table.querySelectorAll('tbody tr:not(:last-child)');
-      rows.forEach(row => calculateRowBest(row));
-
-      const headers = Array.from(table.querySelectorAll('thead th')).map(th => th.textContent.trim());
-      headers.forEach(h => {
-        if (h && h !== 'Event Wise Best' && h !== 'W1' && h !== 'W2' && h !== 'W3' && h !== 'W4' && h !== 'W5' && h !== 'W6' && h !== 'W7' && h !== 'W8' && h !== 'W9 (Avg)') calculateColumnTotal(table, h);
-      });
-      calculateColumnTotal(table, 'Event Wise Best');
-      calculateSingleColumnTotal(table);
-      if (document.getElementById('tab-FC_All') && typeof calculateFCAll === 'function') calculateFCAll();
-      if (document.getElementById('tab-DMV_RESULT') && typeof calculateDMVResult === 'function') calculateDMVResult();
-      if (document.getElementById('tab-OPEM_RESULT') && typeof calculateOPEMResult === 'function') calculateOPEMResult();
-      if (document.getElementById('tab-OTHER_RESULT') && typeof calculateOtherResult === 'function') calculateOtherResult();
-      
-      if (document.getElementById('tab-CS_RESULT') && window.calculateCSResult) window.calculateCSResult();
-      if (document.getElementById('tab-CS_CLERK_RESULT') && window.calculateCSClerkResult) window.calculateCSClerkResult();
-      if (document.getElementById('tab-CS_ASSESSMENT') && window.calculateCSAssessment) window.calculateCSAssessment();
-      
-      if (window.calculateOpemAssessmentLive) {
-        if (document.getElementById('tab-OPEM_ASSESSMENT')) window.calculateOpemAssessmentLive('OPEM_ASSESSMENT');
-        if (document.getElementById('tab-DMV_ASSESSMENT')) window.calculateOpemAssessmentLive('DMV_ASSESSMENT');
-        if (document.getElementById('tab-OTHER_ASSESSMENT')) window.calculateOpemAssessmentLive('OTHER_ASSESSMENT');
-      }
-      
-      if (typeof calculateOpemDmvPracticalLive === 'function') {
-        if (document.getElementById('tab-OPEM_PRACTICAL')) calculateOpemDmvPracticalLive('OPEM_PRACTICAL');
-        if (document.getElementById('tab-DMV_PRACTICAL')) calculateOpemDmvPracticalLive('DMV_PRACTICAL');
-        if (document.getElementById('tab-OPEM_MAINTENANCE')) calculateOpemDmvPracticalLive('OPEM_MAINTENANCE');
-        if (document.getElementById('tab-DMV_DRIVING')) calculateOpemDmvPracticalLive('DMV_DRIVING');
-      }
-      
-      if (window.calculateScreenBoardLive) {
-        if (document.getElementById('tab-DMV_SCREEN_BOARD')) window.calculateScreenBoardLive('DMV_SCREEN_BOARD');
-        if (document.getElementById('tab-OPEM_SCREEN_BOARD')) window.calculateScreenBoardLive('OPEM_SCREEN_BOARD');
-        if (document.getElementById('tab-OTHER_SCREEN_BOARD')) window.calculateScreenBoardLive('OTHER_SCREEN_BOARD');
-      }
     });
 
     // Setup PPT/BPET bidirectional listeners
     setupPptBpetListeners();
-
-    // Sync loaded numeric values to text grade select dropdowns initially
-    document.querySelectorAll('select.grade-txt-select').forEach(selectEl => {
-      const cell = selectEl.closest('div');
-      const numInput = cell?.querySelector('input[type="number"]');
-      if (numInput && numInput.value) {
-        const testCode = selectEl.getAttribute('data-test-code');
-        const eventName = selectEl.getAttribute('data-sub-event');
-        selectEl.value = getPptBpetTextFromNumber(testCode, eventName, parseFloat(numInput.value));
-      }
-    });
 
     // Sync remarks fields live
     document.querySelectorAll('[name="remarks"]').forEach(el => {
@@ -3516,11 +3486,6 @@
         }
       });
     });
-
-    // Update overall profile card
-    if (window.updateOverallProfileCard) {
-      window.updateOverallProfileCard();
-    }
 
     // Universal listener to mark tab as evaluated and update profile card live on any change/input
     document.addEventListener('input', (e) => {
@@ -3548,8 +3513,6 @@
         }
       }
     });
-    ['CLK_INITIAL', 'CLK_WEEKLY_1', 'CLK_WEEKLY_2', 'CLK_FINAL'].forEach(calculateClerkResult);
-    ['PPT', 'BPET', 'Firing', 'DST', 'MR_III', 'BFC', 'PDP', 'FC_All'].forEach(calculateBattalionResult);
     // ... (previous functions calculateRowBest, calculateFCAll, calculateDMVResult, calculateOPEMResult)
 
     function calculateOtherResult() {
@@ -3795,6 +3758,7 @@
     function calculateBattalionResult(testCode) {
       const tab = document.getElementById('tab-' + testCode);
       if (!tab) return;
+      if (testCode === 'CMK_SHEET' || testCode === 'WPN_HANDLING') return;
 
       const hasInputs = tab.querySelector('input[type="number"]:not([readonly])');
       if (!hasInputs) return; // view-only mode, do not overwrite Django-rendered footer
@@ -4327,6 +4291,428 @@
     window.calculateW2Live = function () { calculateClerkResult('CLK_WEEKLY_2'); };
     window.calculateFLive = function () { calculateClerkResult('CLK_FINAL'); };
 
+    window.calculateCmkLive = function() {
+      const tab = document.getElementById('tab-CMK_SHEET');
+      if (!tab) return;
+
+      const getSubEventValue = (testCode, subEventName) => {
+        const t = document.getElementById('tab-' + testCode);
+        if (!t) return 0;
+        
+        // 1. Try to find input element by exact name first (for edit/evaluate mode)
+        const input = t.querySelector(`input[name="${CSS.escape(subEventName)}"]`);
+        if (input) {
+          return parseFloat(input.value) || 0;
+        }
+        
+        // 2. Map name if needed for cell-text matching
+        let searchName = subEventName;
+        if (testCode === 'FC_All') {
+          if (subEventName === 'FC Online 1st Attempt') searchName = '1st Attempt';
+          else if (subEventName === 'FC Online 2nd Attempt') searchName = '2nd Attempt';
+          else if (subEventName === 'FC Online Best Attempt') searchName = 'Best Attempt';
+        }
+        
+        // 3. Fallback to scraping cell content
+        const rows = Array.from(t.querySelectorAll('tbody tr'));
+        let row = rows.find(r => r.getAttribute('data-sub-event-raw') === subEventName);
+        if (!row) {
+          row = rows.find(r => r.cells[0] && r.cells[0].textContent.toUpperCase().includes(searchName.toUpperCase()));
+        }
+        if (!row) return 0;
+        const cell = row.cells[1];
+        if (!cell) return 0;
+        const cellInput = cell.querySelector('input');
+        if (cellInput) {
+          return parseFloat(cellInput.value) || 0;
+        }
+        const val = parseFloat(cell.textContent.trim());
+        return isNaN(val) ? 0 : val;
+      };
+
+      // 1. Fetch values
+      // FC Prac
+      const tgtIden = getSubEventValue('FC_All', 'TGT IDEN');
+      const judgingDist = getSubEventValue('FC_All', 'JUDGING DIST');
+      const obsnTrg = getSubEventValue('FC_All', 'OBSN TRG');
+      const fcPrac = tgtIden + judgingDist + obsnTrg;
+
+      // FC Online
+      const fcOnline1st = getSubEventValue('FC_All', 'FC Online 1st Attempt');
+      const fcOnline2nd = getSubEventValue('FC_All', 'FC Online 2nd Attempt');
+      const fcOnlineBest = Math.max(fcOnline1st, fcOnline2nd);
+
+      // Camp Trg
+      const campTrg = getSubEventValue('FC_All', 'CAMP TRG');
+
+      // MR Std III
+      const mrOutdoor = getSubEventValue('MR_III', 'Outdoor Test');
+      const mrIndoor = getSubEventValue('MR_III', 'Indoor Test Written');
+      const mrProject = getSubEventValue('MR_III', 'Project Wks');
+      const mrOriginalTotal = mrOutdoor + mrIndoor + mrProject;
+      const mrStdIII = Math.round((mrOriginalTotal / 150) * 100);
+      const mrConverted = (mrOriginalTotal / 150) * 40;
+
+      // BFC
+      let bfcTotal = 0;
+      const bfcTab = document.getElementById('tab-BFC');
+      if (bfcTab) {
+        ['1st Attempt', '2nd Attempt'].forEach(col => {
+          let sum = 0;
+          ['Hindi (Theory)', 'Hindi (TMA)', 'English (Theory)', 'English (TMA)'].forEach(sub => {
+            const input = bfcTab.querySelector(`input[name="${col}_${sub}"]`);
+            if (input) {
+              sum += parseFloat(input.value) || 0;
+            }
+          });
+          if (sum > bfcTotal) bfcTotal = sum;
+        });
+        if (bfcTotal === 0) {
+          const bfcScoreEl = document.getElementById('score-BFC');
+          if (bfcScoreEl) {
+            const val = parseFloat(bfcScoreEl.textContent.trim());
+            bfcTotal = isNaN(val) ? 0 : val;
+          }
+        }
+      }
+      const bfcConverted = (bfcTotal / 240) * 15;
+
+      // PDP
+      const pdpTotal = getSubEventValue('PDP', 'PDP Test');
+      const pdpConverted = (pdpTotal / 50) * 15;
+
+      // Totals
+      const total160 = fcPrac + fcOnlineBest + campTrg + mrConverted + bfcConverted + pdpConverted;
+      const converted20 = (total160 / 160) * 20;
+
+      // 2. Set values in CMK_SHEET inputs or cell texts (if read-only/view-only)
+      const setVal = (name, val, decimals = null) => {
+        const inp = tab.querySelector(`input[name="${CSS.escape(name)}"]`);
+        const formattedVal = decimals !== null ? val.toFixed(decimals) : val;
+        if (inp) {
+          inp.value = formattedVal;
+        } else {
+          const rows = Array.from(tab.querySelectorAll('tbody tr'));
+          let row = rows.find(r => r.getAttribute('data-sub-event-raw') === name);
+          if (!row) {
+            row = rows.find(r => r.cells[0] && r.cells[0].textContent.toUpperCase().includes(name.toUpperCase()));
+          }
+          if (row && row.cells[1]) {
+            row.cells[1].textContent = formattedVal;
+          }
+        }
+      };
+
+      setVal('FC/BC PRAC (30)', fcPrac);
+      setVal('FC/BC ONLINE TEST (30)', fcOnlineBest);
+      setVal('CAMP TRG (30)', campTrg);
+      setVal('MR STD III (100)', mrStdIII);
+      setVal('CONVERTED (40)', mrConverted, 2);
+      setVal('BFC (240)', bfcTotal);
+      setVal('BFC CONVERTED (15)', parseFloat(bfcConverted.toFixed(4)));
+      setVal('PDP (50)', pdpTotal);
+      setVal('PDP CONVERTED (15)', parseFloat(pdpConverted.toFixed(2)));
+      setVal('TOTAL (160)', total160, 2);
+      setVal('CONVERTED (20)', converted20, 2);
+
+      // Update sticky bottom footer stats for CMK_SHEET
+      const scoreEl = document.getElementById('score-CMK_SHEET');
+      const percEl = document.getElementById('perc-CMK_SHEET');
+      const gradeEl = document.getElementById('grade-CMK_SHEET');
+      const statusEl = document.getElementById('status-CMK_SHEET');
+
+      const percentage = (converted20 / 20) * 100;
+      const grade = getGrade(percentage, null, 40);
+
+      if (scoreEl) scoreEl.textContent = converted20.toFixed(2);
+      if (percEl) percEl.textContent = percentage.toFixed(2);
+      if (gradeEl) gradeEl.textContent = grade;
+      if (statusEl) {
+        if (percentage >= 40) {
+          statusEl.innerHTML = '✓ PASS';
+          statusEl.style.color = '#52B788';
+        } else {
+          statusEl.innerHTML = '✗ FAIL';
+          statusEl.style.color = '#EF5350';
+        }
+      }
+    };
+
+    window.calculateWpnHandlingLive = function() {
+      const tab = document.getElementById('tab-WPN_HANDLING');
+      if (!tab) return;
+
+      const getVal = (name) => {
+        const inp = tab.querySelector(`input[name="${CSS.escape(name)}"]`);
+        if (inp) {
+          return parseFloat(inp.value) || 0;
+        }
+        const rows = Array.from(tab.querySelectorAll('tbody tr'));
+        let row = rows.find(r => r.getAttribute('data-sub-event-raw') === name);
+        if (!row) {
+          row = rows.find(r => r.cells[0] && r.cells[0].textContent.toUpperCase().includes(name.toUpperCase()));
+        }
+        if (!row) return 0;
+        const cell = row.cells[1];
+        if (!cell) return 0;
+        const cellInput = cell.querySelector('input');
+        if (cellInput) {
+          return parseFloat(cellInput.value) || 0;
+        }
+        const val = parseFloat(cell.textContent.trim());
+        return isNaN(val) ? 0 : val;
+      };
+
+      const setVal = (name, val, decimals = null) => {
+        const inp = tab.querySelector(`input[name="${CSS.escape(name)}"]`);
+        const formattedVal = decimals !== null ? val.toFixed(decimals) : val;
+        if (inp) {
+          inp.value = formattedVal;
+        } else {
+          const rows = Array.from(tab.querySelectorAll('tbody tr'));
+          let row = rows.find(r => r.getAttribute('data-sub-event-raw') === name);
+          if (!row) {
+            row = rows.find(r => r.cells[0] && r.cells[0].textContent.toUpperCase().includes(name.toUpperCase()));
+          }
+          if (row && row.cells[1]) {
+            row.cells[1].textContent = formattedVal;
+          }
+        }
+      };
+
+      const tsoet1 = getVal('TsOET-1 (10)');
+      const tsoet2 = getVal('TsOET-2 (10)');
+      const tsoet3 = getVal('TsOET-3 (10)');
+      const tsoet4 = getVal('TsOET-4 (15)');
+      const tsoet5 = getVal('TsOET-5 (15)');
+      const tsoet6 = getVal('TsOET-6 (15)');
+      const tsoet7 = getVal('TsOET-7 (10)');
+      const idenParts = getVal('IDEN OF PARTS (15)');
+
+      const total100 = tsoet1 + tsoet2 + tsoet3 + tsoet4 + tsoet5 + tsoet6 + tsoet7 + idenParts;
+      setVal('TOTAL (100)', total100);
+
+      const attempt1 = getVal('1st ATTEMPT (60)');
+      const attempt2 = getVal('2nd ATTEMPT (60)');
+      const bestAttempt = Math.max(attempt1, attempt2);
+      setVal('BEST ATTEMPT (60)', bestAttempt);
+
+      const total160 = total100 + bestAttempt;
+      setVal('TOTAL (160)', total160);
+
+      const converted20 = (total160 / 160) * 20;
+      setVal('CONVERTED (20)', converted20, 2);
+
+      // Update sticky bottom footer stats
+      const scoreEl = document.getElementById('score-WPN_HANDLING');
+      const percEl = document.getElementById('perc-WPN_HANDLING');
+      const gradeEl = document.getElementById('grade-WPN_HANDLING');
+      const statusEl = document.getElementById('status-WPN_HANDLING');
+
+      const percentage = (converted20 / 20) * 100;
+      const grade = getGrade(percentage, null, 40);
+
+      if (scoreEl) scoreEl.textContent = converted20.toFixed(2);
+      if (percEl) percEl.textContent = percentage.toFixed(2);
+      if (gradeEl) gradeEl.textContent = grade;
+      if (statusEl) {
+        if (percentage >= 40) {
+          statusEl.innerHTML = '✓ PASS';
+          statusEl.style.color = '#52B788';
+        } else {
+          statusEl.innerHTML = '✗ FAIL';
+          statusEl.style.color = '#EF5350';
+        }
+      }
+    };
+
+    window.calculateFinalMeritLive = function() {
+      const tab = document.getElementById('tab-FINAL_MERIT');
+      if (!tab) return;
+
+      const getSubEventValue = (testCode, subEventName) => {
+        const t = document.getElementById('tab-' + testCode);
+        if (!t) return 0;
+        
+        // 1. Try to find input element by exact name first (for edit/evaluate mode)
+        const input = t.querySelector(`input[name="${CSS.escape(subEventName)}"]`);
+        if (input) {
+          return parseFloat(input.value) || 0;
+        }
+        
+        // 2. Fallback to scraping cell content (for view-only mode)
+        const rows = Array.from(t.querySelectorAll('tbody tr'));
+        let row = rows.find(r => r.getAttribute('data-sub-event-raw') === subEventName);
+        if (!row) {
+          row = rows.find(r => r.cells[0] && r.cells[0].textContent.toUpperCase().includes(subEventName.toUpperCase()));
+        }
+        if (!row) return 0;
+        const cell = row.cells[1];
+        if (!cell) return 0;
+        const cellInput = cell.querySelector('input');
+        if (cellInput) {
+          return parseFloat(cellInput.value) || 0;
+        }
+        const val = parseFloat(cell.textContent.trim());
+        return isNaN(val) ? 0 : val;
+      };
+
+      const getTabScore = (testCode) => {
+        const el = document.getElementById('score-' + testCode);
+        if (!el) return 0;
+        const val = parseFloat(el.textContent.trim());
+        return isNaN(val) ? 0 : val;
+      };
+
+      // 1. Fetch values
+      const cmk = getSubEventValue('CMK_SHEET', 'CONVERTED (20)');
+      const wpn = getSubEventValue('WPN_HANDLING', 'CONVERTED (20)');
+      const basicTac = getSubEventValue('FINAL_MERIT', 'BASIC TAC (40)');
+      
+      const ppt = getTabScore('PPT') * 0.1;
+      const fire = getTabScore('Firing') * 0.1;
+      const drill = getTabScore('DST') * 0.2;
+      const bpet = getTabScore('BPET') * 0.1;
+
+      const totalPoint = cmk + wpn + basicTac + ppt + fire + drill + bpet;
+
+      // 2. Set values in inputs or cell texts (if read-only/view-only)
+      const setVal = (name, val, decimals = null) => {
+        const inp = tab.querySelector(`input[name="${CSS.escape(name)}"]`);
+        const formattedVal = decimals !== null ? val.toFixed(decimals) : val;
+        if (inp) {
+          inp.value = formattedVal;
+        } else {
+          const rows = Array.from(tab.querySelectorAll('tbody tr'));
+          let row = rows.find(r => r.getAttribute('data-sub-event-raw') === name);
+          if (!row) {
+            row = rows.find(r => r.cells[0] && r.cells[0].textContent.toUpperCase().includes(name.toUpperCase()));
+          }
+          if (row && row.cells[1]) {
+            row.cells[1].textContent = formattedVal;
+          }
+        }
+      };
+
+      setVal('COMMN MIL KNOWLAGE (20)', cmk, 2);
+      setVal('WPN & EQPT HANDLING (20)', wpn, 2);
+      setVal('PPT (10)', ppt, 2);
+      setVal('FIRE (10)', fire, 2);
+      setVal('DRILL (20)', drill, 2);
+      setVal('BPET (10)', bpet, 2);
+      setVal('TOTAL POINT (130)', totalPoint, 2);
+
+      // Update sticky bottom footer stats for FINAL_MERIT
+      const scoreEl = document.getElementById('score-FINAL_MERIT');
+      const percEl = document.getElementById('perc-FINAL_MERIT');
+      const gradeEl = document.getElementById('grade-FINAL_MERIT');
+      const statusEl = document.getElementById('status-FINAL_MERIT');
+
+      const percentage = (totalPoint / 130) * 100;
+      const grade = getGrade(percentage, null, 40);
+
+      if (scoreEl) scoreEl.textContent = totalPoint.toFixed(2);
+      if (percEl) percEl.textContent = percentage.toFixed(2);
+      if (gradeEl) gradeEl.textContent = grade;
+      if (statusEl) {
+        if (percentage >= 40) {
+          statusEl.innerHTML = '✓ PASS';
+          statusEl.style.color = '#52B788';
+        } else {
+          statusEl.innerHTML = '✗ FAIL';
+          statusEl.style.color = '#EF5350';
+        }
+      }
+    };
+
+    window.calculateFinalResultLive = function() {
+      const tab = document.getElementById('tab-FINAL_RESULT');
+      if (!tab) return;
+
+      const getSubEventValue = (testCode, subEventName) => {
+        const t = document.getElementById('tab-' + testCode);
+        if (!t) return 0;
+        
+        // 1. Try to find input element by exact name first (for edit/evaluate mode)
+        const input = t.querySelector(`input[name="${CSS.escape(subEventName)}"]`);
+        if (input) {
+          return parseFloat(input.value) || 0;
+        }
+        
+        // 2. Fallback to scraping cell content (for view-only mode)
+        const rows = Array.from(t.querySelectorAll('tbody tr'));
+        let row = rows.find(r => r.getAttribute('data-sub-event-raw') === subEventName);
+        if (!row) {
+          row = rows.find(r => r.cells[0] && r.cells[0].textContent.toUpperCase().includes(subEventName.toUpperCase()));
+        }
+        if (!row) return 0;
+        const cell = row.cells[1];
+        if (!cell) return 0;
+        const cellInput = cell.querySelector('input');
+        if (cellInput) {
+          return parseFloat(cellInput.value) || 0;
+        }
+        const val = parseFloat(cell.textContent.trim());
+        return isNaN(val) ? 0 : val;
+      };
+
+      // 1. Fetch values
+      const cmk = getSubEventValue('CMK_SHEET', 'CONVERTED (20)');
+      const wpn = getSubEventValue('WPN_HANDLING', 'CONVERTED (20)');
+      const basicTac = parseFloat('{{ dynamic_ces_marks|default:0 }}') || 0;
+      const tradeProf = parseFloat('{{ dynamic_btt_marks|default:0 }}') || 0;
+
+      const totalPoint = cmk + wpn + basicTac + tradeProf;
+      const roundFigure = Math.round(totalPoint);
+
+      // 2. Set values in inputs or cell texts (if read-only/view-only)
+      const setVal = (name, val, decimals = null) => {
+        const inp = tab.querySelector(`input[name="${CSS.escape(name)}"]`);
+        const formattedVal = decimals !== null ? val.toFixed(decimals) : val;
+        if (inp) {
+          inp.value = formattedVal;
+        } else {
+          const rows = Array.from(tab.querySelectorAll('tbody tr'));
+          let row = rows.find(r => r.getAttribute('data-sub-event-raw') === name);
+          if (!row) {
+            row = rows.find(r => r.cells[0] && r.cells[0].textContent.toUpperCase().includes(name.toUpperCase()));
+          }
+          if (row && row.cells[1]) {
+            row.cells[1].textContent = formattedVal;
+          }
+        }
+      };
+
+      setVal('COMMON MIL KNOWLEDGE (20)', cmk, 2);
+      setVal('BASIC TACTICE (CES) (40)', basicTac, 2);
+      setVal('TRADE PROFICIENCY (BTT) (40)', tradeProf, 2);
+      setVal('WPN & EQPT HANDLING (20)', wpn, 2);
+      setVal('TOTAL (120)', totalPoint, 2);
+      setVal('ROUND FIGURE (120)', roundFigure);
+
+      // Update sticky bottom footer stats for FINAL_RESULT
+      const scoreEl = document.getElementById('score-FINAL_RESULT');
+      const percEl = document.getElementById('perc-FINAL_RESULT');
+      const gradeEl = document.getElementById('grade-FINAL_RESULT');
+      const statusEl = document.getElementById('status-FINAL_RESULT');
+
+      const percentage = (totalPoint / 120) * 100;
+      const grade = getGrade(percentage, null, 40);
+
+      if (scoreEl) scoreEl.textContent = totalPoint.toFixed(2);
+      if (percEl) percEl.textContent = percentage.toFixed(2);
+      if (gradeEl) gradeEl.textContent = grade;
+      if (statusEl) {
+        if (percentage >= 40) {
+          statusEl.innerHTML = '✓ PASS';
+          statusEl.style.color = '#52B788';
+        } else {
+          statusEl.innerHTML = '✗ FAIL';
+          statusEl.style.color = '#EF5350';
+        }
+      }
+    };
+
     function calculateRowBest(row) {
       const attempts = Array.from(row.querySelectorAll('input[name^="1st Attempt"][type="number"], input[name^="2nd Attempt"][type="number"], input[name^="3rd Attempt"][type="number"]'));
       const bestInput = row.querySelector('input[name^="Event Wise Best"][type="number"]');
@@ -4609,6 +4995,81 @@
         totalRow.cells[1].style.color = '#52B788';
         totalRow.cells[1].style.fontWeight = '700';
       }
+    }
+
+    // ==========================================
+    // INITIALIZATION RUN (after all functions are fully defined)
+    // ==========================================
+
+    // 1. Initial calculation loop for all tables
+    const tablesForInit = document.querySelectorAll('.army-table');
+    tablesForInit.forEach(table => {
+      const rows = table.querySelectorAll('tbody tr:not(:last-child)');
+      rows.forEach(row => calculateRowBest(row));
+
+      const headers = Array.from(table.querySelectorAll('thead th')).map(th => th.textContent.trim());
+      headers.forEach(h => {
+        if (h && h !== 'Event Wise Best' && h !== 'W1' && h !== 'W2' && h !== 'W3' && h !== 'W4' && h !== 'W5' && h !== 'W6' && h !== 'W7' && h !== 'W8' && h !== 'W9 (Avg)') {
+          calculateColumnTotal(table, h);
+        }
+      });
+      calculateColumnTotal(table, 'Event Wise Best');
+      calculateSingleColumnTotal(table);
+    });
+
+    // 2. Initial execution of other tab results
+    if (document.getElementById('tab-FC_All') && typeof calculateFCAll === 'function') calculateFCAll();
+    if (document.getElementById('tab-DMV_RESULT') && typeof calculateDMVResult === 'function') calculateDMVResult();
+    if (document.getElementById('tab-OPEM_RESULT') && typeof calculateOPEMResult === 'function') calculateOPEMResult();
+    if (document.getElementById('tab-OTHER_RESULT') && typeof calculateOtherResult === 'function') calculateOtherResult();
+
+    if (document.getElementById('tab-CS_RESULT') && window.calculateCSResult) window.calculateCSResult();
+    if (document.getElementById('tab-CS_CLERK_RESULT') && window.calculateCSClerkResult) window.calculateCSClerkResult();
+    if (document.getElementById('tab-CS_ASSESSMENT') && window.calculateCSAssessment) window.calculateCSAssessment();
+
+    if (window.calculateOpemAssessmentLive) {
+      if (document.getElementById('tab-OPEM_ASSESSMENT')) window.calculateOpemAssessmentLive('OPEM_ASSESSMENT');
+      if (document.getElementById('tab-DMV_ASSESSMENT')) window.calculateOpemAssessmentLive('DMV_ASSESSMENT');
+      if (document.getElementById('tab-OTHER_ASSESSMENT')) window.calculateOpemAssessmentLive('OTHER_ASSESSMENT');
+    }
+
+    if (typeof calculateOpemDmvPracticalLive === 'function') {
+      if (document.getElementById('tab-OPEM_PRACTICAL')) calculateOpemDmvPracticalLive('OPEM_PRACTICAL');
+      if (document.getElementById('tab-DMV_PRACTICAL')) calculateOpemDmvPracticalLive('DMV_PRACTICAL');
+      if (document.getElementById('tab-OPEM_MAINTENANCE')) calculateOpemDmvPracticalLive('OPEM_MAINTENANCE');
+      if (document.getElementById('tab-DMV_DRIVING')) calculateOpemDmvPracticalLive('DMV_DRIVING');
+    }
+
+    if (window.calculateScreenBoardLive) {
+      if (document.getElementById('tab-DMV_SCREEN_BOARD')) window.calculateScreenBoardLive('DMV_SCREEN_BOARD');
+      if (document.getElementById('tab-OPEM_SCREEN_BOARD')) window.calculateScreenBoardLive('OPEM_SCREEN_BOARD');
+      if (document.getElementById('tab-OTHER_SCREEN_BOARD')) window.calculateScreenBoardLive('OTHER_SCREEN_BOARD');
+    }
+
+    // 3. Sync loaded numeric values to text grade select dropdowns initially
+    document.querySelectorAll('select.grade-txt-select').forEach(selectEl => {
+      const cell = selectEl.closest('div');
+      const numInput = cell?.querySelector('input[type="number"]');
+      if (numInput && numInput.value) {
+        const testCode = selectEl.getAttribute('data-test-code');
+        const eventName = selectEl.getAttribute('data-sub-event');
+        selectEl.value = getPptBpetTextFromNumber(testCode, eventName, parseFloat(numInput.value));
+      }
+    });
+
+    // 4. Trigger calculations for clerk and battalion tests
+    ['CLK_INITIAL', 'CLK_WEEKLY_1', 'CLK_WEEKLY_2', 'CLK_FINAL'].forEach(calculateClerkResult);
+    ['PPT', 'BPET', 'Firing', 'DST', 'MR_III', 'BFC', 'PDP', 'FC_All'].forEach(calculateBattalionResult);
+
+    // 5. Trigger Common Mil Knowledge and AV Merit calculations
+    if (document.getElementById('tab-WPN_HANDLING') && window.calculateWpnHandlingLive) window.calculateWpnHandlingLive();
+    if (document.getElementById('tab-CMK_SHEET') && window.calculateCmkLive) window.calculateCmkLive();
+    if (document.getElementById('tab-FINAL_MERIT') && window.calculateFinalMeritLive) window.calculateFinalMeritLive();
+    if (document.getElementById('tab-FINAL_RESULT') && window.calculateFinalResultLive) window.calculateFinalResultLive();
+
+    // 6. Update overall profile card stats
+    if (window.updateOverallProfileCard) {
+      window.updateOverallProfileCard();
     }
   });
 </script>

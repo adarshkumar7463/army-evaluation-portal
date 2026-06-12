@@ -57,7 +57,11 @@ DEPT_CONFIG = {
             ('MR_III', 'MR-III'),
             ('BFC', 'BFC Test'),
             ('PDP', 'PDP Test'),
-            ('FC_All', 'FC Practical, FC Online & Camp Trg'),
+            ('FC_All', 'FC & camp'),
+            ('CMK_SHEET', 'CMK'),
+            ('WPN_HANDLING', 'W&EqH'),
+            ('FINAL_MERIT', 'AV Merit List'),
+            ('FINAL_RESULT', 'Final Result'),
         ],
 
 
@@ -71,6 +75,10 @@ DEPT_CONFIG = {
             'BFC': 'assessment',
             'PDP': 'assessment',
             'FC_All': 'field',
+            'CMK_SHEET': 'assessment',
+            'WPN_HANDLING': 'weapon',
+            'FINAL_MERIT': 'assessment',
+            'FINAL_RESULT': 'assessment',
         },
         'test_config': {
             'PPT': {
@@ -103,6 +111,10 @@ DEPT_CONFIG = {
             'BFC': ['Hindi (Theory)', 'Hindi (TMA)', 'English (Theory)', 'English (TMA)'],
             'PDP': ['PDP Test'],
             'FC_All': ['TGT IDEN', 'JUDGING DIST', 'OBSN TRG', 'FC Online 1st Attempt', 'FC Online 2nd Attempt', 'FC Online Best Attempt', 'CAMP TRG'],
+            'CMK_SHEET': ['FC/BC PRAC (30)', 'FC/BC ONLINE TEST (30)', 'CAMP TRG (30)', 'MR STD III (100)', 'CONVERTED (40)', 'BFC (240)', 'BFC CONVERTED (15)', 'PDP (50)', 'PDP CONVERTED (15)', 'TOTAL (160)', 'CONVERTED (20)'],
+            'WPN_HANDLING': ['TsOET-1 (10)', 'TsOET-2 (10)', 'TsOET-3 (10)', 'TsOET-4 (15)', 'TsOET-5 (15)', 'TsOET-6 (15)', 'TsOET-7 (10)', 'IDEN OF PARTS (15)', 'TOTAL (100)', '1st ATTEMPT (60)', '2nd ATTEMPT (60)', 'BEST ATTEMPT (60)', 'TOTAL (160)', 'CONVERTED (20)'],
+            'FINAL_MERIT': ['COMMN MIL KNOWLAGE (20)', 'WPN & EQPT HANDLING (20)', 'BASIC TAC (40)', 'PPT (10)', 'FIRE (10)', 'DRILL (20)', 'BPET (10)', 'TOTAL POINT (130)'],
+            'FINAL_RESULT': ['COMMON MIL KNOWLEDGE (20)', 'BASIC TACTICE (CES) (40)', 'TRADE PROFICIENCY (BTT) (40)', 'WPN & EQPT HANDLING (20)', 'TOTAL (120)', 'ROUND FIGURE (120)'],
         },
         'max_marks': {
             'PPT': {
@@ -157,9 +169,86 @@ DEPT_CONFIG = {
                 'FC Online 2nd Attempt': 30,
                 'FC Online Best Attempt': 30,
                 'CAMP TRG': 30,
+            },
+            'CMK_SHEET': {
+                'FC/BC PRAC (30)': 30,
+                'FC/BC ONLINE TEST (30)': 30,
+                'CAMP TRG (30)': 30,
+                'MR STD III (100)': 100,
+                'CONVERTED (40)': 40,
+                'BFC (240)': 240,
+                'BFC CONVERTED (15)': 15,
+                'PDP (50)': 50,
+                'PDP CONVERTED (15)': 15,
+                'TOTAL (160)': 160,
+                'CONVERTED (20)': 20,
+            },
+            'WPN_HANDLING': {
+                'TsOET-1 (10)': 10,
+                'TsOET-2 (10)': 10,
+                'TsOET-3 (10)': 10,
+                'TsOET-4 (15)': 15,
+                'TsOET-5 (15)': 15,
+                'TsOET-6 (15)': 15,
+                'TsOET-7 (10)': 10,
+                'IDEN OF PARTS (15)': 15,
+                'TOTAL (100)': 100,
+                '1st ATTEMPT (60)': 60,
+                '2nd ATTEMPT (60)': 60,
+                'BEST ATTEMPT (60)': 60,
+                'TOTAL (160)': 160,
+                'CONVERTED (20)': 20,
+            },
+            'FINAL_MERIT': {
+                'COMMN MIL KNOWLAGE (20)': 20,
+                'WPN & EQPT HANDLING (20)': 20,
+                'BASIC TAC (40)': 40,
+                'PPT (10)': 10,
+                'FIRE (10)': 10,
+                'DRILL (20)': 20,
+                'BPET (10)': 10,
+                'TOTAL POINT (130)': 130,
+            },
+            'FINAL_RESULT': {
+                'COMMON MIL KNOWLEDGE (20)': 20,
+                'BASIC TACTICE (CES) (40)': 40,
+                'TRADE PROFICIENCY (BTT) (40)': 40,
+                'WPN & EQPT HANDLING (20)': 20,
+                'TOTAL (120)': 120,
+                'ROUND FIGURE (120)': 120,
             }
         },
         'readonly_events': {
+            'CMK_SHEET': [
+                'FC/BC PRAC (30)',
+                'FC/BC ONLINE TEST (30)',
+                'CAMP TRG (30)',
+                'MR STD III (100)',
+                'CONVERTED (40)',
+                'BFC (240)',
+                'BFC CONVERTED (15)',
+                'PDP (50)',
+                'PDP CONVERTED (15)',
+                'TOTAL (160)',
+                'CONVERTED (20)',
+            ],
+            'WPN_HANDLING': [
+                'TOTAL (100)',
+                'BEST ATTEMPT (60)',
+                'TOTAL (160)',
+                'CONVERTED (20)',
+            ],
+            'FINAL_MERIT': [
+                'COMMN MIL KNOWLAGE (20)',
+                'WPN & EQPT HANDLING (20)',
+                'TOTAL POINT (130)',
+            ],
+            'FINAL_RESULT': [
+                'COMMON MIL KNOWLEDGE (20)',
+                'WPN & EQPT HANDLING (20)',
+                'TOTAL (120)',
+                'ROUND FIGURE (120)',
+            ]
         }
     },
     'B': {
@@ -193,21 +282,18 @@ DEPT_CONFIG = {
                     ('practical', 'Final Practical Test'),
                     ('driving', 'Final Driving Test'),
                     ('assessment', 'Assessment'),
-                    ('screen_board', 'Screen Board'),
                     ('result', 'Final Result'),
                 ],
                 'test_types': [
                     ('DMV_PRACTICAL', 'Final Practical Test'),
                     ('DMV_DRIVING', 'Final Driving Test'),
                     ('DMV_ASSESSMENT', 'Final Assessment'),
-                    ('DMV_SCREEN_BOARD', 'Screen Board'),
                     ('DMV_RESULT', 'Final Result Sheet'),
                 ],
                 'test_to_category': {
                     'DMV_PRACTICAL': 'practical',
                     'DMV_DRIVING': 'driving',
                     'DMV_ASSESSMENT': 'assessment',
-                    'DMV_SCREEN_BOARD': 'screen_board',
                     'DMV_RESULT': 'result',
                 },
                 'sub_events': {
@@ -340,21 +426,18 @@ DEPT_CONFIG = {
                     ('OPEM_MAINTENANCE', 'Maintenance Test'),
                     ('OPEM_PRACTICAL', 'Practical Test'),
                     ('OPEM_ASSESSMENT', 'Final Assessment'),
-                    ('OPEM_SCREEN_BOARD', 'Screen Board'),
                     ('OPEM_RESULT', 'Final Result')
                 ],
                 'categories': [
                     ('maintenance', 'Maintenance'),
                     ('practical', 'Practical'),
                     ('assessment', 'Assessment'),
-                    ('screen_board', 'Screen Board'),
                     ('result', 'Result')
                 ],
                 'test_to_category': {
                     'OPEM_MAINTENANCE': 'maintenance',
                     'OPEM_PRACTICAL': 'practical',
                     'OPEM_ASSESSMENT': 'assessment',
-                    'OPEM_SCREEN_BOARD': 'screen_board',
                     'OPEM_RESULT': 'result'
                 },
                 'sub_events': {

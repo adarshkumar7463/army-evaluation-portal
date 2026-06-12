@@ -809,7 +809,7 @@
 <div class="modal fade custom-modal" id="passedModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
-      <div class="modal-header">
+      <div class="modal-header d-flex justify-content-between align-items-center w-100">
         <h5 class="modal-title" style="color:var(--army-olive);">
           <i class="bi bi-trophy-fill me-2"></i>PASSED AGNIVEERS
         </h5>
@@ -826,7 +826,7 @@
         <table class="modal-table">
           <thead>
             <tr>
-              <th>Enrollment No</th><th>Name</th>
+              <th>Agniveer No</th><th>Name</th>
               <th class="text-center">Score</th>
               <th class="text-center">Percentage</th>
               <th class="text-center">Action</th>
@@ -844,7 +844,7 @@
               <td class="text-center">
                 <a href="{% url 'departments:agniveer_detail' ag.id %}" class="btn btn-sm"
                    style="background:var(--army-green);color:white;border-radius:6px;padding:3px 10px;font-size:10px;">
-                  <i class="bi bi-eye"></i> View
+                   <i class="bi bi-eye"></i> View
                 </a>
               </td>
             </tr>
@@ -862,7 +862,7 @@
 <div class="modal fade custom-modal" id="failedModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
-      <div class="modal-header">
+      <div class="modal-header d-flex justify-content-between align-items-center w-100">
         <h5 class="modal-title" style="color:#EF5350;">
           <i class="bi bi-exclamation-triangle-fill me-2"></i>FAILED AGNIVEERS
         </h5>
@@ -879,7 +879,7 @@
         <table class="modal-table">
           <thead>
             <tr>
-              <th>Enrollment No</th><th>Name</th>
+              <th>Agniveer No</th><th>Name</th>
               <th class="text-center">Score</th>
               <th class="text-center">Percentage</th>
               <th class="text-center">Action</th>
@@ -897,7 +897,7 @@
               <td class="text-center">
                 <a href="{% url 'departments:agniveer_detail' ag.id %}" class="btn btn-sm"
                    style="background:#EF5350;color:white;border-radius:6px;padding:3px 10px;font-size:10px;">
-                  <i class="bi bi-eye"></i> View
+                   <i class="bi bi-eye"></i> View
                 </a>
               </td>
             </tr>
