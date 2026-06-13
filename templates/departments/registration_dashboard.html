@@ -322,6 +322,17 @@
                                 </select>
                             </div>
                             <div class="col-md-3">
+                                <label class="form-group-label">Rank</label>
+                                <input type="text" name="rank" class="form-control">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-group-label">Photo</label>
+                                <input type="file" name="photo" accept="image/*" class="form-control">
+                                <div id="editPhotoWrap" style="margin-top:6px;">
+                                    <img id="editPhotoPreview" src="" alt="Photo preview" style="max-width:110px; display:none; border-radius:6px;" />
+                                </div>
+                            </div>
+                            <div class="col-md-3">
                                 <label class="form-group-label">Relationship</label>
                                 <input type="text" name="relationship" class="form-control">
                             </div>
@@ -536,7 +547,7 @@
 
         <!-- Tab 2: Single Registration Form -->
         <div class="tab-pane fade {% if active_tab == 'register' %}show active{% endif %}" id="register" role="tabpanel">
-            <form method="POST" action="{% url 'departments:registration_dashboard' %}">
+            <form method="POST" action="{% url 'departments:registration_dashboard' %}" enctype="multipart/form-data">
                 {% csrf_token %}
                 <input type="hidden" name="action" value="register">
                 
@@ -596,6 +607,16 @@
                                 <div class="col-md-3">
                                     <label class="form-group-label">Relationship</label>
                                     {{ reg_form.relationship }}
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-group-label">Rank</label>
+                                    {{ reg_form.rank }}
+                                    {{ reg_form.rank.errors }}
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-group-label">Photo</label>
+                                    {{ reg_form.photo }}
+                                    {{ reg_form.photo.errors }}
                                 </div>
                             </div>
                         </div>
@@ -814,20 +835,21 @@
             regTabs.classList.remove('d-none');
             regTabsContent.classList.remove('d-none');
             editForm.reset();
-            document.getElementById('formErrors').classList.add('d-none');
+            const fe = document.getElementById('formErrors');
+            if (fe) fe.classList.add('d-none');
         }
 
         function updateCompanyOptions(bnVal, companySelect, currentCompanyVal = '') {
             companySelect.innerHTML = '<option value="">---</option>';
             let options = [];
             if (bnVal === '1TB') {
-                options = ['Company A', 'Company B', 'Company C'];
+                options = ['Tirah Company', 'Megiddo Company', 'Ghuznee Company'];
             } else if (bnVal === '2TB') {
-                options = ['Company D', 'Company E', 'Company F'];
+                options = ['Maktila Company', 'Cassino Company', 'Pigris Company'];
             } else if (bnVal === 'STB') {
-                options = ['Company G', 'Company H', 'Company I'];
+                options = ['Company A', 'Company B', 'Company C'];
             } else {
-                options = ['Company A', 'Company B', 'Company C', 'Company D', 'Company E', 'Company F', 'Company G', 'Company H', 'Company I'];
+                options = ['Tirah Company', 'Megiddo Company', 'Ghuznee Company', 'Maktila Company', 'Cassino Company', 'Pigris Company', 'Company A', 'Company B', 'Company C'];
             }
             options.forEach(opt => {
                 const optionEl = document.createElement('option');
@@ -843,14 +865,18 @@
         function updatePlatoonOptions(compVal, platoonSelect, currentPlatoonVal = '') {
             platoonSelect.innerHTML = '<option value="">---</option>';
             let options = [];
-            if (compVal === 'Company A' || compVal === 'Company D' || compVal === 'Company G') {
-                options = ['P1', 'P2', 'P3'];
-            } else if (compVal === 'Company B' || compVal === 'Company E' || compVal === 'Company H') {
-                options = ['P4', 'P5', 'P6'];
-            } else if (compVal === 'Company C' || compVal === 'Company F' || compVal === 'Company I') {
-                options = ['P7', 'P8', 'P9'];
+            // Determine prefix: Maktila uses 'Ma', others use first letter
+            let prefix = '';
+            if (!compVal) {
+                prefix = 'P';
+            } else if (compVal.startsWith('Maktila')) {
+                prefix = 'Ma';
             } else {
-                options = ['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'P8', 'P9'];
+                prefix = compVal.charAt(0).toUpperCase();
+            }
+            // Generate platoons P1..P8 style with prefix
+            for (let i = 1; i <= 8; i++) {
+                options.push(prefix + i);
             }
             options.forEach(opt => {
                 const optionEl = document.createElement('option');
@@ -914,6 +940,18 @@
                                 }
                             }
                         }
+                            // Show photo preview if available
+                            const photoPreview = document.getElementById('editPhotoPreview');
+                            const photoWrap = document.getElementById('editPhotoWrap');
+                            if (photoPreview) {
+                                if (data.photo) {
+                                    photoPreview.src = data.photo;
+                                    photoPreview.style.display = 'block';
+                                } else {
+                                    photoPreview.src = '';
+                                    photoPreview.style.display = 'none';
+                                }
+                            }
                         if (editBnDesp && editCompany && editPlatoon) {
                             updateCompanyOptions(data.bn_desp, editCompany, data.company);
                             updatePlatoonOptions(data.company, editPlatoon, data.platoon);
@@ -930,41 +968,117 @@
             const formData = new FormData(editForm);
             const saveBtn = document.getElementById('saveBtn');
             const errorDiv = document.getElementById('formErrors');
-            
+
+            // Read CSRF token from the form input
+            const csrfInput = editForm.querySelector('input[name="csrfmiddlewaretoken"]');
+            const csrfToken = csrfInput ? csrfInput.value : '';
+
             saveBtn.disabled = true;
             saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Saving...';
-            errorDiv.classList.add('d-none');
+            if (errorDiv) errorDiv.classList.add('d-none');
 
+            console.log('Submitting edit for', currentAgniveerId);
             fetch(`/departments/registration/${currentAgniveerId}/edit-ajax/`, {
                 method: 'POST',
                 body: formData,
+                credentials: 'same-origin',
                 headers: {
-                    'X-CSRFToken': '{{ csrf_token }}'
+                    'X-CSRFToken': csrfToken,
+                    'Accept': 'application/json'
                 }
             })
-            .then(r => r.json())
+            .then(r => {
+                console.log('Fetch response status', r.status);
+                if (!r.ok) {
+                    return r.text().then(txt => { throw new Error(txt || 'Server error'); });
+                }
+                return r.json();
+            })
             .then(data => {
-                if (data.success) {
+                console.log('Edit response', data);
+                if (data && data.success) {
                     location.reload();
                 } else {
                     let errMsg = '';
-                    for (const field in data.errors) {
-                        errMsg += `<strong>${field}:</strong> ${data.errors[field].join(', ')}<br>`;
+                    if (data && data.errors) {
+                        for (const field in data.errors) {
+                            errMsg += `<strong>${field}:</strong> ${data.errors[field].join(', ')}<br>`;
+                        }
                     }
-                    errorDiv.innerHTML = errMsg || 'An error occurred while saving.';
-                    errorDiv.classList.remove('d-none');
-                    saveBtn.disabled = false;
+                    if (errorDiv) {
+                        errorDiv.innerHTML = errMsg || (data && data.message) || 'An error occurred while saving.';
+                        errorDiv.classList.remove('d-none');
+                    } else {
+                        console.warn('formErrors element not found; error message:', errMsg);
+                    }
                     saveBtn.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i> Save Changes';
                 }
             })
             .catch(err => {
                 console.error("Error saving data:", err);
-                errorDiv.innerHTML = 'Network error. Please try again.';
-                errorDiv.classList.remove('d-none');
-                saveBtn.disabled = false;
+                if (errorDiv) {
+                    errorDiv.innerHTML = err.message || 'Network error. Please try again.';
+                    errorDiv.classList.remove('d-none');
+                } else {
+                    console.warn('formErrors element not found; fetch error:', err);
+                }
                 saveBtn.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i> Save Changes';
+            })
+            .finally(() => {
+                // Ensure button is always re-enabled
+                try { saveBtn.disabled = false; } catch(e) {}
             });
         });
+
+        // Live preview selected photo file
+        const photoInput = editForm.querySelector('input[name="photo"]');
+        if (photoInput) {
+            photoInput.addEventListener('change', function() {
+                const file = this.files && this.files[0];
+                const photoPreview = document.getElementById('editPhotoPreview');
+                if (file && photoPreview) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        photoPreview.src = e.target.result;
+                        photoPreview.style.display = 'block';
+                    }
+                    reader.readAsDataURL(file);
+                } else if (photoPreview) {
+                    photoPreview.src = '';
+                    photoPreview.style.display = 'none';
+                }
+            });
+        }
+
+        // If URL contains ?edit=<pk>, open inline editor for that PK
+        const params = new URLSearchParams(window.location.search);
+        if (params.has('edit')) {
+            const editPk = params.get('edit');
+            if (editPk) {
+                currentAgniveerId = editPk;
+                fetch(`/departments/registration/${currentAgniveerId}/edit-ajax/`)
+                    .then(r => r.json())
+                    .then(data => {
+                        inlineEnrollmentNo.innerText = data.enrollment_number;
+                        for (const key in data) {
+                            const input = editForm.querySelector(`[name="${key}"]`);
+                            if (input) {
+                                if (input.type === 'checkbox') {
+                                    input.checked = !!data[key];
+                                } else {
+                                    input.value = data[key];
+                                }
+                            }
+                        }
+                        if (editBnDesp && editCompany && editPlatoon) {
+                            updateCompanyOptions(data.bn_desp, editCompany, data.company);
+                            updatePlatoonOptions(data.company, editPlatoon, data.platoon);
+                        }
+                        showInlineEdit();
+                    })
+                    .catch(err => console.error("Error loading data:", err));
+            }
+        }
     });
 </script>
 {% endblock %}

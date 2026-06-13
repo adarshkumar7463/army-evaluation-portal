@@ -20,6 +20,7 @@ class AgniveerRegistrationForm(forms.ModelForm):
         fields = [
             'agniveer_no', 'name', 'father_name',
             'dor', 'trade', 'aros_bros', 'bn_desp', 'batch_no', 'company', 'platoon', 'relationship',
+            'rank', 'photo',
             'afmsf_2a', 'review_cert', 'edn_ql_enrollment',
             'higher_edn_qualification', 'edn_cert', 'verification_roll',
             'character_cert', 'unmarried_cert', 'caste_cert', 'class_field',
@@ -55,6 +56,8 @@ class AgniveerRegistrationForm(forms.ModelForm):
                 'class': 'form-control form-control-sm',
                 'placeholder': 'e.g. 2'
             }),
+            'rank': forms.TextInput(attrs={'class': 'form-control form-control-sm', 'placeholder': 'Rank'}),
+            'photo': forms.FileInput(attrs={'class': 'form-control form-control-sm', 'accept': 'image/*'}),
             'afmsf_2a': forms.Select(attrs={'class': 'form-select form-select-sm'}, choices=YES_NO_CHOICES),
             'review_cert': forms.Select(attrs={'class': 'form-select form-select-sm'}, choices=YES_NO_CHOICES),
             'edn_ql_enrollment': forms.TextInput(attrs={
@@ -108,6 +111,7 @@ class AgniveerEditForm(forms.ModelForm):
         fields = [
             'agniveer_no', 'name', 'father_name',
             'dor', 'trade', 'aros_bros', 'bn_desp', 'batch_no', 'company', 'platoon', 'relationship',
+            'rank', 'photo',
             'afmsf_2a', 'review_cert', 'edn_ql_enrollment',
             'higher_edn_qualification', 'edn_cert', 'verification_roll',
             'character_cert', 'unmarried_cert', 'caste_cert', 'class_field',
@@ -127,6 +131,8 @@ class AgniveerEditForm(forms.ModelForm):
             'company': forms.Select(attrs={'class': 'form-select form-select-sm', 'id': 'edit_company'}),
             'platoon': forms.Select(attrs={'class': 'form-select form-select-sm', 'id': 'edit_platoon'}),
             'relationship': forms.TextInput(attrs={'class': 'form-control form-control-sm'}),
+            'rank': forms.TextInput(attrs={'class': 'form-control form-control-sm'}),
+            'photo': forms.FileInput(attrs={'class': 'form-control form-control-sm', 'accept': 'image/*'}),
             'afmsf_2a': forms.Select(attrs={'class': 'form-select form-select-sm'}, choices=YES_NO_CHOICES),
             'review_cert': forms.Select(attrs={'class': 'form-select form-select-sm'}, choices=YES_NO_CHOICES),
             'edn_ql_enrollment': forms.TextInput(attrs={'class': 'form-control form-control-sm'}),

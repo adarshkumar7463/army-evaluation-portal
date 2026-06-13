@@ -11,6 +11,7 @@ from django.contrib import messages
 from django.db.models import Q, Count
 from django.urls import reverse_lazy
 from django.http import JsonResponse, HttpResponse
+from django import forms as django_forms
 from django.core.paginator import Paginator
 import json
 import io
@@ -130,7 +131,16 @@ class RegistrationDashboardView(RegistrationOfficeMixin, View):
         action = request.POST.get('action', 'register')
 
         if action == 'register':
-            reg_form = AgniveerRegistrationForm(request.POST)
+            reg_form = AgniveerRegistrationForm(request.POST, request.FILES)
+            # Allow dynamic platoon values generated client-side (e.g., 'T2')
+            submitted_platoon = request.POST.get('platoon')
+            if submitted_platoon:
+                # Replace platoon field with a free-text CharField to accept dynamic values
+                try:
+                    if 'platoon' in reg_form.fields:
+                        reg_form.fields['platoon'] = django_forms.CharField(required=False)
+                except Exception:
+                    pass
             if reg_form.is_valid():
                 agniveer = reg_form.save(commit=False)
                 agniveer.registered_by = request.user
@@ -311,12 +321,22 @@ class AgniveerEditAjaxView(RegistrationOfficeMixin, View):
             'aadhar_card': ag.aadhar_card,
             'remarks': ag.remarks or '',
             'status': ag.status,
+            'rank': ag.rank or '',
+            'photo': ag.photo.url if ag.photo else '',
         }
         return JsonResponse(data)
 
     def post(self, request, pk):
         ag = get_object_or_404(Agniveer, pk=pk)
-        form = AgniveerEditForm(request.POST, instance=ag)
+        form = AgniveerEditForm(request.POST, request.FILES, instance=ag)
+        # Allow dynamic platoon values generated client-side by replacing with CharField
+        submitted_platoon = request.POST.get('platoon')
+        if submitted_platoon:
+            try:
+                if 'platoon' in form.fields:
+                    form.fields['platoon'] = django_forms.CharField(required=False)
+            except Exception:
+                pass
         if form.is_valid():
             form.save()
             log_action(request.user, 'UPDATE',
@@ -571,6 +591,8 @@ class AgniveerDetailView(AnyStaffMixin, DetailView):
         ctx['percentage'] = round(percentage, 1)
         ctx['score_color'] = score_color
         ctx['score_color_dark'] = score_color_dark
+        # Editability: department users could evaluate via the profile UI.
+        # Department heads, G-Head and Commander behavior is handled elsewhere.
         ctx['can_evaluate'] = user.is_department
 
         import json

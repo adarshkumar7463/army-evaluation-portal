@@ -601,10 +601,7 @@
 
           {% if 'CLK_' in code %}
           {# Beautiful custom Clerk tabs! #}
-          <h5
-            style="color: #D4A017; margin-top: 0px !important; margin-bottom: 12px !important; font-family: 'Rajdhani', sans-serif; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">
-            <i class="bi bi-person-workspace me-2"></i> {{ name }} Evaluation Workspace
-          </h5>
+          <h6 style="color: #52B788; margin-top: 0px !important; margin-bottom: 12px !important; font-family: 'Rajdhani', sans-serif;">{{ name }} Detailed Results</h6>
 
           {% if can_evaluate %}
           <form id="form-{{ code }}" method="post" action="{% url 'evaluation:evaluate_agniveer' agniveer.pk %}">
@@ -1061,7 +1058,7 @@
             <div class="compact-score-card" style="flex: 0.9 1 110px !important; margin: 0 !important; max-width: 140px !important;">
               <span class="card-label">Grading</span>
               <span class="card-val text-warning" id="grade-CLK_FINAL" style="font-weight: 700;">
-                {% if current_sheet %}{{ current_sheet.sub_event_results.Marks|get_item:'Grading'|default:"—" }}{% else %}—{% endif %}
+                {% if current_sheet %}{% with grading=current_sheet.sub_event_results.Marks|get_item:'Grading'|default:current_sheet.sub_event_results|get_item:'Grading' %}{% if grading == 'Fail' or grading == '—' %}—{% else %}{{ grading|default:"—" }}{% endif %}{% endwith %}{% else %}—{% endif %}
               </span>
             </div>
             <div class="compact-score-card" style="flex: 0.9 1 110px !important; margin: 0 !important; max-width: 140px !important;">
@@ -1119,7 +1116,7 @@
             <div class="compact-score-card" style="flex: 0.9 1 110px !important; margin: 0 !important; max-width: 140px !important;">
               <span class="card-label">Grading</span>
               <span class="card-val text-warning" id="grade-{{ code }}" style="font-weight: 700;">
-                {% if current_sheet %}{{ current_sheet.sub_event_results.Marks|get_item:'Grading'|default:"—" }}{% else %}—{% endif %}
+                {% if current_sheet %}{% with grading=current_sheet.sub_event_results.Marks|get_item:'Grading'|default:current_sheet.sub_event_results|get_item:'Grading' %}{% if grading == 'Fail' or grading == '—' %}—{% else %}{{ grading|default:"—" }}{% endif %}{% endwith %}{% else %}—{% endif %}
               </span>
             </div>
             <div class="compact-score-card" style="flex: 0.9 1 110px !important; margin: 0 !important; max-width: 140px !important;">
@@ -1164,10 +1161,7 @@
           {% elif code == 'OPEM_ASSESSMENT' or code == 'DMV_ASSESSMENT' or code == 'CS_ASSESSMENT' or code == 'OTHER_ASSESSMENT' %}
           {# Beautiful custom OPEM/DMV/CES/OTHER Assessment! #}
           <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-            <h5
-              style="color: #D4A017; margin: 0; font-family: 'Rajdhani', sans-serif; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; font-size: 15px;">
-              <i class="bi bi-clipboard2-check-fill me-2"></i> {% if code == 'OPEM_ASSESSMENT' %}OPEM{% elif code == 'DMV_ASSESSMENT' %}DMV{% elif code == 'OTHER_ASSESSMENT' %}OTHER{% else %}CES{% endif %} Final Assessment Workspace
-            </h5>
+            <h6 style="color: #52B788; margin-top: 0px !important; margin-bottom: 12px !important; font-family: 'Rajdhani', sans-serif;">{{ name }} Detailed Results</h6>
           </div>
 
           <!-- Category Selectors for OPEM/DMV/CES Assessment -->
@@ -1938,21 +1932,21 @@
           <div class="evaluation-sticky-footer no-print" data-sheet-code="{{ code }}" data-max-marks="{% if code == 'CS_ASSESSMENT' or code == 'OTHER_ASSESSMENT' %}40{% else %}71{% endif %}" data-evaluated="{% if current_sheet %}true{% else %}false{% endif %}" style="display: flex !important; flex-flow: row nowrap !important; align-items: center !important; justify-content: space-between !important; gap: 12px !important; padding: 10px 20px !important;">
             {% if code == 'CS_ASSESSMENT' %}
             <div class="compact-score-card" style="flex: 0.9 1 110px !important; margin: 0 !important; max-width: 140px !important;">
-              <span class="card-label">Total Marks (Out of 86)</span>
+              <span class="card-label">Total Marks</span>
               <span class="card-val text-success">
                 <span id="score-{{ code }}">{% if current_sheet %}{{ current_sheet.sub_event_results.Marks.Total|floatformat:2 }}{% else %}0.00{% endif %}</span> / 86
               </span>
             </div>
             {% elif code == 'OTHER_ASSESSMENT' %}
             <div class="compact-score-card" style="flex: 0.9 1 110px !important; margin: 0 !important; max-width: 140px !important;">
-              <span class="card-label">Total Marks (Out of 74)</span>
+              <span class="card-label">Total Marks</span>
               <span class="card-val text-success">
                 <span id="score-{{ code }}">{% if current_sheet %}{{ current_sheet.sub_event_results.Marks.Total|floatformat:2 }}{% else %}0.00{% endif %}</span> / 74
               </span>
             </div>
             {% else %}
             <div class="compact-score-card" style="flex: 0.9 1 110px !important; margin: 0 !important; max-width: 140px !important;">
-              <span class="card-label">Total Marks (Out of 71)</span>
+              <span class="card-label">Total Marks</span>
               <span class="card-val text-success">
                 <span id="score-{{ code }}">{% if current_sheet %}{{ current_sheet.sub_event_results.Marks.Total|floatformat:2 }}{% else %}0.00{% endif %}</span> / 71
               </span>
@@ -1967,7 +1961,7 @@
             <div class="compact-score-card" style="flex: 0.9 1 110px !important; margin: 0 !important; max-width: 140px !important;">
               <span class="card-label">Grading</span>
               <span class="card-val text-warning" id="grade-{{ code }}" style="font-weight: 700;">
-                {% if current_sheet %}{{ current_sheet.sub_event_results.Marks|get_item:'Grading'|default:"—" }}{% else %}—{% endif %}
+                {% if current_sheet %}{% with grading=current_sheet.sub_event_results.Marks|get_item:'Grading'|default:current_sheet.sub_event_results|get_item:'Grading' %}{% if grading == 'Fail' or grading == '—' %}—{% else %}{{ grading|default:"—" }}{% endif %}{% endwith %}{% else %}—{% endif %}
               </span>
             </div>
             <div class="compact-score-card" style="flex: 0.9 1 110px !important; margin: 0 !important; max-width: 140px !important;">
@@ -2046,7 +2040,7 @@
                             class="form-control marks-input text-center mx-auto"
                             style="background: rgba(15,20,25,0.6); color: #E0E6F0; border: 1px solid rgba(82,183,136,0.3); width: 60px; height: 30px; padding: 2px 5px; font-size: 14px; border-radius: 4px;"
                             min="0" max="{% with m=dept_config.max_marks|get_item:code|get_item:sub %}{% if m %}{{ m }}{% else %}8{% endif %}{% endwith %}" step="0.01" placeholder="0-{% with m=dept_config.max_marks|get_item:code|get_item:sub %}{% if m %}{{ m }}{% else %}8{% endif %}{% endwith %}" title="Maximum marks: {% with m=dept_config.max_marks|get_item:code|get_item:sub %}{% if m %}{{ m }}{% else %}8{% endif %}{% endwith %}"
-                            oninput="if(this.value && parseFloat(this.value) > parseFloat(this.max)) this.value = this.max;">
+                            oninput="if(this.value && parseFloat(this.value) > parseFloat(this.max)) { showMaxAlert(this, this.max); this.value = this.max; }">
                           {% else %}
                           {% if val is not None %}{{ val }}{% else %}{% if col == '1st Attempt' %}{{ current_sheet.sub_event_results|get_item:'nco'|get_item:sub|default:"—" }}{% elif col == '2nd                           Attempt' %}{{ current_sheet.sub_event_results|get_item:'jco'|get_item:sub|default:"—" }}{%                           endif %}{% endif %}
                           {% endif %}
@@ -2086,7 +2080,7 @@
                             class="form-control marks-input text-center mx-auto"
                             style="background: rgba(15,20,25,0.6); color: #E0E6F0; border: 1px solid rgba(82,183,136,0.3); width: 60px; height: 30px; padding: 2px 5px; font-size: 14px; border-radius: 4px;"
                             min="0" max="{% with m=dept_config.max_marks|get_item:code|get_item:sub %}{% if m %}{{ m }}{% else %}8{% endif %}{% endwith %}" step="0.01" placeholder="0-{% with m=dept_config.max_marks|get_item:code|get_item:sub %}{% if m %}{{ m }}{% else %}8{% endif %}{% endwith %}" title="Maximum marks: {% with m=dept_config.max_marks|get_item:code|get_item:sub %}{% if m %}{{ m }}{% else %}8{% endif %}{% endwith %}"
-                            oninput="if(this.value && parseFloat(this.value) > parseFloat(this.max)) this.value = this.max;">
+                            oninput="if(this.value && parseFloat(this.value) > parseFloat(this.max)) { showMaxAlert(this, this.max); this.value = this.max; }">
                           {% else %}
                           {% if val is not None %}{{ val }}{% else %}{% if col == '1st Attempt' %}{{ current_sheet.sub_event_results|get_item:'nco'|get_item:sub|default:"—" }}{% elif col == '2nd                           Attempt' %}{{ current_sheet.sub_event_results|get_item:'jco'|get_item:sub|default:"—" }}{%                           endif %}{% endif %}
                           {% endif %}
@@ -2792,12 +2786,15 @@
                   {% endif %}
                   {% endif %}
 
+                  {% if 'SCREEN_BOARD' not in code or sub != 'Grand Total (40)' and sub != '% Age' and sub != 'Grading' %}
                   <tr data-sub-event-raw="{{ sub }}">
                     <td style="font-weight: 600; color: #E0E6F0; font-size:13px; white-space:nowrap;">
                       {{ sub|clean_sub_event_name }}
                       {% with max_val=dept_config.max_marks|get_item:code|get_item:sub %}
                         {% if max_val is not None and not sub|has_parenthesized_number %}
-                          <span style="font-size: 11px; color: #8B9BB4;">({{ max_val }})</span>
+                          {% if 'SCREEN_BOARD' not in code or 'Convert' not in sub %}
+                            <span style="font-size: 11px; color: #8B9BB4;">({{ max_val }})</span>
+                          {% endif %}
                         {% endif %}
                       {% endwith %}
                     </td>
@@ -2828,7 +2825,7 @@
                             data-sub-event="{{ sub }}"
                             data-test-code="{{ code }}"
                             {% if col == 'Event Wise Best' %}readonly{% endif %}
-                            oninput="if(this.value && parseFloat(this.value) > parseFloat(this.max)) this.value = this.max;">
+                            oninput="if(this.value && parseFloat(this.value) > parseFloat(this.max)) { showMaxAlert(this, this.max); this.value = this.max; }">
                           
                           <!-- Select dropdown -->
                           {% with txt_suffix="_txt" %}
@@ -2866,7 +2863,7 @@
                         step="0.01"
                         placeholder="0-{% with m=dept_config.max_marks|get_item:code|get_item:sub %}{% if m %}{{ m }}{% else %}{% if code == 'Firing' %}8{% elif code == 'DST' %}{% if 'Arm' in sub %}60{% else %}20{% endif %}{% elif code == 'BFC' %}{% if 'Theory' in sub %}100{% else %}20{% endif %}{% else %}40{% endif %}{% endif %}{% endwith %}"
                         title="Maximum marks: {% with m=dept_config.max_marks|get_item:code|get_item:sub %}{% if m %}{{ m }}{% else %}{% if code == 'Firing' %}8{% elif code == 'DST' %}{% if 'Arm' in sub %}60{% else %}20{% endif %}{% elif code == 'BFC' %}{% if 'Theory' in sub %}100{% else %}20{% endif %}{% else %}40{% endif %}{% endif %}{% endwith %}"
-                        oninput="if(this.value && parseFloat(this.value) > parseFloat(this.max)) this.value = this.max;">
+                        oninput="if(this.value && parseFloat(this.value) > parseFloat(this.max)) { showMaxAlert(this, this.max); this.value = this.max; }">
                       {% endif %}
                       {% else %}
                       {% if code == 'DST' and sub == 'DST W/O Arm' and col != '1st Attempt' %}—
@@ -2904,7 +2901,7 @@
                         placeholder="0-{% with m=dept_config.max_marks|get_item:code|get_item:sub %}{% if m %}{{ m }}{% else %}{% if code == 'MR_III' %}{% if sub == 'Outdoor Test' %}50{% elif sub == 'Indoor Test Written' %}90{% else %}10{% endif %}{% elif code == 'PDP' %}50{% elif code == 'FC_All' %}{% if 'Attempt' in sub %}40{% else %}10{% endif %}{% else %}40{% endif %}{% endif %}{% endwith %}"
                         title="Maximum marks: {% with m=dept_config.max_marks|get_item:code|get_item:sub %}{% if m %}{{ m }}{% else %}{% if code == 'MR_III' %}{% if sub == 'Outdoor Test' %}50{% elif sub == 'Indoor Test Written' %}90{% else %}10{% endif %}{% elif code == 'PDP' %}50{% elif code == 'FC_All' %}{% if 'Attempt' in sub %}40{% else %}10{% endif %}{% else %}40{% endif %}{% endif %}{% endwith %}"
                         {% if code == 'DMV_RESULT' and sub != 'Online Test (100)' %}readonly{% elif code == 'OPEM_RESULT' and sub != 'Written Test (100)' %}readonly{% elif code == 'CS_RESULT' and sub == 'TOTAL TOET (50)' %}readonly{% elif code == 'CS_RESULT' and sub == '25% OF TOET (25)' %}readonly{% elif code == 'CS_RESULT' and sub == 'FE Total (70)' %}readonly{% elif code == 'CS_RESULT' and sub == 'BR Total (65)' %}readonly{% elif code == 'CS_RESULT' and sub == 'TOTAL (160)' %}readonly{% elif code == 'CS_RESULT' and sub == 'CONVERTED TO 40' %}readonly{% elif code == 'CS_CLERK_RESULT' and sub == 'Total (40)' %}readonly{% elif 'SCREEN_BOARD' in code and sub in 'Convert In 10 Mks (Mid Term),Convert In 15 Mks,Convert In 05 Mks,Convert In 10 Mks (Practical),Grand Total (40),% Age,Grading' %}readonly{% elif code == 'CMK_SHEET' %}readonly{% elif code == 'WPN_HANDLING' and sub in 'TOTAL (100),BEST ATTEMPT (60),TOTAL (160),CONVERTED (20)' %}readonly{% elif code == 'FINAL_MERIT' and sub != 'BASIC TAC (40)' %}readonly{% elif code == 'FINAL_RESULT' %}readonly{% endif %}
-                        oninput="if(this.type === 'number' && this.value && parseFloat(this.value) > parseFloat(this.max)) this.value = this.max; if('{{ code }}' === 'CS_RESULT') calculateCSResult(); if('{{ code }}' === 'CS_CLERK_RESULT') calculateCSClerkResult(); if('{{ code }}' === 'CS_ASSESSMENT') calculateCSAssessment(); if(['OPEM_PRACTICAL', 'DMV_PRACTICAL', 'OPEM_MAINTENANCE', 'DMV_DRIVING'].includes('{{ code }}')) calculateOpemDmvPracticalLive('{{ code }}'); if('{{ code }}' === 'OPEM_RESULT') calculateOPEMResult(); if('{{ code }}' === 'DMV_RESULT') calculateDMVResult(); if('{{ code }}'.includes('SCREEN_BOARD')) calculateScreenBoardLive('{{ code }}'); if('{{ code }}' === 'WPN_HANDLING') calculateWpnHandlingLive(); if('{{ code }}' === 'FINAL_MERIT') calculateFinalMeritLive(); if('{{ code }}' === 'FINAL_RESULT') calculateFinalResultLive();">
+                        oninput="if(this.type === 'number' && this.value && parseFloat(this.value) > parseFloat(this.max)) { showMaxAlert(this, this.max); this.value = this.max; } if('{{ code }}' === 'CS_RESULT') calculateCSResult(); if('{{ code }}' === 'CS_CLERK_RESULT') calculateCSClerkResult(); if('{{ code }}' === 'CS_ASSESSMENT') calculateCSAssessment(); if(['OPEM_PRACTICAL', 'DMV_PRACTICAL', 'OPEM_MAINTENANCE', 'DMV_DRIVING'].includes('{{ code }}')) calculateOpemDmvPracticalLive('{{ code }}'); if('{{ code }}' === 'OPEM_RESULT') calculateOPEMResult(); if('{{ code }}' === 'DMV_RESULT') calculateDMVResult(); if('{{ code }}'.includes('SCREEN_BOARD')) calculateScreenBoardLive('{{ code }}'); if('{{ code }}' === 'WPN_HANDLING') calculateWpnHandlingLive(); if('{{ code }}' === 'FINAL_MERIT') calculateFinalMeritLive(); if('{{ code }}' === 'FINAL_RESULT') calculateFinalResultLive();">
                       {% else %}
                       {% if current_sheet %}
                       {% with val=current_sheet.sub_event_results.Marks|get_item:sub %}{% if val is not None %}{{ val }}{% else %}{{ current_sheet.sub_event_results|get_item:'nco'|get_item:sub|default:"—" }}{% endif %}{% endwith %}
@@ -2915,6 +2912,7 @@
                     </td>
                     {% endif %}
                   </tr>
+                  {% endif %}
                   {% empty %}
                   <tr>
                     <td style="font-weight: 600; color: #E0E6F0;">Performance Score</td>
@@ -2949,7 +2947,15 @@
                     {% else %}
                     <td
                       style="text-align:center; font-weight: 700; color: #52B788; font-family: 'Rajdhani', sans-serif;">
-                      {% if current_sheet %}{{ current_sheet.get_total_marks }}{% else %}—{% endif %}
+                      {% if current_sheet %}
+                        {% if 'SCREEN_BOARD' in code %}
+                          {{ current_sheet.sub_event_results|get_item:'Grand Total (40)'|default:current_sheet.get_total_marks|floatformat:2 }}
+                        {% else %}
+                          {{ current_sheet.get_total_marks }}
+                        {% endif %}
+                      {% else %}
+                        —
+                      {% endif %}
                     </td>
                     {% endif %}
                   </tr>
@@ -2959,18 +2965,9 @@
                   <tr style="background: #D2E8F6 !important;">
                     <td style="font-weight: 800; color: #1B4332 !important; font-size:13px; text-align: left; padding-left: 12px;">CONVERTED (100) MKS</td>
                     <td
-                      style="text-align: right; padding-right: 15px; font-weight: 800; color: #1B4332 !important; font-family: 'Rajdhani', sans-serif;"
+                      style="text-align: center; font-weight: 800; color: #1B4332 !important; font-family: 'Rajdhani', sans-serif;"
                       data-converted-mriii="true">
                       {% if current_sheet %}{{ current_sheet.sub_event_results.Marks|get_item:'CONVERTED 100 MKS'|default:"—" }}{% else %}—{% endif %}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style="font-weight: 600; color: #E0E6F0; font-size:13px;">REMARKS</td>
-                    <td colspan="100%" style="text-align:center;">
-                      <input type="text" name="remarks" form="form-{{ code }}"
-                        value="{% if current_sheet %}{{ current_sheet.remarks|default:current_sheet.marks.first.remarks|default_if_none:'' }}{% endif %}"
-                        class="form-control text-center mx-auto"
-                        style="background: rgba(15,20,25,0.6); color: #E0E6F0; border: 1px solid rgba(82,183,136,0.3); width: 100%; height: 30px; padding: 2px 5px; font-size: 14px; border-radius: 4px;">
                     </td>
                   </tr>
                   {% elif code == 'BFC' %}
@@ -2992,35 +2989,8 @@
                     {% endfor %}
                     {% endif %}
                   </tr>
-                  <tr>
-                    <td style="font-weight: 600; color: #E0E6F0; font-size:13px;">REMARKS</td>
-                    <td colspan="100%" style="text-align:center;">
-                      <input type="text" name="remarks" form="form-{{ code }}"
-                        value="{% if current_sheet %}{{ current_sheet.remarks|default:current_sheet.marks.first.remarks|default_if_none:'' }}{% endif %}"
-                        class="form-control text-center mx-auto"
-                        style="background: rgba(15,20,25,0.6); color: #E0E6F0; border: 1px solid rgba(82,183,136,0.3); width: 100%; height: 30px; padding: 2px 5px; font-size: 14px; border-radius: 4px;">
-                    </td>
-                  </tr>
-                  {% elif 'OPEM' in code or 'DMV' in code %}
-                  <tr>
-                    <td style="font-weight: 600; color: #E0E6F0; font-size:13px;">REMARKS</td>
-                    <td colspan="100%" style="text-align:center;">
-                      <input type="text" name="remarks" form="form-{{ code }}"
-                        value="{% if current_sheet %}{{ current_sheet.remarks|default:current_sheet.marks.first.remarks|default_if_none:'' }}{% endif %}"
-                        class="form-control text-center mx-auto"
-                        style="background: rgba(15,20,25,0.6); color: #E0E6F0; border: 1px solid rgba(82,183,136,0.3); width: 100%; height: 30px; padding: 2px 5px; font-size: 14px; border-radius: 4px;">
-                    </td>
-                  </tr>
-                  {% elif code == 'PDP' %}
-                  <tr>
-                    <td style="font-weight: 600; color: #E0E6F0; font-size:13px;">REMARKS</td>
-                    <td colspan="100%" style="text-align:center;">
-                      <input type="text" name="remarks" form="form-{{ code }}"
-                        value="{% if current_sheet %}{{ current_sheet.remarks|default:current_sheet.marks.first.remarks|default_if_none:'' }}{% endif %}"
-                        class="form-control text-center mx-auto"
-                        style="background: rgba(15,20,25,0.6); color: #E0E6F0; border: 1px solid rgba(82,183,136,0.3); width: 100%; height: 30px; padding: 2px 5px; font-size: 14px; border-radius: 4px;">
-                    </td>
-                  </tr>
+
+
                   {% endif %}
                 </tbody>
               </table>
@@ -3056,7 +3026,7 @@
             <div class="compact-score-card" style="flex: 0.9 1 110px !important; margin: 0 !important; max-width: 140px !important;">
               <span class="card-label">Grading</span>
               <span class="card-val text-warning" id="grade-CS_RESULT" style="font-weight: 700;">
-                {% if current_sheet %}{{ current_sheet.sub_event_results.Marks|get_item:'Grading'|default:"—" }}{% else %}—{% endif %}
+                {% if current_sheet %}{% with grading=current_sheet.sub_event_results.Marks|get_item:'Grading'|default:current_sheet.sub_event_results|get_item:'Grading' %}{% if grading == 'Fail' or grading == '—' %}—{% else %}{{ grading|default:"—" }}{% endif %}{% endwith %}{% else %}—{% endif %}
               </span>
             </div>
             <div class="compact-score-card" style="flex: 0.9 1 110px !important; margin: 0 !important; max-width: 140px !important;">
@@ -3090,7 +3060,7 @@
             <div class="compact-score-card" style="flex: 0.9 1 110px !important; margin: 0 !important; max-width: 140px !important;">
               <span class="card-label">Grading</span>
               <span class="card-val text-warning" id="grade-CS_CLERK_RESULT" style="font-weight: 700;">
-                {% if current_sheet %}{{ current_sheet.sub_event_results.Marks|get_item:'Grading'|default:"—" }}{% else %}—{% endif %}
+                {% if current_sheet %}{% with grading=current_sheet.sub_event_results.Marks|get_item:'Grading'|default:current_sheet.sub_event_results|get_item:'Grading' %}{% if grading == 'Fail' or grading == '—' %}—{% else %}{{ grading|default:"—" }}{% endif %}{% endwith %}{% else %}—{% endif %}
               </span>
             </div>
             <div class="compact-score-card" style="flex: 0.9 1 110px !important; margin: 0 !important; max-width: 140px !important;">
@@ -3124,7 +3094,7 @@
             <div class="compact-score-card" style="flex: 0.9 1 110px !important; margin: 0 !important; max-width: 140px !important;">
               <span class="card-label">Grading</span>
               <span class="card-val text-warning" id="grade-{{ code }}" style="font-weight: 700;">
-                {% if current_sheet %}{{ current_sheet.sub_event_results|get_item:'Grading'|default:"—" }}{% else %}—{% endif %}
+                {% if current_sheet %}{% with grading=current_sheet.sub_event_results|get_item:'Grading' %}{% if grading == 'Fail' %}—{% else %}{{ grading|default:"—" }}{% endif %}{% endwith %}{% else %}—{% endif %}
               </span>
             </div>
             <div class="compact-score-card" style="flex: 0.9 1 110px !important; margin: 0 !important; max-width: 140px !important;">
@@ -3144,9 +3114,9 @@
 
             {% else %}
             <div class="compact-score-card" style="flex: 0.9 1 110px !important; margin: 0 !important; max-width: 140px !important;">
-              <span class="card-label">Total Best Score</span>
+              <span class="card-label">{% if code == 'PDP' or code == 'FINAL_MERIT' %}Best Score{% elif code == 'FC_All' or code == 'CMK_SHEET' or code == 'WPN_HANDLING' or code == 'FINAL_RESULT' or code == 'MR_III' %}Total Score{% else %}Total Best Score{% endif %}</span>
               <span class="card-val text-success">
-                <span id="score-{{ code }}">{% if current_sheet %}{% if code == 'CMK_SHEET' or code == 'WPN_HANDLING' or code == 'FINAL_MERIT' or code == 'FINAL_RESULT' %}{{ current_sheet.get_total_marks|floatformat:2 }}{% else %}{{ current_sheet.get_total_marks|floatformat:0 }}{% endif %}{% else %}0.00{% endif %}</span>
+                <span id="score-{{ code }}">{% if current_sheet %}{% if code == 'FINAL_RESULT' %}{{ current_sheet.sub_event_results.Marks|get_item:'ROUND FIGURE (120)'|default:current_sheet.get_total_marks|floatformat:0 }}{% elif code == 'CMK_SHEET' or code == 'WPN_HANDLING' or code == 'FINAL_MERIT' %}{{ current_sheet.get_total_marks|floatformat:2 }}{% else %}{{ current_sheet.get_total_marks|floatformat:0 }}{% endif %}{% else %}0.00{% endif %}</span>
                 <span style="font-size: 9px; color: var(--text-muted);">/{% if code == 'BFC' %}240{% elif code == 'PDP' %}50{% elif code == 'FC_All' %}90{% elif code == 'CMK_SHEET' or code == 'WPN_HANDLING' %}20{% elif code == 'FINAL_MERIT' %}130{% elif code == 'FINAL_RESULT' %}120{% else %}100{% endif %}</span>
               </span>
             </div>
@@ -3159,7 +3129,7 @@
             <div class="compact-score-card" style="flex: 0.9 1 110px !important; margin: 0 !important; max-width: 140px !important;">
               <span class="card-label">Grading</span>
               <span class="card-val text-warning" id="grade-{{ code }}" style="font-weight: 700;">
-                {% if current_sheet %}{% with grading=current_sheet.sub_event_results|get_item:'Grading' marks_grading=current_sheet.sub_event_results.Marks|get_item:'Grading' %}{{ grading|default:marks_grading|default:"—" }}{% endwith %}{% else %}—{% endif %}
+                {% if current_sheet %}{% with grading=current_sheet.sub_event_results|get_item:'Grading' marks_grading=current_sheet.sub_event_results.Marks|get_item:'Grading' %}{% with final_grade=grading|default:marks_grading|default:"—" %}{% if final_grade == 'Fail' %}—{% else %}{{ final_grade }}{% endif %}{% endwith %}{% endwith %}{% else %}—{% endif %}
               </span>
             </div>
             <div class="compact-score-card" style="flex: 0.9 1 110px !important; margin: 0 !important; max-width: 140px !important;">
@@ -3209,6 +3179,49 @@
 </div>
 
 <script>
+  window.showMaxAlert = function(input, maxVal) {
+    const parent = input.parentElement;
+    if (!parent) return;
+    let existing = parent.querySelector('.max-alert-badge');
+    if (existing) {
+      existing.remove();
+    }
+    
+    const badge = document.createElement('span');
+    badge.className = 'max-alert-badge';
+    badge.style.color = '#ff6b6b';
+    badge.style.fontSize = '9px';
+    badge.style.display = 'block';
+    badge.style.position = 'absolute';
+    badge.style.background = '#2A1010';
+    badge.style.border = '1px solid #ff4d4d';
+    badge.style.padding = '1px 5px';
+    badge.style.borderRadius = '3px';
+    badge.style.zIndex = '999';
+    badge.style.marginTop = '2px';
+    badge.style.left = '50%';
+    badge.style.transform = 'translateX(-50%)';
+    badge.style.whiteSpace = 'nowrap';
+    badge.style.pointerEvents = 'none';
+    badge.style.fontWeight = 'bold';
+    badge.textContent = `Max: ${maxVal}`;
+    
+    const origPosition = window.getComputedStyle(parent).position;
+    if (origPosition !== 'relative' && origPosition !== 'absolute' && origPosition !== 'fixed') {
+      parent.style.position = 'relative';
+    }
+    
+    parent.appendChild(badge);
+    
+    setTimeout(() => {
+      badge.style.transition = 'opacity 0.5s';
+      badge.style.opacity = '0';
+      setTimeout(() => {
+        badge.remove();
+      }, 500);
+    }, 2000);
+  };
+
   window.showOpemCategory = function (btn, catName) {
     const tabPane = btn.closest('.test-tab-pane');
     if (!tabPane) return;
@@ -3412,6 +3425,13 @@
         }
 
         input.addEventListener('input', (e) => {
+          const val = parseFloat(input.value);
+          const max = parseFloat(input.getAttribute('max'));
+          if (!isNaN(max) && !isNaN(val) && val > max) {
+            showMaxAlert(input, max);
+            input.value = max;
+          }
+
           const row = e.target.closest('tr');
           calculateRowBest(row);
 
@@ -3638,7 +3658,7 @@
     if (percEl) percEl.textContent = percentage.toFixed(2) + '%';
     if (gradeEl) gradeEl.textContent = grade;
     if (statusEl) {
-      if (grade === 'Fail') {
+      if (grade === 'Fail' || grade === '—') {
         statusEl.innerHTML = '<span style="color: #EF5350;">✗ FAIL</span>';
       } else {
         statusEl.innerHTML = '<span style="color: #52B788;">✓ PASS</span>';
@@ -4067,7 +4087,7 @@
     };
 
     function getGrade(percentage, subjects, passingPct = 46) {
-      let tentative = 'Fail';
+      let tentative = '—';
       if (percentage >= 80) {
         tentative = 'Distinction';
       } else if (percentage >= 70) {
@@ -4077,7 +4097,7 @@
       } else if (percentage >= passingPct) {
         tentative = 'C';
       } else {
-        return 'Fail';
+        return '—';
       }
 
       if (!subjects || subjects.length === 0) {
@@ -4110,9 +4130,9 @@
       }
       if (tentative === 'C') {
         if (checkMin(35)) return 'C';
-        return 'Fail';
+        return '—';
       }
-      return 'Fail';
+      return '—';
     }
 
     function calculateClerkResult(testCode) {
@@ -4932,12 +4952,12 @@
     }
 
     function calculateColumnTotal(table, columnName) {
-      const inputs = table.querySelectorAll(`input[name^="${columnName}_"]`);
+      const inputs = Array.from(table.querySelectorAll('input')).filter(inp => inp.name.startsWith(columnName + '_'));
       if (inputs.length === 0) return;
 
       let total = 0;
       inputs.forEach(input => {
-        total += parseInt(input.value) || 0;
+        total += parseFloat(input.value) || 0;
       });
 
       // Find the total cell for this column
@@ -4979,19 +4999,27 @@
     }
 
     function calculateSingleColumnTotal(table) {
-      const inputs = Array.from(table.querySelectorAll('input:not([readonly])')).filter(i => !i.name.includes('_'));
-      if (inputs.length === 0) return;
-
+      const isScreenBoard = table.closest('.test-tab-pane')?.id.includes('SCREEN_BOARD');
       let total = 0;
-      inputs.forEach(input => {
-        total += parseFloat(input.value) || 0;
-      });
+
+      if (isScreenBoard) {
+        const convInputs = Array.from(table.querySelectorAll('input')).filter(i => i.name.startsWith('Convert'));
+        convInputs.forEach(input => {
+          total += parseFloat(input.value) || 0;
+        });
+      } else {
+        const inputs = Array.from(table.querySelectorAll('input:not([readonly])')).filter(i => !i.name.includes('_'));
+        if (inputs.length === 0) return;
+        inputs.forEach(input => {
+          total += parseFloat(input.value) || 0;
+        });
+      }
 
       const rows = Array.from(table.querySelectorAll('tbody tr'));
 
       const totalRow = rows.find(r => r.cells[0] && r.cells[0].textContent.trim() === 'TOTAL');
       if (totalRow && totalRow.cells[1]) {
-        totalRow.cells[1].textContent = total;
+        totalRow.cells[1].textContent = isScreenBoard ? total.toFixed(2) : total;
         totalRow.cells[1].style.color = '#52B788';
         totalRow.cells[1].style.fontWeight = '700';
       }

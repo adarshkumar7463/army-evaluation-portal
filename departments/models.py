@@ -60,16 +60,17 @@ PLATOON_CHOICES = [
     ('P9', 'P9'),
 ]
 
+# Company naming per battalion
 COMPANY_CHOICES = [
+    ('Tirah Company', 'Tirah Company'),
+    ('Megiddo Company', 'Megiddo Company'),
+    ('Ghuznee Company', 'Ghuznee Company'),
+    ('Maktila Company', 'Maktila Company'),
+    ('Cassino Company', 'Cassino Company'),
+    ('Pigris Company', 'Pigris Company'),
     ('Company A', 'Company A'),
     ('Company B', 'Company B'),
     ('Company C', 'Company C'),
-    ('Company D', 'Company D'),
-    ('Company E', 'Company E'),
-    ('Company F', 'Company F'),
-    ('Company G', 'Company G'),
-    ('Company H', 'Company H'),
-    ('Company I', 'Company I'),
 ]
 
 
@@ -232,6 +233,7 @@ class Agniveer(models.Model):
     email = models.EmailField(blank=True, null=True)
     address = models.TextField(blank=True, null=True)
     photo = models.ImageField(upload_to='agniveers/', blank=True, null=True)
+    rank = models.CharField(max_length=50, blank=True, null=True)
     batch = models.CharField(max_length=30, blank=True, null=True)
     batch_no = models.CharField(max_length=10, choices=BATCH_NO_CHOICES, blank=True, null=True)
     company = models.CharField(max_length=20, choices=COMPANY_CHOICES, blank=True, null=True)

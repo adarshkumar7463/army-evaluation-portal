@@ -33,6 +33,15 @@ def build_evaluated_result_lists(agniveers, valid_sheet_ids, departments):
             if sheet.department in departments and is_sheet_evaluated(sheet)
         ]
         if not valid_sheets:
+            max_marks = sum(120 if d == 'A' else 40 for d in departments)
+            info = {
+                'name': agniveer.get_full_name(),
+                'enrollment': agniveer.agniveer_no or agniveer.enrollment_number,
+                'score': f"0/{max_marks:g}",
+                'percentage': 0.0,
+                'id': agniveer.pk
+            }
+            failed_agniveers.append(info)
             continue
 
         total_marks = 0
@@ -66,13 +75,23 @@ def build_evaluated_result_lists(agniveers, valid_sheet_ids, departments):
 
 
 def build_department_result_stats(dept, sheets, agniveers):
+    if dept == 'A' or dept == 'C':
+        eligible_agniveers = Agniveer.objects.all()
+    elif dept == 'D':
+        eligible_agniveers = Agniveer.objects.filter(trade__in=CLERK_TRADES)
+    elif dept == 'B':
+        eligible_agniveers = Agniveer.objects.exclude(trade__in=CLERK_TRADES)
+    else:
+        eligible_agniveers = agniveers
+
     passed = 0
     failed = 0
     evaluated = 0
 
-    for agniveer in agniveers:
+    for agniveer in eligible_agniveers:
         dept_sheets = list(sheets.filter(agniveer=agniveer, department=dept))
         if not dept_sheets:
+            failed += 1
             continue
         evaluated += 1
         result_row = build_department_result_row(agniveer, dept_sheets, dept)
@@ -81,14 +100,7 @@ def build_department_result_stats(dept, sheets, agniveers):
         else:
             failed += 1
 
-    if dept == 'A' or dept == 'C':
-        total_eligible = Agniveer.objects.count()
-    elif dept == 'D':
-        total_eligible = Agniveer.objects.filter(trade__in=CLERK_TRADES).count()
-    elif dept == 'B':
-        total_eligible = Agniveer.objects.exclude(trade__in=CLERK_TRADES).count()
-    else:
-        total_eligible = agniveers.count()
+    total_eligible = eligible_agniveers.count()
 
     return {
         'passed': passed,
@@ -97,7 +109,7 @@ def build_department_result_stats(dept, sheets, agniveers):
         'evaluated': evaluated,
         'total_eligible': total_eligible,
         'pass_rate': (passed / max(evaluated, 1)) * 100,
-        'agniveers': agniveers.count(),
+        'agniveers': eligible_agniveers.count(),
     }
 
 
@@ -124,10 +136,10 @@ def build_sub_department_result_stats(dept, sub_dept_key, sheets, all_agniveers)
     failed = 0
     evaluated = 0
 
-    evaluated_qs = sub_agniveers.filter(evaluations__in=sub_sheets).distinct()
-    for agniveer in evaluated_qs:
+    for agniveer in sub_agniveers:
         dept_sheets = list(sub_sheets.filter(agniveer=agniveer))
         if not dept_sheets:
+            failed += 1
             continue
         evaluated += 1
         result_row = build_department_result_row(agniveer, dept_sheets, dept)
@@ -605,11 +617,11 @@ class DepartmentDashboard(LoginRequiredMixin, View):
                 elif user.tts_trade == 'OPEM':
                     agniveers = agniveers.filter(trade='OPEM')
                 elif user.tts_trade == 'OTHER':
-                    agniveers = agniveers.exclude(trade__in=['DMV', 'OPEM'])
+                    agniveers = agniveers.exclude(trade__in=['DMV', 'OPEM'] + CLERK_TRADES)
             else:
-                agniveers = agniveers.filter(evaluations__department='B').distinct()
+                agniveers = agniveers.exclude(trade__in=CLERK_TRADES)
         elif dept == 'C':
-            agniveers = agniveers.filter(evaluations__department='C').distinct()
+            pass
         elif dept == 'D':
             agniveers = agniveers.filter(trade__in=CLERK_TRADES)
 
@@ -635,13 +647,15 @@ class DepartmentDashboard(LoginRequiredMixin, View):
             else:
                 battalion_units = [choice[0] for choice in CustomUser.BATTALION_CHOICES]
                 all_dept_sheets = all_dept_sheets.filter(agniveer__bn_desp__in=battalion_units)
-        elif dept == 'B' and user.tts_trade:
+        elif dept == 'B':
             if user.tts_trade == 'DMV':
                 all_dept_sheets = all_dept_sheets.filter(agniveer__trade='DMV')
             elif user.tts_trade == 'OPEM':
                 all_dept_sheets = all_dept_sheets.filter(agniveer__trade='OPEM')
             elif user.tts_trade == 'OTHER':
-                all_dept_sheets = all_dept_sheets.exclude(agniveer__trade__in=['DMV', 'OPEM'])
+                all_dept_sheets = all_dept_sheets.exclude(agniveer__trade__in=['DMV', 'OPEM'] + CLERK_TRADES)
+            else:
+                all_dept_sheets = all_dept_sheets.exclude(agniveer__trade__in=CLERK_TRADES)
         elif dept == 'D':
             all_dept_sheets = all_dept_sheets.filter(agniveer__trade__in=CLERK_TRADES)
 
@@ -656,8 +670,19 @@ class DepartmentDashboard(LoginRequiredMixin, View):
         
         all_agniveers = agniveers.prefetch_related('evaluations__marks')
         for agniveer in all_agniveers:
-            dept_evals = [s for s in all_dept_sheets.filter(agniveer=agniveer) if is_sheet_evaluated(s)]
+            if dept == 'A':
+                dept_evals = [s for s in agniveer.evaluations.all() if is_sheet_evaluated(s)]
+            else:
+                dept_evals = [s for s in all_dept_sheets.filter(agniveer=agniveer) if is_sheet_evaluated(s)]
             if not dept_evals:
+                info = {
+                    'name': agniveer.get_full_name(),
+                    'enrollment': agniveer.agniveer_no or agniveer.enrollment_number,
+                    'score': "0/120" if dept == 'A' else "0/40",
+                    'percentage': 0.0,
+                    'id': agniveer.pk
+                }
+                failed_agniveers.append(info)
                 continue
             result_row = build_department_result_row(agniveer, dept_evals, dept)
             raw_score = result_row.get('grand_total', 0) or 0

@@ -8,7 +8,7 @@ def get_grade(percentage, subjects=None, passing_pct=46):
     elif percentage >= passing_pct:
         tentative_grade = 'C'
     else:
-        return 'Fail'
+        return '—'
 
     if not subjects:
         return tentative_grade
@@ -42,9 +42,9 @@ def get_grade(percentage, subjects=None, passing_pct=46):
         if check_subjects_min(35):
             return 'C'
         else:
-            return 'Fail'
+            return '—'
 
-    return 'Fail'
+    return '—'
 
 
 def _marks_from_sheet(sheet):
@@ -195,11 +195,12 @@ def build_tts_result_row(agniveer, sheets):
                 total_assess = get_sheet_total_marks(assessment_sheet)
                 grand_total = round((total_assess / 71) * 40, 2)
                 percentage = round((total_assess / 71) * 100, 2)
+                total_200 = round((total_assess / 71) * 200, 2)
                 grading = get_grade(percentage)
             else:
                 grand_total = 0.0
                 percentage = 0.0
-                grading = 'Fail'
+                grading = '—'
         else:
             grand_total = _num(marks.get('Convert 40 Marks')) or round(total_200 * 0.2, 2)
             percentage = _num(marks.get('% Age')) or round((total_200 / 200) * 100, 2)
@@ -229,11 +230,12 @@ def build_tts_result_row(agniveer, sheets):
                 total_assess = get_sheet_total_marks(assessment_sheet)
                 grand_total = round((total_assess / 71) * 40, 2)
                 percentage = round((total_assess / 71) * 100, 2)
+                total_200 = round((total_assess / 71) * 200, 2)
                 grading = get_grade(percentage)
             else:
                 grand_total = 0.0
                 percentage = 0.0
-                grading = 'Fail'
+                grading = '—'
         else:
             grand_total = _num(marks.get('Convert 40 Marks')) or round(total_200 * 0.2, 2)
             percentage = _num(marks.get('% Age')) or round((total_200 / 200) * 100, 2)
@@ -279,13 +281,17 @@ def build_tts_result_row(agniveer, sheets):
             else:
                 grand_total = 0.0
                 percentage = 0.0
-                grading = 'Fail'
+                grading = '—'
             online = 0
             job = 0
             practical = 0
             online_conv = 0
             job_conv = 0
             practical_conv = 0
+
+    is_pass = percentage >= 50
+    if not is_pass:
+        grading = '—'
 
     return {
         'agniveer': agniveer,
@@ -305,7 +311,9 @@ def build_tts_result_row(agniveer, sheets):
         'grand_total': grand_total,
         'percentage': percentage,
         'grading': grading,
-        'is_pass': percentage >= 50,
+        'is_pass': is_pass,
+        'total_200': total_200 if (trade in ['DMV', 'OPEM']) else 0,
+        'remarks': result_sheet.remarks if (result_sheet and hasattr(result_sheet, 'remarks') and result_sheet.remarks) else '',
     }
 
 
@@ -327,6 +335,10 @@ def build_cs_result_row(agniveer, sheets):
     marks = _marks_from_sheet(sheet)
     total = _num(marks.get(score_key)) or get_sheet_total_marks(sheet)
     percentage = round((total / 40) * 100, 2) if total else 0
+    is_pass = percentage >= 50
+    grading = get_grade(percentage, passing_pct=50)
+    if not is_pass:
+        grading = '—'
     return {
         'agniveer': agniveer,
         'army_no': agniveer.agniveer_no or agniveer.enrollment_number,
@@ -336,8 +348,8 @@ def build_cs_result_row(agniveer, sheets):
         'unit': agniveer.bn_desp or '',
         'grand_total': round(total, 2),
         'percentage': percentage,
-        'grading': get_grade(percentage),
-        'is_pass': percentage >= 50,
+        'grading': grading,
+        'is_pass': is_pass,
     }
 
 
@@ -410,6 +422,10 @@ def build_clerk_result_row(agniveer, sheets):
         max_total = 40
 
     percentage = round((total / max_total) * 100, 2) if max_total else 0
+    is_pass = percentage >= 46
+    grading = get_grade(percentage, subjects, passing_pct=46)
+    if not is_pass:
+        grading = '—'
     return {
         'agniveer': agniveer,
         'army_no': agniveer.agniveer_no or agniveer.enrollment_number,
@@ -420,8 +436,8 @@ def build_clerk_result_row(agniveer, sheets):
         'grand_total': round(total, 2),
         'max_total': max_total,
         'percentage': percentage,
-        'grading': get_grade(percentage, subjects),
-        'is_pass': percentage >= 46,
+        'grading': grading,
+        'is_pass': is_pass,
     }
 
 
@@ -452,6 +468,10 @@ def build_battalion_result_row(agniveer, sheets):
     round_figure_120 = round(total_120)
 
     percentage = round((total_120 / 120) * 100, 2) if total_120 else 0
+    is_pass = percentage >= 40
+    grading = get_grade(percentage, passing_pct=40)
+    if not is_pass:
+        grading = '—'
 
     return {
         'agniveer': agniveer,
@@ -469,8 +489,8 @@ def build_battalion_result_row(agniveer, sheets):
         'grand_total': total_120,
         'max_total': 120,
         'percentage': percentage,
-        'grading': get_grade(percentage, passing_pct=40),
-        'is_pass': percentage >= 40,
+        'grading': grading,
+        'is_pass': is_pass,
     }
 
 

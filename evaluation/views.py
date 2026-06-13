@@ -370,7 +370,7 @@ class AgniveerEvaluateView(AnyStaffMixin, View):
                 (practical, 60)
             ]
             grading = get_grade(percentage, subjects)
-            result_status = 'Fail' if grading == 'Fail' else 'Pass'
+            result_status = 'Fail' if grading in ('Fail', '—') else 'Pass'
 
             results = {
                 'Mid Term Test (50)': mid_term,
@@ -676,14 +676,28 @@ class AgniveerEvaluateView(AnyStaffMixin, View):
                 elif active_test == 'FINAL_MERIT':
                     total_for_best = float(results['Marks'].get('TOTAL POINT (130)') or 0)
                 elif active_test == 'FINAL_RESULT':
-                    from .result_helpers import get_ces_final_marks, get_btt_final_marks, _num
+                    from .result_helpers import get_ces_final_marks, get_btt_final_marks, _num, _marks_from_sheet
                     basic_tac = get_ces_final_marks(agniveer)
                     trade_prof = get_btt_final_marks(agniveer)
                     results['Marks']['BASIC TACTICE (CES) (40)'] = basic_tac
                     results['Marks']['TRADE PROFICIENCY (BTT) (40)'] = trade_prof
                     
                     cmk_20 = _num(results['Marks'].get('COMMON MIL KNOWLEDGE (20)'))
+                    if cmk_20 == 0.0:
+                        cmk_sheet = EvaluationSheet.objects.filter(agniveer=agniveer, test_type='CMK_SHEET').first()
+                        if cmk_sheet:
+                            cmk_marks = _marks_from_sheet(cmk_sheet)
+                            cmk_20 = _num(cmk_marks.get('CONVERTED (20)'))
+                    results['Marks']['COMMON MIL KNOWLEDGE (20)'] = cmk_20
+
                     wpn_handling_20 = _num(results['Marks'].get('WPN & EQPT HANDLING (20)'))
+                    if wpn_handling_20 == 0.0:
+                        wpn_sheet = EvaluationSheet.objects.filter(agniveer=agniveer, test_type='WPN_HANDLING').first()
+                        if wpn_sheet:
+                            wpn_marks = _marks_from_sheet(wpn_sheet)
+                            wpn_handling_20 = _num(wpn_marks.get('CONVERTED (20)'))
+                    results['Marks']['WPN & EQPT HANDLING (20)'] = wpn_handling_20
+                    
                     total_120 = cmk_20 + basic_tac + trade_prof + wpn_handling_20
                     round_figure_120 = round(total_120)
                     
