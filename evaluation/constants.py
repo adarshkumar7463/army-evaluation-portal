@@ -42,7 +42,7 @@ DEPT_CONFIG = {
     'A': {
         'name': 'Battalion',
         'sub_departments': ['1TB', '2TB', 'STB'],
-        'total_marks': 500,
+        'total_marks': 120,
         'categories': [
             ('physical', 'Physical Efficiency'),
             ('weapon', 'Weapon Training'),

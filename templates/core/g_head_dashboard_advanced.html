@@ -126,40 +126,40 @@
 
   /* Per-card colour themes */
   .metric-card.mc-agniveers {
-    background: linear-gradient(145deg, rgba(79,195,247,0.22), rgba(33,150,243,0.08)) !important;
-    border-color: rgba(79,195,247,0.45) !important;
+    background: #E8F7FF !important;
+    border-color: #BEE9FF !important;
   }
-  .metric-card.mc-agniveers::before { background: linear-gradient(90deg,#4FC3F7,#2196F3); }
+  .metric-card.mc-agniveers::before { background: #4FC3F7; }
   .metric-card.mc-agniveers .metric-value { color: #0288D1; }
-  .metric-card.mc-agniveers .counter-bar  { background: linear-gradient(90deg,#4FC3F7,#2196F3); }
-  .metric-card.mc-agniveers:hover { border-color:#4FC3F7 !important; box-shadow:0 10px 28px rgba(79,195,247,0.22); }
+  .metric-card.mc-agniveers .counter-bar  { background: #4FC3F7; }
+  .metric-card.mc-agniveers:hover { border-color:#4FC3F7 !important; box-shadow:0 10px 28px rgba(79,195,247,0.12); }
 
   .metric-card.mc-trainers {
-    background: linear-gradient(145deg, rgba(212,160,23,0.22), rgba(255,193,7,0.08)) !important;
-    border-color: rgba(212,160,23,0.45) !important;
+    background: #FFF8E1 !important;
+    border-color: #FFECB3 !important;
   }
-  .metric-card.mc-trainers::before { background: linear-gradient(90deg,#D4A017,#FFC107); }
+  .metric-card.mc-trainers::before { background: #D4A017; }
   .metric-card.mc-trainers .metric-value { color: #F57F17; }
-  .metric-card.mc-trainers .counter-bar  { background: linear-gradient(90deg,#D4A017,#FFC107); }
-  .metric-card.mc-trainers:hover { border-color:#D4A017 !important; box-shadow:0 10px 28px rgba(212,160,23,0.22); }
+  .metric-card.mc-trainers .counter-bar  { background: #D4A017; }
+  .metric-card.mc-trainers:hover { border-color:#D4A017 !important; box-shadow:0 10px 28px rgba(212,160,23,0.12); }
 
   .metric-card.mc-passed {
-    background: linear-gradient(145deg, rgba(82,183,136,0.22), rgba(46,125,50,0.08)) !important;
-    border-color: rgba(82,183,136,0.45) !important;
+    background: #E9FBF0 !important;
+    border-color: #DFF6E6 !important;
   }
-  .metric-card.mc-passed::before { background: linear-gradient(90deg,#52B788,#2E7D32); }
+  .metric-card.mc-passed::before { background: #52B788; }
   .metric-card.mc-passed .metric-value { color: #2E7D32; }
-  .metric-card.mc-passed .counter-bar  { background: linear-gradient(90deg,#52B788,#2E7D32); }
-  .metric-card.mc-passed:hover { border-color:#52B788 !important; box-shadow:0 10px 28px rgba(82,183,136,0.22); }
+  .metric-card.mc-passed .counter-bar  { background: #52B788; }
+  .metric-card.mc-passed:hover { border-color:#52B788 !important; box-shadow:0 10px 28px rgba(82,183,136,0.12); }
 
   .metric-card.mc-failed {
-    background: linear-gradient(145deg, rgba(239,83,80,0.22), rgba(183,28,28,0.08)) !important;
-    border-color: rgba(239,83,80,0.45) !important;
+    background: #FFF0F0 !important;
+    border-color: #FFD6D6 !important;
   }
-  .metric-card.mc-failed::before { background: linear-gradient(90deg,#EF5350,#B71C1C); }
+  .metric-card.mc-failed::before { background: #EF5350; }
   .metric-card.mc-failed .metric-value { color: #C62828; }
-  .metric-card.mc-failed .counter-bar  { background: linear-gradient(90deg,#EF5350,#B71C1C); }
-  .metric-card.mc-failed:hover { border-color:#EF5350 !important; box-shadow:0 10px 28px rgba(239,83,80,0.22); }
+  .metric-card.mc-failed .counter-bar  { background: #EF5350; }
+  .metric-card.mc-failed:hover { border-color:#EF5350 !important; box-shadow:0 10px 28px rgba(239,83,80,0.12); }
 
   [data-bs-theme="dark"] .metric-card.mc-agniveers .metric-value { color: #4FC3F7; }
   [data-bs-theme="dark"] .metric-card.mc-trainers  .metric-value { color: #D4A017; }
@@ -558,10 +558,10 @@
     <div class="metric-label">Total Agniveers</div>
     <div class="counter-bar" id="bar-agniveers"></div>
   </div>
-  <div class="metric-card mc-trainers" onclick="location.href='{% url 'accounts:my_team' %}'">
-    <div class="metric-value" id="cnt-trainers">0</div>
-    <div class="metric-label">Total Trainers</div>
-    <div class="counter-bar" id="bar-trainers"></div>
+  <div class="metric-card mc-trainers" data-bs-toggle="modal" data-bs-target="#evaluatedModal" style="cursor:pointer;">
+    <div class="metric-value" id="cnt-evaluated">0</div>
+    <div class="metric-label">Evaluated Agniveers</div>
+    <div class="counter-bar" id="bar-evaluated"></div>
   </div>
   <div class="metric-card mc-passed" data-bs-toggle="modal" data-bs-target="#passedModal" style="cursor:pointer;">
     <div class="metric-value" id="cnt-passed">0</div>
@@ -913,6 +913,54 @@
   </div>
 </div>
 
+<!-- Evaluated Modal -->
+<div class="modal fade custom-modal" id="evaluatedModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header d-flex justify-content-between align-items-center w-100">
+        <h5 class="modal-title" style="color:var(--army-olive);">
+          <i class="bi bi-card-checklist me-2"></i>EVALUATED AGNIVEERS
+        </h5>
+        <div class="d-flex align-items-center gap-2">
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+      </div>
+      <div class="modal-body">
+        <table class="modal-table">
+          <thead>
+            <tr>
+              <th>Agniveer No</th><th>Name</th>
+              <th class="text-center">Score</th>
+              <th class="text-center">Percentage</th>
+              <th class="text-center">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for ag in evaluated_agniveers_list %}
+            <tr>
+              <td><a href="{% url 'departments:agniveer_detail' ag.id %}" style="color:var(--army-olive);text-decoration:none;font-weight:600;">{{ ag.enrollment }}</a></td>
+              <td>{{ ag.name }}</td>
+              <td class="text-center">{{ ag.score }}</td>
+              <td class="text-center">
+                <span style="padding:3px 10px;border-radius:20px;font-size:10px;background:rgba(82,183,136,0.15);color:#52B788;">{{ ag.percentage }}%</span>
+              </td>
+              <td class="text-center">
+                <a href="{% url 'departments:agniveer_detail' ag.id %}" class="btn btn-sm"
+                   style="background:var(--army-green);color:white;border-radius:6px;padding:3px 10px;font-size:10px;">
+                  <i class="bi bi-eye"></i> View
+                </a>
+              </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5" class="text-center py-4" style="color:var(--text-muted)">No records found</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
 {% endblock %}
 
 {% block extra_js %}
@@ -924,7 +972,7 @@
   /* ── Django data ─────────────────────────────────────── */
   const DATA = {
     totalAgniveers  : Number('{{ total_agniveers }}'),
-    totalTrainers   : Number('{{ total_trainers }}'),
+    evaluatedAgniveers : Number('{{ evaluated_agniveers }}'),
     passCount       : Number('{{ pass_count }}'),
     failCount       : Number('{{ fail_count }}'),
     categoryLabels  : JSON.parse('{{ category_labels|safe }}'),
@@ -991,7 +1039,7 @@
   function runCounters() {
     const dur = 1200;
     animateCount(document.getElementById('cnt-agniveers'), DATA.totalAgniveers, dur);
-    animateCount(document.getElementById('cnt-trainers'),  DATA.totalTrainers,  dur);
+    animateCount(document.getElementById('cnt-evaluated'), DATA.evaluatedAgniveers, dur);
     animateCount(document.getElementById('cnt-passed'),    DATA.passCount,      dur);
     animateCount(document.getElementById('cnt-failed'),    DATA.failCount,      dur);
     animateCount(document.getElementById('dist-pass'),     DATA.passCount,      dur);
@@ -999,7 +1047,7 @@
 
     /* donut % counter */
     const pctEl     = document.getElementById('donut-pct');
-    const total     = DATA.totalAgniveers || 1;
+    const total     = DATA.evaluatedAgniveers || 1;
     const targetPct = Math.round((DATA.passCount / total) * 100);
     let cur = 0;
     const pt = setInterval(() => {
@@ -1010,7 +1058,7 @@
 
     /* progress bars */
     setTimeout(() => {
-      ['bar-agniveers','bar-trainers','bar-passed','bar-failed'].forEach(id => {
+      ['bar-agniveers','bar-evaluated','bar-passed','bar-failed'].forEach(id => {
         const b = document.getElementById(id);
         if (b) { b.style.width = '0'; b.classList.add('loaded'); }
       });
@@ -1052,7 +1100,7 @@
           tooltip: {
             callbacks: {
               label: c => {
-                const t = DATA.totalAgniveers || 1;
+                const t = DATA.evaluatedAgniveers || 1;
                 return ` ${c.label}: ${c.parsed} (${Math.round(c.parsed / t * 100)}%)`;
               }
             }

@@ -109,6 +109,69 @@ class EvaluationSheet(models.Model):
         return mark.marks if mark else 0
 
     def get_total_marks(self):
+        if self.test_type == 'DMV_RESULT':
+            from .result_helpers import get_sheet_total_marks, _num, _marks_from_sheet
+            res = self.sub_event_results or {}
+            m_dict = res.get('Marks', res) if isinstance(res.get('Marks'), dict) else res
+            online = _num(m_dict.get('Online Test (100)'))
+            prac_sheet = self.agniveer.evaluations.filter(test_type='DMV_PRACTICAL').first()
+            practical = get_sheet_total_marks(prac_sheet) if prac_sheet else _num(m_dict.get('Practical Test (50)'))
+            drive_sheet = self.agniveer.evaluations.filter(test_type='DMV_DRIVING').first()
+            job = get_sheet_total_marks(drive_sheet) if drive_sheet else _num(m_dict.get('Driving Test (50)'))
+            raw_total = online + practical + job
+            if raw_total == 0:
+                assess_sheet = self.agniveer.evaluations.filter(test_type='DMV_ASSESSMENT').first()
+                if assess_sheet:
+                    total_assess = get_sheet_total_marks(assess_sheet)
+                    return round((total_assess / 71) * 40, 2)
+                return 0.0
+            return round(raw_total * 0.2, 2)
+
+        if self.test_type == 'OPEM_RESULT':
+            from .result_helpers import get_sheet_total_marks, _num, _marks_from_sheet
+            res = self.sub_event_results or {}
+            m_dict = res.get('Marks', res) if isinstance(res.get('Marks'), dict) else res
+            online = _num(m_dict.get('Written Test (100)'))
+            prac_sheet = self.agniveer.evaluations.filter(test_type='OPEM_PRACTICAL').first()
+            practical = get_sheet_total_marks(prac_sheet) if prac_sheet else _num(m_dict.get('Practical Test (50)'))
+            maint_sheet = self.agniveer.evaluations.filter(test_type='OPEM_MAINTENANCE').first()
+            job = get_sheet_total_marks(maint_sheet) if maint_sheet else _num(m_dict.get('Maintenance Test (50)'))
+            raw_total = online + practical + job
+            if raw_total == 0:
+                assess_sheet = self.agniveer.evaluations.filter(test_type='OPEM_ASSESSMENT').first()
+                if assess_sheet:
+                    total_assess = get_sheet_total_marks(assess_sheet)
+                    return round((total_assess / 71) * 40, 2)
+                return 0.0
+            return round(raw_total * 0.2, 2)
+
+        if self.test_type == 'FINAL_RESULT':
+            from .result_helpers import get_ces_final_marks, get_btt_final_marks, _num, _marks_from_sheet
+            basic_tac = get_ces_final_marks(self.agniveer)
+            trade_prof = get_btt_final_marks(self.agniveer)
+            
+            cmk_sheet = self.agniveer.evaluations.filter(test_type='CMK_SHEET').first()
+            cmk_20 = 0.0
+            if cmk_sheet:
+                cmk_marks = _marks_from_sheet(cmk_sheet)
+                cmk_20 = _num(cmk_marks.get('CONVERTED (20)'))
+            else:
+                res = self.sub_event_results or {}
+                m_dict = res.get('Marks', res) if isinstance(res.get('Marks'), dict) else res
+                cmk_20 = _num(m_dict.get('COMMON MIL KNOWLEDGE (20)'))
+                
+            wpn_sheet = self.agniveer.evaluations.filter(test_type='WPN_HANDLING').first()
+            wpn_handling_20 = 0.0
+            if wpn_sheet:
+                wpn_marks = _marks_from_sheet(wpn_sheet)
+                wpn_handling_20 = _num(wpn_marks.get('CONVERTED (20)'))
+            else:
+                res = self.sub_event_results or {}
+                m_dict = res.get('Marks', res) if isinstance(res.get('Marks'), dict) else res
+                wpn_handling_20 = _num(m_dict.get('WPN & EQPT HANDLING (20)'))
+                
+            return round(cmk_20 + basic_tac + trade_prof + wpn_handling_20)
+
         # Admin marks supersede individual evaluator marks if present
         admin_mark = self.marks.filter(evaluator_type='admin').first()
         if admin_mark is not None:
@@ -116,6 +179,8 @@ class EvaluationSheet(models.Model):
         return self.get_nco_marks() + self.get_jco_marks() + self.get_officer_marks()
 
     def get_max_marks(self):
+        if self.test_type in ['DMV_RESULT', 'OPEM_RESULT']:
+            return 40
         if self.department == 'A':
             max_marks_map = {
                 'PPT': 100,

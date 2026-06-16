@@ -29,6 +29,7 @@ from accounts.models import CustomUser
 from evaluation.models import EvaluationSheet
 from evaluation.forms import AgniveerEvaluationForm
 from logs.utils import log_action
+from evaluation.result_helpers import get_bn_desp_q
 
 
 # ── Registration Dashboard ──────────────────────────────────────────────────────
@@ -379,7 +380,7 @@ class AgniveerListView(AnyStaffMixin, ListView):
 
         # Battalion Level Isolation
         if user.is_battalion and user.battalion_unit:
-            queryset = queryset.filter(bn_desp=user.battalion_unit)
+            queryset = queryset.filter(get_bn_desp_q('bn_desp', user.battalion_unit))
 
         # Company/Platoon Level Isolation
         if not user.can_view_all:
@@ -416,25 +417,24 @@ class AgniveerListView(AnyStaffMixin, ListView):
             if not (dept == 'B' and hasattr(user, 'tts_trade') and user.tts_trade == 'OTHER'):
                 queryset = queryset.filter(trade=trade_param)
         if battalion_param:
-            queryset = queryset.filter(bn_desp=battalion_param)
+            queryset = queryset.filter(get_bn_desp_q('bn_desp', battalion_param))
         if company_param:
             queryset = queryset.filter(company=company_param)
         if platoon_param:
             queryset = queryset.filter(platoon=platoon_param)
 
         if eval_filter and user.is_department:
-            from evaluation.models import Marks
             from evaluation.constants import get_dept_config
+            from evaluation.result_helpers import is_sheet_evaluated
             config = get_dept_config(dept or 'A', user)
             test_types = [test[0] for test in config['test_types']]
 
-            evaluated_ids = EvaluationSheet.objects.filter(
+            all_dept_sheets = EvaluationSheet.objects.filter(
                 department=dept,
                 test_type__in=test_types,
-                marks__isnull=False,
-            ).values('agniveer_id').annotate(
-                completed=Count('test_type', distinct=True)
-            ).filter(completed__gte=len(test_types)).values_list('agniveer_id', flat=True)
+            ).prefetch_related('marks')
+
+            evaluated_ids = {s.agniveer_id for s in all_dept_sheets if is_sheet_evaluated(s)}
 
             if eval_filter == 'evaluated':
                 queryset = queryset.filter(pk__in=evaluated_ids)
@@ -566,15 +566,28 @@ class AgniveerDetailView(AnyStaffMixin, DetailView):
                 hidden_tests = {'CS_CLERK_RESULT'}
             test_type_choices = [test for test in test_type_choices if test[0] not in hidden_tests]
 
+        from evaluation.result_helpers import build_department_result_row, is_sheet_evaluated
+
         if user.is_commander or user.is_g_head:
-            total_score = sum(e.get_total_marks() for e in evaluations)
-            max_marks = sum(e.get_max_marks() for e in evaluations)
+            total_score = 0.0
+            max_marks = 0.0
+            for d in ['A', 'B', 'C', 'D']:
+                d_sheets = [e for e in evaluations if e.department == d]
+                if d_sheets and any(is_sheet_evaluated(s) for s in d_sheets):
+                    d_row = build_department_result_row(agniveer, d_sheets, d)
+                    total_score += float(d_row.get('grand_total', 0.0) or 0.0)
+                    max_marks += float(d_row.get('max_total') or (120 if d == 'A' else 40))
             if max_marks == 0:
                 max_marks = get_overall_total_marks(user)
+            total_score = round(total_score, 2)
         else:
-            total_score = sum(e.get_total_marks() for e in evaluations.filter(department=department))
-            max_marks = sum(e.get_max_marks() for e in evaluations.filter(department=department))
-            if max_marks == 0:
+            d_sheets = [e for e in evaluations if e.department == department]
+            if d_sheets and any(is_sheet_evaluated(s) for s in d_sheets):
+                d_row = build_department_result_row(agniveer, d_sheets, department)
+                total_score = round(float(d_row.get('grand_total', 0.0) or 0.0), 2)
+                max_marks = float(d_row.get('max_total') or (120 if department == 'A' else 40))
+            else:
+                total_score = 0.0
                 max_marks = config.get('total_marks', 300)
 
         percentage = (total_score / max_marks * 100) if max_marks > 0 else 0
@@ -588,7 +601,7 @@ class AgniveerDetailView(AnyStaffMixin, DetailView):
 
         ctx['total_score'] = total_score
         ctx['max_marks'] = max_marks
-        ctx['percentage'] = round(percentage, 1)
+        ctx['percentage'] = round(percentage, 2)
         ctx['score_color'] = score_color
         ctx['score_color_dark'] = score_color_dark
         # Editability: department users could evaluate via the profile UI.

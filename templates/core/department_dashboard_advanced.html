@@ -118,46 +118,201 @@
 
   /* Per-card colour themes */
   .metric-card.mc-agniveers {
-    background: linear-gradient(145deg, rgba(79,195,247,0.22), rgba(33,150,243,0.08)) !important;
-    border-color: rgba(79,195,247,0.45) !important;
+    background: #E8F7FF !important;
+    border-color: #BEE9FF !important;
   }
-  .metric-card.mc-agniveers::before { background: linear-gradient(90deg,#4FC3F7,#2196F3); }
+  .metric-card.mc-agniveers::before { background: #4FC3F7; }
   .metric-card.mc-agniveers .metric-value { color: #0288D1; }
-  .metric-card.mc-agniveers .counter-bar  { background: linear-gradient(90deg,#4FC3F7,#2196F3); }
-  .metric-card.mc-agniveers:hover { border-color:#4FC3F7 !important; box-shadow:0 10px 28px rgba(79,195,247,0.22); }
+  .metric-card.mc-agniveers .counter-bar  { background: #4FC3F7; }
+  .metric-card.mc-agniveers:hover { border-color:#4FC3F7 !important; box-shadow:0 10px 28px rgba(79,195,247,0.12); }
 
   .metric-card.mc-passed {
-    background: linear-gradient(145deg, rgba(82,183,136,0.22), rgba(46,125,50,0.08)) !important;
-    border-color: rgba(82,183,136,0.45) !important;
+    background: #E9FBF0 !important;
+    border-color: #DFF6E6 !important;
   }
-  .metric-card.mc-passed::before { background: linear-gradient(90deg,#52B788,#2E7D32); }
+  .metric-card.mc-passed::before { background: #52B788; }
   .metric-card.mc-passed .metric-value { color: #2E7D32; }
-  .metric-card.mc-passed .counter-bar  { background: linear-gradient(90deg,#52B788,#2E7D32); }
-  .metric-card.mc-passed:hover { border-color:#52B788 !important; box-shadow:0 10px 28px rgba(82,183,136,0.22); }
+  .metric-card.mc-passed .counter-bar  { background: #52B788; }
+  .metric-card.mc-passed:hover { border-color:#52B788 !important; box-shadow:0 10px 28px rgba(82,183,136,0.12); }
 
   .metric-card.mc-failed {
-    background: linear-gradient(145deg, rgba(239,83,80,0.22), rgba(183,28,28,0.08)) !important;
-    border-color: rgba(239,83,80,0.45) !important;
+    background: #FFF0F0 !important;
+    border-color: #FFD6D6 !important;
   }
-  .metric-card.mc-failed::before { background: linear-gradient(90deg,#EF5350,#B71C1C); }
+  .metric-card.mc-failed::before { background: #EF5350; }
   .metric-card.mc-failed .metric-value { color: #C62828; }
-  .metric-card.mc-failed .counter-bar  { background: linear-gradient(90deg,#EF5350,#B71C1C); }
-  .metric-card.mc-failed:hover { border-color:#EF5350 !important; box-shadow:0 10px 28px rgba(239,83,80,0.22); }
+  .metric-card.mc-failed .counter-bar  { background: #EF5350; }
+  .metric-card.mc-failed:hover { border-color:#EF5350 !important; box-shadow:0 10px 28px rgba(239,83,80,0.12); }
 
   .metric-card.mc-trainers {
-    background: linear-gradient(145deg, rgba(212,160,23,0.22), rgba(255,193,7,0.08)) !important;
-    border-color: rgba(212,160,23,0.45) !important;
+    background: #FFF8E1 !important;
+    border-color: #FFECB3 !important;
   }
-  .metric-card.mc-trainers::before { background: linear-gradient(90deg,#D4A017,#FFC107); }
+  .metric-card.mc-trainers::before { background: #D4A017; }
   .metric-card.mc-trainers .metric-value { color: #F57F17; }
-  .metric-card.mc-trainers .counter-bar  { background: linear-gradient(90deg,#D4A017,#FFC107); }
-  .metric-card.mc-trainers:hover { border-color:#D4A017 !important; box-shadow:0 10px 28px rgba(212,160,23,0.22); }
+  .metric-card.mc-trainers .counter-bar  { background: #D4A017; }
+  .metric-card.mc-trainers:hover { border-color:#D4A017 !important; box-shadow:0 10px 28px rgba(212,160,23,0.12); }
 
   /* dark-mode value overrides */
   [data-bs-theme="dark"] .metric-card.mc-agniveers .metric-value { color: #4FC3F7; }
   [data-bs-theme="dark"] .metric-card.mc-passed    .metric-value { color: #52B788; }
   [data-bs-theme="dark"] .metric-card.mc-failed    .metric-value { color: #EF5350; }
   [data-bs-theme="dark"] .metric-card.mc-trainers  .metric-value { color: #D4A017; }
+
+  /* ── Test Type Tab Bar ──────────────────────────────── */
+  .tt-tab-bar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    padding: 10px 14px;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+  }
+
+  .tt-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 13px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    font-family: 'Rajdhani', sans-serif;
+    letter-spacing: 0.3px;
+    cursor: pointer;
+    border: 1.5px solid var(--border-color);
+    color: var(--text-muted);
+    background: transparent;
+    transition: all 0.18s ease;
+    white-space: nowrap;
+    text-decoration: none;
+    user-select: none;
+  }
+  .tt-tab:hover {
+    border-color: rgba(82,183,136,0.55);
+    color: #52B788;
+    background: rgba(82,183,136,0.07);
+  }
+  .tt-tab.active {
+    border-color: #52B788;
+    color: #fff;
+    background: linear-gradient(135deg, #2E7D32, #52B788);
+    box-shadow: 0 4px 14px rgba(82,183,136,0.30);
+  }
+  .tt-tab.active:hover { filter: brightness(1.06); }
+
+  /* Inline results panel */
+  .tt-results-panel {
+    grid-column: 1;
+    display: none;
+    flex-direction: column;
+    gap: 0;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    overflow: hidden;
+    animation: panelSlide 0.22s ease;
+  }
+  .tt-results-panel.visible { display: flex; }
+  @keyframes panelSlide {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .tt-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 16px;
+    background: linear-gradient(90deg, rgba(46,125,50,0.08), transparent);
+    border-bottom: 1px solid var(--border-color);
+  }
+  .tt-panel-title {
+    font-size: 12px;
+    font-weight: 800;
+    font-family: 'Rajdhani', sans-serif;
+    color: var(--text-primary);
+    letter-spacing: 0.4px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .tt-panel-badges {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .tt-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 10px;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 700;
+    font-family: 'Rajdhani', sans-serif;
+  }
+  .tt-badge.pass { background: rgba(82,183,136,0.15); color: #2E7D32; }
+  .tt-badge.fail { background: rgba(239,83,80,0.12); color: #C62828; }
+  [data-bs-theme="dark"] .tt-badge.pass { color: #52B788; }
+  [data-bs-theme="dark"] .tt-badge.fail { color: #EF5350; }
+
+  .tt-panel-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11.5px;
+  }
+  .tt-panel-table th {
+    padding: 7px 14px;
+    font-size: 9px;
+    font-weight: 800;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+    border-bottom: 1px solid var(--border-color);
+    background: rgba(82,183,136,0.04);
+    text-align: left;
+  }
+  .tt-panel-table td {
+    padding: 7px 14px;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-primary);
+    vertical-align: middle;
+  }
+  .tt-panel-table tr:last-child td { border-bottom: none; }
+  .tt-panel-table tr:hover td { background: rgba(82,183,136,0.04); }
+  .tt-status-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 8px;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+  }
+  .tt-status-pill.pass { background: rgba(82,183,136,0.14); color: #2E7D32; }
+  .tt-status-pill.fail { background: rgba(239,83,80,0.12); color: #C62828; }
+  [data-bs-theme="dark"] .tt-status-pill.pass { color: #52B788; }
+  [data-bs-theme="dark"] .tt-status-pill.fail { color: #EF5350; }
+
+  .tt-panel-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 28px;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .tt-panel-empty {
+    text-align: center;
+    padding: 32px;
+    color: var(--text-muted);
+    font-size: 12px;
+  }
 
   /* ── Chart Boxes ──────────────────────────────────────── */
   .chart-box {
@@ -389,6 +544,77 @@
     <div class="metric-value" id="cnt-failed">0</div>
     <div class="metric-label">Failed</div>
     <div class="counter-bar" id="bar-failed"></div>
+  </div>
+</div>
+
+<!-- Test Section Tab Bar -->
+<div class="testtype-row" style="display:flex;flex-direction:column;gap:8px;">
+  <!-- Pill Tab Bar -->
+  <div class="tt-tab-bar" id="ttTabBar" role="tablist" aria-label="Test Type Tabs">
+    <!-- Overall Stats tab -->
+    <button class="tt-tab active" id="tt-tab-overall" role="tab"
+            aria-selected="true" aria-controls="ttResultsPanel"
+            onclick="selectTestTab(this, null)">
+      <i class="bi bi-grid-3x3-gap-fill"></i> Overall Stats
+    </button>
+    {% for tt_code, tt_label in test_types %}
+    <button class="tt-tab" id="tt-tab-{{ tt_code }}"
+            role="tab" aria-selected="false" aria-controls="ttResultsPanel"
+            data-tt-code="{{ tt_code }}"
+            onclick="selectTestTab(this, '{{ tt_code }}')">
+      {{ tt_label }}
+    </button>
+    {% endfor %}
+  </div>
+
+  <!-- Inline Results Panel (hidden when Overall Stats active) -->
+  <div class="tt-results-panel" id="ttResultsPanel" role="tabpanel">
+    <!-- header -->
+    <div class="tt-panel-header" id="ttPanelHeader">
+      <div class="tt-panel-title">
+        <i class="bi bi-list-check"></i>
+        <span id="ttPanelTestName">Test Results</span>
+      </div>
+      <div class="tt-panel-badges" id="ttPanelBadges"></div>
+      <div class="d-flex gap-2 align-items-center" id="ttPanelActions">
+        <a href="#" id="ttExportBtn"
+           class="btn btn-sm"
+           style="background:rgba(82,183,136,0.12);border:1px solid rgba(82,183,136,0.4);color:#52B788;font-size:10px;font-weight:700;padding:3px 10px;"
+           title="Download Excel">
+          <i class="bi bi-file-earmark-excel-fill"></i> Excel
+        </a>
+        <button class="btn btn-sm"
+                style="background:transparent;border:1px solid var(--border-color);color:var(--text-muted);font-size:10px;padding:3px 8px;"
+                onclick="selectTestTab(document.getElementById('tt-tab-overall'), null)">
+          <i class="bi bi-x"></i>
+        </button>
+      </div>
+    </div>
+    <!-- body -->
+    <div id="ttPanelBody" style="max-height:320px;overflow-y:auto;">
+      <div class="tt-panel-loading" id="ttPanelLoading" style="display:none;">
+        <div class="spinner-border spinner-border-sm text-success" role="status"></div>
+        Loading results…
+      </div>
+      <div class="tt-panel-empty" id="ttPanelEmpty" style="display:none;">
+        <i class="bi bi-inbox" style="font-size:22px;display:block;margin-bottom:6px;"></i>
+        No locked evaluations found for this test.
+      </div>
+      <table class="tt-panel-table" id="ttPanelTable" style="display:none;">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Army No</th>
+            <th>Name</th>
+            <th>Batch</th>
+            <th style="text-align:center;">Score</th>
+            <th style="text-align:center;">%</th>
+            <th style="text-align:center;">Status</th>
+          </tr>
+        </thead>
+        <tbody id="ttPanelTableBody"></tbody>
+      </table>
+    </div>
   </div>
 </div>
 
@@ -970,6 +1196,104 @@
   }
 
   window.openAgniveerModal = openAgniveerModal;
+
+  /* ── Test Tab Bar ────────────────────────────────────── */
+  let activeTestType = null;
+
+  function selectTestTab(tabEl, testTypeCode) {
+    // Deactivate all tabs
+    document.querySelectorAll('#ttTabBar .tt-tab').forEach(t => {
+      t.classList.remove('active');
+      t.setAttribute('aria-selected', 'false');
+    });
+
+    // Activate selected
+    tabEl.classList.add('active');
+    tabEl.setAttribute('aria-selected', 'true');
+
+    const panel = document.getElementById('ttResultsPanel');
+
+    if (!testTypeCode) {
+      // "Overall Stats" — close the panel
+      panel.classList.remove('visible');
+      activeTestType = null;
+      return;
+    }
+
+    // Avoid redundant reload if same tab clicked again
+    if (testTypeCode === activeTestType) return;
+    activeTestType = testTypeCode;
+
+    // Show panel + loading state
+    panel.classList.add('visible');
+    document.getElementById('ttPanelLoading').style.display = 'flex';
+    document.getElementById('ttPanelEmpty').style.display   = 'none';
+    document.getElementById('ttPanelTable').style.display   = 'none';
+
+    // Update title from the button label
+    document.getElementById('ttPanelTestName').textContent = tabEl.textContent.trim();
+    document.getElementById('ttPanelBadges').innerHTML = '';
+
+    // Update Excel export link
+    const exportBtn = document.getElementById('ttExportBtn');
+    const dept = '{{ dept }}';
+    exportBtn.href = `/reports/export/test/${dept}/${testTypeCode}/excel/`;
+
+    // Fetch JSON
+    fetch(`/reports/api/test-results/${dept}/${testTypeCode}/json/`)
+      .then(r => r.json())
+      .then(data => {
+        document.getElementById('ttPanelLoading').style.display = 'none';
+
+        if (!data.rows || !data.rows.length) {
+          document.getElementById('ttPanelEmpty').style.display = 'flex';
+          return;
+        }
+
+        // Summary badges
+        const badgesEl = document.getElementById('ttPanelBadges');
+        badgesEl.innerHTML = `
+          <span class="tt-badge pass"><i class="bi bi-check-circle-fill"></i> ${data.passed} PASS</span>
+          <span class="tt-badge fail"><i class="bi bi-x-circle-fill"></i>  ${data.failed} FAIL</span>
+          <span style="font-size:10px;color:var(--text-muted);font-family:'Rajdhani',sans-serif;font-weight:700;">${data.total} Total</span>
+        `;
+
+        // Table rows
+        const tbody = document.getElementById('ttPanelTableBody');
+        tbody.innerHTML = data.rows.map((r, i) => {
+          const pct = Number(r.percentage);
+          const statusClass = r.is_pass ? 'pass' : 'fail';
+          const statusText  = r.is_pass ? '✔ PASS' : '✘ FAIL';
+          return `
+            <tr>
+              <td style="color:var(--text-muted);font-size:10px;">${i + 1}</td>
+              <td><a href="/departments/agniveers/${r.id}/" style="color:#52B788;font-weight:700;text-decoration:none;">${r.army_no}</a></td>
+              <td style="font-weight:600;">${r.name}</td>
+              <td style="color:var(--text-muted);">${r.batch}</td>
+              <td style="text-align:center;font-family:'Rajdhani',monospace;font-weight:700;">${r.total}/${r.max}</td>
+              <td style="text-align:center;">
+                <span style="padding:2px 7px;border-radius:8px;font-size:10px;font-weight:700;
+                  background:${pct>=50?'rgba(82,183,136,0.14)':'rgba(239,83,80,0.12)'};
+                  color:${pct>=50?'#2E7D32':'#C62828'};">${pct}%</span>
+              </td>
+              <td style="text-align:center;">
+                <span class="tt-status-pill ${statusClass}">${statusText}</span>
+              </td>
+            </tr>`;
+        }).join('');
+
+        document.getElementById('ttPanelTable').style.display = 'table';
+      })
+      .catch(err => {
+        document.getElementById('ttPanelLoading').style.display = 'none';
+        document.getElementById('ttPanelEmpty').style.display = 'flex';
+        document.getElementById('ttPanelEmpty').innerHTML =
+          '<i class="bi bi-exclamation-triangle" style="font-size:22px;display:block;margin-bottom:6px;color:#EF5350;"></i>Error loading data.';
+        console.error('Test results fetch error:', err);
+      });
+  }
+
+  window.selectTestTab = selectTestTab;
 
   /* ── Theme listener ──────────────────────────────────── */
   window.addEventListener('themeChanged', buildAll);

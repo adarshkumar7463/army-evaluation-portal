@@ -15,7 +15,16 @@ from django.db.models.functions import Coalesce
 
 from departments.models import Agniveer
 from evaluation.models import EvaluationSheet, Marks
-from evaluation.result_helpers import build_tts_result_row, build_battalion_result_row, build_department_result_row, build_cs_result_row, build_clerk_result_row
+from evaluation.result_helpers import (
+    build_tts_result_row,
+    build_battalion_result_row,
+    build_department_result_row,
+    build_cs_result_row,
+    build_clerk_result_row,
+    get_bn_desp_list,
+    get_bn_desp_q,
+    ALL_BATTALION_UNITS_LIST
+)
 from accounts.models import CustomUser
 from accounts.mixins import AnyStaffMixin, CommanderOrGHeadMixin
 from logs.utils import log_action
@@ -30,8 +39,8 @@ def scoped_agniveers(queryset, user, dept=None):
     dept = dept or user.get_department_code()
     if dept == 'A':
         if user.is_department and user.battalion_unit:
-            return queryset.filter(bn_desp=user.battalion_unit)
-        battalion_units = [choice[0] for choice in CustomUser.BATTALION_CHOICES]
+            return queryset.filter(get_bn_desp_q('bn_desp', user.battalion_unit))
+        battalion_units = get_bn_desp_list([choice[0] for choice in CustomUser.BATTALION_CHOICES])
         return queryset.filter(bn_desp__in=battalion_units)
     if dept == 'B':
         if user.is_department and user.tts_trade == 'DMV':
@@ -53,8 +62,8 @@ def scoped_sheets(queryset, user, dept=None):
     queryset = queryset.filter(department=dept)
     if dept == 'A':
         if user.is_department and user.battalion_unit:
-            return queryset.filter(agniveer__bn_desp=user.battalion_unit)
-        battalion_units = [choice[0] for choice in CustomUser.BATTALION_CHOICES]
+            return queryset.filter(get_bn_desp_q('agniveer__bn_desp', user.battalion_unit))
+        battalion_units = get_bn_desp_list([choice[0] for choice in CustomUser.BATTALION_CHOICES])
         return queryset.filter(agniveer__bn_desp__in=battalion_units)
     if dept == 'B':
         if user.is_department and user.tts_trade == 'DMV':
@@ -213,6 +222,13 @@ class ReportDashboardView(AnyStaffMixin, View):
 
         context['fail_count'] = context.get('fail_count', 0)
 
+        # Provide available test types to templates for per-test exports
+        try:
+            test_types = list(EvaluationSheet.TEST_TYPE_CHOICES)
+        except Exception:
+            test_types = []
+        context['test_types'] = test_types
+
         return render(request, self.template_name, context)
 
 
@@ -264,9 +280,9 @@ class BattalionReportCardView(BattalionHeadMixin, View):
         
         # Filter agniveers by battalion unit
         if battalion_unit:
-            agniveers = Agniveer.objects.filter(bn_desp=battalion_unit)
+            agniveers = Agniveer.objects.filter(get_bn_desp_q('bn_desp', battalion_unit))
         else:
-            battalion_units = [choice[0] for choice in CustomUser.BATTALION_CHOICES]
+            battalion_units = get_bn_desp_list([choice[0] for choice in CustomUser.BATTALION_CHOICES])
             agniveers = Agniveer.objects.filter(bn_desp__in=battalion_units)
         
         sheets = EvaluationSheet.objects.filter(
@@ -365,17 +381,80 @@ class ReportCardDetailView(AnyStaffMixin, View):
         for dept in departments_to_show:
             dept_evals = evaluations.filter(department=dept)
             if dept_evals.exists():
+                if dept == 'A':
+                    d_row = build_department_result_row(agniveer, list(dept_evals), 'A')
+                    total_marks = d_row.get('grand_total', 0.0)
+                else:
+                    total_marks = sum(e.get_total_marks() for e in dept_evals)
                 dept_evaluations[dept] = {
                     'on_field': dept_evals.filter(category='on_field'),
                     'trade': dept_evals.filter(category='trade'),
-                    'total_marks': sum(e.get_total_marks() for e in dept_evals),
+                    'total_marks': total_marks,
                     'max_marks': get_dept_total_marks(dept),
                 }
         
         # Calculate overall scores
-        grand_total = sum(e.get_total_marks() for e in evaluations)
-        max_total = get_dept_total_marks(user_dept) if is_department_view else get_overall_total_marks()
-        percentage = round((grand_total / max_total * 100), 2) if max_total > 0 else 0
+        if is_department_view:
+            result_row = build_department_result_row(agniveer, list(evaluations), user_dept)
+            grand_total = result_row.get('grand_total', 0)
+            max_total = result_row.get('max_total') or (120 if user_dept == 'A' else 40)
+            percentage = result_row.get('percentage', 0)
+            overall_pass = result_row.get('is_pass', False)
+        else:
+            # Compute summary for all 4 departments
+            from evaluation.result_helpers import build_department_result_row, is_sheet_evaluated
+            all_evaluations = list(EvaluationSheet.objects.filter(agniveer=agniveer).prefetch_related('marks'))
+            
+            trade = str(agniveer.trade or '').strip().upper()
+            bn_raw = str(agniveer.bn_desp or '').strip().lower()
+            if '1tb' in bn_raw:
+                bn_name = '1tb'
+            elif '2tb' in bn_raw or '2b' in bn_raw:
+                bn_name = '2tb'
+            else:
+                bn_name = '1tb'
+                
+            dept_name_map = {
+                'A': bn_name,
+                'B': 'dmv department' if trade == 'DMV' else ('opem' if trade == 'OPEM' else 'tts department'),
+                'C': 'CES DEpartment',
+                'D': 'cts department',
+            }
+            
+            all_dept_results = {}
+            for d in ['A', 'B', 'C', 'D']:
+                d_sheets = [s for s in all_evaluations if s.department == d]
+                if d_sheets:
+                    d_row = build_department_result_row(agniveer, d_sheets, d)
+                    is_eval = any(is_sheet_evaluated(s) for s in d_sheets)
+                    if is_eval:
+                        all_dept_results[d] = {
+                            'name': dept_name_map.get(d, d),
+                            'grand_total': d_row.get('grand_total', 0),
+                            'max_total': d_row.get('max_total') or (120 if d == 'A' else 40),
+                        }
+                    else:
+                        all_dept_results[d] = {
+                            'name': dept_name_map.get(d, d),
+                            'grand_total': '—',
+                            'max_total': (120 if d == 'A' else 40),
+                        }
+                else:
+                    all_dept_results[d] = {
+                        'name': dept_name_map.get(d, d),
+                        'grand_total': '—',
+                        'max_total': (120 if d == 'A' else 40),
+                    }
+            
+            grand_total = 0.0
+            max_total = 0.0
+            for d, res in all_dept_results.items():
+                if res['grand_total'] != '—':
+                    grand_total += float(res['grand_total'])
+                    max_total += float(res['max_total'])
+            percentage = round((grand_total / max_total * 100), 2) if max_total else 0
+            overall_pass = percentage >= 50
+            
         passing_threshold = 40 if is_department_view and user_dept == 'A' else 50
         overall_pass = percentage >= passing_threshold
         
@@ -429,6 +508,25 @@ class ExportAgniveersCSVView(AnyStaffMixin, View):
                 a.evaluations.values_list('department', flat=True).distinct()
             )
             department_text = ', '.join(DEPARTMENT_NAMES.get(dept, dept) for dept in dept_codes)
+            
+            if user.is_department:
+                dept_code = user.get_department_code()
+                evals = list(a.evaluations.filter(department=dept_code).prefetch_related('marks'))
+                from evaluation.result_helpers import build_department_result_row, is_sheet_evaluated
+                if evals and any(is_sheet_evaluated(s) for s in evals):
+                    d_row = build_department_result_row(a, evals, dept_code)
+                    total_score = d_row.get('grand_total', 0.0)
+                    if dept_code == 'A':
+                        total_score = d_row.get('round_figure_120', total_score)
+                    is_pass = d_row.get('is_pass', False)
+                    pass_status = 'Pass' if is_pass else 'Fail'
+                else:
+                    total_score = '—'
+                    pass_status = 'Pending'
+            else:
+                total_score = a.get_total_score()
+                pass_status = a.get_pass_status()
+
             writer.writerow([
                 a.enrollment_number,
                 a.get_full_name(),
@@ -436,8 +534,8 @@ class ExportAgniveersCSVView(AnyStaffMixin, View):
                 a.batch,
                 a.joining_date.strftime('%Y-%m-%d') if a.joining_date else '',
                 a.get_status_display(),
-                a.get_total_score(),
-                a.get_pass_status(),
+                total_score,
+                pass_status,
             ])
 
         log_action(user, 'EXPORT', 'Exported Agniveers CSV', request)
@@ -572,6 +670,233 @@ class ExportExcelView(AnyStaffMixin, View):
         return response
 
 
+class ExportTestTypeExcelView(AnyStaffMixin, View):
+    """Export locked evaluation sheets for a specific department and test type as Excel."""
+    def get(self, request, dept, test_type):
+        try:
+            import openpyxl
+            from openpyxl.styles import Font, PatternFill, Alignment
+        except ImportError:
+            return HttpResponse("openpyxl not installed. Run: pip install openpyxl", status=500)
+
+        user = request.user
+
+        # Restrict dept to user's dept unless commander/g_head
+        if not (user.is_commander or user.is_g_head):
+            user_dept = user.get_department_code()
+            if dept != user_dept:
+                return HttpResponse("Not authorized to export for this department", status=403)
+
+        sheets = EvaluationSheet.objects.filter(is_locked=True, test_type=test_type, department=dept).select_related('agniveer').prefetch_related('marks')
+
+        # Optional status filter: pass|fail
+        status = request.GET.get('status')
+        if status in ('pass', 'fail'):
+            wanted = True if status == 'pass' else False
+            sheets = [s for s in sheets if s.is_pass() == wanted]
+
+        # Further restrict to scoped sheets for department users
+        if user.is_department and not (user.is_commander or user.is_g_head):
+            sheets = scoped_sheets(sheets, user, dept)
+
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = f"{dept}_{test_type}"[:31]
+
+        header_fill = PatternFill(start_color="1B4332", end_color="1B4332", fill_type="solid")
+        header_font = Font(color="FFFFFF", bold=True, size=11)
+        center = Alignment(horizontal='center', vertical='center')
+
+        headers = ['S.No', 'Army No', 'Name', 'Enrollment No', 'Batch', 'Category', 'Test Type', 'NCO', 'JCO', 'Officer', 'Total', 'Percentage', 'Result']
+        for col, header in enumerate(headers, 1):
+            cell = ws.cell(row=1, column=col, value=header)
+            cell.fill = header_fill
+            cell.font = header_font
+            cell.alignment = center
+
+        for idx, sheet in enumerate(sheets, 1):
+            is_pass = sheet.is_pass()
+            row = [
+                idx,
+                sheet.agniveer.agniveer_no or sheet.agniveer.enrollment_number,
+                sheet.agniveer.get_full_name(),
+                sheet.agniveer.enrollment_number,
+                sheet.agniveer.batch,
+                sheet.get_category_display(),
+                sheet.get_test_type_display(),
+                sheet.get_nco_marks(),
+                sheet.get_jco_marks(),
+                sheet.get_officer_marks(),
+                sheet.get_total_marks(),
+                f"{sheet.get_percentage()}%",
+                'PASS' if is_pass else 'FAIL',
+            ]
+            for col, val in enumerate(row, 1):
+                cell = ws.cell(row=idx+1, column=col, value=val)
+                cell.alignment = center
+
+        # Autosize a few columns
+        for col in range(1, len(headers) + 1):
+            ws.column_dimensions[openpyxl.utils.get_column_letter(col)].width = 15
+
+        buffer = io.BytesIO()
+        wb.save(buffer)
+        buffer.seek(0)
+
+        response = HttpResponse(
+            buffer.getvalue(),
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        filename = f"{DEPARTMENT_NAMES.get(dept,dept)}_{test_type}_report.xlsx"
+        if status:
+            filename = f"{DEPARTMENT_NAMES.get(dept,dept)}_{test_type}_{status}_report.xlsx"
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        log_action(user, 'EXPORT', f'Exported {dept} {test_type} Excel', request)
+        return response
+
+
+class TestTypeResultsView(AnyStaffMixin, View):
+    """Show the locked evaluation sheets for a given department and test type. Renders into the reports dashboard template (no new template file)."""
+
+    def get(self, request, dept, test_type):
+        user = request.user
+
+        # Authorization: department users only for their own dept unless commander/g_head
+        if user.is_department and not (user.is_commander or user.is_g_head):
+            if dept != user.get_department_code():
+                return HttpResponse("Not authorized to view this department results", status=403)
+
+        sheets_qs = EvaluationSheet.objects.filter(is_locked=True, department=dept, test_type=test_type).select_related('agniveer').prefetch_related('marks')
+        if user.is_department and not (user.is_commander or user.is_g_head):
+            sheets_qs = scoped_sheets(sheets_qs, user, dept)
+
+        rows = []
+        for s in sheets_qs:
+            rows.append({
+                'agniveer': s.agniveer,
+                'nco': s.get_nco_marks(),
+                'jco': s.get_jco_marks(),
+                'officer': s.get_officer_marks(),
+                'total': s.get_total_marks(),
+                'percentage': s.get_percentage(),
+                'is_pass': s.is_pass(),
+            })
+
+        # Counts
+        passed = sum(1 for r in rows if r['is_pass'])
+        failed = sum(1 for r in rows if not r['is_pass'])
+
+        # Reuse ReportDashboardView context by calling it to get base context
+        base_view = ReportDashboardView()
+        base_request = request
+        base_ctx = base_view.get(request).context_data if hasattr(base_view.get(request), 'context_data') else {}
+
+        # Construct context and render the same dashboard template with the results block
+        context = base_ctx
+        context.update({
+            'test_results_rows': rows,
+            'test_results_passed': passed,
+            'test_results_failed': failed,
+            'test_results_dept': dept,
+            'test_results_test_type': test_type,
+        })
+
+        return render(request, 'reports/report_dashboard.html', context)
+
+
+class DeptTestResultsView(AnyStaffMixin, View):
+    """Render test-type results into the department dashboard template for inline viewing."""
+
+    def get(self, request, dept, test_type):
+        user = request.user
+        # Authorization
+        if user.is_department and not (user.is_commander or user.is_g_head):
+            if dept != user.get_department_code():
+                return HttpResponse("Not authorized to view this department results", status=403)
+
+        sheets_qs = EvaluationSheet.objects.filter(is_locked=True, department=dept, test_type=test_type).select_related('agniveer').prefetch_related('marks')
+        if user.is_department and not (user.is_commander or user.is_g_head):
+            sheets_qs = scoped_sheets(sheets_qs, user, dept)
+
+        rows = []
+        for s in sheets_qs:
+            rows.append({
+                'agniveer': s.agniveer,
+                'nco': s.get_nco_marks(),
+                'jco': s.get_jco_marks(),
+                'officer': s.get_officer_marks(),
+                'total': s.get_total_marks(),
+                'percentage': s.get_percentage(),
+                'is_pass': s.is_pass(),
+            })
+
+        passed = sum(1 for r in rows if r['is_pass'])
+        failed = sum(1 for r in rows if not r['is_pass'])
+
+        # Build department dashboard context by delegating to core view logic
+        from core.views import get_all_test_types_for_dept
+        # Minimal context: include test results and available test types
+        context = {
+            'dept': dept,
+            'test_results_rows': rows,
+            'test_results_passed': passed,
+            'test_results_failed': failed,
+            'test_results_dept': dept,
+            'test_results_test_type': test_type,
+            'test_types': get_all_test_types_for_dept(dept),
+        }
+
+        return render(request, 'core/department_dashboard_advanced.html', context)
+
+
+
+class DeptTestResultsJsonView(AnyStaffMixin, View):
+    """Return JSON list of pass/fail results for a department + test_type for inline dashboard loading."""
+
+    def get(self, request, dept, test_type):
+        from django.http import JsonResponse
+        user = request.user
+
+        if user.is_department and not (user.is_commander or user.is_g_head):
+            if dept != user.get_department_code():
+                return JsonResponse({'error': 'Not authorized'}, status=403)
+
+        sheets_qs = (
+            EvaluationSheet.objects
+            .filter(is_locked=True, department=dept, test_type=test_type)
+            .select_related('agniveer')
+            .prefetch_related('marks')
+        )
+        if user.is_department and not (user.is_commander or user.is_g_head):
+            sheets_qs = list(scoped_sheets(sheets_qs, user, dept))
+
+        rows = []
+        for s in sheets_qs:
+            is_pass = s.is_pass()
+            rows.append({
+                'id': s.agniveer.pk,
+                'army_no': s.agniveer.agniveer_no or s.agniveer.enrollment_number,
+                'name': s.agniveer.get_full_name(),
+                'batch': s.agniveer.batch or '—',
+                'total': s.get_total_marks(),
+                'max': s.get_max_marks(),
+                'percentage': s.get_percentage(),
+                'is_pass': is_pass,
+            })
+
+        passed = sum(1 for r in rows if r['is_pass'])
+        failed = len(rows) - passed
+
+        return JsonResponse({
+            'dept': dept,
+            'test_type': test_type,
+            'total': len(rows),
+            'passed': passed,
+            'failed': failed,
+            'rows': rows,
+        })
+
+
 class ExportDashboardResultsExcelView(AnyStaffMixin, View):
     def _export_battalion_results(self, request, status_filter, sub_dept=None):
         import openpyxl
@@ -593,8 +918,8 @@ class ExportDashboardResultsExcelView(AnyStaffMixin, View):
             unit_filter = user.battalion_unit
 
         if unit_filter and unit_filter != 'all':
-            agniveers = agniveers.filter(bn_desp=unit_filter)
-            sheets = sheets.filter(agniveer__bn_desp=unit_filter)
+            agniveers = agniveers.filter(get_bn_desp_q('bn_desp', unit_filter))
+            sheets = sheets.filter(get_bn_desp_q('agniveer__bn_desp', unit_filter))
 
         from collections import defaultdict
         sheets_by_agniveer = defaultdict(list)
@@ -605,7 +930,7 @@ class ExportDashboardResultsExcelView(AnyStaffMixin, View):
         rows = []
         for agniveer in agniveers.order_by('agniveer_no', 'enrollment_number'):
             ag_sheets = sheets_by_agniveer.get(agniveer.id, [])
-            if not ag_sheets and is_pass_filter:
+            if not ag_sheets:
                 continue
             row = build_battalion_result_row(agniveer, ag_sheets)
             if row['is_pass'] == is_pass_filter:
@@ -731,7 +1056,7 @@ class ExportDashboardResultsExcelView(AnyStaffMixin, View):
         rows = []
         for agniveer in agniveers.order_by('agniveer_no', 'enrollment_number'):
             ag_sheets = sheets_by_agniveer.get(agniveer.id, [])
-            if not ag_sheets and is_pass_filter:
+            if not ag_sheets:
                 continue
             
             row = build_tts_result_row(agniveer, ag_sheets)
@@ -879,8 +1204,8 @@ class ExportDashboardResultsExcelView(AnyStaffMixin, View):
         ).select_related('agniveer').prefetch_related('marks')
 
         if sub_dept and sub_dept != 'all':
-            agniveers = agniveers.filter(bn_desp=sub_dept)
-            sheets = sheets.filter(agniveer__bn_desp=sub_dept)
+            agniveers = agniveers.filter(get_bn_desp_q('bn_desp', sub_dept))
+            sheets = sheets.filter(get_bn_desp_q('agniveer__bn_desp', sub_dept))
 
         cs_final_rows = []
         cs_clerk_rows = []
@@ -895,26 +1220,14 @@ class ExportDashboardResultsExcelView(AnyStaffMixin, View):
 
         for agniveer in agniveers.order_by('agniveer_no', 'enrollment_number'):
             ag_sheets = sheets_by_agniveer.get(agniveer.id, [])
-            if not ag_sheets and is_pass_filter:
+            if not ag_sheets:
                 continue
             
             sheet_map = {s.test_type: s for s in ag_sheets}
             
             if agniveer.trade in CS_CLERK_RESULT_TRADES:
-                result_sheet = sheet_map.get('CS_CLERK_RESULT')
+                result_sheet = sheet_map.get('CS_CLERK_RESULT') or sheet_map.get('CS_ASSESSMENT')
                 if not result_sheet:
-                    if not is_pass_filter:
-                        cs_clerk_rows.append({
-                            'rank': getattr(agniveer, 'rank', '') or '',
-                            'trade': agniveer.trade or '',
-                            'name': agniveer.get_full_name(),
-                            'pl': agniveer.platoon or '',
-                            'bn': agniveer.bn_desp or '',
-                            'online': 0.0,
-                            'prac': 0.0,
-                            'total': 0.0,
-                            'remarks': 'No evaluation'
-                        })
                     continue
                 marks = _marks_from_sheet(result_sheet)
                 online = _num(marks.get('Online (20)'))
@@ -936,29 +1249,8 @@ class ExportDashboardResultsExcelView(AnyStaffMixin, View):
                         'remarks': result_sheet.remarks if result_sheet.remarks else ''
                     })
             else:
-                result_sheet = sheet_map.get('CS_RESULT')
+                result_sheet = sheet_map.get('CS_RESULT') or sheet_map.get('CS_ASSESSMENT')
                 if not result_sheet:
-                    if not is_pass_filter:
-                        cs_final_rows.append({
-                            'army_no': agniveer.agniveer_no or agniveer.enrollment_number,
-                            'rank': getattr(agniveer, 'rank', '') or '',
-                            'trade': agniveer.trade or '',
-                            'name': agniveer.get_full_name(),
-                            'unit': agniveer.bn_desp or '',
-                            'toet_i': 0.0,
-                            'toet_ii': 0.0,
-                            'toet_total': 0.0,
-                            'toet_25': 0.0,
-                            'fe_online': 0.0,
-                            'fe_prac': 0.0,
-                            'fe_total': 0.0,
-                            'br_online': 0.0,
-                            'br_prac': 0.0,
-                            'br_total': 0.0,
-                            'total_160': 0.0,
-                            'converted_40': 0.0,
-                            'remarks': 'No evaluation'
-                        })
                     continue
                 marks = _marks_from_sheet(result_sheet)
                 
@@ -1136,8 +1428,8 @@ class ExportDashboardResultsExcelView(AnyStaffMixin, View):
         ).select_related('agniveer').prefetch_related('marks')
 
         if sub_dept and sub_dept != 'all':
-            agniveers = agniveers.filter(bn_desp=sub_dept)
-            sheets = sheets.filter(agniveer__bn_desp=sub_dept)
+            agniveers = agniveers.filter(get_bn_desp_q('bn_desp', sub_dept))
+            sheets = sheets.filter(get_bn_desp_q('agniveer__bn_desp', sub_dept))
 
         from collections import defaultdict
         sheets_by_agniveer = defaultdict(list)
@@ -1148,34 +1440,12 @@ class ExportDashboardResultsExcelView(AnyStaffMixin, View):
         rows = []
         for agniveer in agniveers.order_by('agniveer_no', 'enrollment_number'):
             ag_sheets = sheets_by_agniveer.get(agniveer.id, [])
-            if not ag_sheets and is_pass_filter:
+            if not ag_sheets:
                 continue
             
             sheet_map = {s.test_type: s for s in ag_sheets}
             sheet = sheet_map.get('CLK_FINAL')
             if not sheet:
-                if not is_pass_filter:
-                    rows.append({
-                        'army_no': agniveer.agniveer_no or agniveer.enrollment_number,
-                        'rank': getattr(agniveer, 'rank', '') or '',
-                        'trade': agniveer.trade or '',
-                        'name': agniveer.get_full_name(),
-                        'unit': agniveer.bn_desp or '',
-                        'tech_online': '',
-                        'tech_proj': '',
-                        'academic': '',
-                        'comp_online': '',
-                        'comp_prac': '',
-                        'comp_total': '',
-                        'extempore': '',
-                        'typing_20': '',
-                        'marks_obtained_300': 0,
-                        'percentage': 0,
-                        'result_str': 'FAIL',
-                        'grading': '—',
-                        'converted_40': 0,
-                        'remarks': 'No final test evaluation'
-                    })
                 continue
                 
             marks = _marks_from_sheet(sheet)
@@ -1349,7 +1619,7 @@ class ExportDashboardResultsExcelView(AnyStaffMixin, View):
         all_agniveers = Agniveer.objects.all()
         if dept_code == 'A':
             if sub_dept_key and sub_dept_key != 'all':
-                agniveers_qs = all_agniveers.filter(bn_desp=sub_dept_key)
+                agniveers_qs = all_agniveers.filter(get_bn_desp_q('bn_desp', sub_dept_key))
             else:
                 agniveers_qs = all_agniveers
         elif dept_code == 'B':
@@ -1612,20 +1882,6 @@ class ExportDashboardResultsExcelView(AnyStaffMixin, View):
                 evaluated_departments.append(DEPARTMENT_NAMES.get(dept, dept))
 
             if max_marks <= 0:
-                if not is_pass_filter:
-                    total_max = sum(120 if d == 'A' else 40 for d in departments)
-                    filtered_agniveers.append({
-                        'enrollment_number': agniveer.enrollment_number,
-                        'army_no': agniveer.agniveer_no or agniveer.enrollment_number,
-                        'rank': getattr(agniveer, 'rank', '') or '',
-                        'name': agniveer.get_full_name(),
-                        'trade': agniveer.trade or '',
-                        'unit': agniveer.bn_desp or '',
-                        'departments': 'None',
-                        'score': f"0/{total_max}",
-                        'percentage': 0.0,
-                        'status': 'FAIL'
-                    })
                 continue
 
             percentage = (total_marks / max_marks) * 100
@@ -1640,7 +1896,7 @@ class ExportDashboardResultsExcelView(AnyStaffMixin, View):
                     'unit': agniveer.bn_desp or '',
                     'departments': ', '.join(evaluated_departments),
                     'score': f"{total_marks:g}/{max_marks:g}",
-                    'percentage': round(percentage, 1),
+                    'percentage': round(percentage, 2),
                     'status': 'PASS' if is_pass else 'FAIL'
                 })
 
@@ -1721,15 +1977,68 @@ class ExportDashboardResultsExcelView(AnyStaffMixin, View):
         response['Content-Disposition'] = f'attachment; filename="dashboard_{status_filter}_results.xlsx"'
         return response
 
+
+def extract_sheet_sub_events(sheet):
+    if not sheet:
+        return []
+    res = sheet.sub_event_results or {}
+    marks_dict = {}
+    if isinstance(res, dict):
+        if isinstance(res.get('Marks'), dict):
+            marks_dict = res['Marks']
+        else:
+            for ev in ['admin', 'officer', 'jco', 'nco']:
+                if isinstance(res.get(ev), dict) and res[ev]:
+                    marks_dict = res[ev]
+                    break
+            if not marks_dict:
+                marks_dict = res
+
+    if not isinstance(marks_dict, dict):
+        return []
+
+    import re
+    sub_events = []
+    exclude_patterns = ['total', 'percentage', 'result', 'grading', 'status', 'remarks', 'convert', 'grand', 'round']
+
+    for k, v in marks_dict.items():
+        k_lower = k.lower()
+        if any(p in k_lower for p in exclude_patterns):
+            continue
+        if k in ['Marks', 'admin', 'nco', 'jco', 'officer']:
+            continue
+            
+        match = re.search(r'\((MM\s*|Max\s*Marks\s*)?(\d+)[^)]*\)', k)
+        if match:
+            max_val = int(match.group(2))
+            clean_k = re.sub(r'\((MM\s*|Max\s*Marks\s*)?(\d+)[^)]*\)', '', k).strip()
+        else:
+            max_val = '—'
+            clean_k = k.strip()
+
+        try:
+            val_float = float(v)
+            val_str = f"{val_float:.1f}"
+        except (ValueError, TypeError):
+            val_str = str(v) if v is not None else '—'
+
+        sub_events.append({
+            'name': clean_k,
+            'score': val_str,
+            'max': max_val
+        })
+    return sub_events
+
+
 class ExportPDFReportCardView(AnyStaffMixin, View):
-    """Export individual Agniveer report card as PDF with enhanced ReportLab styling."""
+    """Export individual Agniveer report card as PDF with enhanced ReportLab styling in Portrait layout."""
 
     def get(self, request, pk):
         try:
             from reportlab.lib.pagesizes import A4
             from reportlab.lib import colors
             from reportlab.lib.units import inch
-            from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image, HRFlowable
+            from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image
             from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
             from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
         except ImportError:
@@ -1737,12 +2046,77 @@ class ExportPDFReportCardView(AnyStaffMixin, View):
 
         agniveer = get_object_or_404(Agniveer, pk=pk)
         evaluations = EvaluationSheet.objects.filter(agniveer=agniveer).prefetch_related('marks').order_by('department', 'category', 'test_type')
+        all_evaluations = list(evaluations)
+
+        def get_universal_dept_name_local(dept_code):
+            if not dept_code:
+                return ""
+            dept_code = str(dept_code).strip().upper()
+            trade = str(agniveer.trade or '').strip().upper()
+            
+            if dept_code == 'A':
+                bn = str(agniveer.bn_desp or '').strip().lower()
+                if '1tb' in bn:
+                    return "1tb"
+                elif '2tb' in bn or '2b' in bn:
+                    return "2tb"
+                return "1tb"
+            elif dept_code == 'B':
+                if trade == 'DMV':
+                    return "dmv department"
+                elif trade == 'OPEM':
+                    return "opem"
+                else:
+                    return "tts department"
+            elif dept_code == 'C':
+                return "CES DEpartment"
+            elif dept_code == 'D':
+                return "cts department"
+            return dept_code
+
+        def get_final_sheet_for_dept(all_sheets, dept, trade):
+            if dept == 'A':
+                final_test_types = ['FINAL_RESULT']
+            elif dept == 'B':
+                if trade == 'DMV':
+                    final_test_types = ['DMV_RESULT']
+                elif trade == 'OPEM':
+                    final_test_types = ['OPEM_RESULT']
+                else:
+                    final_test_types = ['OTHER_SCREEN_BOARD']
+            elif dept == 'C':
+                from evaluation.constants import CS_CLERK_RESULT_TRADES
+                if trade in CS_CLERK_RESULT_TRADES:
+                    final_test_types = ['CS_CLERK_RESULT']
+                else:
+                    final_test_types = ['CS_RESULT']
+            elif dept == 'D':
+                final_test_types = ['CLK_FINAL']
+            else:
+                final_test_types = []
+                
+            for sheet in all_sheets:
+                if sheet.department == dept and sheet.test_type in final_test_types:
+                    return sheet
+            return None
 
         if request.user.is_trainer:
             return HttpResponse("You don't have permission to export report cards.", status=403)
 
+        # Distinct departments in evaluations that actually have records
+        available_depts = list(EvaluationSheet.objects.filter(agniveer=agniveer).values_list('department', flat=True).distinct())
+        available_depts.sort()
+
         # Determine filtering based on role and optional query parameter
         target_dept = request.GET.get('dept')
+        if not target_dept and (request.user.is_commander or request.user.is_g_head):
+            if 'A' in available_depts:
+                target_dept = 'A'
+            elif available_depts:
+                target_dept = available_depts[0]
+            else:
+                target_dept = 'A'
+
         is_department_export = False
         user_dept = None
 
@@ -1752,213 +2126,429 @@ class ExportPDFReportCardView(AnyStaffMixin, View):
                 return HttpResponse("You don't have permission to export this report card.", status=403)
             evaluations = scoped_sheets(evaluations, request.user, user_dept)
             is_department_export = True
-            departments_to_show = [user_dept]
         elif target_dept and target_dept in ['A', 'B', 'C', 'D'] and (request.user.is_commander or request.user.is_g_head):
-            # Privileged users can optionally filter by department
             evaluations = evaluations.filter(department=target_dept)
             is_department_export = True
-            departments_to_show = [target_dept]
             user_dept = target_dept
         else:
-            # Commanders/G-Heads see everything by default
             is_department_export = False
-            departments_to_show = ['A', 'B', 'C', 'D']
+            user_dept = 'A'
 
-        dept_evaluations = {}
-        from evaluation.constants import get_dept_total_marks, get_overall_total_marks
+        # Fetch active final sheets
+        active_final_sheets = []
+        if is_department_export:
+            sheet = get_final_sheet_for_dept(all_evaluations, user_dept, agniveer.trade)
+            if sheet:
+                active_final_sheets.append(sheet)
+        else:
+            for d in ['A', 'B', 'C', 'D']:
+                sheet = get_final_sheet_for_dept(all_evaluations, d, agniveer.trade)
+                if sheet:
+                    active_final_sheets.append(sheet)
+
+        # Compute results
+        from evaluation.result_helpers import build_department_result_row
         
-        for dept in departments_to_show:
-            dept_evals = evaluations.filter(department=dept)
-            if dept_evals.exists():
-                dept_evaluations[dept] = {
-                    'on_field': dept_evals.filter(category='on_field'),
-                    'trade': dept_evals.filter(category='trade'),
-                    'total_marks': sum(e.get_total_marks() for e in dept_evals),
-                    'max_marks': get_dept_total_marks(dept),
-                }
-
-        grand_total = sum(e.get_total_marks() for e in evaluations)
-        max_total = get_dept_total_marks(user_dept) if is_department_export else get_overall_total_marks()
-        percentage = round((grand_total / max_total * 100), 2) if max_total else 0
-        overall_pass = percentage >= 50
+        if is_department_export:
+            department_result_row = build_department_result_row(agniveer, list(evaluations), user_dept)
+            grand_total = department_result_row.get('grand_total', 0)
+            max_total = department_result_row.get('max_total') or (120 if user_dept == 'A' else 40)
+            percentage = department_result_row.get('percentage', 0)
+            overall_pass = department_result_row.get('is_pass', False)
+        else:
+            department_result_row = {}
+            # Compute summary for all 4 departments
+            from evaluation.result_helpers import build_department_result_row, is_sheet_evaluated
+            
+            trade = str(agniveer.trade or '').strip().upper()
+            bn_raw = str(agniveer.bn_desp or '').strip().lower()
+            if '1tb' in bn_raw:
+                bn_name = '1tb'
+            elif '2tb' in bn_raw or '2b' in bn_raw:
+                bn_name = '2tb'
+            else:
+                bn_name = '1tb'
+                
+            dept_name_map = {
+                'A': bn_name,
+                'B': 'dmv department' if trade == 'DMV' else ('opem' if trade == 'OPEM' else 'tts department'),
+                'C': 'CES DEpartment',
+                'D': 'cts department',
+            }
+            
+            all_dept_results = {}
+            for d in ['A', 'B', 'C', 'D']:
+                d_sheets = [s for s in all_evaluations if s.department == d]
+                if d_sheets:
+                    d_row = build_department_result_row(agniveer, d_sheets, d)
+                    is_eval = any(is_sheet_evaluated(s) for s in d_sheets)
+                    if is_eval:
+                        all_dept_results[d] = {
+                            'name': dept_name_map.get(d, d),
+                            'grand_total': d_row.get('grand_total', 0),
+                            'max_total': d_row.get('max_total') or (120 if d == 'A' else 40),
+                        }
+                    else:
+                        all_dept_results[d] = {
+                            'name': dept_name_map.get(d, d),
+                            'grand_total': '—',
+                            'max_total': (120 if d == 'A' else 40),
+                        }
+                else:
+                    all_dept_results[d] = {
+                        'name': dept_name_map.get(d, d),
+                        'grand_total': '—',
+                        'max_total': (120 if d == 'A' else 40),
+                    }
+            
+            grand_total = 0.0
+            max_total = 0.0
+            for d, res in all_dept_results.items():
+                if res['grand_total'] != '—':
+                    grand_total += float(res['grand_total'])
+                    max_total += float(res['max_total'])
+            percentage = round((grand_total / max_total * 100), 2) if max_total else 0
+            overall_pass = percentage >= 50
 
         buffer = io.BytesIO()
-        doc = SimpleDocTemplate(buffer, pagesize=A4, topMargin=0.4*inch, bottomMargin=0.4*inch, leftMargin=0.5*inch, rightMargin=0.5*inch)
+        doc = SimpleDocTemplate(
+            buffer, 
+            pagesize=A4, 
+            topMargin=0.4*inch, 
+            bottomMargin=0.4*inch, 
+            leftMargin=0.5*inch, 
+            rightMargin=0.5*inch
+        )
         styles = getSampleStyleSheet()
 
-        # Color Palette (Matching Web UI)
+        # Brand colors matching the Web App
         brand_dark = colors.HexColor('#1B4332')
         brand_medium = colors.HexColor('#2D6A4F')
-        accent_green = colors.HexColor('#1B4332')
         gold_color = colors.HexColor('#D4A017')
-        text_dark = colors.HexColor('#0F1419')
-        text_muted = colors.HexColor('#6C757D')
-        pass_green = colors.HexColor('#4CAF50')
-        fail_red = colors.HexColor('#EF5350')
-        
-        # Styles
-        title_style = ParagraphStyle('Title', fontSize=18, textColor=colors.white, fontName='Helvetica-Bold', alignment=TA_CENTER)
-        subtitle_style = ParagraphStyle('Sub', fontSize=7, textColor=colors.white, fontName='Helvetica', alignment=TA_CENTER, letterSpacing=2)
-        badge_style = ParagraphStyle('Badge', fontSize=14, textColor=colors.white, fontName='Helvetica-Bold', alignment=TA_CENTER)
-        badge_sub_style = ParagraphStyle('BadgeSub', fontSize=8, textColor=colors.white, fontName='Helvetica', alignment=TA_CENTER)
-        
-        dept_title_style = ParagraphStyle('Dept', fontSize=12, textColor=brand_dark, fontName='Helvetica-Bold', spaceBefore=10, spaceAfter=6)
-        section_style = ParagraphStyle('Section', fontSize=9, textColor=brand_medium, fontName='Helvetica-Bold', spaceBefore=6, spaceAfter=4)
-        label_style = ParagraphStyle('Label', fontSize=7, textColor=text_muted, fontName='Helvetica-Bold', leading=8)
-        value_style = ParagraphStyle('Value', fontSize=10, textColor=text_dark, fontName='Helvetica-Bold', leading=12)
+        text_dark = colors.HexColor('#1A2C3E')
+        text_muted = colors.HexColor('#5A6A7A')
+        pass_green = colors.HexColor('#2E7D32')
+        fail_red = colors.HexColor('#C62828')
+        light_bg = colors.HexColor('#F7FAF8')
+        border_color = colors.HexColor('#D1E2D6')
 
         elements = []
 
-        # ==== HEADER WITH BADGE ====
-        result_text = '✓ PASS' if overall_pass else '✗ FAIL'
+        # styles
+        title_style = ParagraphStyle('Title', fontSize=14, textColor=colors.white, fontName='Helvetica-Bold', alignment=TA_CENTER)
+        subtitle_style = ParagraphStyle('Sub', fontSize=7, textColor=colors.HexColor('#D4A017'), fontName='Helvetica', alignment=TA_CENTER, letterSpacing=2)
+        badge_style = ParagraphStyle('Badge', fontSize=10, textColor=colors.white, fontName='Helvetica-Bold', alignment=TA_CENTER)
+        badge_sub_style = ParagraphStyle('BadgeSub', fontSize=7, textColor=colors.white, fontName='Helvetica', alignment=TA_CENTER)
+        
+        # Profile styles
+        label_style = ParagraphStyle('Label', fontSize=7, textColor=text_muted, fontName='Helvetica-Bold', leading=8)
+        value_style = ParagraphStyle('Value', fontSize=9, textColor=text_dark, fontName='Helvetica-Bold', leading=11)
+
+        # Table cell styles
+        cell_style = ParagraphStyle('Cell', fontSize=7, fontName='Helvetica', alignment=TA_CENTER, leading=8)
+        cell_bold_style = ParagraphStyle('CellBold', fontSize=7, fontName='Helvetica-Bold', alignment=TA_CENTER, leading=8)
+
+        # ==== HEADER BANNER ====
+        result_text = 'PASSED' if overall_pass else 'FAILED'
         result_color = pass_green if overall_pass else fail_red
         
         badge_content = [
-            [Paragraph(result_text, ParagraphStyle('RT', parent=badge_style, textColor=result_color))],
-            [Paragraph(f'{percentage}%', ParagraphStyle('PC', parent=badge_sub_style, textColor=colors.white))]
+          [Paragraph(result_text, ParagraphStyle('RT', parent=badge_style, textColor=result_color))],
+          [Paragraph(f'{percentage:.2f}%', ParagraphStyle('PC', parent=badge_sub_style, textColor=colors.HexColor('#1A2C3E' if overall_pass else '#FFFFFF')))]
         ]
-        badge_table = Table(badge_content, colWidths=[1.1*inch])
+        badge_table = Table(badge_content, colWidths=[1.3*inch])
         badge_table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (0, -1), colors.Color(result_color.red, result_color.green, result_color.blue, alpha=0.1)),
-            ('BORDER', (0, 0), (0, -1), 1.5, result_color),
-            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-            ('TOPPADDING', (0, 0), (-1, -1), 4),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+          ('BACKGROUND', (0, 0), (-1, -1), colors.Color(result_color.red, result_color.green, result_color.blue, alpha=0.15)),
+          ('BORDER', (0, 0), (-1, -1), 1.5, result_color),
+          ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+          ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+          ('TOPPADDING', (0, 0), (-1, -1), 3),
+          ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
         ]))
 
+        dept_names_map = {
+            'A': get_universal_dept_name_local('A'),
+            'B': get_universal_dept_name_local('B'),
+            'C': get_universal_dept_name_local('C'),
+            'D': get_universal_dept_name_local('D'),
+        }
+        title_banner_text = dept_names_map.get(user_dept, 'ARMY EVALUATION PORTAL').upper() if is_department_export else 'ARMY EVALUATION PORTAL'
         header_data = [
-            [
-                Paragraph('ARMY EVALUATION PORTAL', title_style),
-                badge_table
-            ],
-            [
-                Paragraph('AGNIVEER PROFILE & PERFORMANCE REPORT', subtitle_style),
-                ''
-            ]
+          [
+            Paragraph(title_banner_text, title_style),
+            badge_table
+          ],
+          [
+            Paragraph(f'AGNIVEER PERFORMANCE ASSESSMENT REPORT — BATCH {agniveer.batch}', subtitle_style),
+            ''
+          ]
         ]
         
-        header_table = Table(header_data, colWidths=[5.7*inch, 1.6*inch])
+        header_table = Table(header_data, colWidths=[5.77*inch, 1.5*inch])
         header_table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, -1), brand_dark),
-            ('SPAN', (1, 0), (1, 1)),
-            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-            ('TOPPADDING', (0, 0), (-1, -1), 10),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
-            ('RIGHTPADDING', (1, 0), (1, 1), 15),
+          ('BACKGROUND', (0, 0), (-1, -1), brand_dark),
+          ('SPAN', (1, 0), (1, 1)),
+          ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+          ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+          ('TOPPADDING', (0, 0), (-1, -1), 6),
+          ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+          ('RIGHTPADDING', (1, 0), (1, 1), 10),
         ]))
+        # Construct hierarchical meta string
+        dept_name_str = dept_names_map.get(user_dept, 'ALL DEPARTMENTS').upper()
+        company_str = (agniveer.company or '—').upper()
+        platoon_str = (agniveer.platoon or '—').upper()
+        bn_str = (agniveer.bn_desp or '—').upper()
+        
+        if is_department_export:
+            hierarchy_str = f"DEPARTMENT-{dept_name_str} — {company_str} — PLATOON-{platoon_str}"
+        else:
+            hierarchy_str = f"BATTALION-{bn_str} — ALL DEPARTMENTS — {company_str} — PLATOON-{platoon_str}"
+            
+        hierarchy_style = ParagraphStyle('HierarchyPDF', fontSize=7.5, textColor=colors.HexColor('#2D6A4F'), fontName='Helvetica-Bold', alignment=TA_CENTER)
+        
         elements.append(header_table)
-        elements.append(Spacer(1, 12))
+        elements.append(Spacer(1, 4))
+        elements.append(Paragraph(hierarchy_str, hierarchy_style))
+        elements.append(Spacer(1, 6))
 
-        # ==== PROFILE SECTION ====
+        # ==== PROFILE GRID ====
         try:
             if agniveer.photo:
-                img = Image(agniveer.photo.path, 0.8*inch, 0.8*inch)
+                img = Image(agniveer.photo.path, 0.75*inch, 0.75*inch)
             else:
-                img = Paragraph('PHOTO\nN/A', label_style)
+                img = Paragraph('PHOTO<br/>N/A', label_style)
         except:
             img = Paragraph('N/A', label_style)
 
         profile_grid = [
-            [Paragraph('NAME', label_style), Paragraph('ENROLLMENT NO', label_style)],
-            [Paragraph(agniveer.get_full_name().upper(), value_style), Paragraph(agniveer.enrollment_number, value_style)],
-            [Spacer(1, 6), Spacer(1, 6)],
-            [Paragraph('BATCH', label_style), Paragraph('JOINING DATE', label_style)],
-            [Paragraph(agniveer.batch, value_style), Paragraph(agniveer.joining_date.strftime('%d %b %Y'), value_style)],
+            [
+                Paragraph('FULL NAME', label_style), 
+                Paragraph('RANK', label_style), 
+                Paragraph('TRADE', label_style), 
+                Paragraph('BATTALION / UNIT', label_style)
+            ],
+            [
+                Paragraph(agniveer.get_full_name().upper(), value_style), 
+                Paragraph(department_result_row.get('rank', '—').upper() if is_department_export else getattr(agniveer, 'rank', '—').upper(), value_style), 
+                Paragraph((agniveer.trade or 'Other').upper(), value_style), 
+                Paragraph((agniveer.bn_desp or '—').upper(), value_style)
+            ],
+            [Spacer(1, 3), Spacer(1, 3), Spacer(1, 3), Spacer(1, 3)],
+            [
+                Paragraph('AGNIVEER NO (ARMY NO)', label_style), 
+                Paragraph('ENROLLMENT NO', label_style), 
+                Paragraph('COMPANY', label_style), 
+                Paragraph('PLATOON', label_style)
+            ],
+            [
+                Paragraph((agniveer.agniveer_no or '—').upper(), value_style), 
+                Paragraph(agniveer.enrollment_number.upper(), value_style), 
+                Paragraph(company_str, value_style), 
+                Paragraph((agniveer.platoon or '—').upper(), value_style)
+            ],
         ]
         
-        grid_table = Table(profile_grid, colWidths=[2.8*inch, 2.8*inch])
+        grid_table = Table(profile_grid, colWidths=[1.54*inch, 1.54*inch, 1.54*inch, 1.55*inch])
         grid_table.setStyle(TableStyle([
             ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 1),
+            ('TOPPADDING', (0, 0), (-1, -1), 1),
         ]))
 
-        main_profile_table = Table([[img, grid_table]], colWidths=[1.1*inch, 6.1*inch])
+        main_profile_table = Table([[img, grid_table]], colWidths=[1.1*inch, 6.17*inch])
         main_profile_table.setStyle(TableStyle([
             ('VALIGN', (0, 0), (-1, -1), 'TOP'),
             ('ALIGN', (0, 0), (0, 0), 'CENTER'),
+            ('BACKGROUND', (0, 0), (-1, -1), light_bg),
+            ('TOPPADDING', (0, 0), (-1, -1), 8),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+            ('LEFTPADDING', (0, 0), (-1, -1), 12),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 12),
         ]))
         elements.append(main_profile_table)
-        elements.append(Spacer(1, 5))
-        elements.append(HRFlowable(width="100%", thickness=0.5, color=colors.lightgrey, spaceAfter=10))
+        elements.append(Spacer(1, 8))
 
-        # ==== EVALUATIONS ====
-        for dept, data in dept_evaluations.items():
-            elements.append(Paragraph(f'DEPARTMENT {dept} EVALUATIONS', dept_title_style))
+        # ==== DEPARTMENT EVALUATION TABLE ====
+        # We replace this with cards for active final sheets
+        for sheet in active_final_sheets:
+            dept_name_str = get_universal_dept_name_local(sheet.department).upper()
+            title_text = f"<b>{dept_name_str} FINAL RESULT</b>"
+            total_val = sheet.get_total_marks()
+            max_val = sheet.get_max_marks()
+            total_str = f"{int(total_val)}" if isinstance(total_val, (int, float)) and float(total_val).is_integer() else f"{total_val:.1f}"
+            max_str = f"{int(max_val)}" if isinstance(max_val, (int, float)) and float(max_val).is_integer() else f"{max_val:.1f}"
+            score_text = f"<b>{total_str} / {max_str}</b>"
             
-            # Compact Score Bar
-            score_data = [[f'ACHIEVED SCORE: {data["total_marks"]} / {data["max_marks"]}']]
-            score_bar = Table(score_data, colWidths=[7.2*inch])
-            score_bar.setStyle(TableStyle([
-                ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#F8F9FA')),
-                ('TEXTCOLOR', (0, 0), (-1, -1), brand_dark),
-                ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),
-                ('FONTSIZE', (0, 0), (-1, -1), 9),
-                ('PADDING', (0, 0), (-1, -1), 5),
+            # Simple borderless table for final card header
+            header_para_left = Paragraph(title_text, ParagraphStyle('CardTitle', fontSize=9, textColor=brand_dark, fontName='Helvetica-Bold'))
+            header_para_right = Paragraph(score_text, ParagraphStyle('CardScore', fontSize=9, textColor=pass_green, fontName='Helvetica-Bold', alignment=TA_RIGHT))
+            
+            card_header_table = Table([[header_para_left, header_para_right]], colWidths=[5.27*inch, 2.0*inch])
+            card_header_table.setStyle(TableStyle([
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+                ('TOPPADDING', (0, 0), (-1, -1), 4),
+                ('LINEBELOW', (0, 0), (-1, -1), 1, border_color),
             ]))
-            elements.append(score_bar)
+            elements.append(card_header_table)
+            elements.append(Spacer(1, 4))
+            
+            # Extract components
+            sub_events = extract_sheet_sub_events(sheet)
+            if sub_events:
+                # Table headers
+                sheet_headers = [
+                    Paragraph('<b>TEST / SECTION COMPONENT</b>', ParagraphStyle('THL', fontSize=7.5, fontName='Helvetica-Bold', textColor=text_muted, alignment=TA_LEFT)),
+                    Paragraph('<b>SCORE</b>', ParagraphStyle('THC', fontSize=7.5, fontName='Helvetica-Bold', textColor=text_muted, alignment=TA_CENTER)),
+                    Paragraph('<b>MAX</b>', ParagraphStyle('THR', fontSize=7.5, fontName='Helvetica-Bold', textColor=text_muted, alignment=TA_CENTER))
+                ]
+                
+                sheet_data = [sheet_headers]
+                t_style = [
+                    ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                    ('TOPPADDING', (0, 0), (-1, -1), 4),
+                    ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+                ]
+                t_style.append(('LINEBELOW', (0, 0), (-1, 0), 1, border_color))
 
-            for cat_name, cat_key, head_col in [('ON FIELD TRAINING', 'on_field', brand_dark), ('TRADE TRAINING', 'trade', brand_medium)]:
-                if data[cat_key]:
-                    elements.append(Paragraph(f'• {cat_name}', section_style))
+                for idx, event in enumerate(sub_events, 1):
+                    try:
+                        max_float = float(event['max'])
+                        max_str = f"{int(max_float)}" if max_float.is_integer() else f"{max_float:.1f}"
+                    except (ValueError, TypeError):
+                        max_str = str(event['max'])
+                        
+                    is_total_conv = False
+                    ev_name_lower = event['name'].lower()
+                    if 'total' in ev_name_lower or 'converted' in ev_name_lower or 'round' in ev_name_lower:
+                        is_total_conv = True
                     
-                    table_data = [['Test Type', 'NCO', 'JCO', 'Officer', 'Total', '%', 'Result']]
-                    for ev in data[cat_key]:
-                        res = 'PASS' if ev.is_pass() else 'FAIL'
-                        table_data.append([
-                            ev.get_test_type_display(),
-                            str(ev.get_nco_marks()),
-                            str(ev.get_jco_marks()),
-                            str(ev.get_officer_marks()),
-                            str(ev.get_total_marks()),
-                            f'{ev.get_percentage()}%',
-                            res
-                        ])
-                    
-                    t = Table(table_data, colWidths=[2.1*inch, 0.7*inch, 0.7*inch, 0.7*inch, 0.7*inch, 0.7*inch, 1.2*inch])
-                    t.setStyle(TableStyle([
-                        ('BACKGROUND', (0, 0), (-1, 0), head_col),
-                        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
-                        ('ALIGN', (1, 0), (-1, -1), 'CENTER'),
-                        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                        ('FONTSIZE', (0, 0), (-1, -1), 8),
-                        ('GRID', (0, 0), (-1, -1), 0.5, colors.lightgrey),
-                        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#F9F9F9')]),
-                        ('TOPPADDING', (0, 0), (-1, -1), 3),
-                        ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
-                    ]))
-                    elements.append(t)
-                    elements.append(Spacer(1, 8))
+                    if is_total_conv:
+                        t_style.append(('BACKGROUND', (0, idx), (-1, idx), colors.HexColor('#F0F9F4'))) # light green background
+                        name_style = ParagraphStyle(f'EvNameTotal_{sheet.test_type}_{idx}', fontSize=7.5, fontName='Helvetica-Bold', textColor=colors.HexColor('#2E7D32'), alignment=TA_LEFT, leading=9)
+                        score_style = ParagraphStyle(f'EvScoreTotal_{sheet.test_type}_{idx}', fontSize=8.5, fontName='Helvetica-Bold', textColor=colors.HexColor('#2E7D32'), alignment=TA_CENTER)
+                        max_style = ParagraphStyle(f'EvMaxTotal_{sheet.test_type}_{idx}', fontSize=7.5, fontName='Helvetica-Bold', textColor=colors.HexColor('#2E7D32'), alignment=TA_CENTER)
+                    else:
+                        name_style = ParagraphStyle(f'EvName_{sheet.test_type}_{idx}', fontSize=7.5, fontName='Helvetica', alignment=TA_LEFT, leading=9)
+                        score_style = ParagraphStyle(f'EvScore_{sheet.test_type}_{idx}', fontSize=8.5, fontName='Helvetica-Bold', alignment=TA_CENTER)
+                        max_style = ParagraphStyle(f'EvMax_{sheet.test_type}_{idx}', fontSize=7.5, fontName='Helvetica', textColor=text_muted, alignment=TA_CENTER)
+                        
+                    sheet_data.append([
+                        Paragraph(event['name'].upper(), name_style),
+                        Paragraph(f"<b>{event['score']}</b>", score_style),
+                        Paragraph(max_str, max_style)
+                    ])
 
-        # ==== SUMMARY ====
-        elements.append(Spacer(1, 10))
-        elements.append(HRFlowable(width="100%", thickness=1, color=brand_dark))
+                for r in range(1, len(sheet_data) - 1):
+                    t_style.append(('LINEBELOW', (0, r), (-1, r), 0.5, colors.HexColor('#E5ECE7')))
+                
+                sheet_table = Table(sheet_data, colWidths=[4.27*inch, 1.5*inch, 1.5*inch])
+                sheet_table.setStyle(TableStyle(t_style))
+                elements.append(sheet_table)
+                
+            # Remarks at the bottom of the card
+            if sheet.remarks:
+                elements.append(Spacer(1, 4))
+                remarks_text = f"<i>Remarks: {sheet.remarks}</i>"
+                elements.append(Paragraph(remarks_text, ParagraphStyle('CardRemarks', fontSize=8, fontName='Helvetica-Oblique', textColor=text_muted, leftIndent=12)))
+            
+            elements.append(Spacer(1, 15))
+
+        # ==== CONSOLIDATED 4-DEPARTMENT OVERALL TABLE ====
+        if request.user.is_commander or request.user.is_g_head:
+            from evaluation.result_helpers import is_sheet_evaluated
+            all_dept_results = {}
+            for d in ['A', 'B', 'C', 'D']:
+                d_sheets = [s for s in all_evaluations if s.department == d]
+                if d_sheets:
+                    d_row = build_department_result_row(agniveer, d_sheets, d)
+                    is_eval = any(is_sheet_evaluated(s) for s in d_sheets)
+                    if is_eval:
+                        all_dept_results[d] = {
+                            'name': get_universal_dept_name_local(d),
+                            'grand_total': d_row.get('grand_total', 0),
+                            'max_total': d_row.get('max_total') or (120 if d == 'A' else 40),
+                            'percentage': d_row.get('percentage', 0),
+                            'grading': d_row.get('grading', '—'),
+                            'is_pass': d_row.get('is_pass', False),
+                            'status': 'PASSED' if d_row.get('is_pass') else 'FAILED'
+                        }
+                    else:
+                        all_dept_results[d] = {
+                            'name': get_universal_dept_name_local(d),
+                            'grand_total': '—',
+                            'max_total': (120 if d == 'A' else 40),
+                            'percentage': '—',
+                            'grading': '—',
+                            'status': 'PENDING'
+                        }
+                else:
+                    all_dept_results[d] = {
+                        'name': get_universal_dept_name_local(d),
+                        'grand_total': '—',
+                        'max_total': (120 if d == 'A' else 40),
+                        'percentage': '—',
+                        'grading': '—',
+                        'status': 'PENDING'
+                    }
+            
+            elements.append(Spacer(1, 12))
+            elements.append(Paragraph("OVERALL FOUR-DEPARTMENT PERFORMANCE SUMMARY", ParagraphStyle('ConsTitle', fontSize=8, textColor=brand_dark, fontName='Helvetica-Bold', spaceAfter=4)))
+            
+            cons_headers = [
+                Paragraph('<b>Department / Assessment Phase</b>', cell_bold_style),
+                Paragraph('<b>Marks Obtained</b>', cell_bold_style),
+                Paragraph('<b>Max Marks</b>', cell_bold_style),
+                Paragraph('<b>Percentage</b>', cell_bold_style),
+                Paragraph('<b>Grading</b>', cell_bold_style),
+                Paragraph('<b>Status</b>', cell_bold_style)
+            ]
+            
+            cons_data = [cons_headers]
+            for code, res in all_dept_results.items():
+                pct_val = f"{res['percentage']:.2f}%" if res['percentage'] != '—' else '—'
+                cons_data.append([
+                    Paragraph(res['name'], ParagraphStyle('ConsName', fontSize=7, fontName='Helvetica-Bold', alignment=TA_LEFT)),
+                    Paragraph(str(res['grand_total']), cell_style),
+                    Paragraph(str(res['max_total']), cell_style),
+                    Paragraph(pct_val, cell_style),
+                    Paragraph(str(res['grading']), cell_style),
+                    Paragraph(res['status'], ParagraphStyle('ConsStatus', fontSize=7, fontName='Helvetica-Bold', alignment=TA_CENTER, textColor=pass_green if res['status'] == 'PASSED' else (fail_red if res['status'] == 'FAILED' else text_muted)))
+                ])
+                
+            cons_table = Table(cons_data, colWidths=[2.5*inch, 1.0*inch, 1.0*inch, 1.0*inch, 0.77*inch, 1.0*inch])
+            cons_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), brand_dark),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+                ('GRID', (0, 0), (-1, -1), 0.5, border_color),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                ('TOPPADDING', (0, 0), (-1, -1), 4),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+                ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#F9FDF9')]),
+            ]))
+            elements.append(cons_table)
+
+        # ==== SIGNATURES & FOOTER ====
+        elements.append(Spacer(1, 25))
         
-        summary_title = f'{"DEPARTMENT " + user_dept if is_department_export else "OVERALL"} PERFORMANCE SUMMARY'
-        elements.append(Paragraph(summary_title, ParagraphStyle('Sum', fontSize=11, fontName='Helvetica-Bold', alignment=TA_CENTER, spaceBefore=10, spaceAfter=8)))
-        
-        # Professional Summary Card
-        summary_data = [
-            [Paragraph('CRITERIA', ParagraphStyle('CL', fontSize=8, fontName='Helvetica-Bold', textColor=colors.white)), 
-             Paragraph('ACHIEVEMENT', ParagraphStyle('CR', fontSize=8, fontName='Helvetica-Bold', textColor=colors.white, alignment=TA_RIGHT))],
-            ['TOTAL SCORE ACHIEVED', f'{grand_total} / {max_total}'],
-            ['PERCENTAGE ACHIEVEMENT', f'{percentage}%'],
-            ['FINAL QUALIFICATION STATUS', Paragraph('✓ PASSED' if overall_pass else '✗ FAILED', ParagraphStyle('Res', fontSize=10, fontName='Helvetica-Bold', alignment=TA_RIGHT, textColor=pass_green if overall_pass else fail_red))]
+        sig_data = [
+            [
+                Paragraph('_______________________<br/><b>Training Officer</b>', ParagraphStyle('Sig1', fontSize=8, fontName='Helvetica', alignment=TA_CENTER)),
+                Paragraph('<br/><b>[ SEAL ]</b>', ParagraphStyle('Sig2', fontSize=8, fontName='Helvetica', alignment=TA_CENTER)),
+                Paragraph('_______________________<br/><b>Officer Commanding</b>', ParagraphStyle('Sig3', fontSize=8, fontName='Helvetica', alignment=TA_CENTER))
+            ]
         ]
-        
-        summary_table = Table(summary_data, colWidths=[3.65*inch, 3.65*inch])
-        summary_table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), brand_dark),
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
-            ('FONTNAME', (0, 1), (-1, -1), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 1), (-1, -1), 10),
-            ('ALIGN', (1, 1), (1, -1), 'RIGHT'),
-            ('GRID', (0, 0), (-1, -1), 0.5, brand_dark),
-            ('PADDING', (0, 0), (-1, -1), 8),
-            ('BACKGROUND', (0, 1), (0, -1), colors.HexColor('#F8F9FA')),
+        sig_table = Table(sig_data, colWidths=[2.42*inch, 2.42*inch, 2.43*inch])
+        sig_table.setStyle(TableStyle([
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
         ]))
-        elements.append(summary_table)
+        elements.append(sig_table)
+        
+        elements.append(Spacer(1, 15))
+        footer_style = ParagraphStyle('Footer', fontSize=7, alignment=TA_CENTER, textColor=text_muted)
+        elements.append(Paragraph(f'Generated by Army Evaluation Portal | Date: {timezone.now().strftime("%d %b %Y, %H:%M")} | Trainee Enrollment: {agniveer.enrollment_number}', footer_style))
 
         doc.build(elements)
         pdf = buffer.getvalue()
@@ -1966,17 +2556,9 @@ class ExportPDFReportCardView(AnyStaffMixin, View):
         
         response = HttpResponse(pdf, content_type='application/pdf')
         response['Content-Disposition'] = f'attachment; filename="ReportCard_{agniveer.enrollment_number}.pdf"'
-        return response
-
-        # ==== FOOTER ====
-        elements.append(Spacer(1, 15))
-        footer_style = ParagraphStyle('Footer', fontSize=7, alignment=TA_CENTER, textColor=text_muted)
-        elements.append(Paragraph(f'Generated by Army Evaluation Portal | Report ID: {agniveer.enrollment_number} | Date: {timezone.now().strftime("%d %b %Y, %H:%M")}', footer_style))
-
-        doc.build(elements)
-        buffer.seek(0)
+        
         log_action(request.user, 'EXPORT', f'Exported PDF Report Card for {agniveer.enrollment_number}', request)
-        return FileResponse(buffer, as_attachment=True, filename=f'report_card_{agniveer.enrollment_number}.pdf')
+        return response
 
 
 class ExportDepartmentPDFView(AnyStaffMixin, View):
@@ -2002,7 +2584,7 @@ class ExportDepartmentPDFView(AnyStaffMixin, View):
             dept,
         )
         buffer = io.BytesIO()
-        doc = SimpleDocTemplate(buffer, pagesize=landscape(A4), topMargin=0.4*inch, bottomMargin=0.4*inch)
+        doc = SimpleDocTemplate(buffer, pagesize=landscape(A4), topMargin=0.4*inch, bottomMargin=0.4*inch, leftMargin=0.5*inch, rightMargin=0.5*inch)
         styles = getSampleStyleSheet()
         
         # Brand Colors
@@ -2021,7 +2603,19 @@ class ExportDepartmentPDFView(AnyStaffMixin, View):
         elements.append(header_table)
         elements.append(Spacer(1, 20))
 
-        headers = ['S.No', 'Enrollment No', 'Name', 'Batch', 'Total Score', 'Pass/Fail Status']
+        hdr_style = ParagraphStyle('HdrStyle', fontSize=9, fontName='Helvetica-Bold', textColor=colors.white, alignment=1)
+        cell_style = ParagraphStyle('CellStyle', fontSize=9, fontName='Helvetica', alignment=1)
+        left_cell_style = ParagraphStyle('LeftCellStyle', fontSize=9, fontName='Helvetica', alignment=0)
+
+        headers = [
+            Paragraph('<b>S.No</b>', hdr_style),
+            Paragraph('<b>Enrollment No</b>', hdr_style),
+            Paragraph('<b>Name</b>', hdr_style),
+            Paragraph('<b>Batch</b>', hdr_style),
+            Paragraph('<b>Total Score</b>', hdr_style),
+            Paragraph('<b>Pass/Fail Status</b>', hdr_style),
+            Paragraph('<b>Remarks</b>', hdr_style),
+        ]
         data = [headers]
 
         for i, a in enumerate(agniveers, 1):
@@ -2030,27 +2624,37 @@ class ExportDepartmentPDFView(AnyStaffMixin, View):
                 request.user,
                 dept,
             )
-            total_score = sum(sheet.get_total_marks() for sheet in a_sheets)
-            max_score = sum(sheet.get_max_marks() for sheet in a_sheets)
-            pass_status = 'Pass' if max_score and (total_score / max_score) * 100 >= 50 else 'Fail'
+            result_row = build_department_result_row(a, list(a_sheets), dept)
+            raw_score = result_row.get('grand_total', 0)
+            total_score = result_row.get('round_figure_120') if dept == 'A' else raw_score
+            
+            if dept == 'A':
+                total_score_str = f"{total_score:g}"
+            else:
+                total_score_str = f"{total_score:.2f}"
+                
+            is_pass = result_row.get('is_pass', False)
+            pass_status = 'Pass' if is_pass else 'Fail'
+            
+            remarks_list = [sheet.remarks.strip() for sheet in a_sheets if sheet.remarks and sheet.remarks.strip()]
+            remarks_str = "; ".join(remarks_list) if remarks_list else ""
+
             data.append([
-                str(i),
-                a.enrollment_number,
-                a.get_full_name(),
-                a.batch,
-                str(total_score),
-                pass_status,
+                Paragraph(str(i), cell_style),
+                Paragraph(a.enrollment_number or '', cell_style),
+                Paragraph(a.get_full_name() or '', left_cell_style),
+                Paragraph(a.batch or '', cell_style),
+                Paragraph(total_score_str, cell_style),
+                Paragraph(pass_status or '', cell_style),
+                Paragraph(remarks_str or '', left_cell_style),
             ])
 
-        table = Table(data, colWidths=[0.6*inch, 1.8*inch, 2.8*inch, 1.5*inch, 1.5*inch, 1.8*inch])
+        table = Table(data, colWidths=[0.5*inch, 1.5*inch, 2.3*inch, 1.0*inch, 1.2*inch, 1.3*inch, 2.75*inch])
         table.setStyle(TableStyle([
-            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
             ('BACKGROUND', (0, 0), (-1, 0), brand_dark),
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
             ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
-            ('FONTSIZE', (0, 0), (-1, -1), 10),
-            ('PADDING', (0, 0), (-1, -1), 8),
-            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('PADDING', (0, 0), (-1, -1), 6),
             ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#F8F9FA')]),
         ]))
         elements.append(table)

@@ -25,4 +25,8 @@ urlpatterns = [
     path('export/report-card/<int:pk>/pdf/', views.ExportPDFReportCardView.as_view(), name='export_report_card_pdf'),
     path('export/department/<str:dept>/pdf/', views.ExportDepartmentPDFView.as_view(), name='export_dept_pdf'),
     path('export/dashboard/excel/', views.ExportDashboardResultsExcelView.as_view(), name='export_dashboard_excel'),
+    path('export/test/<str:dept>/<str:test_type>/excel/', views.ExportTestTypeExcelView.as_view(), name='export_test_excel'),
+    path('test-results/<str:dept>/<str:test_type>/', views.TestTypeResultsView.as_view(), name='test_results'),
+    path('dept-test-results/<str:dept>/<str:test_type>/', views.DeptTestResultsView.as_view(), name='dept_test_results'),
+    path('api/test-results/<str:dept>/<str:test_type>/json/', views.DeptTestResultsJsonView.as_view(), name='test_results_json'),
 ]

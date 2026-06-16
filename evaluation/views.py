@@ -184,9 +184,23 @@ class AgniveerEvaluateView(AnyStaffMixin, View):
                 (prac_total, 50),
                 (drive_total, 50)
             ]
-            grading = get_grade(percentage, subjects)
             
-            converted_40 = (total_200 / 200 * 40) if total_200 else 0
+            if total_200 == 0:
+                assess_sheet = EvaluationSheet.objects.filter(agniveer=agniveer, test_type='DMV_ASSESSMENT', department='B').first()
+                if assess_sheet:
+                    total_assess = assess_sheet.get_total_marks()
+                    converted_40 = round((total_assess / 71) * 40, 2)
+                    percentage = round((total_assess / 71) * 100, 2)
+                    total_200 = round((total_assess / 71) * 200, 2)
+                    grading = get_grade(percentage)
+                else:
+                    converted_40 = 0.0
+                    percentage = 0.0
+                    total_200 = 0.0
+                    grading = '—'
+            else:
+                grading = get_grade(percentage, subjects)
+                converted_40 = (total_200 / 200 * 40) if total_200 else 0
             
             results = {
                 'Online Test (100)': online_val,
@@ -222,9 +236,23 @@ class AgniveerEvaluateView(AnyStaffMixin, View):
                 (prac_total, 50),
                 (maint_total, 50)
             ]
-            grading = get_grade(percentage, subjects)
             
-            converted_40 = (total_200 / 200 * 40) if total_200 else 0
+            if total_200 == 0:
+                assess_sheet = EvaluationSheet.objects.filter(agniveer=agniveer, test_type='OPEM_ASSESSMENT', department='B').first()
+                if assess_sheet:
+                    total_assess = assess_sheet.get_total_marks()
+                    converted_40 = round((total_assess / 71) * 40, 2)
+                    percentage = round((total_assess / 71) * 100, 2)
+                    total_200 = round((total_assess / 71) * 200, 2)
+                    grading = get_grade(percentage)
+                else:
+                    converted_40 = 0.0
+                    percentage = 0.0
+                    total_200 = 0.0
+                    grading = '—'
+            else:
+                grading = get_grade(percentage, subjects)
+                converted_40 = (total_200 / 200 * 40) if total_200 else 0
             
             results = {
                 'Written Test (100)': written_val,
@@ -992,6 +1020,34 @@ class UnlockSheetView(AnyStaffMixin, View):
         return redirect('evaluation:marks_entry', pk=pk)
 
 
+def get_final_sheet_for_dept(all_sheets, dept, trade):
+    CLERK_TRADES = ['CLK', 'CLERK', 'Clerk', 'CLK_SD', 'CLK_IM']
+    if dept == 'A':
+        final_test_types = ['FINAL_RESULT']
+    elif dept == 'B':
+        if trade == 'DMV':
+            final_test_types = ['DMV_RESULT']
+        elif trade == 'OPEM':
+            final_test_types = ['OPEM_RESULT']
+        else:
+            final_test_types = ['OTHER_SCREEN_BOARD']
+    elif dept == 'C':
+        from evaluation.constants import CS_CLERK_RESULT_TRADES
+        if trade in CS_CLERK_RESULT_TRADES:
+            final_test_types = ['CS_CLERK_RESULT']
+        else:
+            final_test_types = ['CS_RESULT']
+    elif dept == 'D':
+        final_test_types = ['CLK_FINAL']
+    else:
+        final_test_types = []
+        
+    for sheet in all_sheets:
+        if sheet.department == dept and sheet.test_type in final_test_types:
+            return sheet
+    return None
+
+
 class AgniveerReportCardView(AnyStaffMixin, View):
     template_name = 'evaluation/report_card.html'
 
@@ -999,15 +1055,16 @@ class AgniveerReportCardView(AnyStaffMixin, View):
         evaluations = evaluations.filter(department=user_dept)
 
         if user_dept == 'A':
-            if user.battalion_unit and agniveer.bn_desp != user.battalion_unit:
+            from .result_helpers import get_bn_desp_list, ALL_BATTALION_UNITS_LIST
+            if user.battalion_unit and agniveer.bn_desp not in get_bn_desp_list(user.battalion_unit):
                 return None
             if not user.battalion_unit:
-                battalion_units = [choice[0] for choice in user.BATTALION_CHOICES]
+                battalion_units = get_bn_desp_list(ALL_BATTALION_UNITS_LIST)
                 if agniveer.bn_desp not in battalion_units:
                     return None
                 evaluations = evaluations.filter(agniveer__bn_desp__in=battalion_units)
             else:
-                evaluations = evaluations.filter(agniveer__bn_desp=user.battalion_unit)
+                evaluations = evaluations.filter(agniveer__bn_desp__in=get_bn_desp_list(user.battalion_unit))
 
         elif user_dept == 'B' and user.tts_trade:
             if user.tts_trade == 'DMV':
@@ -1042,13 +1099,27 @@ class AgniveerReportCardView(AnyStaffMixin, View):
         evaluations = EvaluationSheet.objects.filter(
             agniveer=agniveer
         ).prefetch_related('marks').order_by('department', 'category', 'test_type')
+        all_evaluations = list(evaluations)
+        
+        # Distinct departments in evaluations that actually have records
+        available_depts = list(EvaluationSheet.objects.filter(agniveer=agniveer).values_list('department', flat=True).distinct())
+        available_depts.sort()
         
         # Determine filtering based on role and optional query parameter
         target_dept = request.GET.get('dept')
+        if not target_dept and (request.user.is_commander or request.user.is_g_head):
+            if 'A' in available_depts:
+                target_dept = 'A'
+            elif available_depts:
+                target_dept = available_depts[0]
+            else:
+                target_dept = 'A'
+                
         is_department_view = False
         user_dept = None
         battalion_result_row = None
-
+        tts_result_row = None
+ 
         if request.user.is_department:
             user_dept = request.user.get_department_code()
             evaluations = self._scope_evaluations_for_department_user(evaluations, request.user, agniveer, user_dept)
@@ -1066,7 +1137,7 @@ class AgniveerReportCardView(AnyStaffMixin, View):
             # Commanders/G-Heads see everything by default
             is_department_view = False
             departments_to_show = ['A', 'B', 'C', 'D']
-
+ 
         # Group by department
         dept_evaluations = {}
         from .constants import get_dept_total_marks, get_overall_total_marks
@@ -1074,15 +1145,35 @@ class AgniveerReportCardView(AnyStaffMixin, View):
         for dept in departments_to_show:
             dept_evals = evaluations.filter(department=dept)
             if dept_evals.exists():
-                dept_evaluations[dept] = {
-                    'on_field': dept_evals.filter(category='on_field'),
-                    'trade': dept_evals.filter(category='trade'),
-                    'total_marks': sum(e.get_total_marks() for e in dept_evals),
-                    'max_marks': sum(e.get_max_marks() for e in dept_evals),
-                    'total_locked': sum(e.get_total_marks() for e in dept_evals if e.is_locked),
-                    'max_total': sum(e.get_max_marks() for e in dept_evals if e.is_locked),
-                }
-
+                if dept == 'A':
+                    d_row = build_department_result_row(agniveer, list(dept_evals), 'A')
+                    locked_evals = [e for e in dept_evals if e.is_locked]
+                    if locked_evals:
+                        d_row_locked = build_department_result_row(agniveer, locked_evals, 'A')
+                        total_locked = d_row_locked.get('grand_total', 0.0)
+                        max_total_locked = d_row_locked.get('max_total', 120)
+                    else:
+                        total_locked = 0.0
+                        max_total_locked = 0.0
+                    
+                    dept_evaluations[dept] = {
+                        'on_field': dept_evals.filter(category='on_field'),
+                        'trade': dept_evals.filter(category='trade'),
+                        'total_marks': d_row.get('grand_total', 0.0),
+                        'max_marks': d_row.get('max_total', 120),
+                        'total_locked': total_locked,
+                        'max_total': max_total_locked,
+                    }
+                else:
+                    dept_evaluations[dept] = {
+                        'on_field': dept_evals.filter(category='on_field'),
+                        'trade': dept_evals.filter(category='trade'),
+                        'total_marks': sum(e.get_total_marks() for e in dept_evals),
+                        'max_marks': sum(e.get_max_marks() for e in dept_evals),
+                        'total_locked': sum(e.get_total_marks() for e in dept_evals if e.is_locked),
+                        'max_total': sum(e.get_max_marks() for e in dept_evals if e.is_locked),
+                    }
+ 
         # Prepare chart data
         chart_data = {
             'departments': [],
@@ -1105,25 +1196,91 @@ class AgniveerReportCardView(AnyStaffMixin, View):
                 chart_data['on_field_totals'].append(0)
                 chart_data['trade_totals'].append(0)
                 chart_data['overall_totals'].append(0)
+ 
+        trade = str(agniveer.trade or '').strip().upper()
+        bn_raw = str(agniveer.bn_desp or '').strip().lower()
+        if '1tb' in bn_raw:
+            bn_name = '1tb'
+        elif '2tb' in bn_raw or '2b' in bn_raw:
+            bn_name = '2tb'
+        else:
+            bn_name = '1tb'
+
+        dept_name_map = {
+            'A': bn_name,
+            'B': 'dmv department' if trade == 'DMV' else ('opem' if trade == 'OPEM' else 'tts department'),
+            'C': 'CES DEpartment',
+            'D': 'cts department',
+        }
+
+        # Compute summary for all 4 departments
+        from evaluation.result_helpers import is_sheet_evaluated
+        all_dept_results = {}
+        for d in ['A', 'B', 'C', 'D']:
+            d_sheets = [s for s in all_evaluations if s.department == d]
+            if d_sheets:
+                d_row = build_department_result_row(agniveer, d_sheets, d)
+                is_eval = any(is_sheet_evaluated(s) for s in d_sheets)
+                if is_eval:
+                    all_dept_results[d] = {
+                        'name': dept_name_map.get(d, d),
+                        'grand_total': d_row.get('grand_total', 0),
+                        'max_total': d_row.get('max_total') or (120 if d == 'A' else 40),
+                        'percentage': d_row.get('percentage', 0),
+                        'grading': d_row.get('grading', '—'),
+                        'is_pass': d_row.get('is_pass', False),
+                        'status': 'PASSED' if d_row.get('is_pass') else 'FAILED'
+                    }
+                else:
+                    all_dept_results[d] = {
+                        'name': dept_name_map.get(d, d),
+                        'grand_total': '—',
+                        'max_total': (120 if d == 'A' else 40),
+                        'percentage': '—',
+                        'grading': '—',
+                        'status': 'PENDING'
+                    }
+            else:
+                all_dept_results[d] = {
+                    'name': dept_name_map.get(d, d),
+                    'grand_total': '—',
+                    'max_total': (120 if d == 'A' else 40),
+                    'percentage': '—',
+                    'grading': '—',
+                    'status': 'PENDING'
+                }
+
+        active_final_sheets = []
+        if is_department_view:
+            sheet = get_final_sheet_for_dept(all_evaluations, user_dept, agniveer.trade)
+            if sheet:
+                active_final_sheets.append(sheet)
+        else:
+            for d in ['A', 'B', 'C', 'D']:
+                sheet = get_final_sheet_for_dept(all_evaluations, d, agniveer.trade)
+                if sheet:
+                    active_final_sheets.append(sheet)
 
         department_result_row = None
-        tts_result_row = None
         if is_department_view:
             department_result_row = build_department_result_row(agniveer, list(evaluations), user_dept)
-            grand_total = department_result_row['grand_total']
-            max_total = department_result_row.get('max_total') or 40
-            percentage = department_result_row['percentage']
-            overall_pass = department_result_row['is_pass']
+            grand_total = department_result_row.get('grand_total', 0)
+            max_total = department_result_row.get('max_total') or (120 if user_dept == 'A' else 40)
+            percentage = department_result_row.get('percentage', 0)
+            overall_pass = department_result_row.get('is_pass', False)
             if user_dept == 'B':
                 tts_result_row = department_result_row
             elif user_dept == 'A':
                 battalion_result_row = department_result_row
         else:
-            grand_total = sum(e.get_total_marks() for e in evaluations)
-            max_total = sum(e.get_max_marks() for e in evaluations)
+            grand_total = 0.0
+            max_total = 0.0
+            for d, res in all_dept_results.items():
+                if res['grand_total'] != '—':
+                    grand_total += float(res['grand_total'])
+                    max_total += float(res['max_total'])
             percentage = round((grand_total / max_total * 100), 2) if max_total else 0
             overall_pass = percentage >= 50
-
         return render(request, self.template_name, {
             'agniveer': agniveer,
             'dept_evaluations': dept_evaluations,
@@ -1137,5 +1294,8 @@ class AgniveerReportCardView(AnyStaffMixin, View):
             'overall_pass': overall_pass,
             'is_department_view': is_department_view,
             'user_department': user_dept if is_department_view else None,
-            'user_department_name': {'A': 'Battalion', 'B': 'TTS', 'C': 'CS', 'D': 'Clerk'}.get(user_dept, user_dept) if is_department_view else None,
+            'user_department_name': dept_name_map.get(user_dept, user_dept) if is_department_view else None,
+            'available_depts': available_depts,
+            'all_dept_results': all_dept_results,
+            'active_final_sheets': active_final_sheets,
         })

@@ -523,19 +523,19 @@
       <div class="army-card-body text-center" id="scoreCardBody" data-color="{{ score_color }}"
         data-color-dark="{{ score_color_dark }}">
         <div style="font-family:Rajdhani,sans-serif;font-size:32px;font-weight:700;margin-bottom:8px;" data-total-score>
-          {{ total_score }}
+          {{ total_score|floatformat:"-2" }}
         </div>
         <div style="font-size:14px;color:#8B9BB4;margin-bottom:12px;">out of <span
             id="profile-max-marks" style="font-weight:600;color:#E0E6F0;">{{ max_marks }}</span></div>
 
         <!-- Progress Bar -->
         <div style="background:rgba(27,67,50,0.2);border-radius:8px;height:8px;margin-bottom:12px;overflow:hidden;">
-          <div style="height:100%;transition:width 0.3s ease;" data-progress-bar data-width="{{ percentage }}"></div>
+          <div style="height:100%;transition:width 0.3s ease;" data-progress-bar data-width="{{ percentage|floatformat:-2 }}"></div>
         </div>
 
         <!-- Percentage -->
         <div style="font-family:Rajdhani,sans-serif;font-size:20px;font-weight:700;margin-bottom:8px;" data-percentage>
-          {{ percentage }}%
+          {{ percentage|floatformat:"-2" }}%
         </div>
 
         <div style="font-size:12px;color:#8B9BB4;">Cumulative Performance Score</div>
@@ -2109,13 +2109,13 @@
                     </td>
                     {% endfor %}
                   </tr>
-                  <tr style="background: #D2E8F6 !important;">
-                    <td style="font-weight: 800; color: #1B4332 !important; font-size:13px; width: 30%;">CONVERTED (100) MKS</td>
+                  <tr style="background: rgba(82, 183, 136, 0.05) !important;">
+                    <td style="font-weight: 700; color: #52B788; font-size:13px; width: 30%;">CONVERTED (100) MKS</td>
                     {% for col in t_config.columns %}
                     <td
-                      style="text-align:center; font-weight: 800; color: #1B4332 !important; font-family: 'Rajdhani', sans-serif;"
+                      style="text-align:center; font-weight: 700; color: #52B788; font-family: 'Rajdhani', sans-serif;"
                       data-converted-col="{{ col }}">
-                      {{ col }}: <span class="val">{% if current_sheet %}{% with conv=current_sheet.sub_event_results|get_item:col|get_item:'CONVERTED 100 MKS' %}{% if conv is not None %}{{ conv }}{% else %}—{% endif %}{% endwith %}{% else %}—{% endif %}</span>
+                      {{ col }}: <span class="val" style="color: #52B788 !important; font-weight: 700 !important;">{% if current_sheet %}{% with conv=current_sheet.sub_event_results|get_item:col|get_item:'CONVERTED 100 MKS' %}{% if conv is not None %}{{ conv }}{% else %}—{% endif %}{% endwith %}{% else %}—{% endif %}</span>
                     </td>
                     {% endfor %}
                   </tr>
@@ -2787,8 +2787,8 @@
                   {% endif %}
 
                   {% if 'SCREEN_BOARD' not in code or sub != 'Grand Total (40)' and sub != '% Age' and sub != 'Grading' %}
-                  <tr data-sub-event-raw="{{ sub }}">
-                    <td style="font-weight: 600; color: #E0E6F0; font-size:13px; white-space:nowrap;">
+                  <tr data-sub-event-raw="{{ sub }}" {% if sub|is_total_or_converted %}style="background: rgba(82, 183, 136, 0.05) !important;"{% endif %}>
+                    <td style="{% if sub|is_total_or_converted %}font-weight: 700; color: #52B788;{% else %}font-weight: 600; color: #E0E6F0;{% endif %} font-size:13px; white-space:nowrap;">
                       {{ sub|clean_sub_event_name }}
                       {% with max_val=dept_config.max_marks|get_item:code|get_item:sub %}
                         {% if max_val is not None and not sub|has_parenthesized_number %}
@@ -2800,7 +2800,7 @@
                     </td>
                     {% if t_config.columns %}
                     {% for col in t_config.columns %}
-                    <td style="text-align:center; font-family: 'Rajdhani', sans-serif;">
+                    <td style="text-align:center; font-family: 'Rajdhani', sans-serif; {% if sub|is_total_or_converted %}color: #52B788 !important; font-weight: 700 !important; font-size: 14px;{% endif %}">
                       {% with val=current_sheet.sub_event_results|get_item:col|get_item:sub %}
                       {% if can_evaluate and 'TOTAL POINT' not in sub %}
                       {% if code == 'DST' and sub == 'DST W/O Arm' and col != '1st Attempt' %}
@@ -2857,7 +2857,7 @@
                       <input type="number" name="{{ col }}_{{ sub }}"
                         value="{% if val is not None %}{{ val }}{% else %}{% if col == '1st Attempt' %}{{ current_sheet.sub_event_results|get_item:'nco'|get_item:sub|default_if_none:'' }}{% elif col == '2nd Attempt' %}{{ current_sheet.sub_event_results|get_item:'jco'|get_item:sub|default_if_none:'' }}{% elif col == '3rd Attempt' %}{{ current_sheet.sub_event_results|get_item:'officer'|get_item:sub|default_if_none:'' }}{% endif %}{% endif %}"
                         class="form-control marks-input text-center mx-auto"
-                        style="background: rgba(15,20,25,0.6); color: #E0E6F0; border: 1px solid rgba(82,183,136,0.3); width: 60px; height: 30px; padding: 2px 5px; font-size: 14px; border-radius: 4px;"
+                        style="{% if sub|is_total_or_converted %}background: rgba(82, 183, 136, 0.05) !important; color: #52B788 !important; border: 1.5px solid #52B788 !important; font-weight: 700 !important;{% else %}background: rgba(15,20,25,0.6); color: #E0E6F0; border: 1px solid rgba(82,183,136,0.3);{% endif %} width: 60px; height: 30px; padding: 2px 5px; font-size: 14px; border-radius: 4px;"
                         min="0"
                         max="{% with m=dept_config.max_marks|get_item:code|get_item:sub %}{% if m %}{{ m }}{% else %}{% if code == 'Firing' %}8{% elif code == 'DST' %}{% if 'Arm' in sub %}60{% else %}20{% endif %}{% elif code == 'BFC' %}{% if 'Theory' in sub %}100{% else %}20{% endif %}{% else %}40{% endif %}{% endif %}{% endwith %}"
                         step="0.01"
@@ -2876,9 +2876,11 @@
                         {% endwith %}{% endwith %}{% endwith %}
                       {% else %}
                         {% if val is not None %}
-                        {{ val }}
+                        <span {% if sub|is_total_or_converted %}style="color: #52B788 !important; font-weight: 700 !important;"{% endif %}>{{ val }}</span>
                         {% else %}
+                        <span {% if sub|is_total_or_converted %}style="color: #52B788 !important; font-weight: 700 !important;"{% endif %}>
                         {% if col == '1st Attempt' %}{{ current_sheet.sub_event_results|get_item:'nco'|get_item:sub|default:"—" }}{% elif col == '2nd Attempt' %}{{ current_sheet.sub_event_results|get_item:'jco'|get_item:sub|default:"—" }}{% elif col == '3rd Attempt' %}{{ current_sheet.sub_event_results|get_item:'officer'|get_item:sub|default:"—" }}{% else %}—{% endif %}
+                        </span>
                         {% endif %}
                       {% endif %}
                       {% endif %}
@@ -2887,14 +2889,14 @@
                     </td>
                     {% endfor %}
                     {% else %}
-                    <td style="text-align:center; font-family: 'Rajdhani', sans-serif;">
+                    <td style="text-align:center; font-family: 'Rajdhani', sans-serif; {% if sub|is_total_or_converted %}color: #52B788 !important; font-weight: 700 !important; font-size: 14px;{% endif %}">
                       {% if can_evaluate %}
                       <input
                         type="{% if code == 'CS_CLERK_RESULT' and sub == 'PL' or code == 'CS_CLERK_RESULT' and sub == 'EN' %}text{% else %}number{% endif %}"
                         name="{{ sub }}"
                         value="{% if code == 'FINAL_RESULT' and sub == 'BASIC TACTICE (CES) (40)' %}{{ dynamic_ces_marks|default_if_none:'0' }}{% elif code == 'FINAL_RESULT' and sub == 'TRADE PROFICIENCY (BTT) (40)' %}{{ dynamic_btt_marks|default_if_none:'0' }}{% else %}{% with stored=current_sheet.sub_event_results.Marks|get_item:sub %}{% if stored is not None %}{{ stored }}{% else %}{{ current_sheet.sub_event_results|get_item:sub|default_if_none:'' }}{% endif %}{% endwith %}{% endif %}"
                         class="form-control marks-input text-center mx-auto"
-                        style="background: rgba(15,20,25,0.6); color: #E0E6F0; border: 1px solid rgba(82,183,136,0.3); width: {% if code == 'CS_CLERK_RESULT' and sub == 'PL' or code == 'CS_CLERK_RESULT' and sub == 'EN' %}90px{% else %}60px{% endif %}; height: 30px; padding: 2px 5px; font-size: 14px; border-radius: 4px;"
+                        style="{% if sub|is_total_or_converted %}background: rgba(82, 183, 136, 0.05) !important; color: #52B788 !important; border: 1.5px solid #52B788 !important; font-weight: 700 !important;{% else %}background: rgba(15,20,25,0.6); color: #E0E6F0; border: 1px solid rgba(82,183,136,0.3);{% endif %} width: {% if code == 'CS_CLERK_RESULT' and sub == 'PL' or code == 'CS_CLERK_RESULT' and sub == 'EN' %}90px{% else %}60px{% endif %}; height: 30px; padding: 2px 5px; font-size: 14px; border-radius: 4px;"
                         min="0"
                         max="{% with m=dept_config.max_marks|get_item:code|get_item:sub %}{% if m %}{{ m }}{% else %}{% if code == 'MR_III' %}{% if sub == 'Outdoor Test' %}50{% elif sub == 'Indoor Test Written' %}90{% else %}10{% endif %}{% elif code == 'PDP' %}50{% elif code == 'FC_All' %}{% if 'Attempt' in sub %}40{% else %}10{% endif %}{% else %}40{% endif %}{% endif %}{% endwith %}"
                         step="0.01"
@@ -2904,7 +2906,11 @@
                         oninput="if(this.type === 'number' && this.value && parseFloat(this.value) > parseFloat(this.max)) { showMaxAlert(this, this.max); this.value = this.max; } if('{{ code }}' === 'CS_RESULT') calculateCSResult(); if('{{ code }}' === 'CS_CLERK_RESULT') calculateCSClerkResult(); if('{{ code }}' === 'CS_ASSESSMENT') calculateCSAssessment(); if(['OPEM_PRACTICAL', 'DMV_PRACTICAL', 'OPEM_MAINTENANCE', 'DMV_DRIVING'].includes('{{ code }}')) calculateOpemDmvPracticalLive('{{ code }}'); if('{{ code }}' === 'OPEM_RESULT') calculateOPEMResult(); if('{{ code }}' === 'DMV_RESULT') calculateDMVResult(); if('{{ code }}'.includes('SCREEN_BOARD')) calculateScreenBoardLive('{{ code }}'); if('{{ code }}' === 'WPN_HANDLING') calculateWpnHandlingLive(); if('{{ code }}' === 'FINAL_MERIT') calculateFinalMeritLive(); if('{{ code }}' === 'FINAL_RESULT') calculateFinalResultLive();">
                       {% else %}
                       {% if current_sheet %}
-                      {% with val=current_sheet.sub_event_results.Marks|get_item:sub %}{% if val is not None %}{{ val }}{% else %}{{ current_sheet.sub_event_results|get_item:'nco'|get_item:sub|default:"—" }}{% endif %}{% endwith %}
+                      {% with val=current_sheet.sub_event_results.Marks|get_item:sub %}
+                      <span {% if sub|is_total_or_converted %}style="color: #52B788 !important; font-weight: 700 !important;"{% endif %}>
+                        {% if val is not None %}{{ val }}{% else %}{{ current_sheet.sub_event_results|get_item:'nco'|get_item:sub|default:"—" }}{% endif %}
+                      </span>
+                      {% endwith %}
                       {% else %}
                       —
                       {% endif %}
@@ -2921,7 +2927,7 @@
                     </td>
                   </tr>
                   {% endfor %}
-                  {% if code != 'CMK_SHEET' and code != 'WPN_HANDLING' and code != 'FINAL_MERIT' %}
+                  {% if code != 'CMK_SHEET' and code != 'WPN_HANDLING' and code != 'FINAL_MERIT' and code != 'FINAL_RESULT' %}
                   <tr style="background: rgba(82, 183, 136, 0.05);">
                     <td style="font-weight: 700; color: #52B788; font-size:13px;">TOTAL</td>
                     {% if t_config.columns %}
@@ -2962,10 +2968,10 @@
                   {% endif %}
 
                   {% if code == 'MR_III' %}
-                  <tr style="background: #D2E8F6 !important;">
-                    <td style="font-weight: 800; color: #1B4332 !important; font-size:13px; text-align: left; padding-left: 12px;">CONVERTED (100) MKS</td>
+                  <tr style="background: rgba(82, 183, 136, 0.05) !important;">
+                    <td style="font-weight: 700; color: #52B788; font-size:13px; text-align: left; padding-left: 12px;">CONVERTED (100) MKS</td>
                     <td
-                      style="text-align: center; font-weight: 800; color: #1B4332 !important; font-family: 'Rajdhani', sans-serif;"
+                      style="text-align: center; font-weight: 700; color: #52B788; font-family: 'Rajdhani', sans-serif;"
                       data-converted-mriii="true">
                       {% if current_sheet %}{{ current_sheet.sub_event_results.Marks|get_item:'CONVERTED 100 MKS'|default:"—" }}{% else %}—{% endif %}
                     </td>
@@ -3003,7 +3009,7 @@
           {% endif %}
 
           <!-- Sticky Bottom Summary Panel for Standard Dynamic Tabs -->
-          <div class="evaluation-sticky-footer no-print" data-sheet-code="{{ code }}" data-max-marks="{% if code == 'CS_RESULT' %}160{% elif code == 'CS_CLERK_RESULT' or 'SCREEN_BOARD' in code %}40{% elif code == 'BFC' %}240{% elif code == 'PDP' %}50{% elif code == 'FC_All' %}90{% elif code == 'CMK_SHEET' or code == 'WPN_HANDLING' %}20{% elif code == 'FINAL_MERIT' %}130{% elif code == 'FINAL_RESULT' %}120{% else %}100{% endif %}" data-evaluated="{% if current_sheet %}true{% else %}false{% endif %}" style="display: flex !important; flex-flow: row nowrap !important; align-items: center !important; justify-content: space-between !important; gap: 12px !important; padding: 10px 20px !important;">
+          <div class="evaluation-sticky-footer no-print" data-sheet-code="{{ code }}" data-max-marks="{% if code == 'CS_RESULT' %}160{% elif code == 'CS_CLERK_RESULT' or 'SCREEN_BOARD' in code or code == 'DMV_RESULT' or code == 'OPEM_RESULT' %}40{% elif code == 'BFC' %}240{% elif code == 'PDP' %}50{% elif code == 'FC_All' %}90{% elif code == 'CMK_SHEET' or code == 'WPN_HANDLING' %}20{% elif code == 'FINAL_MERIT' %}130{% elif code == 'FINAL_RESULT' %}120{% elif code == 'DMV_PRACTICAL' or code == 'DMV_DRIVING' or code == 'OPEM_PRACTICAL' or code == 'OPEM_MAINTENANCE' %}50{% elif code == 'DMV_ASSESSMENT' or code == 'OPEM_ASSESSMENT' %}71{% else %}100{% endif %}" data-evaluated="{% if current_sheet %}true{% else %}false{% endif %}" style="display: flex !important; flex-flow: row nowrap !important; align-items: center !important; justify-content: space-between !important; gap: 12px !important; padding: 10px 20px !important;">
             {% if code == 'CS_RESULT' %}
             <div class="compact-score-card" style="flex: 0.9 1 110px !important; margin: 0 !important; max-width: 140px !important;">
               <span class="card-label">Total Marks</span>
@@ -3116,8 +3122,8 @@
             <div class="compact-score-card" style="flex: 0.9 1 110px !important; margin: 0 !important; max-width: 140px !important;">
               <span class="card-label">{% if code == 'PDP' or code == 'FINAL_MERIT' %}Best Score{% elif code == 'FC_All' or code == 'CMK_SHEET' or code == 'WPN_HANDLING' or code == 'FINAL_RESULT' or code == 'MR_III' %}Total Score{% else %}Total Best Score{% endif %}</span>
               <span class="card-val text-success">
-                <span id="score-{{ code }}">{% if current_sheet %}{% if code == 'FINAL_RESULT' %}{{ current_sheet.sub_event_results.Marks|get_item:'ROUND FIGURE (120)'|default:current_sheet.get_total_marks|floatformat:0 }}{% elif code == 'CMK_SHEET' or code == 'WPN_HANDLING' or code == 'FINAL_MERIT' %}{{ current_sheet.get_total_marks|floatformat:2 }}{% else %}{{ current_sheet.get_total_marks|floatformat:0 }}{% endif %}{% else %}0.00{% endif %}</span>
-                <span style="font-size: 9px; color: var(--text-muted);">/{% if code == 'BFC' %}240{% elif code == 'PDP' %}50{% elif code == 'FC_All' %}90{% elif code == 'CMK_SHEET' or code == 'WPN_HANDLING' %}20{% elif code == 'FINAL_MERIT' %}130{% elif code == 'FINAL_RESULT' %}120{% else %}100{% endif %}</span>
+                <span id="score-{{ code }}">{% if current_sheet %}{% if code == 'FINAL_RESULT' %}{{ current_sheet.sub_event_results.Marks|get_item:'ROUND FIGURE (120)'|default:current_sheet.get_total_marks|floatformat:0 }}{% elif code == 'CMK_SHEET' or code == 'WPN_HANDLING' or code == 'FINAL_MERIT' or code == 'DMV_RESULT' or code == 'OPEM_RESULT' %}{{ current_sheet.get_total_marks|floatformat:2 }}{% else %}{{ current_sheet.get_total_marks|floatformat:0 }}{% endif %}{% else %}0.00{% endif %}</span>
+                <span style="font-size: 9px; color: var(--text-muted);">/{% if code == 'BFC' %}240{% elif code == 'PDP' %}50{% elif code == 'FC_All' %}90{% elif code == 'CMK_SHEET' or code == 'WPN_HANDLING' %}20{% elif code == 'FINAL_MERIT' %}130{% elif code == 'FINAL_RESULT' %}120{% elif code == 'DMV_RESULT' or code == 'OPEM_RESULT' %}40{% elif code == 'DMV_PRACTICAL' or code == 'DMV_DRIVING' or code == 'OPEM_PRACTICAL' or code == 'OPEM_MAINTENANCE' %}50{% elif code == 'DMV_ASSESSMENT' or code == 'OPEM_ASSESSMENT' %}71{% else %}100{% endif %}</span>
               </span>
             </div>
             <div class="compact-score-card" style="flex: 0.9 1 110px !important; margin: 0 !important; max-width: 140px !important;">
@@ -4074,11 +4080,13 @@
       
       if (maxMarks > 0) {
         const percentage = (totalScore / maxMarks) * 100;
-        if (totalScoreEl) totalScoreEl.textContent = totalScore.toFixed(1).replace(/\.0$/, '');
-        if (percentageEl) percentageEl.textContent = percentage.toFixed(1) + '%';
+        const scoreStr = parseFloat(totalScore.toFixed(2)).toString();
+        const percStr = parseFloat(percentage.toFixed(2)).toString();
+        if (totalScoreEl) totalScoreEl.textContent = scoreStr;
+        if (percentageEl) percentageEl.textContent = percStr + '%';
         if (progressBarEl) {
-          progressBarEl.style.width = percentage.toFixed(1) + '%';
-          progressBarEl.setAttribute('data-width', percentage.toFixed(1));
+          progressBarEl.style.width = percStr + '%';
+          progressBarEl.setAttribute('data-width', percStr);
         }
         if (maxMarksSpan) {
           maxMarksSpan.textContent = maxMarks;
@@ -4716,10 +4724,10 @@
       const gradeEl = document.getElementById('grade-FINAL_RESULT');
       const statusEl = document.getElementById('status-FINAL_RESULT');
 
-      const percentage = (totalPoint / 120) * 100;
+      const percentage = (roundFigure / 120) * 100;
       const grade = getGrade(percentage, null, 40);
 
-      if (scoreEl) scoreEl.textContent = totalPoint.toFixed(2);
+      if (scoreEl) scoreEl.textContent = roundFigure;
       if (percEl) percEl.textContent = percentage.toFixed(2);
       if (gradeEl) gradeEl.textContent = grade;
       if (statusEl) {
@@ -4788,24 +4796,24 @@
       if (!onlineInput) return;
 
       // Find totals from other tabs
-      let pracTotal = 0;
-      let driveTotal = 0;
+      let pracTotal = 0.0;
+      let driveTotal = 0.0;
 
       // Practical Total
       const pracTab = document.getElementById('tab-DMV_PRACTICAL');
       if (pracTab) {
         const totalRow = Array.from(pracTab.querySelectorAll('tr')).find(r => r.textContent.includes('TOTAL'));
-        if (totalRow) pracTotal = parseInt(totalRow.cells[1].textContent) || 0;
+        if (totalRow) pracTotal = parseFloat(totalRow.cells[1].textContent) || 0.0;
       }
 
       // Driving Total
       const driveTab = document.getElementById('tab-DMV_DRIVING');
       if (driveTab) {
         const totalRow = Array.from(driveTab.querySelectorAll('tr')).find(r => r.textContent.includes('TOTAL'));
-        if (totalRow) driveTotal = parseInt(totalRow.cells[1].textContent) || 0;
+        if (totalRow) driveTotal = parseFloat(totalRow.cells[1].textContent) || 0.0;
       }
 
-      const onlineVal = parseInt(onlineInput.value) || 0;
+      const onlineVal = parseFloat(onlineInput.value) || 0.0;
       const total200 = onlineVal + pracTotal + driveTotal;
       const percentage = (total200 / 200 * 100);
       const converted40 = (total200 / 200 * 40);
@@ -4816,19 +4824,39 @@
         const rows = Array.from(resultTab.querySelectorAll('tbody tr'));
 
         const pracRow = rows.find(r => r.textContent.includes('Practical Test (50)'));
-        if (pracRow) pracRow.cells[1].textContent = pracTotal;
+        if (pracRow) {
+          const input = pracRow.cells[1].querySelector('input');
+          if (input) input.value = pracTotal.toFixed(2).replace(/\.00$/, '');
+          else pracRow.cells[1].textContent = pracTotal.toFixed(2).replace(/\.00$/, '');
+        }
 
         const driveRow = rows.find(r => r.textContent.includes('Driving Test (50)'));
-        if (driveRow) driveRow.cells[1].textContent = driveTotal;
+        if (driveRow) {
+          const input = driveRow.cells[1].querySelector('input');
+          if (input) input.value = driveTotal.toFixed(2).replace(/\.00$/, '');
+          else driveRow.cells[1].textContent = driveTotal.toFixed(2).replace(/\.00$/, '');
+        }
 
         const totalRow = rows.find(r => r.textContent.includes('Total (200)'));
-        if (totalRow) totalRow.cells[1].textContent = total200;
+        if (totalRow) {
+          const input = totalRow.cells[1].querySelector('input');
+          if (input) input.value = total200.toFixed(2).replace(/\.00$/, '');
+          else totalRow.cells[1].textContent = total200.toFixed(2).replace(/\.00$/, '');
+        }
 
         const percRow = rows.find(r => r.textContent.includes('% Age'));
-        if (percRow) percRow.cells[1].textContent = percentage.toFixed(2) + '%';
+        if (percRow) {
+          const input = percRow.cells[1].querySelector('input');
+          if (input) input.value = percentage.toFixed(2) + '%';
+          else percRow.cells[1].textContent = percentage.toFixed(2) + '%';
+        }
 
         const convertRow = rows.find(r => r.textContent.includes('Convert 40 Marks'));
-        if (convertRow) convertRow.cells[1].textContent = converted40.toFixed(2);
+        if (convertRow) {
+          const input = convertRow.cells[1].querySelector('input');
+          if (input) input.value = converted40.toFixed(2);
+          else convertRow.cells[1].textContent = converted40.toFixed(2);
+        }
 
         const subjects = [
           { val: onlineVal, max: 100 },
@@ -4871,6 +4899,12 @@
       });
 
       const percentage = (total / 50.0) * 100.0;
+      
+      const totalRow = Array.from(table.querySelectorAll('tr')).find(r => r.textContent.toUpperCase().includes('TOTAL'));
+      if (totalRow && totalRow.cells[1]) {
+        totalRow.cells[1].textContent = total.toFixed(2).replace(/\.00$/, '');
+      }
+
       updateStandardSummary(testCode, total, percentage);
 
       if (testCode.startsWith('OPEM_')) {
@@ -4884,22 +4918,22 @@
       const writtenInput = document.querySelector('input[name="Written Test (100)"]');
       if (!writtenInput) return;
 
-      let pracTotal = 0;
-      let maintTotal = 0;
+      let pracTotal = 0.0;
+      let maintTotal = 0.0;
 
       const pracTab = document.getElementById('tab-OPEM_PRACTICAL');
       if (pracTab) {
         const totalRow = Array.from(pracTab.querySelectorAll('tr')).find(r => r.textContent.includes('TOTAL'));
-        if (totalRow) pracTotal = parseInt(totalRow.cells[1].textContent) || 0;
+        if (totalRow) pracTotal = parseFloat(totalRow.cells[1].textContent) || 0.0;
       }
 
       const maintTab = document.getElementById('tab-OPEM_MAINTENANCE');
       if (maintTab) {
         const totalRow = Array.from(maintTab.querySelectorAll('tr')).find(r => r.textContent.includes('TOTAL'));
-        if (totalRow) maintTotal = parseInt(totalRow.cells[1].textContent) || 0;
+        if (totalRow) maintTotal = parseFloat(totalRow.cells[1].textContent) || 0.0;
       }
 
-      const writtenVal = parseInt(writtenInput.value) || 0;
+      const writtenVal = parseFloat(writtenInput.value) || 0.0;
       const total200 = writtenVal + pracTotal + maintTotal;
       const percentage = (total200 / 200 * 100);
       const converted40 = (total200 / 200 * 40);
@@ -4909,19 +4943,39 @@
         const rows = Array.from(resultTab.querySelectorAll('tbody tr'));
 
         const pracRow = rows.find(r => r.textContent.includes('Practical Test (50)'));
-        if (pracRow) pracRow.cells[1].textContent = pracTotal;
+        if (pracRow) {
+          const input = pracRow.cells[1].querySelector('input');
+          if (input) input.value = pracTotal.toFixed(2).replace(/\.00$/, '');
+          else pracRow.cells[1].textContent = pracTotal.toFixed(2).replace(/\.00$/, '');
+        }
 
         const maintRow = rows.find(r => r.textContent.includes('Maintenance Test (50)'));
-        if (maintRow) maintRow.cells[1].textContent = maintTotal;
+        if (maintRow) {
+          const input = maintRow.cells[1].querySelector('input');
+          if (input) input.value = maintTotal.toFixed(2).replace(/\.00$/, '');
+          else maintRow.cells[1].textContent = maintTotal.toFixed(2).replace(/\.00$/, '');
+        }
 
         const totalRow = rows.find(r => r.textContent.includes('Total (200)'));
-        if (totalRow) totalRow.cells[1].textContent = total200;
+        if (totalRow) {
+          const input = totalRow.cells[1].querySelector('input');
+          if (input) input.value = total200.toFixed(2).replace(/\.00$/, '');
+          else totalRow.cells[1].textContent = total200.toFixed(2).replace(/\.00$/, '');
+        }
 
         const percRow = rows.find(r => r.textContent.includes('% Age'));
-        if (percRow) percRow.cells[1].textContent = percentage.toFixed(2) + '%';
+        if (percRow) {
+          const input = percRow.cells[1].querySelector('input');
+          if (input) input.value = percentage.toFixed(2) + '%';
+          else percRow.cells[1].textContent = percentage.toFixed(2) + '%';
+        }
 
         const convertRow = rows.find(r => r.textContent.includes('Convert 40 Marks'));
-        if (convertRow) convertRow.cells[1].textContent = converted40.toFixed(2);
+        if (convertRow) {
+          const input = convertRow.cells[1].querySelector('input');
+          if (input) input.value = converted40.toFixed(2);
+          else convertRow.cells[1].textContent = converted40.toFixed(2);
+        }
 
         const subjects = [
           { val: writtenVal, max: 100 },

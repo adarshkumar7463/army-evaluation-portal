@@ -266,22 +266,47 @@ class Agniveer(models.Model):
             return self.name
         return f"{self.first_name or ''} {self.last_name or ''}".strip()
 
-    def get_total_score(self):
+    def get_consolidated_scores(self):
         from evaluation.models import EvaluationSheet
-        sheets = EvaluationSheet.objects.filter(agniveer=self, is_locked=True)
-        return sum(sheet.get_total_marks() for sheet in sheets)
+        from evaluation.result_helpers import build_department_result_row, is_sheet_evaluated
+        
+        evaluations = list(EvaluationSheet.objects.filter(agniveer=self).prefetch_related('marks'))
+        
+        total_score = 0.0
+        max_marks = 0.0
+        has_eval = False
+        
+        for d in ['A', 'B', 'C', 'D']:
+            d_sheets = [s for s in evaluations if s.department == d]
+            if d_sheets and any(is_sheet_evaluated(s) for s in d_sheets):
+                has_eval = True
+                d_row = build_department_result_row(self, d_sheets, d)
+                total_score += float(d_row.get('grand_total', 0.0) or 0.0)
+                max_marks += float(d_row.get('max_total') or (120 if d == 'A' else 40))
+                
+        return total_score, max_marks, has_eval
+
+    def get_total_score(self):
+        total, max_val, has_eval = self.get_consolidated_scores()
+        return round(total, 2)
 
     def get_pass_status(self):
+        total, max_val, has_eval = self.get_consolidated_scores()
+        if not has_eval or max_val == 0:
+            return 'Pending'
+            
         from evaluation.models import EvaluationSheet
-        sheets = EvaluationSheet.objects.filter(agniveer=self, is_locked=True)
-        if not sheets.exists():
-            return 'Pending'
-        total = sum(sheet.get_total_marks() for sheet in sheets)
-        max_total = sum(sheet.get_max_marks() for sheet in sheets)
-        if max_total == 0:
-            return 'Pending'
-        percentage = (total / max_total) * 100
-        return 'Pass' if percentage >= 50 else 'Fail'
+        from evaluation.result_helpers import is_sheet_evaluated
+        evaluations = list(EvaluationSheet.objects.filter(agniveer=self).prefetch_related('marks'))
+        evaluated_depts = []
+        for d in ['A', 'B', 'C', 'D']:
+            d_sheets = [s for s in evaluations if s.department == d]
+            if d_sheets and any(is_sheet_evaluated(s) for s in d_sheets):
+                evaluated_depts.append(d)
+                
+        passing_threshold = 40 if evaluated_depts == ['A'] else 50
+        percentage = (total / max_val) * 100
+        return 'Pass' if percentage >= passing_threshold else 'Fail'
 
     def get_evaluation_progress(self, dept_code='A'):
         from evaluation.models import EvaluationSheet

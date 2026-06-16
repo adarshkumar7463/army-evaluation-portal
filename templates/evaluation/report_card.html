@@ -100,7 +100,7 @@
   /* ── Report Card Paper ──────────────────────────────────── */
   .rc-paper {
     width: 100%;
-    max-width: 860px;
+    max-width: 740px;
     margin: 0 auto;
     background: var(--rc-bg);
     border: 1px solid var(--rc-border);
@@ -187,41 +187,192 @@
     flex-shrink: 0;
   }
 
-  /* ── Identity Strip ─────────────────────────────────────── */
-  .rc-identity {
+  /* ── Modern Profile Layout ── */
+  .rc-profile-card {
+    display: flex;
+    gap: 20px;
+    padding: 16px 20px;
+    background: var(--rc-surface);
+    border-bottom: 2px solid var(--rc-border);
+    align-items: center;
+  }
+
+  .rc-profile-photo-container {
+    flex-shrink: 0;
+  }
+
+  .rc-profile-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 12px;
+    border: 3px solid var(--rc-green-light);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    object-fit: cover;
+  }
+
+  .rc-profile-avatar-placeholder {
+    width: 80px;
+    height: 80px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(82,183,136,0.2), rgba(79,195,247,0.15));
+    border: 2px solid var(--rc-green-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--rc-green-light);
+  }
+
+  .rc-profile-details {
+    flex-grow: 1;
+  }
+
+  .rc-profile-name-row {
+    margin-bottom: 6px;
+  }
+
+  .rc-profile-name {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--rc-ink);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 0;
+  }
+
+  .rc-profile-hierarchy {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--rc-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 3px;
+  }
+
+  .rc-profile-fields-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 0;
-    border-bottom: 1px solid var(--rc-border);
-    background: var(--rc-surface);
+    gap: 8px 12px;
+    margin-top: 8px;
+    border-top: 1px dashed var(--rc-border);
+    padding-top: 8px;
   }
 
-  .rc-id-cell {
-    padding: 10px 14px;
-    border-right: 1px solid var(--rc-border);
+  .rc-profile-field {
+    display: flex;
+    flex-direction: column;
   }
 
-  .rc-id-cell:last-child { border-right: none; }
-
-  .rc-id-lbl {
-    font-size: 8.5px;
+  .rc-profile-label {
+    font-size: 8px;
     color: var(--rc-muted);
     text-transform: uppercase;
     letter-spacing: 0.8px;
     font-weight: 700;
-    margin-bottom: 2px;
+    margin-bottom: 1px;
   }
 
-  .rc-id-val {
-    font-size: 13px;
+  .rc-profile-value {
+    font-size: 12px;
     font-weight: 700;
     color: var(--rc-ink);
-    line-height: 1.2;
+  }
+
+  .rc-profile-value.gold { color: #D4A017; }
+  .rc-profile-value.green { color: #52B788; }
+
+  /* ── Universal Final Result Card ── */
+  .rc-final-card {
+    background: var(--rc-bg);
+    border: 2px solid var(--rc-border);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+  }
+
+  .rc-final-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid var(--rc-border);
+    padding-bottom: 10px;
+    margin-bottom: 12px;
+  }
+
+  .rc-final-card-title {
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--rc-ink);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 0;
+  }
+
+  .rc-final-card-badge {
+    font-family: 'Rajdhani', monospace;
+    font-size: 14px;
+    font-weight: 800;
+    padding: 4px 12px;
+    border-radius: 8px;
+    background: rgba(82, 183, 136, 0.15);
+    color: #2E7D32;
+    border: 1px solid rgba(82, 183, 136, 0.3);
+  }
+  
+  [data-bs-theme="dark"] .rc-final-card-badge {
+    color: #52B788;
+    background: rgba(82, 183, 136, 0.1);
+  }
+
+  .rc-final-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+  }
+
+  .rc-final-table th {
+    font-size: 9px;
+    font-weight: 800;
+    color: var(--rc-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    padding: 8px 12px;
+    border-bottom: 1.5px solid var(--rc-border);
+    text-align: left;
+  }
+
+  .rc-final-table td {
+    padding: 10px 12px;
+    border-bottom: 1px dotted var(--rc-border);
+    color: var(--rc-ink);
+    font-size: 13px;
+  }
+
+  .rc-final-table tr:last-child td {
+    border-bottom: none;
+  }
+
+  .rc-final-table td.score {
+    font-weight: 700;
+    color: var(--rc-ink);
     font-family: 'Rajdhani', monospace;
   }
 
-  .rc-id-val.green { color: var(--rc-green-light); }
-  .rc-id-val.gold  { color: var(--rc-gold-light); }
+  .rc-final-table td.max {
+    color: var(--rc-muted);
+    font-family: 'Rajdhani', monospace;
+  }
+
+  .rc-final-remarks {
+    font-size: 11px;
+    font-style: italic;
+    color: var(--rc-muted);
+    margin-top: 14px;
+    padding-top: 10px;
+    border-top: 1px dashed var(--rc-border);
+  }
 
   /* ── Summary Band ───────────────────────────────────────── */
   .rc-summary {
@@ -608,6 +759,9 @@
     .rc-eval-card:nth-child(3n) { border-right: 1px solid var(--rc-border); }
     .rc-eval-card:nth-child(2n) { border-right: none !important; }
     .rc-identity  { grid-template-columns: repeat(2,1fr) !important; }
+    .rc-id-cell { border-right: 1px solid var(--rc-border) !important; border-bottom: 1px solid var(--rc-border) !important; }
+    .rc-id-cell:nth-child(2n) { border-right: none !important; }
+    .rc-id-cell:nth-child(n+7) { border-bottom: none !important; }
     .rc-summary   { grid-template-columns: 1fr 1fr !important; }
     .rc-header    { grid-template-columns: auto 1fr !important; }
     .rc-header-photo, .rc-header-initials { display: none !important; }
@@ -622,8 +776,6 @@
     <a href="{% url 'evaluation:evaluate_agniveer' agniveer.pk %}" class="back-btn">
       <i class="bi bi-arrow-left"></i> Back
     </a>
-      
-    </a>
     <span style="font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;">
       <i class="bi bi-file-earmark-text-fill me-1" style="color:var(--army-olive);"></i>
       Report Card — {{ agniveer.get_full_name }}
@@ -633,56 +785,115 @@
     <button onclick="window.print()" class="rc-btn gold">
       <i class="bi bi-printer-fill"></i> Print
     </button>
-    <a href="{% url 'reports:export_report_card_pdf' agniveer.pk %}" class="rc-btn primary">
+    <a href="{% url 'reports:export_report_card_pdf' agniveer.pk %}{% if user_department %}?dept={{ user_department }}{% endif %}" class="rc-btn primary">
       <i class="bi bi-file-earmark-pdf-fill"></i> Download PDF
     </a>
   </div>
 </div>
 
+{% if request.user.is_commander or request.user.is_g_head %}
+<!-- Department Switcher Tabs for Privileged Users -->
+<div class="no-print" style="max-width: 740px; margin: 0 auto 12px; display: flex; flex-wrap: wrap; gap: 8px; border-bottom: 1px solid var(--rc-border); padding-bottom: 8px;">
+  {% if 'A' in available_depts or not available_depts %}
+  <a href="?dept=A" class="rc-btn {% if user_department == 'A' %}primary{% endif %}" style="font-size: 11px; padding: 6px 12px; text-decoration: none;">
+    <i class="bi bi-shield-fill"></i> Battalion (Overall)
+  </a>
+  {% endif %}
+  {% if 'B' in available_depts %}
+  <a href="?dept=B" class="rc-btn {% if user_department == 'B' %}primary{% endif %}" style="font-size: 11px; padding: 6px 12px; text-decoration: none;">
+    <i class="bi bi-gear-fill"></i> TTS (Trade)
+  </a>
+  {% endif %}
+  {% if 'C' in available_depts %}
+  <a href="?dept=C" class="rc-btn {% if user_department == 'C' %}primary{% endif %}" style="font-size: 11px; padding: 6px 12px; text-decoration: none;">
+    <i class="bi bi-broadcast"></i> CS (Comm Systems)
+  </a>
+  {% endif %}
+  {% if 'D' in available_depts %}
+  <a href="?dept=D" class="rc-btn {% if user_department == 'D' %}primary{% endif %}" style="font-size: 11px; padding: 6px 12px; text-decoration: none;">
+    <i class="bi bi-journal-check"></i> Clerk (CTS)
+  </a>
+  {% endif %}
+</div>
+{% endif %}
+
 <!-- Report Card Paper -->
 <div class="rc-paper" id="reportCard">
 
   <!-- Header -->
-  <div class="rc-header">
+  <div class="rc-header" style="grid-template-columns: auto 1fr; align-items: center; padding: 18px 24px;">
     <div class="rc-emblem">{{ agniveer.department.short_name|default:"ARC"|slice:":3"|upper }}</div>
-    <div class="rc-header-center">
+    <div class="rc-header-center" style="text-align: center; margin-right: 56px;">
       <div class="rc-org-name">{{ agniveer.department.name|default:"Army Training Command" }}</div>
       <div class="rc-title">Agniveer Evaluation Report</div>
-      <div class="rc-subtitle">Comprehensive Performance Assessment Card — Batch {{ agniveer.batch }}</div>
-    </div>
-    {% if agniveer.photo %}
-    <img src="{{ agniveer.photo.url }}" alt="Photo" class="rc-header-photo">
-    {% else %}
-    <div class="rc-header-initials">{{ agniveer.first_name.0|upper }}{{ agniveer.last_name.0|upper }}</div>
-    {% endif %}
-  </div>
-
-  <!-- Identity Strip -->
-  <div class="rc-identity">
-    <div class="rc-id-cell">
-      <div class="rc-id-lbl">Full Name</div>
-      <div class="rc-id-val">{{ agniveer.get_full_name }}</div>
-    </div>
-    <div class="rc-id-cell">
-      <div class="rc-id-lbl">Enrollment No.</div>
-      <div class="rc-id-val green">{{ agniveer.enrollment_number }}</div>
-    </div>
-    <div class="rc-id-cell">
-      <div class="rc-id-lbl">Agniveer No.</div>
-      <div class="rc-id-val gold">{{ agniveer.agniveer_no }}</div>
-    </div>
-    <div class="rc-id-cell">
-      <div class="rc-id-lbl">Joining Date</div>
-      <div class="rc-id-val">{{ agniveer.joining_date|date:"d M Y" }}</div>
+      <div class="rc-subtitle">
+        BATTALION-{{ agniveer.bn_desp|default:"—"|upper }} — 
+        {% if is_department_view %}{{ user_department_name|upper }}{% else %}ALL DEPARTMENTS{% endif %} — 
+        {{ agniveer.company|default:"—"|upper }} — 
+        {{ agniveer.platoon|default:"—"|upper }}
+      </div>
     </div>
   </div>
 
+  <!-- Profile Card (Modern, Borderless) -->
+  <div class="rc-profile-card">
+    <div class="rc-profile-photo-container">
+      {% if agniveer.photo %}
+      <img src="{{ agniveer.photo.url }}" alt="Photo" class="rc-profile-avatar">
+      {% else %}
+      <div class="rc-profile-avatar-placeholder">{{ agniveer.first_name.0|upper }}{{ agniveer.last_name.0|upper }}</div>
+      {% endif %}
+    </div>
+    <div class="rc-profile-details">
+      <div class="rc-profile-name-row">
+        <h2 class="rc-profile-name" style="margin: 0;">{{ agniveer.get_full_name }}</h2>
+        <div class="rc-profile-hierarchy">
+          BATTALION-{{ agniveer.bn_desp|default:"—"|upper }} — 
+          {% if is_department_view %}{{ user_department_name|upper }}{% else %}ALL DEPARTMENTS{% endif %} — 
+          {{ agniveer.company|default:"—"|upper }} — 
+          {{ agniveer.platoon|default:"—"|upper }}
+        </div>
+      </div>
+      <div class="rc-profile-fields-grid">
+        <div class="rc-profile-field">
+          <span class="rc-profile-label">Rank</span>
+          <span class="rc-profile-value">{{ department_result_row.rank|default:"—" }}</span>
+        </div>
+        <div class="rc-profile-field">
+          <span class="rc-profile-label">Trade</span>
+          <span class="rc-profile-value gold">{{ agniveer.trade|default:"—" }}</span>
+        </div>
+        <div class="rc-profile-field">
+          <span class="rc-profile-label">Battalion / Unit</span>
+          <span class="rc-profile-value">{{ agniveer.bn_desp|default:"—" }}</span>
+        </div>
+        <div class="rc-profile-field">
+          <span class="rc-profile-label">Agniveer No.</span>
+          <span class="rc-profile-value">{{ agniveer.agniveer_no|default:"—" }}</span>
+        </div>
+        <div class="rc-profile-field">
+          <span class="rc-profile-label">Enrollment No.</span>
+          <span class="rc-profile-value green">{{ agniveer.enrollment_number }}</span>
+        </div>
+        <div class="rc-profile-field">
+          <span class="rc-profile-label">Company</span>
+          <span class="rc-profile-value">{{ agniveer.company|default:"—" }}</span>
+        </div>
+        <div class="rc-profile-field">
+          <span class="rc-profile-label">Platoon</span>
+          <span class="rc-profile-value">{{ agniveer.platoon|default:"—" }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Summary Band -->
   <!-- Summary Band -->
   <div class="rc-summary">
     <div class="rc-sum-cell">
       <div class="rc-sum-lbl">Total Score</div>
       <div class="rc-sum-val" style="color:var(--rc-ink);">
-        {{ total_score }}<span style="font-size:12px;color:var(--rc-muted);font-weight:600;"> / {{ max_marks }}</span>
+        {{ grand_total|floatformat:"-2" }}<span style="font-size:12px;color:var(--rc-muted);font-weight:600;"> / {{ max_total }}</span>
       </div>
       <div class="rc-progress-wrap" style="margin-top:6px;">
         <div class="rc-progress-bar" style="width:{{ percentage }}%;"></div>
@@ -690,10 +901,19 @@
     </div>
     <div class="rc-sum-cell">
       <div class="rc-sum-lbl">Cumulative Percentage</div>
-      <div class="rc-sum-val blue">{{ percentage }}%</div>
+      <div class="rc-sum-val blue">{{ percentage|floatformat:"-2" }}%</div>
     </div>
     <div class="rc-sum-cell">
       <div class="rc-sum-lbl">Overall Status</div>
+      {% if is_department_view %}
+      <div class="rc-badge-status {% if overall_pass %}pass{% else %}fail{% endif %}">
+        {% if overall_pass %}
+        <i class="bi bi-trophy-fill"></i> PASSED
+        {% else %}
+        <i class="bi bi-x-circle-fill"></i> FAILED
+        {% endif %}
+      </div>
+      {% else %}
       {% with ps=agniveer.get_pass_status %}
       <div class="rc-badge-status {% if ps == 'Pass' %}pass{% elif ps == 'Fail' %}fail{% else %}pending{% endif %}">
         {% if ps == 'Pass' %}
@@ -705,165 +925,73 @@
         {% endif %}
       </div>
       {% endwith %}
+      {% endif %}
     </div>
     <div class="rc-sum-cell" style="align-items:center;justify-content:center;min-width:90px;">
       <div class="rc-sum-lbl">Grade</div>
+      {% with grading=department_result_row.grading|default:"" %}
       <div style="font-family:'Rajdhani',monospace;font-size:38px;font-weight:900;line-height:1;
-        color:{% if percentage >= 80 %}#2E7D32{% elif percentage >= 60 %}#0288D1{% elif percentage >= 46 %}#D4A017{% else %}#C62828{% endif %};">
-        {% if percentage >= 80 %}A{% elif percentage >= 60 %}B{% elif percentage >= 46 %}C{% else %}D{% endif %}
+        color:{% if grading == 'Distinction' or grading == 'A' %}#2E7D32{% elif grading == 'B' %}#0288D1{% elif grading == 'C' %}#D4A017{% elif percentage >= 80 %}#2E7D32{% elif percentage >= 60 %}#0288D1{% elif percentage >= 50 %}#D4A017{% else %}#C62828{% endif %};">
+        {% if grading and grading != '—' %}
+          {{ grading }}
+        {% elif percentage >= 80 %}A{% elif percentage >= 60 %}B{% elif percentage >= 50 %}C{% else %}D{% endif %}
       </div>
+      {% endwith %}
     </div>
   </div>
 
-  <!-- Evaluation Results Grid -->
-  <div class="rc-section-label">
-    <i class="bi bi-clipboard2-data-fill"></i> Test-wise Evaluation Results
+  <!-- Final Result Cards (Universal Layout) -->
+  <div class="rc-section-label" style="margin-top: 15px;">
+    <i class="bi bi-award-fill"></i> Final Department Results
   </div>
+  <div style="padding: 16px; background: var(--rc-bg);">
+    {% for sheet in active_final_sheets %}
+      {% with sub_events=sheet|get_sheet_sub_events %}
+        {% if sub_events %}
+          <div class="rc-final-card">
+            <div class="rc-final-card-header">
+              <h3 class="rc-final-card-title">
+                {{ sheet.department|get_universal_dept_name:agniveer|upper }} FINAL RESULT
+              </h3>
+              <div class="rc-final-card-badge">
+                {{ sheet.get_total_marks|floatformat:"-2" }} / {{ sheet.get_max_marks|floatformat:"-2" }}
+              </div>
+            </div>
+            
+            <table class="rc-final-table">
+              <thead>
+                <tr>
+                  <th style="text-align: left;">TEST / SECTION COMPONENT</th>
+                  <th style="text-align: center; width: 100px;">SCORE</th>
+                  <th style="text-align: center; width: 100px;">MAX</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for event in sub_events %}
+                  <tr {% if event.name|is_total_or_converted %}style="background: rgba(82, 183, 136, 0.05) !important;"{% endif %}>
+                    <td style="text-align: left; {% if event.name|is_total_or_converted %}font-weight: 700; color: #52B788;{% else %}font-weight: 500;{% endif %} font-size: 13px;">{{ event.name|upper }}</td>
+                    <td class="score" style="text-align: center; font-size: 15px; font-weight: 700; {% if event.name|is_total_or_converted %}color: #52B788 !important;{% endif %}">{{ event.score }}</td>
+                    <td class="max" style="text-align: center; font-size: 13px; {% if event.name|is_total_or_converted %}color: #52B788 !important; font-weight: 700;{% else %}color: var(--rc-muted);{% endif %}">{{ event.max }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
 
-  <div class="rc-eval-grid">
-    {% for code, name in test_type_choices %}
-    {% with sheet=evaluations|get_eval_sheet:code %}
-    <div class="rc-eval-card">
-      <div class="rc-eval-name" title="{{ name }}">{{ name }}</div>
-
-      {% if sheet %}
-      <div class="rc-eval-status {% if sheet.is_pass %}pass{% else %}fail{% endif %}">
-        {% if sheet.is_pass %}✓ PASS{% else %}✗ FAIL{% endif %}
+            {% if sheet.remarks %}
+              <div class="rc-final-remarks">
+                <strong>Remarks:</strong> {{ sheet.remarks }}
+              </div>
+            {% endif %}
+          </div>
+        {% endif %}
+      {% endwith %}
+    {% empty %}
+      <div style="text-align: center; padding: 40px; color: var(--rc-muted);">
+        <i class="bi bi-info-circle" style="font-size: 24px; display: block; margin-bottom: 8px;"></i>
+        No final department results recorded.
       </div>
-      <div class="rc-eval-row">
-        <div class="rc-eval-score">{{ sheet.get_total_marks|floatformat:1 }}</div>
-        <div class="rc-eval-max">/ {{ sheet.get_max_marks|default:"—" }}</div>
-        <div class="rc-eval-pct">{{ sheet.get_percentage|floatformat:1 }}%</div>
-      </div>
-      <div class="rc-mini-bar">
-        <div class="rc-mini-bar-fill {% if not sheet.is_pass %}fail{% endif %}"
-          style="width:{{ sheet.get_percentage|floatformat:0 }}%;"></div>
-      </div>
-      {% else %}
-      <div class="rc-eval-status pend">PENDING</div>
-      <div class="rc-eval-row">
-        <div class="rc-eval-score" style="color:var(--rc-muted);font-size:13px;">Not Evaluated</div>
-      </div>
-      <div class="rc-mini-bar"><div class="rc-mini-bar-fill" style="width:0%;"></div></div>
-      {% endif %}
-    </div>
-    {% endwith %}
     {% endfor %}
   </div>
-
-  <!-- Category Summary Table -->
-  {% if category_summary %}
-  <div class="rc-section-label" style="margin-top:0;">
-    <i class="bi bi-table"></i> Category-wise Summary
-  </div>
-  <table class="rc-cat-table">
-    <thead>
-      <tr>
-        <th>Category / Test</th>
-        <th class="text-center">Marks Obtained</th>
-        <th class="text-center">Max Marks</th>
-        <th class="text-center">Percentage</th>
-        <th class="text-center">Status</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for row in category_summary %}
-      <tr {% if row.is_total %}class="cat-total"{% endif %}>
-        <td style="font-weight:{% if row.is_total %}800{% else %}600{% endif %};">{{ row.name }}</td>
-        <td class="text-center" style="font-family:'Rajdhani',monospace;font-weight:700;">{{ row.obtained|floatformat:1 }}</td>
-        <td class="text-center" style="color:var(--rc-muted);">{{ row.max_marks }}</td>
-        <td class="text-center">
-          <span class="pct-pill {% if row.percentage >= 50 %}pass{% elif row.percentage == 0 and not row.is_evaluated %}pend{% else %}fail{% endif %}">
-            {{ row.percentage|floatformat:1 }}%
-          </span>
-        </td>
-        <td class="text-center">
-          {% if not row.is_evaluated %}
-          <span class="pct-pill pend">Pending</span>
-          {% elif row.is_pass %}
-          <span class="pct-pill pass">✓ Pass</span>
-          {% else %}
-          <span class="pct-pill fail">✗ Fail</span>
-          {% endif %}
-        </td>
-      </tr>
-      {% endfor %}
-      <!-- Grand Total Row -->
-      <tr class="cat-total">
-        <td>GRAND TOTAL</td>
-        <td class="text-center" style="font-family:'Rajdhani',monospace;">{{ total_score }}</td>
-        <td class="text-center">{{ max_marks }}</td>
-        <td class="text-center">
-          <span class="pct-pill {% if percentage >= 50 %}pass{% else %}fail{% endif %}">{{ percentage }}%</span>
-        </td>
-        <td class="text-center">
-          {% with ps=agniveer.get_pass_status %}
-          <span class="pct-pill {% if ps == 'Pass' %}pass{% elif ps == 'Fail' %}fail{% else %}pend{% endif %}">
-            {% if ps == 'Pass' %}✓ Pass{% elif ps == 'Fail' %}✗ Fail{% else %}Pending{% endif %}
-          </span>
-          {% endwith %}
-        </td>
-      </tr>
-    </tbody>
-  </table>
-  {% else %}
-  <!-- Fallback: simple totals table from evaluations -->
-  <div class="rc-section-label" style="margin-top:0;">
-    <i class="bi bi-table"></i> Evaluation Summary
-  </div>
-  <table class="rc-cat-table">
-    <thead>
-      <tr>
-        <th>Test / Evaluation</th>
-        <th class="text-center">Score</th>
-        <th class="text-center">Percentage</th>
-        <th class="text-center">Status</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for code, name in test_type_choices %}
-      {% with sheet=evaluations|get_eval_sheet:code %}
-      <tr>
-        <td style="font-weight:600;">{{ name }}</td>
-        <td class="text-center" style="font-family:'Rajdhani',monospace;font-weight:700;">
-          {% if sheet %}{{ sheet.get_total_marks|floatformat:1 }}{% else %}—{% endif %}
-        </td>
-        <td class="text-center">
-          {% if sheet %}
-          <span class="pct-pill {% if sheet.is_pass %}pass{% else %}fail{% endif %}">{{ sheet.get_percentage|floatformat:1 }}%</span>
-          {% else %}
-          <span class="pct-pill pend">Pending</span>
-          {% endif %}
-        </td>
-        <td class="text-center">
-          {% if sheet %}
-          <span class="pct-pill {% if sheet.is_pass %}pass{% else %}fail{% endif %}">
-            {% if sheet.is_pass %}✓ Pass{% else %}✗ Fail{% endif %}
-          </span>
-          {% else %}
-          <span class="pct-pill pend">—</span>
-          {% endif %}
-        </td>
-      </tr>
-      {% endwith %}
-      {% endfor %}
-      <tr class="cat-total">
-        <td>GRAND TOTAL</td>
-        <td class="text-center" style="font-family:'Rajdhani',monospace;">{{ total_score }} / {{ max_marks }}</td>
-        <td class="text-center">
-          <span class="pct-pill {% if percentage >= 50 %}pass{% else %}fail{% endif %}">{{ percentage }}%</span>
-        </td>
-        <td class="text-center">
-          {% with ps=agniveer.get_pass_status %}
-          <span class="pct-pill {% if ps == 'Pass' %}pass{% elif ps == 'Fail' %}fail{% else %}pend{% endif %}">
-            {% if ps == 'Pass' %}✓ Pass{% elif ps == 'Fail' %}✗ Fail{% else %}Pending{% endif %}
-          </span>
-          {% endwith %}
-        </td>
-      </tr>
-    </tbody>
-  </table>
-  {% endif %}
 
   <!-- Footer -->
   <div class="rc-footer">
