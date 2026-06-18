@@ -86,7 +86,7 @@
   }
   
   [data-bs-theme="light"] .eval-filter-btn.active {
-    background: rgba(45, 106, 79, 0.1);
+    background: rgba(235, 241, 238, 0.1);
     border-color: #2D6A4F;
     color: #2D6A4F;
   }
@@ -138,18 +138,18 @@
     border-radius: 30px;
     text-decoration: none;
     transition: all 0.2s ease;
-    background: rgba(82, 183, 136, 0.05);
+    background: rgba(231, 245, 239, 0.05);
     border: 1px solid var(--border-color);
     color: var(--text-muted);
   }
   
   .eval-filter-btn:hover {
-    background: rgba(82, 183, 136, 0.1);
+    background: rgba(238, 245, 242, 0.1);
     border-color: var(--army-olive);
   }
   
   .eval-filter-btn.active {
-    background: rgba(82, 183, 136, 0.15);
+    background: rgba(223, 231, 227, 0.15);
     border-color: var(--army-olive);
     color: var(--army-olive);
   }
@@ -291,8 +291,8 @@
       </div>
 
       {% else %}
-      <!-- CSV export (non-trainers only) -->
-      {% if is_registration_office %}
+      
+      {% if is_registration_office or is_department %}
       <a href="{% url 'departments:registration_dashboard' %}" class="btn btn-army d-flex align-items-center gap-2" style="padding:4px 12px;font-size:12px;display:inline-flex !important;">
         <i class="bi bi-person-plus-fill"></i> Registration Dashboard
       </a>

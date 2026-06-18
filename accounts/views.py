@@ -28,6 +28,28 @@ from logs.utils import log_action
 class LoginView(View):
     template_name = 'accounts/login.html'
 
+    # Maps portal_type (sent from login form) → allowed roles for that portal
+    PORTAL_ROLE_MAP = {
+        'commander':     ['commander'],
+        'ghead':         ['g_head'],
+        'dephead_a':     ['dept_a'],          # Battalion Head + 1TB/2TB/STB sub-units
+        'dephead_b':     ['dept_b'],          # TTS Head + OPEM/DMV/Other trades
+        'dephead_c':     ['dept_c'],          # CES/CS Head + CES users
+        'dephead_d':     ['dept_d'],          # CTS/Clerk Head + CTS users
+        'register_clerk': ['registration'],   # Registration Office
+    }
+
+    # Human-readable portal names for error messages
+    PORTAL_LABELS = {
+        'commander':     'Commander',
+        'ghead':         'G-Head',
+        'dephead_a':     'Battalion',
+        'dephead_b':     'TTS',
+        'dephead_c':     'CES',
+        'dephead_d':     'CTS',
+        'register_clerk': 'Registration Clerk',
+    }
+
     def get(self, request):
         if request.user.is_authenticated:
             return redirect('core:dashboard')
@@ -35,7 +57,9 @@ class LoginView(View):
         return render(request, self.template_name, {'form': form})
 
     def post(self, request):
+        portal_type = request.POST.get('portal_type', '').strip()
         form = ArmyLoginForm(request, data=request.POST)
+
         if form.is_valid():
             username = form.cleaned_data.get('username')
             password = form.cleaned_data.get('password')
@@ -44,13 +68,29 @@ class LoginView(View):
             if user is not None:
                 if user.is_account_locked():
                     messages.error(request, f"Account locked. Try again after {user.locked_until.strftime('%H:%M')}.")
-                    return render(request, self.template_name, {'form': form})
+                    return render(request, self.template_name, {'form': form, 'selected_portal': portal_type})
+
+                # ── Portal Role Enforcement ──────────────────────────────────
+                allowed_roles = self.PORTAL_ROLE_MAP.get(portal_type)
+                if not allowed_roles:
+                    messages.error(request, "Please select a valid portal before logging in.")
+                    return render(request, self.template_name, {'form': form, 'selected_portal': portal_type})
+
+                if user.role not in allowed_roles:
+                    portal_label = self.PORTAL_LABELS.get(portal_type, portal_type)
+                    messages.error(
+                        request,
+                        f"Access denied. Your account is not authorised for the {portal_label} portal. "
+                        f"Please select the correct portal for your role."
+                    )
+                    return render(request, self.template_name, {'form': form, 'selected_portal': portal_type})
+                # ────────────────────────────────────────────────────────────
 
                 user.login_attempts = 0
                 user.last_login_ip = get_client_ip(request)
                 user.save(update_fields=['login_attempts', 'last_login_ip'])
                 login(request, user)
-                log_action(user, 'LOGIN', f'User {user.username} logged in', request)
+                log_action(user, 'LOGIN', f'User {user.username} logged in via {portal_type} portal', request)
                 messages.success(request, f"Welcome back, {user.get_full_name() or user.username}!")
                 return redirect('core:dashboard')
             else:
@@ -69,7 +109,7 @@ class LoginView(View):
         else:
             messages.error(request, "Invalid credentials. Please try again.")
 
-        return render(request, self.template_name, {'form': form})
+        return render(request, self.template_name, {'form': form, 'selected_portal': portal_type})
 
 
 class LogoutView(LoginRequiredMixin, View):

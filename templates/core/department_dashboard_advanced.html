@@ -17,7 +17,7 @@
     height: 100%;
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(220px, 28vw);
-    grid-template-rows: auto auto auto 1fr;
+    grid-template-rows: auto auto auto auto auto;
     gap: 8px;
     align-content: start;
     overflow: auto;
@@ -33,14 +33,19 @@
     gap: 8px;
   }
 
-  .portal-dashboard-page .testtype-row {
+  .portal-dashboard-page .testtabs-row {
     grid-column: 1;
     grid-row: 2;
   }
 
+  .portal-dashboard-page .testtype-row {
+    grid-column: 1;
+    grid-row: 3;
+  }
+
   .portal-dashboard-page .cat-pair-row {
     grid-column: 1 / 3;
-    grid-row: 3;
+    grid-row: 4;
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 8px;
@@ -48,12 +53,12 @@
 
   .portal-dashboard-page .monthly-row {
     grid-column: 1 / -1;
-    grid-row: 4;
+    grid-row: 5;
   }
 
   .portal-dashboard-page .pie-panel {
     grid-column: 2;
-    grid-row: 1 / 3;
+    grid-row: 1 / 4;
     display: flex;
     flex-direction: column;
   }
@@ -158,6 +163,19 @@
   [data-bs-theme="dark"] .metric-card.mc-passed    .metric-value { color: #52B788; }
   [data-bs-theme="dark"] .metric-card.mc-failed    .metric-value { color: #EF5350; }
   [data-bs-theme="dark"] .metric-card.mc-trainers  .metric-value { color: #D4A017; }
+
+  /* Download hint badge inside metric cards */
+  .metric-dl-hint {
+    position: absolute;
+    top: 5px;
+    right: 7px;
+    font-size: 9px;
+    opacity: 0;
+    transition: opacity 0.18s ease;
+    color: inherit;
+    pointer-events: none;
+  }
+  .metric-card:hover .metric-dl-hint { opacity: 0.55; }
 
   /* ── Test Type Tab Bar ──────────────────────────────── */
   .tt-tab-bar {
@@ -518,7 +536,188 @@
   }
   .modal-table tr:last-child td { border-bottom: none; }
   .modal-table tr:hover td { background: rgba(82,183,136,0.05); }
+  /* ── Test Section Download Panel ─────────────────────── */
+  .ts-dl-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 7px 10px;
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+    background: var(--card-bg);
+    transition: background 0.18s, border-color 0.18s;
+  }
+  .ts-dl-row:hover {
+    background: rgba(82,183,136,0.04);
+    border-color: rgba(82,183,136,0.35);
+  }
+
+  .ts-dl-label {
+    font-size: 11px;
+    font-weight: 700;
+    font-family: 'Rajdhani', sans-serif;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    letter-spacing: 0.2px;
+    flex: 1;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .ts-dl-actions {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  .ts-dl-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 12px;
+    border-radius: 8px;
+    font-size: 10px;
+    font-weight: 800;
+    font-family: 'Rajdhani', sans-serif;
+    letter-spacing: 0.5px;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    white-space: nowrap;
+  }
+  .ts-dl-btn i { font-size: 12px; }
+
+  .ts-dl-pass {
+    background: rgba(82,183,136,0.12);
+    border: 1px solid rgba(82,183,136,0.4);
+    color: #2E7D32;
+  }
+  .ts-dl-pass:hover {
+    background: #52B788;
+    border-color: #52B788;
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(82,183,136,0.35);
+    transform: translateY(-1px);
+  }
+
+  .ts-dl-fail {
+    background: rgba(239,83,80,0.10);
+    border: 1px solid rgba(239,83,80,0.35);
+    color: #C62828;
+  }
+  .ts-dl-fail:hover {
+    background: #EF5350;
+    border-color: #EF5350;
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(239,83,80,0.30);
+    transform: translateY(-1px);
+  }
+
+  [data-bs-theme="dark"] .ts-dl-pass { color: #52B788; }
+  [data-bs-theme="dark"] .ts-dl-fail { color: #EF5350; }
+
+  /* ── Test Tabs Bar (Row 2, full-width) ───────────────── */
+  .test-tabs-bar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    padding: 10px 14px;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+  }
+
+  .test-tab-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 14px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    font-family: 'Rajdhani', sans-serif;
+    letter-spacing: 0.3px;
+    cursor: pointer;
+    border: 1.5px solid var(--border-color);
+    color: var(--text-muted);
+    background: transparent;
+    transition: all 0.18s ease;
+    white-space: nowrap;
+    user-select: none;
+  }
+  .test-tab-pill:hover {
+    border-color: rgba(82,183,136,0.55);
+    color: #52B788;
+    background: rgba(82,183,136,0.07);
+    transform: translateY(-1px);
+  }
+  .test-tab-pill.active {
+    border-color: #52B788;
+    color: #52B788;
+    background: rgba(82,183,136,0.12);
+  }
+
+  /* ── Test-Download Modal ─────────────────────────────── */
+  .tdl-modal .modal-content {
+    background: var(--card-bg);
+    border: 1px solid var(--army-olive);
+    border-radius: 16px;
+  }
+  .tdl-modal .modal-header {
+    border-bottom: 1px solid var(--border-color);
+    padding: 12px 20px;
+  }
+  .tdl-modal .modal-title {
+    font-size: 14px;
+    font-weight: 700;
+    font-family: 'Rajdhani', sans-serif;
+    letter-spacing: 0.5px;
+    color: var(--army-olive);
+  }
+  .tdl-modal .modal-body { padding: 20px; }
+
+  .tdl-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 700;
+    font-family: 'Rajdhani', sans-serif;
+    letter-spacing: 0.5px;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    border: 2px solid transparent;
+    cursor: pointer;
+  }
+  .tdl-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.15); }
+  .tdl-btn.tdl-pass {
+    background: #1B4332; color: #52B788; border-color: #52B788;
+  }
+  .tdl-btn.tdl-pass:hover { background: #2D6A4F; color: #74C69D; }
+  .tdl-btn.tdl-fail {
+    background: #2D0A0A; color: #EF5350; border-color: #EF5350;
+  }
+  .tdl-btn.tdl-fail:hover { background: #5C1010; color: #FF7675; }
+  .tdl-btn.tdl-eval {
+    background: #1A1A2E; color: #D4A017; border-color: #D4A017;
+  }
+  .tdl-btn.tdl-eval:hover { background: #2A2A4E; color: #F0C040; }
+
+  [data-bs-theme="light"] .tdl-btn.tdl-pass { background: #E9FBF0; }
+  [data-bs-theme="light"] .tdl-btn.tdl-fail { background: #FFF0F0; }
+  [data-bs-theme="light"] .tdl-btn.tdl-eval { background: #FFF8E1; color: #B7600A; border-color: #D4A017; }
+
 </style>
+
 {% endblock %}
 
 {% block content %}
@@ -530,95 +729,98 @@
     <div class="metric-label">Total Agniveers</div>
     <div class="counter-bar" id="bar-agniveers"></div>
   </div>
-  <div class="metric-card mc-trainers">
+
+  <div class="metric-card mc-trainers"
+       onclick="openEvaluatedModal()"
+       title="View all evaluated agniveers">
+    <div class="metric-dl-hint"><i class="bi bi-people-fill"></i></div>
     <div class="metric-value" id="cnt-evaluated">0</div>
     <div class="metric-label">Evaluated Agniveers</div>
     <div class="counter-bar" id="bar-evaluated"></div>
   </div>
+
   <div class="metric-card mc-passed" onclick="openAgniveerModal('Passed')">
+    <div class="metric-dl-hint"><i class="bi bi-file-earmark-arrow-down"></i></div>
     <div class="metric-value" id="cnt-passed">0</div>
     <div class="metric-label">Passed</div>
     <div class="counter-bar" id="bar-passed"></div>
   </div>
+
   <div class="metric-card mc-failed" onclick="openAgniveerModal('Failed')">
+    <div class="metric-dl-hint"><i class="bi bi-file-earmark-arrow-down"></i></div>
     <div class="metric-value" id="cnt-failed">0</div>
     <div class="metric-label">Failed</div>
     <div class="counter-bar" id="bar-failed"></div>
   </div>
 </div>
 
-<!-- Test Section Tab Bar -->
-<div class="testtype-row" style="display:flex;flex-direction:column;gap:8px;">
-  <!-- Pill Tab Bar -->
-  <div class="tt-tab-bar" id="ttTabBar" role="tablist" aria-label="Test Type Tabs">
-    <!-- Overall Stats tab -->
-    <button class="tt-tab active" id="tt-tab-overall" role="tab"
-            aria-selected="true" aria-controls="ttResultsPanel"
-            onclick="selectTestTab(this, null)">
-      <i class="bi bi-grid-3x3-gap-fill"></i> Overall Stats
-    </button>
+<!-- Row 2: Test Tabs Bar -->
+<div class="testtabs-row">
+  <div class="test-tabs-bar" role="tablist" aria-label="Test Type Downloads">
+    <span style="font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:0.8px;white-space:nowrap;font-family:'Rajdhani',sans-serif;text-transform:uppercase;"
+          class="me-1">
+      <i class="bi bi-grid-3x3-gap-fill me-1"></i>Tests
+    </span>
     {% for tt_code, tt_label in test_types %}
-    <button class="tt-tab" id="tt-tab-{{ tt_code }}"
-            role="tab" aria-selected="false" aria-controls="ttResultsPanel"
+    <button class="test-tab-pill"
             data-tt-code="{{ tt_code }}"
-            onclick="selectTestTab(this, '{{ tt_code }}')">
+            data-tt-label="{{ tt_label }}"
+            onclick="openTestDownloadModal('{{ tt_code }}', '{{ tt_label }}')"
+            title="{{ tt_label }} — download options">
       {{ tt_label }}
     </button>
+    {% empty %}
+    <span style="font-size:11px;color:var(--text-muted);">No tests configured.</span>
     {% endfor %}
   </div>
+</div>
 
-  <!-- Inline Results Panel (hidden when Overall Stats active) -->
-  <div class="tt-results-panel" id="ttResultsPanel" role="tabpanel">
-    <!-- header -->
-    <div class="tt-panel-header" id="ttPanelHeader">
-      <div class="tt-panel-title">
-        <i class="bi bi-list-check"></i>
-        <span id="ttPanelTestName">Test Results</span>
+
+<!-- Test Download Modal -->
+<div class="modal fade tdl-modal" id="testDownloadModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" style="max-width:400px;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div>
+          <div style="font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:2px;">Test Section</div>
+          <div class="modal-title" id="tdlModalTitle">Test Name</div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
-      <div class="tt-panel-badges" id="ttPanelBadges"></div>
-      <div class="d-flex gap-2 align-items-center" id="ttPanelActions">
-        <a href="#" id="ttExportBtn"
-           class="btn btn-sm"
-           style="background:rgba(82,183,136,0.12);border:1px solid rgba(82,183,136,0.4);color:#52B788;font-size:10px;font-weight:700;padding:3px 10px;"
-           title="Download Excel">
-          <i class="bi bi-file-earmark-excel-fill"></i> Excel
-        </a>
-        <button class="btn btn-sm"
-                style="background:transparent;border:1px solid var(--border-color);color:var(--text-muted);font-size:10px;padding:3px 8px;"
-                onclick="selectTestTab(document.getElementById('tt-tab-overall'), null)">
-          <i class="bi bi-x"></i>
-        </button>
+      <div class="modal-body">
+        <p style="font-size:11px;color:var(--text-muted);margin-bottom:16px;text-align:center;">
+          <i class="bi bi-file-earmark-excel-fill me-1"></i>
+          Select the list to download as Excel
+        </p>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <a id="tdlPassBtn" href="#" class="tdl-btn tdl-pass">
+            <i class="bi bi-check-circle-fill" style="font-size:16px;"></i>
+            <div>
+              <div>PASS LIST</div>
+              <div style="font-size:9px;font-weight:400;opacity:0.8;">Only passed agniveers</div>
+            </div>
+          </a>
+          <a id="tdlFailBtn" href="#" class="tdl-btn tdl-fail">
+            <i class="bi bi-x-circle-fill" style="font-size:16px;"></i>
+            <div>
+              <div>FAIL LIST</div>
+              <div style="font-size:9px;font-weight:400;opacity:0.8;">Only failed agniveers</div>
+            </div>
+          </a>
+          <a id="tdlEvalBtn" href="#" class="tdl-btn tdl-eval">
+            <i class="bi bi-people-fill" style="font-size:16px;"></i>
+            <div>
+              <div>TOTAL EVALUATED</div>
+              <div style="font-size:9px;font-weight:400;opacity:0.8;">Both pass &amp; fail combined</div>
+            </div>
+          </a>
+        </div>
       </div>
-    </div>
-    <!-- body -->
-    <div id="ttPanelBody" style="max-height:320px;overflow-y:auto;">
-      <div class="tt-panel-loading" id="ttPanelLoading" style="display:none;">
-        <div class="spinner-border spinner-border-sm text-success" role="status"></div>
-        Loading results…
-      </div>
-      <div class="tt-panel-empty" id="ttPanelEmpty" style="display:none;">
-        <i class="bi bi-inbox" style="font-size:22px;display:block;margin-bottom:6px;"></i>
-        No locked evaluations found for this test.
-      </div>
-      <table class="tt-panel-table" id="ttPanelTable" style="display:none;">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Army No</th>
-            <th>Name</th>
-            <th>Batch</th>
-            <th style="text-align:center;">Score</th>
-            <th style="text-align:center;">%</th>
-            <th style="text-align:center;">Status</th>
-          </tr>
-        </thead>
-        <tbody id="ttPanelTableBody"></tbody>
-      </table>
     </div>
   </div>
 </div>
 
-<!-- Pie Panel — right col, spans rows 1–3 -->
+
 <div class="pie-panel">
   <div class="chart-box">
     <div class="chart-title">
@@ -741,7 +943,60 @@
   </div>
 </div>
 
-<!-- Modal -->
+<!-- Evaluated Agniveers Modal -->
+<div class="modal fade custom-modal" id="evaluatedModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+      <div class="modal-header d-flex justify-content-between align-items-center w-100">
+        <h5 class="modal-title" style="color:#D4A017;">
+          <i class="bi bi-people-fill me-2"></i>ALL EVALUATED AGNIVEERS
+        </h5>
+        <div class="d-flex align-items-center gap-2">
+          {% if dept == 'C' %}
+            <a id="evalDownloadBtnFinal"
+               href="{% url 'reports:export_dashboard_excel' %}?dept=C&sub_dept={{ sub_dept }}&status=evaluated&format=final"
+               class="btn btn-sm"
+               style="background:#1B4332;color:#52B788;border:1px solid #52B788;font-size:11px;font-weight:700;">
+              <i class="bi bi-file-earmark-excel"></i> CES Final (Excel)
+            </a>
+            <a id="evalDownloadBtnClerk"
+               href="{% url 'reports:export_dashboard_excel' %}?dept=C&sub_dept={{ sub_dept }}&status=evaluated&format=clerk"
+               class="btn btn-sm"
+               style="background:#1B4332;color:#52B788;border:1px solid #52B788;font-size:11px;font-weight:700;">
+              <i class="bi bi-file-earmark-excel"></i> CES Clerk (Excel)
+            </a>
+          {% else %}
+            <a id="evalDownloadBtn"
+               href="{% url 'reports:export_dashboard_excel' %}?dept={{ dept }}&sub_dept={{ sub_dept }}&status=evaluated"
+               class="btn btn-sm"
+               style="background:#1B4332;color:#52B788;border:1px solid #52B788;font-size:11px;font-weight:700;">
+              <i class="bi bi-file-earmark-excel"></i> Download Excel
+            </a>
+          {% endif %}
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+      </div>
+      <div class="modal-body" style="max-height:65vh;overflow-y:auto;">
+        <table class="modal-table" style="width:100%;">
+          <thead>
+            <tr>
+              <th style="width:40px">#</th>
+              <th>Army No</th>
+              <th>Name</th>
+              <th>Score</th>
+              <th>Percentage</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="evalModalTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Pass/Fail Modal -->
 <div class="modal fade custom-modal" id="agniveerModal" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
@@ -1197,6 +1452,46 @@
 
   window.openAgniveerModal = openAgniveerModal;
 
+  /* ── Evaluated Modal ─────────────────────────────────── */
+  let evalModalInstance = null;
+  const ALL_EVALUATED   = [...DATA.passedAgniveers, ...DATA.failedAgniveers]
+    .sort((a, b) => (a.enrollment || '').localeCompare(b.enrollment || ''));
+
+  window.openEvaluatedModal = function() {
+    const tbody = document.getElementById('evalModalTableBody');
+
+    tbody.innerHTML = ALL_EVALUATED.length
+      ? ALL_EVALUATED.map((a, i) => {
+          const isPass = a.is_pass !== undefined ? a.is_pass : (a.percentage >= 50);
+          const pct    = a.percentage || 0;
+          const statusBg    = isPass ? 'rgba(82,183,136,0.15)'  : 'rgba(239,83,80,0.12)';
+          const statusColor = isPass ? '#2E7D32'                : '#C62828';
+          const statusTxt   = isPass ? '✔ PASS'                 : '✘ FAIL';
+          const rowColor    = isPass ? '#52B788'                : '#EF5350';
+          return `
+            <tr>
+              <td style="color:var(--text-muted);font-size:10px;">${i + 1}</td>
+              <td><a href="/departments/agniveers/${a.id}/" style="color:${rowColor};text-decoration:none;font-weight:700">${a.enrollment}</a></td>
+              <td style="font-weight:600;">${a.name}</td>
+              <td style="font-family:'Rajdhani',monospace;font-weight:700;">${a.score}</td>
+              <td><span style="padding:2px 8px;border-radius:14px;font-size:10px;
+                background:${pct>=50?'rgba(82,183,136,0.14)':'rgba(239,83,80,0.12)'};
+                color:${pct>=50?'#2E7D32':'#C62828'};">${pct}%</span></td>
+              <td><span style="padding:2px 8px;border-radius:14px;font-size:10px;font-weight:700;
+                background:${statusBg};color:${statusColor};">${statusTxt}</span></td>
+              <td><a href="/departments/agniveers/${a.id}/" class="btn btn-sm"
+                style="background:${rowColor};color:white;border-radius:6px;padding:2px 9px;font-size:10px;">
+                <i class="bi bi-eye"></i> View</a></td>
+            </tr>`;
+        }).join('')
+      : '<tr><td colspan="7" class="text-center py-4" style="color:var(--text-muted)">No evaluated agniveers found</td></tr>';
+
+    if (!evalModalInstance) {
+      evalModalInstance = new bootstrap.Modal(document.getElementById('evaluatedModal'));
+    }
+    evalModalInstance.show();
+  };
+
   /* ── Test Tab Bar ────────────────────────────────────── */
   let activeTestType = null;
 
@@ -1294,6 +1589,38 @@
   }
 
   window.selectTestTab = selectTestTab;
+
+  /* ── Test Download Modal ─────────────────────────────── */
+  const DEPT_CODE = '{{ dept }}';
+  const SUB_DEPT  = '{{ sub_dept }}';
+  const EXPORT_URL = '{% url "reports:export_dashboard_excel" %}';
+
+  let tdlModalInstance = null;
+
+  window.openTestDownloadModal = function(testCode, testLabel) {
+    const base = `${EXPORT_URL}?dept=${DEPT_CODE}&sub_dept=${SUB_DEPT}&test_type=${testCode}`;
+
+    document.getElementById('tdlModalTitle').textContent = testLabel;
+    document.getElementById('tdlPassBtn').href  = base + '&status=pass';
+    document.getElementById('tdlFailBtn').href  = base + '&status=fail';
+    document.getElementById('tdlEvalBtn').href  = base + '&status=evaluated';
+
+    /* highlight the clicked pill */
+    document.querySelectorAll('.test-tab-pill').forEach(p => p.classList.remove('active'));
+    const pill = document.querySelector(`.test-tab-pill[data-tt-code="${testCode}"]`);
+    if (pill) pill.classList.add('active');
+
+    if (!tdlModalInstance) {
+      tdlModalInstance = new bootstrap.Modal(document.getElementById('testDownloadModal'));
+    }
+    tdlModalInstance.show();
+
+    /* de-highlight pill when modal closes */
+    document.getElementById('testDownloadModal')
+      .addEventListener('hidden.bs.modal', () => {
+        if (pill) pill.classList.remove('active');
+      }, { once: true });
+  };
 
   /* ── Theme listener ──────────────────────────────────── */
   window.addEventListener('themeChanged', buildAll);

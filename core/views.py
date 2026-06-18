@@ -71,15 +71,17 @@ def build_evaluated_result_lists(agniveers, valid_sheet_ids, departments):
             continue
 
         percentage = (total_marks / max_marks) * 100
+        passing_threshold = 40 if 'A' in departments and len(departments) == 1 else 50
+        is_pass = percentage >= passing_threshold
         info = {
             'name': agniveer.get_full_name(),
             'enrollment': agniveer.agniveer_no or agniveer.enrollment_number,
             'score': f"{total_marks:g}/{max_marks:g}",
             'percentage': round(percentage, 2),
-            'id': agniveer.pk
+            'id': agniveer.pk,
+            'is_pass': is_pass,
         }
-        passing_threshold = 40 if 'A' in departments and len(departments) == 1 else 50
-        if percentage >= passing_threshold:
+        if is_pass:
             passed_agniveers.append(info)
         else:
             failed_agniveers.append(info)
@@ -279,7 +281,7 @@ class CommanderDashboard(LoginRequiredMixin, View):
         passed_agniveers, failed_agniveers = build_evaluated_result_lists(
             all_agniveers_qs,
             None,
-            ['A', 'B', 'C', 'D'],
+            ['A'],
         )
 
         pass_count = len(passed_agniveers)
@@ -473,7 +475,7 @@ class GHeadDashboard(LoginRequiredMixin, View):
         passed_agniveers, failed_agniveers = build_evaluated_result_lists(
             all_agniveers_qs,
             None,
-            ['A', 'B', 'C', 'D'],
+            ['A'],
         )
 
         pass_count = len(passed_agniveers)
@@ -715,15 +717,17 @@ class DepartmentDashboard(LoginRequiredMixin, View):
                 percentage = round((score_40 / 40) * 100, 1)
 
             if raw_max > 0:
+                passing_threshold = 40 if dept == 'A' else (46 if dept == 'D' else 50)
+                is_passing = percentage >= passing_threshold
                 info = {
                     'name': agniveer.get_full_name(),
                     'enrollment': agniveer.agniveer_no or agniveer.enrollment_number,
                     'score': score_str,
                     'percentage': percentage,
-                    'id': agniveer.pk
+                    'id': agniveer.pk,
+                    'is_pass': is_passing,
                 }
-                passing_threshold = 40 if dept == 'A' else (46 if dept == 'D' else 50)
-                if percentage >= passing_threshold:
+                if is_passing:
                     passed_agniveers.append(info)
                 else:
                     failed_agniveers.append(info)
@@ -808,8 +812,17 @@ class DepartmentDashboard(LoginRequiredMixin, View):
             comp_str = f" {user.company}" if hasattr(user, 'company') and user.company else ""
             dept_name = f"{dept_name}{comp_str} {user.platoon}"
 
+        # Determine sub_dept key for scoped Excel downloads
+        if dept == 'A':
+            sub_dept = user.battalion_unit if user.battalion_unit else 'all'
+        elif dept == 'B':
+            sub_dept = user.tts_trade if user.tts_trade else 'all'
+        else:
+            sub_dept = 'all'
+
         context = {
             'dept': dept,
+            'sub_dept': sub_dept,
             'dept_name': dept_name,
             'total_agniveers': all_agniveers.count(),
             'total_trainers': trainers.count(),
@@ -832,8 +845,11 @@ class DepartmentDashboard(LoginRequiredMixin, View):
             'month_counts': json.dumps(month_counts),
             'month_pass': json.dumps(month_pass),
         }
-        # Add available test types for the department so UI can render quick-test buttons
-        context['test_types'] = get_all_test_types_for_dept(dept)
+        # Add test types scoped to the specific user's sub-department
+        # (e.g. DMV users only see DMV tests, OPEM only OPEM, Battalion only Battalion tests)
+        from evaluation.constants import get_dept_config
+        user_config = get_dept_config(dept, user)
+        context['test_types'] = user_config.get('test_types', [])
         return render(request, 'core/department_dashboard_advanced.html', context)
 
 

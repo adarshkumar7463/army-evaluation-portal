@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" data-bs-theme="dark">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
@@ -115,11 +116,18 @@
       color: #2dea2a;
     }
 
-    /* Clerk Head Theme */
+    /* CTS/Clerk Head Theme */
     .portal-option-btn[data-portal="dephead_d"].active {
       background: linear-gradient(135deg, rgba(156, 39, 176, 0.25), rgba(106, 27, 154, 0.3));
       border-color: #5e016e;
       color: #db9ce7;
+    }
+
+    /* Registration Clerk Theme */
+    .portal-option-btn[data-portal="register_clerk"].active {
+      background: linear-gradient(135deg, rgba(255, 167, 38, 0.25), rgba(230, 81, 0, 0.3));
+      border-color: #FFA726;
+      color: #FFA726;
     }
 
     /* Main Content Area - Split Screen */
@@ -221,10 +229,11 @@
       padding: 40px;
       border-left: 1px solid rgba(255, 255, 255, 0.08);
       position: relative;
+      overflow-y: auto;
     }
 
     .form-header {
-      margin-bottom: 30px;
+      margin-bottom: 24px;
     }
 
     .portal-icon {
@@ -248,12 +257,13 @@
       font-size: 28px;
       font-weight: 700;
       color: white;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
     }
 
     .form-subtitle {
       font-size: 12px;
       color: rgba(255, 255, 255, 0.5);
+      line-height: 1.5;
     }
 
     .form-group {
@@ -337,6 +347,36 @@
       transform: none;
     }
 
+    /* Theme-specific button styles */
+    .btn-login.commander-theme {
+      background: linear-gradient(135deg, #4E342E, #5D4037);
+    }
+
+    .btn-login.ghead-theme {
+      background: linear-gradient(135deg, #0D47A1, #1565C0);
+    }
+
+    .btn-login.battalion-theme {
+      background: linear-gradient(135deg, #311B92, #4527A0);
+    }
+
+    .btn-login.tts-theme {
+      background: linear-gradient(135deg, #004D40, #00695C);
+    }
+
+    .btn-login.ces-theme {
+      background: linear-gradient(135deg, #1B5E20, #2E7D32);
+    }
+
+    .btn-login.cts-theme {
+      background: linear-gradient(135deg, #6A1B9A, #9C27B0);
+    }
+
+    .btn-login.register-clerk-theme {
+      background: linear-gradient(135deg, #E65100, #F57C00);
+    }
+
+    /* Django messages */
     .alert-custom {
       background: rgba(239, 83, 80, 0.1);
       border: 1px solid rgba(239, 83, 80, 0.3);
@@ -344,28 +384,22 @@
       color: #EF5350;
       padding: 12px 16px;
       font-size: 12px;
-      margin-bottom: 20px;
+      margin-bottom: 16px;
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       gap: 10px;
+      line-height: 1.5;
     }
 
-    .security-info {
-      margin-top: 30px;
-      padding-top: 20px;
-      border-top: 1px solid rgba(255, 255, 255, 0.08);
-      text-align: center;
+    .alert-custom i {
+      flex-shrink: 0;
+      margin-top: 1px;
     }
 
-    .security-info p {
-      font-size: 10px;
-      color: rgba(255, 255, 255, 0.35);
-      margin: 0;
-    }
-
-    .security-info i {
+    .alert-success {
+      background: rgba(82, 183, 136, 0.1);
+      border: 1px solid rgba(82, 183, 136, 0.3);
       color: #52B788;
-      margin-right: 4px;
     }
 
     /* Selection Required Message */
@@ -382,24 +416,22 @@
       gap: 10px;
     }
 
-    /* Theme-specific button styles */
-    .btn-login.commander-theme {
-      background: linear-gradient(135deg, #4E342E, #5D4037);
+    .security-info {
+      margin-top: 24px;
+      padding-top: 16px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      text-align: center;
     }
-    .btn-login.ghead-theme {
-      background: linear-gradient(135deg, #0D47A1, #1565C0);
+
+    .security-info p {
+      font-size: 10px;
+      color: rgba(255, 255, 255, 0.35);
+      margin: 0;
     }
-    .btn-login.battalion-theme {
-      background: linear-gradient(135deg, #311B92, #4527A0);
-    }
-    .btn-login.tts-theme {
-      background: linear-gradient(135deg, #004D40, #00695C);
-    }
-    .btn-login.cs-theme {
-      background: linear-gradient(135deg, #B8860B, #D4A017);
-    }
-    .btn-login.clerk-theme {
-      background: linear-gradient(135deg, #6A1B9A, #9C27B0);
+
+    .security-info i {
+      color: #52B788;
+      margin-right: 4px;
     }
 
     /* Responsive */
@@ -407,12 +439,15 @@
       .login-info-section {
         display: none;
       }
+
       .login-form-section {
         width: 100%;
       }
+
       .portal-buttons-wrapper {
         gap: 8px;
       }
+
       .portal-option-btn {
         padding: 6px 14px;
         font-size: 11px;
@@ -424,249 +459,292 @@
         padding: 5px 10px;
         font-size: 10px;
       }
+
       .login-form-section {
         padding: 30px 20px;
       }
     }
   </style>
 </head>
+
 <body>
 
-<div class="login-container">
-  <!-- Top Bar - Horizontal Portal Options (Full Width) -->
-  <div class="portal-top-bar">
-    <div class="portal-buttons-wrapper">
-      <button class="portal-option-btn" data-portal="commander">
-        <i class="bi bi-star-fill"></i> Commander
-      </button>
-      <button class="portal-option-btn" data-portal="ghead">
-        <i class="bi bi-briefcase-fill"></i> G-Head
-      </button>
-      <button class="portal-option-btn" data-portal="dephead_a">
-        <i class="bi bi-shield"></i> Battalion Head
-      </button>
-      <button class="portal-option-btn" data-portal="dephead_b">
-        <i class="bi bi-tools"></i> TTS Head
-      </button>
-      <button class="portal-option-btn" data-portal="dephead_c">
-        <i class="bi bi-wifi"></i> CS Head
-      </button>
-      <button class="portal-option-btn" data-portal="dephead_d">
-        <i class="bi bi-file-text"></i> Clerk Head
-      </button>
-    </div>
-  </div>
-
-  <!-- Main Content Area -->
-  <div class="login-main-content">
-    <!-- Left Side - Info Section -->
-    <div class="login-info-section">
-      <div class="info-content">
-        <h1>G-Head Evaluation Portal</h1>
-        <p>Army Management System - Complete evaluation and performance tracking solution for Agniveers</p>
-        <div class="feature-list">
-          <div class="feature-item">
-            <i class="bi bi-shield-fill-check"></i>
-            <span>Role-Based Access Control with complete data isolation</span>
-          </div>
-          <div class="feature-item">
-            <i class="bi bi-clipboard2-check-fill"></i>
-            <span>Multi-evaluator marking system for accurate assessment</span>
-          </div>
-          <div class="feature-item">
-            <i class="bi bi-bar-chart-fill"></i>
-            <span>Real-time analytics and performance dashboards</span>
-          </div>
-          <div class="feature-item">
-            <i class="bi bi-file-earmark-pdf-fill"></i>
-            <span>PDF & Excel report generation and exports</span>
-          </div>
-        </div>
+  <div class="login-container">
+    <!-- Top Bar - Horizontal Portal Options (Full Width) -->
+    <div class="portal-top-bar">
+      <div class="portal-buttons-wrapper">
+        <button class="portal-option-btn" data-portal="commander" id="btn-commander">
+          <i class="bi bi-star-fill"></i> Commander
+        </button>
+        <button class="portal-option-btn" data-portal="ghead" id="btn-ghead">
+          <i class="bi bi-briefcase-fill"></i> G-Head
+        </button>
+        <button class="portal-option-btn" data-portal="dephead_a" id="btn-dephead_a">
+          <i class="bi bi-shield"></i> Battalion
+        </button>
+        <button class="portal-option-btn" data-portal="dephead_b" id="btn-dephead_b">
+          <i class="bi bi-tools"></i> TTS
+        </button>
+        <button class="portal-option-btn" data-portal="dephead_c" id="btn-dephead_c">
+          <i class="bi bi-wifi"></i> CES
+        </button>
+        <button class="portal-option-btn" data-portal="dephead_d" id="btn-dephead_d">
+          <i class="bi bi-file-text"></i> CTS
+        </button>
+        <button class="portal-option-btn" data-portal="register_clerk" id="btn-register_clerk">
+          <i class="bi bi-person-badge"></i> Registration Clerk
+        </button>
       </div>
     </div>
 
-    <!-- Right Side - Login Form -->
-    <div class="login-form-section" id="loginFormSection">
-      <div class="form-header">
-        <div class="portal-icon" id="portalIcon">
-          <i class="bi bi-shield-lock-fill"></i>
+    <!-- Main Content Area -->
+    <div class="login-main-content">
+      <!-- Left Side - Info Section -->
+      <div class="login-info-section">
+        <div class="info-content">
+          <h1>G-Branch Evaluation Portal</h1>
+          <p>Army Management System - Complete evaluation and performance tracking solution for Agniveers</p>
+          <div class="feature-list">
+            <div class="feature-item">
+              <i class="bi bi-shield-fill-check"></i>
+              <span>Role-Based Access Control with complete data isolation</span>
+            </div>
+            <div class="feature-item">
+              <i class="bi bi-clipboard2-check-fill"></i>
+              <span>Multi-evaluator marking system for accurate assessment</span>
+            </div>
+            <div class="feature-item">
+              <i class="bi bi-bar-chart-fill"></i>
+              <span>Real-time analytics and performance dashboards</span>
+            </div>
+            <div class="feature-item">
+              <i class="bi bi-file-earmark-pdf-fill"></i>
+              <span>PDF &amp; Excel report generation and exports</span>
+            </div>
+          </div>
         </div>
-        <div class="form-title" id="formTitle">Select a Portal</div>
-        <div class="form-subtitle" id="formSubtitle">Please select your role from the top menu to continue</div>
       </div>
 
-      <div id="selectionRequiredMsg" class="selection-required">
-        <i class="bi bi-info-circle-fill"></i>
-        Please select a portal (Commander, G-Head, or Department Head) to login
-      </div>
-
-      <div id="loginFormContainer" style="display: none;">
-        <form method="post" action="{% url 'accounts:login' %}" autocomplete="off" id="loginForm">
-          {% csrf_token %}
-          <input type="hidden" name="portal_type" id="portalTypeInput" value="">
-
-          <div class="form-group">
-            <label class="form-label">Service Number / Username</label>
-            <div class="input-group-custom">
-              <i class="bi bi-person-fill input-icon"></i>
-              <input type="text" name="username" class="form-control-custom" placeholder="Enter service number" id="usernameInput" />
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">Password</label>
-            <div class="input-group-custom">
-              <i class="bi bi-lock-fill input-icon"></i>
-              <input type="password" name="password" class="form-control-custom" placeholder="Enter password" id="passwordInput" />
-            </div>
-          </div>
-
-          <button type="submit" class="btn-login" id="loginBtn">
-            <i class="bi bi-box-arrow-in-right"></i> ACCESS PORTAL
-          </button>
-        </form>
-
-        <div class="security-info">
-          <p>
+      <!-- Right Side - Login Form -->
+      <div class="login-form-section" id="loginFormSection">
+        <div class="form-header">
+          <div class="portal-icon" id="portalIcon">
             <i class="bi bi-shield-lock-fill"></i>
-            Secured with 256-bit encryption · Session-based authentication<br>
-            Unauthorized access is monitored
-          </p>
+          </div>
+          <div class="form-title" id="formTitle">Select a Portal</div>
+          <div class="form-subtitle" id="formSubtitle">Please select your role from the top menu to continue</div>
+        </div>
+
+        <!-- Django Messages (errors / success from backend) -->
+        {% if messages %}
+        {% for message in messages %}
+        <div class="alert-custom {% if message.tags == 'success' %}alert-success{% endif %}">
+          <i
+            class="bi {% if message.tags == 'success' %}bi-check-circle-fill{% else %}bi-exclamation-triangle-fill{% endif %}"></i>
+          <span>{{ message }}</span>
+        </div>
+        {% endfor %}
+        {% endif %}
+
+        <div id="selectionRequiredMsg" class="selection-required" style="display:none;">
+          <i class="bi bi-info-circle-fill"></i>
+          Please select your portal from the top menu to login
+        </div>
+
+        <div id="loginFormContainer" style="display: none;">
+          <form method="post" action="{% url 'accounts:login' %}" autocomplete="off" id="loginForm">
+            {% csrf_token %}
+            <input type="hidden" name="portal_type" id="portalTypeInput" value="">
+
+            <div class="form-group">
+              <label class="form-label">Username</label>
+              <div class="input-group-custom">
+                <i class="bi bi-person-fill input-icon"></i>
+                <input type="text" name="username" class="form-control-custom" placeholder="Enter username"
+                  id="usernameInput" />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Password</label>
+              <div class="input-group-custom">
+                <i class="bi bi-lock-fill input-icon"></i>
+                <input type="password" name="password" class="form-control-custom" placeholder="Enter password"
+                  id="passwordInput" />
+              </div>
+            </div>
+
+            <button type="submit" class="btn-login" id="loginBtn">
+              <i class="bi bi-box-arrow-in-right"></i> ACCESS PORTAL
+            </button>
+          </form>
+
+          <div class="security-info">
+            <p>
+              <i class="bi bi-shield-lock-fill"></i>
+              Secured with 256-bit encryption · Session-based authentication<br>
+              Unauthorized access is monitored
+            </p>
+          </div>
         </div>
       </div>
     </div>
   </div>
-</div>
 
-<!-- Local Bootstrap JS -->
-<script src="/static/js/bootstrap.bundle.min.js"></script>
-<script src="/static/js/portal-ui.js"></script>
-<script>
-  document.addEventListener('DOMContentLoaded', function() {
-    // Portal selection elements
-    const portalBtns = document.querySelectorAll('.portal-option-btn');
-    const portalTypeInput = document.getElementById('portalTypeInput');
-    const formTitle = document.getElementById('formTitle');
-    const formSubtitle = document.getElementById('formSubtitle');
-    const portalIcon = document.getElementById('portalIcon');
-    const loginFormContainer = document.getElementById('loginFormContainer');
-    const selectionRequiredMsg = document.getElementById('selectionRequiredMsg');
-    const loginBtn = document.getElementById('loginBtn');
-    const usernameInput = document.getElementById('usernameInput');
-    const passwordInput = document.getElementById('passwordInput');
-    
-    let selectedPortal = null;
-    
-    // Theme configurations for each portal
-    const portalThemes = {
-      commander: {
-        title: 'Commander Login',
-        subtitle: 'Enter your credentials to access the Commander Portal',
-        icon: 'bi-star-fill',
-        iconColor: '#FFCA28',
-        btnClass: 'commander-theme',
-        badgeColor: '#FFCA28'
-      },
-      ghead: {
-        title: 'G-Head Login',
-        subtitle: 'Enter your credentials to access the G-Head Portal',
-        icon: 'bi-briefcase-fill',
-        iconColor: '#64B5F6',
-        btnClass: 'ghead-theme',
-        badgeColor: '#64B5F6'
-      },
-      dephead_a: {
-        title: 'Battalion Head Login',
-        subtitle: 'Enter your credentials to access the Battalion Head Portal',
-        icon: 'bi-shield',
-        iconColor: '#B39DDB',
-        btnClass: 'battalion-theme',
-        badgeColor: '#B39DDB'
-      },
-      dephead_b: {
-        title: 'TTS Head Login',
-        subtitle: 'Enter your credentials to access the TTS Head Portal',
-        icon: 'bi-tools',
-        iconColor: '#4FC3F7',
-        btnClass: 'tts-theme',
-        badgeColor: '#4FC3F7'
-      },
-      dephead_c: {
-        title: 'CS Head Login',
-        subtitle: 'Enter your credentials to access the CS Head Portal',
-        icon: 'bi-wifi',
-        iconColor: '#D4A017',
-        btnClass: 'cs-theme',
-        badgeColor: '#D4A017'
-      },
-      dephead_d: {
-        title: 'Clerk Head Login',
-        subtitle: 'Enter your credentials to access the Clerk Head Portal',
-        icon: 'bi-file-text',
-        iconColor: '#9C27B0',
-        btnClass: 'clerk-theme',
-        badgeColor: '#9C27B0'
+  <!-- Local Bootstrap JS -->
+  <script src="/static/js/bootstrap.bundle.min.js"></script>
+  <script src="/static/js/portal-ui.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const portalBtns = document.querySelectorAll('.portal-option-btn');
+      const portalTypeInput = document.getElementById('portalTypeInput');
+      const formTitle = document.getElementById('formTitle');
+      const formSubtitle = document.getElementById('formSubtitle');
+      const portalIcon = document.getElementById('portalIcon');
+      const loginFormContainer = document.getElementById('loginFormContainer');
+      const selectionRequiredMsg = document.getElementById('selectionRequiredMsg');
+      const loginBtn = document.getElementById('loginBtn');
+      const usernameInput = document.getElementById('usernameInput');
+      const passwordInput = document.getElementById('passwordInput');
+
+      let selectedPortal = null;
+
+      // Portal configuration — each portal defines exactly who can use it
+      const portalThemes = {
+        commander: {
+          title: 'Commander Login',
+          subtitle: 'Restricted to: Commander only',
+          icon: 'bi-star-fill',
+          iconColor: '#f72606',
+          iconBg: 'rgba(247, 38, 6, 0.15)',
+          btnClass: 'commander-theme',
+        },
+        ghead: {
+          title: 'G-Head Login',
+          subtitle: 'Restricted to: G Department Head only',
+          icon: 'bi-briefcase-fill',
+          iconColor: '#64B5F6',
+          iconBg: 'rgba(100, 181, 246, 0.15)',
+          btnClass: 'ghead-theme',
+        },
+        dephead_a: {
+          title: 'Battalion Portal Login',
+          subtitle: 'Restricted to: Battalion Head · 1TB · 2TB · STB (all platoon levels)',
+          icon: 'bi-shield',
+          iconColor: '#B39DDB',
+          iconBg: 'rgba(179, 157, 219, 0.15)',
+          btnClass: 'battalion-theme',
+        },
+        dephead_b: {
+          title: 'TTS Portal Login',
+          subtitle: 'Restricted to: TTS Head · OPEM · DMV · Other Trades (all TTS levels)',
+          icon: 'bi-tools',
+          iconColor: '#4FC3F7',
+          iconBg: 'rgba(79, 195, 247, 0.15)',
+          btnClass: 'tts-theme',
+        },
+        dephead_c: {
+          title: 'CES Portal Login',
+          subtitle: 'Restricted to: CES / CS Head and CES department users',
+          icon: 'bi-wifi',
+          iconColor: '#2dea2a',
+          iconBg: 'rgba(45, 234, 42, 0.12)',
+          btnClass: 'ces-theme',
+        },
+        dephead_d: {
+          title: 'CTS Portal Login',
+          subtitle: 'Restricted to: CTS / Clerk Head and CTS department users',
+          icon: 'bi-file-text',
+          iconColor: '#db9ce7',
+          iconBg: 'rgba(219, 156, 231, 0.15)',
+          btnClass: 'cts-theme',
+        },
+        register_clerk: {
+          title: 'Registration Clerk Login',
+          subtitle: 'Restricted to: Registration Office / Registration Clerk users',
+          icon: 'bi-person-badge',
+          iconColor: '#FFA726',
+          iconBg: 'rgba(255, 167, 38, 0.15)',
+          btnClass: 'register-clerk-theme',
+        },
+      };
+
+      function updatePortalTheme(portalType) {
+        const theme = portalThemes[portalType];
+        if (!theme) return;
+
+        // Update form header
+        formTitle.textContent = theme.title;
+        formSubtitle.textContent = theme.subtitle;
+        portalIcon.style.background = theme.iconBg;
+        portalIcon.innerHTML = `<i class="bi ${theme.icon}" style="color: ${theme.iconColor}; font-size: 32px;"></i>`;
+
+        // Update login button class
+        loginBtn.className = 'btn-login ' + theme.btnClass;
+
+        // Update active state on top buttons
+        portalBtns.forEach(btn => {
+          btn.classList.remove('active');
+          if (btn.getAttribute('data-portal') === portalType) {
+            btn.classList.add('active');
+          }
+        });
+
+        // Set hidden input value
+        portalTypeInput.value = portalType;
+
+        // Enable form & show it
+        usernameInput.disabled = false;
+        passwordInput.disabled = false;
+        loginBtn.disabled = false;
+        loginFormContainer.style.display = 'block';
+        selectionRequiredMsg.style.display = 'none';
+
+        selectedPortal = portalType;
       }
-    };
-    
-    function updatePortalTheme(portalType) {
-      const theme = portalThemes[portalType];
-      if (!theme) return;
-      
-      // Update form UI
-      formTitle.textContent = theme.title;
-      formSubtitle.textContent = theme.subtitle;
-      portalIcon.innerHTML = `<i class="bi ${theme.icon}" style="color: ${theme.iconColor}; font-size: 32px;"></i>`;
-      
-      // Update button class
-      loginBtn.className = 'btn-login ' + theme.btnClass;
-      
-      // Update active state on buttons
+
+      // Clear alert messages when clicking any portal buttons or focusing on credentials fields
+      function clearMessages() {
+        document.querySelectorAll('.alert-custom, .alert, .messages').forEach(el => el.remove());
+      }
+
+      // Handle portal button clicks
       portalBtns.forEach(btn => {
-        btn.classList.remove('active');
-        if (btn.getAttribute('data-portal') === portalType) {
-          btn.classList.add('active');
+        btn.addEventListener('click', function () {
+          const portalType = this.getAttribute('data-portal');
+          clearMessages();
+          updatePortalTheme(portalType);
+        });
+      });
+
+      usernameInput.addEventListener('focus', clearMessages);
+      passwordInput.addEventListener('focus', clearMessages);
+
+      // Form validation — prevent submission if no portal selected
+      const loginForm = document.getElementById('loginForm');
+      loginForm.addEventListener('submit', function (e) {
+        if (!selectedPortal) {
+          e.preventDefault();
+          selectionRequiredMsg.style.display = 'flex';
+          loginFormContainer.style.display = 'none';
+          return false;
         }
       });
-      
-      // Update portal type input
-      portalTypeInput.value = portalType;
-      
-      // Enable form fields
-      usernameInput.disabled = false;
-      passwordInput.disabled = false;
-      loginBtn.disabled = false;
-      
-      // Show form, hide selection message
-      loginFormContainer.style.display = 'block';
-      selectionRequiredMsg.style.display = 'none';
-    }
-    
-    // Handle portal button clicks
-    portalBtns.forEach(btn => {
-      btn.addEventListener('click', function() {
-        const portalType = this.getAttribute('data-portal');
-        selectedPortal = portalType;
-        updatePortalTheme(portalType);
-      });
-    });
-    
-    // Form validation - prevent submission if no portal selected
-    const loginForm = document.getElementById('loginForm');
-    loginForm.addEventListener('submit', function(e) {
-      if (!selectedPortal) {
-        e.preventDefault();
+
+      // ── Restore portal state after a failed login (Django re-renders page) ──
+      // Django passes `selected_portal` from the view on validation failures
+      const djangoPortal = "{{ selected_portal|default:'' }}";
+      if (djangoPortal && portalThemes[djangoPortal]) {
+        updatePortalTheme(djangoPortal);
+      } else {
+        // No portal pre-selected — show selection prompt
+        usernameInput.disabled = true;
+        passwordInput.disabled = true;
+        loginBtn.disabled = true;
         selectionRequiredMsg.style.display = 'flex';
-        loginFormContainer.style.display = 'none';
-        return false;
       }
     });
-    
-    // Enable inputs when portal is selected (initially disabled)
-    usernameInput.disabled = true;
-    passwordInput.disabled = true;
-    loginBtn.disabled = true;
-  });
-</script>
+  </script>
 </body>
+
 </html>

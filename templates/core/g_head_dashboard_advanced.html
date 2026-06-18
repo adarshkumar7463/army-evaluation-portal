@@ -915,44 +915,70 @@
 
 <!-- Evaluated Modal -->
 <div class="modal fade custom-modal" id="evaluatedModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content">
       <div class="modal-header d-flex justify-content-between align-items-center w-100">
         <h5 class="modal-title" style="color:var(--army-olive);">
           <i class="bi bi-card-checklist me-2"></i>EVALUATED AGNIVEERS
         </h5>
         <div class="d-flex align-items-center gap-2">
+          <a id="evalDownloadBtn"
+             href="{% url 'reports:export_dashboard_excel' %}?status=evaluated"
+             class="btn btn-sm"
+             style="background:#1B4332;color:#52B788;border:1px solid #52B788;font-size:11px;font-weight:700;">
+            <i class="bi bi-file-earmark-excel"></i> Download Excel
+          </a>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
       </div>
-      <div class="modal-body">
-        <table class="modal-table">
+      <div class="modal-body" style="max-height:65vh;overflow-y:auto;">
+        <table class="modal-table" style="width:100%;">
           <thead>
             <tr>
-              <th>Agniveer No</th><th>Name</th>
+              <th style="width:40px">#</th>
+              <th>Army No</th>
+              <th>Name</th>
               <th class="text-center">Score</th>
               <th class="text-center">Percentage</th>
+              <th class="text-center">Status</th>
               <th class="text-center">Action</th>
             </tr>
           </thead>
           <tbody>
             {% for ag in evaluated_agniveers_list %}
             <tr>
-              <td><a href="{% url 'departments:agniveer_detail' ag.id %}" style="color:var(--army-olive);text-decoration:none;font-weight:600;">{{ ag.enrollment }}</a></td>
-              <td>{{ ag.name }}</td>
-              <td class="text-center">{{ ag.score }}</td>
+              <td style="color:var(--text-muted);font-size:10px;">{{ forloop.counter }}</td>
+              <td>
+                <a href="{% url 'departments:agniveer_detail' ag.id %}"
+                   style="color:{% if ag.is_pass %}#52B788{% else %}#EF5350{% endif %};text-decoration:none;font-weight:700;">
+                  {{ ag.enrollment }}
+                </a>
+              </td>
+              <td style="font-weight:600;">{{ ag.name }}</td>
+              <td class="text-center" style="font-family:'Rajdhani',monospace;font-weight:700;">{{ ag.score }}</td>
               <td class="text-center">
-                <span style="padding:3px 10px;border-radius:20px;font-size:10px;background:rgba(82,183,136,0.15);color:#52B788;">{{ ag.percentage }}%</span>
+                <span style="padding:2px 8px;border-radius:14px;font-size:10px;
+                  background:{% if ag.is_pass %}rgba(82,183,136,0.14){% else %}rgba(239,83,80,0.12){% endif %};
+                  color:{% if ag.is_pass %}#2E7D32{% else %}#C62828{% endif %};">
+                  {{ ag.percentage }}%
+                </span>
+              </td>
+              <td class="text-center">
+                <span style="padding:2px 8px;border-radius:14px;font-size:10px;font-weight:700;
+                  background:{% if ag.is_pass %}rgba(82,183,136,0.15){% else %}rgba(239,83,80,0.12){% endif %};
+                  color:{% if ag.is_pass %}#2E7D32{% else %}#C62828{% endif %};">
+                  {% if ag.is_pass %}✔ PASS{% else %}✘ FAIL{% endif %}
+                </span>
               </td>
               <td class="text-center">
                 <a href="{% url 'departments:agniveer_detail' ag.id %}" class="btn btn-sm"
-                   style="background:var(--army-green);color:white;border-radius:6px;padding:3px 10px;font-size:10px;">
+                   style="background:{% if ag.is_pass %}#52B788{% else %}#EF5350{% endif %};color:white;border-radius:6px;padding:2px 9px;font-size:10px;">
                   <i class="bi bi-eye"></i> View
                 </a>
               </td>
             </tr>
             {% empty %}
-            <tr><td colspan="5" class="text-center py-4" style="color:var(--text-muted)">No records found</td></tr>
+            <tr><td colspan="7" class="text-center py-4" style="color:var(--text-muted)">No evaluated agniveers found</td></tr>
             {% endfor %}
           </tbody>
         </table>
