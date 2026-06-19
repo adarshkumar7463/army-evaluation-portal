@@ -7,6 +7,12 @@
 {% block page_subtitle %}Manage individual and bulk Agniveer registrations{% endblock %}
 {% block body_class %}portal-standard-page portal-ops-page{% endblock %}
 
+{% block header_actions %}
+<a href="{% url 'reports:export_registration_pptx' %}" class="btn btn-army d-flex align-items-center gap-2" style="padding: 6px 14px; font-weight: 600; font-size:11px;">
+  <i class="bi bi-file-earmark-ppt-fill fs-6"></i> Download Presentation (PPTX)
+</a>
+{% endblock %}
+
 {% block extra_css %}
 <style>
     .portal-standard-page .sidebar {

@@ -2745,3 +2745,405 @@ class ExportDepartmentPDFView(AnyStaffMixin, View):
 
         log_action(request.user, 'EXPORT', f'Exported Department {dept} PDF', request)
         return FileResponse(buffer, as_attachment=True, filename=f"dept_{dept}_summary.pdf")
+
+
+# ── PowerPoint Dashboard Export Views ─────────────────────────────────────────
+
+class ExportCommanderDashboardPPTXView(CommanderOrGHeadMixin, View):
+    def get(self, request):
+        import io
+        from datetime import timedelta
+        from django.utils import timezone
+        from core.views import (
+            build_evaluated_result_lists, 
+            build_department_result_stats,
+            DEPARTMENT_NAMES
+        )
+        from reports.pptx_generators import generate_commander_pptx
+
+        # Key stats
+        total_agniveers = Agniveer.objects.count()
+        total_trainers = CustomUser.objects.filter(
+            role__in=['trainer_nco', 'trainer_jco', 'trainer_officer']
+        ).count()
+        
+        from evaluation.result_helpers import is_sheet_evaluated
+        all_sheets = EvaluationSheet.objects.all().prefetch_related('marks')
+        all_agniveers_qs = Agniveer.objects.prefetch_related('evaluations__marks')
+        
+        passed_agniveers, failed_agniveers = build_evaluated_result_lists(
+            all_agniveers_qs,
+            None,
+            ['A'],
+        )
+        
+        pass_count = len(passed_agniveers)
+        fail_count = len(failed_agniveers)
+        evaluated_agniveers = pass_count + fail_count
+        evaluated_sheets_count = sum(1 for s in all_sheets if is_sheet_evaluated(s))
+        completion_rate = (evaluated_sheets_count / max(total_agniveers * 28, 1)) * 100 if total_agniveers > 0 else 0
+        pass_rate = (pass_count / max(evaluated_agniveers, 1)) * 100
+        
+        # Dept breakdown
+        dept_labels = []
+        dept_passed = []
+        dept_failed = []
+        for dept in ['A', 'B', 'C', 'D']:
+            dept_sheets = all_sheets.filter(department=dept)
+            dept_agniveers = Agniveer.objects.filter(evaluations__department=dept).distinct()
+            stats = build_department_result_stats(dept, dept_sheets, dept_agniveers)
+            dept_labels.append(DEPARTMENT_NAMES.get(dept, dept))
+            dept_passed.append(stats['passed'])
+            dept_failed.append(stats['failed'])
+            
+        # Monthly trend
+        months = []
+        month_counts = []
+        month_pass = []
+        for i in range(5, -1, -1):
+            month_date = timezone.now() - timedelta(days=30 * i)
+            month_sheets = all_sheets.filter(
+                evaluation_date__year=month_date.year,
+                evaluation_date__month=month_date.month
+            )
+            sheets_count = month_sheets.count()
+            sheets_pass = sum(1 for s in month_sheets if s.is_pass())
+            months.append(month_date.strftime('%b'))
+            month_counts.append(sheets_count)
+            month_pass.append(sheets_pass)
+            
+        # Top performers
+        top_agniveers = []
+        for agniveer in all_agniveers_qs[:20]:
+            valid_sheets = [s for s in agniveer.evaluations.all() if is_sheet_evaluated(s)]
+            if not valid_sheets:
+                continue
+            total_marks = sum(s.get_total_marks() for s in valid_sheets)
+            max_marks = sum(s.get_max_marks() for s in valid_sheets)
+            if max_marks > 0:
+                percentage = (total_marks / max_marks) * 100
+                top_agniveers.append({
+                    'name': agniveer.get_full_name(),
+                    'enrollment': agniveer.agniveer_no or agniveer.enrollment_number,
+                    'percentage': round(percentage, 1)
+                })
+        top_agniveers = sorted(top_agniveers, key=lambda x: x['percentage'], reverse=True)
+
+        data = {
+            'total_agniveers': total_agniveers,
+            'evaluated_agniveers': evaluated_agniveers,
+            'pass_count': pass_count,
+            'fail_count': fail_count,
+            'pass_rate': round(pass_rate, 1),
+            'completion_rate': round(completion_rate, 1),
+            'dept_labels': dept_labels,
+            'dept_passed': dept_passed,
+            'dept_failed': dept_failed,
+            'months_labels': months,
+            'month_counts': month_counts,
+            'month_pass': month_pass,
+            'top_agniveers': top_agniveers,
+        }
+        
+        prs = generate_commander_pptx(data)
+        buffer = io.BytesIO()
+        prs.save(buffer)
+        buffer.seek(0)
+        
+        log_action(request.user, 'EXPORT', 'Exported Commander Dashboard PPTX', request)
+        return FileResponse(
+            buffer, 
+            as_attachment=True, 
+            filename="commander_dashboard_review.pptx",
+            content_type="application/vnd.openxmlformats-officedocument.presentationml.presentation"
+        )
+
+
+class ExportGHeadDashboardPPTXView(CommanderOrGHeadMixin, View):
+    def get(self, request):
+        import io
+        from datetime import timedelta
+        from django.utils import timezone
+        from core.views import (
+            build_evaluated_result_lists, 
+            build_department_result_stats,
+            DEPARTMENT_NAMES
+        )
+        from reports.pptx_generators import generate_ghead_pptx
+
+        # Key stats
+        total_agniveers = Agniveer.objects.count()
+        total_trainers = CustomUser.objects.filter(
+            role__in=['trainer_nco', 'trainer_jco', 'trainer_officer']
+        ).count()
+        
+        from evaluation.result_helpers import is_sheet_evaluated
+        all_sheets = EvaluationSheet.objects.all().prefetch_related('marks')
+        all_agniveers_qs = Agniveer.objects.prefetch_related('evaluations__marks')
+        
+        passed_agniveers, failed_agniveers = build_evaluated_result_lists(
+            all_agniveers_qs,
+            None,
+            ['A'],
+        )
+        
+        pass_count = len(passed_agniveers)
+        fail_count = len(failed_agniveers)
+        evaluated_agniveers = pass_count + fail_count
+        evaluated_sheets_count = sum(1 for s in all_sheets if is_sheet_evaluated(s))
+        completion_rate = (evaluated_sheets_count / max(total_agniveers * 28, 1)) * 100 if total_agniveers > 0 else 0
+        pass_rate = (pass_count / max(evaluated_agniveers, 1)) * 100
+        
+        # Dept breakdown
+        dept_labels = []
+        dept_passed = []
+        dept_failed = []
+        for dept in ['A', 'B', 'C', 'D']:
+            dept_sheets = all_sheets.filter(department=dept)
+            dept_agniveers = Agniveer.objects.filter(evaluations__department=dept).distinct()
+            stats = build_department_result_stats(dept, dept_sheets, dept_agniveers)
+            dept_labels.append(DEPARTMENT_NAMES.get(dept, dept))
+            dept_passed.append(stats['passed'])
+            dept_failed.append(stats['failed'])
+            
+        # Category breakdown
+        category_labels = []
+        category_pass_rates = []
+        for category, label in EvaluationSheet.CATEGORY_CHOICES:
+            cat_sheets = all_sheets.filter(category=category)
+            if cat_sheets.exists():
+                cat_pass = sum(1 for s in cat_sheets if s.is_pass())
+                pr = (cat_pass / cat_sheets.count()) * 100
+                category_labels.append(label)
+                category_pass_rates.append(round(pr, 1))
+
+        # Monthly trend
+        months = []
+        month_counts = []
+        month_pass = []
+        for i in range(5, -1, -1):
+            month_date = timezone.now() - timedelta(days=30 * i)
+            month_sheets = all_sheets.filter(
+                evaluation_date__year=month_date.year,
+                evaluation_date__month=month_date.month
+            )
+            sheets_count = month_sheets.count()
+            sheets_pass = sum(1 for s in month_sheets if s.is_pass())
+            months.append(month_date.strftime('%b'))
+            month_counts.append(sheets_count)
+            month_pass.append(sheets_pass)
+
+        data = {
+            'total_agniveers': total_agniveers,
+            'evaluated_agniveers': evaluated_agniveers,
+            'pass_count': pass_count,
+            'fail_count': fail_count,
+            'pass_rate': round(pass_rate, 1),
+            'completion_rate': round(completion_rate, 1),
+            'dept_labels': dept_labels,
+            'dept_passed': dept_passed,
+            'dept_failed': dept_failed,
+            'category_labels': category_labels,
+            'category_pass_rates': category_pass_rates,
+            'months_labels': months,
+            'month_counts': month_counts,
+            'month_pass': month_pass,
+        }
+        
+        prs = generate_ghead_pptx(data)
+        buffer = io.BytesIO()
+        prs.save(buffer)
+        buffer.seek(0)
+        
+        log_action(request.user, 'EXPORT', 'Exported G-Head Dashboard PPTX', request)
+        return FileResponse(
+            buffer, 
+            as_attachment=True, 
+            filename="g_head_dashboard_review.pptx",
+            content_type="application/vnd.openxmlformats-officedocument.presentationml.presentation"
+        )
+
+
+class ExportDepartmentDashboardPPTXView(AnyStaffMixin, View):
+    def get(self, request, dept):
+        import io
+        from datetime import timedelta
+        from django.utils import timezone
+        from core.views import (
+            build_evaluated_result_lists, 
+            get_scope_agniveers_and_sheets
+        )
+        from reports.pptx_generators import generate_department_pptx
+
+        user = request.user
+        if not (user.is_commander or user.is_g_head) and user.get_department_code() != dept:
+            return HttpResponse("Unauthorized access to this department dashboard.", status=403)
+
+        # Scoped data gathering
+        all_sheets = EvaluationSheet.objects.all().prefetch_related('marks')
+        all_agniveers = Agniveer.objects.all()
+        
+        sub_dept = 'all'
+        if dept == 'A' and user.is_department and user.battalion_unit:
+            sub_dept = user.battalion_unit
+        elif dept == 'B' and user.is_department and user.tts_trade:
+            sub_dept = user.tts_trade
+
+        scoped_agniveers_qs, scoped_sheets_qs, total_eligible = get_scope_agniveers_and_sheets(
+            dept, sub_dept, all_sheets.filter(department=dept), all_agniveers
+        )
+
+        from evaluation.result_helpers import is_sheet_evaluated
+        passed_agniveers, failed_agniveers = build_evaluated_result_lists(
+            scoped_agniveers_qs.prefetch_related('evaluations__marks'),
+            None,
+            [dept],
+        )
+
+        pass_count = len(passed_agniveers)
+        fail_count = len(failed_agniveers)
+        evaluated_agniveers = pass_count + fail_count
+        
+        evaluated_sheets_count = sum(1 for s in scoped_sheets_qs if is_sheet_evaluated(s))
+        completion_rate = (evaluated_sheets_count / max(total_eligible * 28, 1)) * 100 if total_eligible > 0 else 0
+        pass_rate = (pass_count / max(evaluated_agniveers, 1)) * 100
+
+        # Category pass rates
+        category_bar_labels = []
+        category_pass_rates = []
+        for category, label in EvaluationSheet.CATEGORY_CHOICES:
+            cat_sheets = scoped_sheets_qs.filter(category=category)
+            if cat_sheets.exists():
+                cat_pass = sum(1 for s in cat_sheets if s.is_pass())
+                category_bar_labels.append(label)
+                category_pass_rates.append(round((cat_pass / cat_sheets.count()) * 100, 1))
+
+        # Test type averages
+        test_labels = []
+        test_avg_marks = []
+        test_pass_rates = []
+        from evaluation.constants import get_dept_config
+        user_config = get_dept_config(dept, user)
+        for test_type, label in user_config.get('test_types', []):
+            test_sheets = scoped_sheets_qs.filter(test_type=test_type)
+            if test_sheets.exists():
+                avg = sum(s.get_total_marks() for s in test_sheets) / test_sheets.count()
+                pass_c = sum(1 for s in test_sheets if s.is_pass())
+                pr = (pass_c / test_sheets.count()) * 100
+            else:
+                avg = 0.0
+                pr = 0.0
+            test_labels.append(label)
+            test_avg_marks.append(round(avg, 1))
+            test_pass_rates.append(round(pr, 1))
+
+        # Monthly progress
+        months = []
+        month_counts = []
+        month_pass = []
+        for i in range(5, -1, -1):
+            month_date = timezone.now() - timedelta(days=30 * i)
+            month_sheets = scoped_sheets_qs.filter(
+                evaluation_date__year=month_date.year,
+                evaluation_date__month=month_date.month
+            )
+            sheets_count = month_sheets.count()
+            sheets_pass = sum(1 for s in month_sheets if s.is_pass())
+            months.append(month_date.strftime('%b'))
+            month_counts.append(sheets_count)
+            month_pass.append(sheets_pass)
+
+        data = {
+            'total_agniveers': total_eligible,
+            'evaluated_agniveers': evaluated_agniveers,
+            'pass_count': pass_count,
+            'fail_count': fail_count,
+            'pass_rate': round(pass_rate, 1),
+            'completion_rate': round(completion_rate, 1),
+            'category_bar_labels': category_bar_labels,
+            'category_pass_rates': category_pass_rates,
+            'test_labels': test_labels,
+            'test_avg_marks': test_avg_marks,
+            'test_pass_rates': test_pass_rates,
+            'months_labels': months,
+            'month_counts': month_counts,
+            'month_pass': month_pass,
+        }
+
+        prs = generate_department_pptx(dept, data)
+        buffer = io.BytesIO()
+        prs.save(buffer)
+        buffer.seek(0)
+
+        log_action(request.user, 'EXPORT', f'Exported Department {dept} Dashboard PPTX', request)
+        return FileResponse(
+            buffer, 
+            as_attachment=True, 
+            filename=f"department_{dept}_dashboard_review.pptx",
+            content_type="application/vnd.openxmlformats-officedocument.presentationml.presentation"
+        )
+
+
+class ExportRegistrationDashboardPPTXView(LoginRequiredMixin, View):
+    def get(self, request):
+        import io
+        from django.db.models import Count
+        from departments.models import Agniveer, TRADE_CHOICES, COMPANY_CHOICES
+        from reports.pptx_generators import generate_registration_pptx
+
+        if not (request.user.is_commander or request.user.is_g_head or request.user.is_registration_office):
+            return HttpResponse("Unauthorized", status=403)
+            
+        total_count = Agniveer.objects.count()
+        
+        # Trades breakdown
+        trades_qs = Agniveer.objects.values('trade').annotate(count=Count('id'))
+        trades_dict = {}
+        for item in trades_qs:
+            trade_code = item['trade']
+            trade_label = trade_code
+            for code, label in TRADE_CHOICES:
+                if code == trade_code:
+                    trade_label = label
+                    break
+            if not trade_label:
+                trade_label = "Unassigned"
+            trades_dict[trade_label] = item['count']
+            
+        # Company breakdown
+        company_qs = Agniveer.objects.values('company').annotate(count=Count('id'))
+        company_dict = {}
+        for item in company_qs:
+            c_code = item['company']
+            c_label = c_code
+            for code, label in COMPANY_CHOICES:
+                if code == c_code:
+                    c_label = label
+                    break
+            if not c_label:
+                c_label = "Unassigned"
+            company_dict[c_label] = item['count']
+            
+        recent_registrations = Agniveer.objects.order_by('-created_at')[:15]
+        
+        data = {
+            'total_count': total_count,
+            'trades_dict': trades_dict,
+            'company_dict': company_dict,
+            'recent_registrations': recent_registrations,
+            'active_batch': 'Batch 2026',
+        }
+        
+        prs = generate_registration_pptx(data)
+        buffer = io.BytesIO()
+        prs.save(buffer)
+        buffer.seek(0)
+        
+        log_action(request.user, 'EXPORT', 'Exported Registration Dashboard PPTX', request)
+        return FileResponse(
+            buffer, 
+            as_attachment=True, 
+            filename="registration_dashboard_summary.pptx",
+            content_type="application/vnd.openxmlformats-officedocument.presentationml.presentation"
+        )
+

@@ -720,6 +720,12 @@
 
 {% endblock %}
 
+{% block header_actions %}
+<a href="{% url 'reports:export_department_pptx' dept=dept %}" class="btn btn-army d-flex align-items-center gap-2" style="padding: 6px 14px; font-weight: 600; font-size:11px;">
+  <i class="bi bi-file-earmark-ppt-fill fs-6"></i> Download Presentation (PPTX)
+</a>
+{% endblock %}
+
 {% block content %}
 
 <!-- Row 1 : Metric Cards -->
@@ -1039,7 +1045,8 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+{% load static %}
+<script src="{% static 'js/chart.umd.min.js' %}"></script>
 <script>
 (function () {
   'use strict';
