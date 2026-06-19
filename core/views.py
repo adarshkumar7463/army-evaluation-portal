@@ -262,7 +262,7 @@ class DashboardView(LoginRequiredMixin, View):
         elif user.is_trainer:
             return TrainerDashboard().get(request)
         elif user.is_registration_office:
-            return redirect('departments:registration_dashboard')
+            return redirect('departments:agniveer_list')
         return render(request, 'core/dashboard.html', {})
 
 

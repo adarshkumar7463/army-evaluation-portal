@@ -85,10 +85,10 @@
     color: #6c757d;
   }
   
-  [data-bs-theme="light"] .eval-filter-btn.active {
+  [data-bs-theme="light"] a.eval-filter-btn.active:not(.btn) {
     background: rgba(235, 241, 238, 0.1);
     border-color: #2D6A4F;
-    color: #2D6A4F;
+    color: #ffffff !important;
   }
   
   /* Search Bar Styles */
@@ -148,10 +148,10 @@
     border-color: var(--army-olive);
   }
   
-  .eval-filter-btn.active {
+  a.eval-filter-btn.active:not(.btn) {
     background: rgba(223, 231, 227, 0.15);
     border-color: var(--army-olive);
-    color: var(--army-olive);
+    color: #ffffff !important;
   }
   
   .btn-gold {
@@ -249,13 +249,22 @@
       </select>
     </div>
 
+    <!-- Sort By Filter -->
+    <div class="col-md-2">
+      <label class="form-label small text-muted mb-1">Sort By</label>
+      <select name="sort_by" class="filter-select" onchange="this.form.submit()">
+        <option value="latest" {% if sort_by == 'latest' %}selected{% endif %}>Latest Registered</option>
+        <option value="oldest" {% if sort_by == 'oldest' %}selected{% endif %}>Oldest Registered</option>
+      </select>
+    </div>
+
     <div class="col-md-auto">
       <button type="submit" class="btn btn-army px-4" style="height: 30px;">
         <i class="bi bi-funnel"></i> Filter
       </button>
     </div>
   </form>
-  {% if request.GET.search or request.GET.trade or request.GET.battalion or request.GET.batch_no or request.GET.company or request.GET.platoon %}
+  {% if request.GET.search or request.GET.trade or request.GET.battalion or request.GET.batch_no or request.GET.company or request.GET.platoon or request.GET.sort_by %}
   <div class="mt-2">
     <a href="?{% if request.GET.eval_status %}eval_status={{ request.GET.eval_status }}{% endif %}" class="btn btn-sm btn-army-outline">
       <i class="bi bi-x-circle"></i> Clear Filters
@@ -273,7 +282,7 @@
     </h6>
     <div class="d-flex gap-2 align-items-center">
 
-      {% if is_department %}
+      {% if request.user.is_department or request.user.is_commander or request.user.is_g_head%}
       <!-- Eval Status Filter -->
       <div class="d-flex gap-1">
         <a href="?eval_status={% for key, value in request.GET.items %}{% if key != 'eval_status' and key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}"
@@ -289,16 +298,19 @@
           <i class="bi bi-clock-fill" style="font-size:10px;"></i> Pending
         </a>
       </div>
+      <a href="{% url 'reports:export_agniveers_csv' %}?{% for key, value in request.GET.items %}{{ key }}={{ value }}&{% endfor %}" class="btn btn-army-outline" style="padding:4px 12px;font-size:12px;">
+        <i class="bi bi-download"></i> Download CSV
+      </a>
 
       {% else %}
       
-      {% if is_registration_office or is_department %}
+      {% if request.user.is_registration_office or request.user.is_department  %}
       <a href="{% url 'departments:registration_dashboard' %}" class="btn btn-army d-flex align-items-center gap-2" style="padding:4px 12px;font-size:12px;display:inline-flex !important;">
         <i class="bi bi-person-plus-fill"></i> Registration Dashboard
       </a>
       {% endif %}
-      <a href="{% url 'reports:export_agniveers_csv' %}" class="btn btn-army-outline" style="padding:4px 12px;font-size:12px;">
-        <i class="bi bi-download"></i> CSV
+      <a href="{% url 'reports:export_agniveers_csv' %}?{% for key, value in request.GET.items %}{{ key }}={{ value }}&{% endfor %}" class="btn btn-army-outline" style="padding:4px 12px;font-size:12px;">
+        <i class="bi bi-download"></i> Download CSV
       </a>
       {% endif %}
 
@@ -319,7 +331,7 @@
           <th>Company</th>
           {% endif %}
           <th>Trade</th>
-          {% if is_department %}
+          {% if request.user.is_department %}
           <th style="text-align:center;">Eval Progress</th>
           {% endif %}
           <th>Actions</th>
@@ -348,7 +360,7 @@
           <td><span class="badge bg-success" style="font-size: 10px;">{{ a.company }}</span></td>
           {% endif %}
           <td>{{ a.trade|default:"—" }}</td>
-          {% if is_department %}
+          {% if request.user.is_department %}
           <td style="text-align:center;">
             <span class="badge {% if a.eval_count == 0 %}bg-secondary{% elif a.is_fully_evaluated %}bg-success{% else %}bg-warning text-dark{% endif %}" style="font-size: 11px;">
               {{ a.eval_count|default:0 }}/{{ a.eval_total|default:0 }} Evaluated
@@ -357,22 +369,22 @@
           {% endif %}
           <td>
             <div class="d-flex gap-1">
-              {% if is_commander or is_g_head or is_department %}
+              {% if request.user.is_commander or request.user.is_g_head or request.user.is_department %}
               <a href="{% url 'evaluation:report_card' a.pk %}" class="btn btn-army-outline" style="padding:4px 8px;font-size:12px;" title="Report Card">
                 <i class="bi bi-file-earmark-text"></i>
               </a>
               {% endif %}
-              {% if is_department or is_commander or is_g_head %}
+              {% if request.user.is_department or request.user.is_commander or request.user.is_g_head %}
               <a href="{% url 'evaluation:evaluate_agniveer' a.pk %}" class="btn btn-army-outline" style="padding:4px 8px;font-size:12px;" title="Evaluation Sheet">
                 <i class="bi bi-clipboard-check"></i>
               </a>
               {% endif %}
-              {% if is_registration_office %}
+              {% if request.user.is_registration_office %}
               <a href="{% url 'departments:registration_dashboard' %}?edit={{ a.pk }}" class="btn btn-army-outline" style="padding:4px 8px;font-size:12px;" title="Edit">
                 <i class="bi bi-pencil-fill"></i>
               </a>
               {% endif %}
-              {% if is_commander or is_g_head or is_department %}
+              {% if request.user.is_commander or request.user.is_g_head or request.user.is_department %}
               <a href="{% url 'accounts:profile' %}?agniveer={{ a.pk }}" class="btn btn-army" style="padding:4px 8px;font-size:12px;" title="View Profile">
                 <i class="bi bi-person-circle"></i>
               </a>

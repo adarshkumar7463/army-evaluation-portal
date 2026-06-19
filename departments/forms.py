@@ -93,8 +93,19 @@ class AgniveerRegistrationForm(forms.ModelForm):
             }),
         }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if 'platoon' in self.fields:
+            self.fields['platoon'] = forms.CharField(required=False, widget=self.fields['platoon'].widget)
+        for field in ['agniveer_no', 'name', 'father_name', 'dor']:
+            if field in self.fields:
+                self.fields[field].required = True
+
     def clean_agniveer_no(self):
-        val = self.cleaned_data.get('agniveer_no', '').strip()
+        val = self.cleaned_data.get('agniveer_no')
+        if not val or not val.strip():
+            return None
+        val = val.strip()
         qs = Agniveer.objects.filter(agniveer_no=val)
         if self.instance and self.instance.pk:
             qs = qs.exclude(pk=self.instance.pk)
@@ -154,8 +165,19 @@ class AgniveerEditForm(forms.ModelForm):
             'status': forms.Select(attrs={'class': 'form-select form-select-sm'}),
         }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if 'platoon' in self.fields:
+            self.fields['platoon'] = forms.CharField(required=False, widget=self.fields['platoon'].widget)
+        for field in ['agniveer_no', 'name', 'father_name', 'dor']:
+            if field in self.fields:
+                self.fields[field].required = True
+
     def clean_agniveer_no(self):
-        val = self.cleaned_data.get('agniveer_no', '').strip()
+        val = self.cleaned_data.get('agniveer_no')
+        if not val or not val.strip():
+            return None
+        val = val.strip()
         qs = Agniveer.objects.filter(agniveer_no=val)
         if self.instance and self.instance.pk:
             qs = qs.exclude(pk=self.instance.pk)

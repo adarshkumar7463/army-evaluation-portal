@@ -634,7 +634,7 @@
         <i class="bi bi-shield"></i>
       </div>
       <div class="sidebar-brand-text">
-        G-Head Evaluation
+        G-Branch Evaluation
         <span>Army Management System</span>
       </div>
     </div>
@@ -662,7 +662,7 @@
       {% endif %}
 
       <!-- My Team - Only for Department Heads -->
-      {% if is_department_head or is_commander or is_g_head %}
+      {% if is_department_head %}
       <div class="nav-section-label">Team</div>
       <a href="{% url 'accounts:my_team' %}" class="sidebar-link {% if 'my-team' in request.path %}active{% endif %}">
         <i class="bi bi-people-fill"></i> My Team

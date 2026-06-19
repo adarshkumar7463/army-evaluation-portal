@@ -45,7 +45,11 @@ class RegistrationDashboardView(RegistrationOfficeMixin, View):
     def get(self, request):
         reg_form = AgniveerRegistrationForm()
         upload_form = AgniveerExcelUploadForm()
-        agniveers = Agniveer.objects.all().order_by('-created_at')
+        sort_by = request.GET.get('sort_by', 'latest')
+        if sort_by == 'oldest':
+            agniveers = Agniveer.objects.all().order_by('created_at', 'enrollment_number')
+        else:
+            agniveers = Agniveer.objects.all().order_by('-created_at', '-enrollment_number')
 
         # Search / filter
         search = request.GET.get('search', '').strip()
@@ -125,6 +129,7 @@ class RegistrationDashboardView(RegistrationOfficeMixin, View):
             'cert_fields': cert_fields,
             'status_choices': Agniveer.STATUS_CHOICES,
             'uploaded_files': uploaded_files,
+            'sort_by': sort_by,
         }
         return render(request, self.template_name, context)
 
@@ -441,10 +446,15 @@ class AgniveerListView(AnyStaffMixin, ListView):
             elif eval_filter == 'not_evaluated':
                 queryset = queryset.exclude(pk__in=evaluated_ids)
 
-        return queryset.order_by('enrollment_number')
+        sort_by = self.request.GET.get('sort_by', 'latest')
+        if sort_by == 'oldest':
+            return queryset.order_by('created_at', 'enrollment_number')
+        else:
+            return queryset.order_by('-created_at', '-enrollment_number')
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
+        ctx['sort_by'] = self.request.GET.get('sort_by', 'latest')
         ctx['status_choices'] = Agniveer.STATUS_CHOICES
         ctx['batch_no_choices'] = BATCH_NO_CHOICES
         ctx['bn_choices'] = BN_DESP_CHOICES
@@ -458,8 +468,8 @@ class AgniveerListView(AnyStaffMixin, ListView):
         ctx['portal_title'] = f"{dept_names.get(dept, 'Agniveer')} Dashboard"
         ctx['portal_subtitle'] = f"Manage {dept_names.get(dept, 'Agniveer')} evaluation records"
         if user.is_registration_office:
-            ctx['portal_title'] = "Agniveer Registration Dashboard"
-            ctx['portal_subtitle'] = "Manage individual and bulk Agniveer registrations"
+            ctx['portal_title'] = "Agniveer List"
+            ctx['portal_subtitle'] = "Registered Agniveer Personnel"
 
         if user.is_department:
             from evaluation.models import EvaluationSheet, Marks

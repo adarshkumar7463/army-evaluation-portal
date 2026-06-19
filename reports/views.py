@@ -483,62 +483,208 @@ class ReportCardDetailView(AnyStaffMixin, View):
             'tts_result_row': tts_result_row,
             'battalion_result_row': battalion_result_row,
         })
-
 class ExportAgniveersCSVView(AnyStaffMixin, View):
     def get(self, request):
         user = request.user
-        if user.is_commander or user.is_g_head:
-            agniveers = Agniveer.objects.all()
+        queryset = Agniveer.objects.all()
+        dept = user.get_department_code()
+
+        if user.is_commander or user.is_g_head or user.is_registration_office:
+            pass
         elif user.is_department:
-            agniveers = scoped_agniveers(Agniveer.objects.all(), user)
+            queryset = scoped_agniveers(queryset, user)
         else:
-            agniveers = Agniveer.objects.none()
+            queryset = Agniveer.objects.none()
 
-        response = HttpResponse(content_type='text/csv')
-        response['Content-Disposition'] = 'attachment; filename="agniveers.csv"'
+        # TTS (Dept B) Specific Filtering
+        if dept == 'B' and hasattr(user, 'tts_trade'):
+            if user.tts_trade == 'DMV':
+                queryset = queryset.filter(trade='DMV')
+            elif user.tts_trade == 'OPEM':
+                queryset = queryset.filter(trade='OPEM')
+            elif user.tts_trade == 'OTHER':
+                queryset = queryset.exclude(trade__in=['DMV', 'OPEM'])
+                trade_param = request.GET.get('trade')
+                if trade_param:
+                    queryset = queryset.filter(trade=trade_param)
 
-        writer = csv.writer(response)
-        writer.writerow([
-            'Enrollment No', 'Name', 'Department', 'Batch',
-            'Joining Date', 'Status', 'Total Score', 'Pass/Fail'
-        ])
+        # Clerk AV dashboard shows only Clerk trade Agniveers.
+        if dept == 'D':
+            queryset = queryset.filter(trade__in=['CLK', 'CLERK', 'Clerk', 'CLK_SD', 'CLK_IM'])
 
-        for a in agniveers:
-            dept_codes = list(
-                a.evaluations.values_list('department', flat=True).distinct()
+        # Battalion Level Isolation
+        if user.is_battalion and user.battalion_unit:
+            queryset = queryset.filter(get_bn_desp_q('bn_desp', user.battalion_unit))
+
+        # Company/Platoon Level Isolation
+        if not user.can_view_all:
+            if hasattr(user, 'company') and user.company:
+                queryset = queryset.filter(company=user.company)
+            if hasattr(user, 'platoon') and user.platoon:
+                queryset = queryset.filter(platoon=user.platoon)
+
+        status = request.GET.get('status')
+        search = request.GET.get('search')
+        batch = request.GET.get('batch')
+        batch_no = request.GET.get('batch_no')
+        eval_filter = request.GET.get('eval_status')
+        trade_param = request.GET.get('trade')
+        battalion_param = request.GET.get('battalion')
+        company_param = request.GET.get('company')
+        platoon_param = request.GET.get('platoon')
+
+        if status:
+            queryset = queryset.filter(status=status)
+        if batch:
+            queryset = queryset.filter(batch__icontains=batch)
+        if batch_no:
+            queryset = queryset.filter(batch_no=batch_no)
+        if search:
+            queryset = queryset.filter(
+                Q(enrollment_number__icontains=search) |
+                Q(agniveer_no__icontains=search) |
+                Q(name__icontains=search) |
+                Q(father_name__icontains=search)
             )
-            department_text = ', '.join(DEPARTMENT_NAMES.get(dept, dept) for dept in dept_codes)
-            
+        if trade_param:
+            if not (dept == 'B' and hasattr(user, 'tts_trade') and user.tts_trade == 'OTHER'):
+                queryset = queryset.filter(trade=trade_param)
+        if battalion_param:
+            queryset = queryset.filter(get_bn_desp_q('bn_desp', battalion_param))
+        if company_param:
+            queryset = queryset.filter(company=company_param)
+        if platoon_param:
+            queryset = queryset.filter(platoon=platoon_param)
+
+        if eval_filter and (user.is_department or user.is_commander or user.is_g_head):
+            from evaluation.result_helpers import is_sheet_evaluated
             if user.is_department:
-                dept_code = user.get_department_code()
-                evals = list(a.evaluations.filter(department=dept_code).prefetch_related('marks'))
-                from evaluation.result_helpers import build_department_result_row, is_sheet_evaluated
-                if evals and any(is_sheet_evaluated(s) for s in evals):
-                    d_row = build_department_result_row(a, evals, dept_code)
-                    total_score = d_row.get('grand_total', 0.0)
-                    if dept_code == 'A':
-                        total_score = d_row.get('round_figure_120', total_score)
-                    is_pass = d_row.get('is_pass', False)
-                    pass_status = 'Pass' if is_pass else 'Fail'
-                else:
-                    total_score = '—'
-                    pass_status = 'Pending'
+                from evaluation.constants import get_dept_config
+                config = get_dept_config(dept or 'A', user)
+                test_types = [test[0] for test in config['test_types']]
+
+                all_dept_sheets = EvaluationSheet.objects.filter(
+                    department=dept,
+                    test_type__in=test_types,
+                ).prefetch_related('marks')
             else:
-                total_score = a.get_total_score()
-                pass_status = a.get_pass_status()
+                all_dept_sheets = EvaluationSheet.objects.all().prefetch_related('marks')
 
-            writer.writerow([
-                a.enrollment_number,
+            evaluated_ids = {s.agniveer_id for s in all_dept_sheets if is_sheet_evaluated(s)}
+
+            if eval_filter == 'evaluated':
+                queryset = queryset.filter(pk__in=evaluated_ids)
+            elif eval_filter == 'not_evaluated':
+                queryset = queryset.exclude(pk__in=evaluated_ids)
+
+        sort_by = request.GET.get('sort_by', 'latest')
+        if sort_by == 'oldest':
+            agniveers = queryset.order_by('created_at', 'enrollment_number')
+        else:
+            agniveers = queryset.order_by('-created_at', '-enrollment_number')
+
+        import openpyxl
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Agniveers"
+        st = _xl_styles(is_fail_theme=(eval_filter == 'not_evaluated'))
+
+        # Build dynamic title based on filters
+        title_parts = []
+        
+        # 1. Battalion
+        battalion_val = battalion_param
+        if not battalion_val and user.is_battalion and user.battalion_unit:
+            battalion_val = user.battalion_unit
+        if battalion_val:
+            title_parts.append(f"Battalion - {battalion_val.lower()}")
+            
+        # 2. Company
+        company_val = company_param
+        if not company_val and not user.can_view_all and hasattr(user, 'company') and user.company:
+            company_val = user.company
+        if company_val:
+            title_parts.append(f"Company {company_val}")
+            
+        # 3. Platoon
+        platoon_val = platoon_param
+        if not platoon_val and not user.can_view_all and hasattr(user, 'platoon') and user.platoon:
+            platoon_val = user.platoon
+        if platoon_val:
+            title_parts.append(f"Platoon {platoon_val}")
+            
+        # 4. Trade
+        trade_val = trade_param
+        if not trade_val:
+            if dept == 'B' and hasattr(user, 'tts_trade') and user.tts_trade != 'OTHER':
+                trade_val = user.tts_trade
+            elif dept == 'D':
+                trade_val = 'clerk'
+            elif dept == 'C':
+                trade_val = 'ces'
+        if trade_val:
+            title_parts.append(trade_val.lower())
+            
+        # 5. Eval Status
+        eval_status_val = eval_filter
+        if eval_status_val:
+            if eval_status_val == 'evaluated':
+                title_parts.append("evaluated")
+            elif eval_status_val == 'not_evaluated':
+                title_parts.append("non evaluated")
+
+        if title_parts:
+            title_text = " - ".join(title_parts).title() + " Agniveers"
+        else:
+            title_text = "All Agniveers"
+
+        headers = ['Agniveer No', 'Name', 'Rank', 'B/desp', 'Company', 'Platoon', 'Trade']
+        num_cols = len(headers)
+
+        _xl_write_title(ws, title_text, num_cols, st)
+        _xl_write_headers(ws, headers, st)
+
+        NAME_COL = 2
+        for index, a in enumerate(agniveers, 1):
+            values = [
+                a.agniveer_no or a.enrollment_number,
                 a.get_full_name(),
-                DEPARTMENT_NAMES.get(user.get_department_code(), '') if user.is_department else department_text,
-                a.batch,
-                a.joining_date.strftime('%Y-%m-%d') if a.joining_date else '',
-                a.get_status_display(),
-                total_score,
-                pass_status,
-            ])
+                getattr(a, 'rank', '') or '',
+                a.bn_desp or '',
+                a.company or '',
+                a.platoon or '',
+                a.trade or '',
+            ]
+            for col, value in enumerate(values, 1):
+                cell = ws.cell(row=index + 2, column=col, value=value)
+                cell.font = st['data_font']
+                cell.border = st['border']
+                cell.alignment = st['left'] if col == NAME_COL else st['center']
+            ws.row_dimensions[index + 2].height = 20
 
-        log_action(user, 'EXPORT', 'Exported Agniveers CSV', request)
+        for col_idx in range(1, num_cols + 1):
+            col_letter = openpyxl.utils.get_column_letter(col_idx)
+            vals = [ws.cell(row=r, column=col_idx).value for r in range(2, len(agniveers) + 3)]
+            max_len = max((len(str(v or '')) for v in vals), default=12)
+            ws.column_dimensions[col_letter].width = max(max_len + 4, 12)
+
+        ws.freeze_panes = 'A3'
+        ws.auto_filter.ref = f"A2:{openpyxl.utils.get_column_letter(num_cols)}{max(len(agniveers) + 2, 2)}"
+
+        buffer = io.BytesIO()
+        wb.save(buffer)
+        buffer.seek(0)
+
+        import re
+        safe_filename = re.sub(r'[^a-zA-Z0-9_\-]', '_', title_text.strip().lower())
+        safe_filename = f"{safe_filename}.xlsx"
+
+        log_action(user, 'EXPORT', f'Exported Agniveers Excel: {title_text}', request)
+        response = HttpResponse(
+            buffer.getvalue(),
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        response['Content-Disposition'] = f'attachment; filename="{safe_filename}"'
         return response
 
 

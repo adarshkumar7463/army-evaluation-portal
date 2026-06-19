@@ -130,22 +130,18 @@
     <a href="{% url 'accounts:create_g_head' %}" class="btn btn-army d-flex align-items-center gap-2">
       <i class="bi bi-person-badge-fill"></i> Create G Head
     </a>
-    <a href="{% url 'accounts:create_registration' %}" class="btn btn-army-outline d-flex align-items-center gap-2">
-      <i class="bi bi-person-plus-fill"></i> Create Registration Office
-    </a>
     {% endif %}
+    
     {% if is_commander or is_g_head %}
+    <a href="{% url 'accounts:create_registration' %}" class="btn btn-army-outline d-flex align-items-center gap-2">
+      <i class="bi bi-person-plus-fill"></i> Create Registration clerk
+    </a>
     <a href="{% url 'accounts:create_department' %}" class="btn btn-army-outline d-flex align-items-center gap-2">
       <i class="bi bi-building"></i> Create Department User
     </a>
     {% endif %}
-    <a href="{% url 'accounts:create_trainer' %}" class="btn btn-army-outline d-flex align-items-center gap-2">
-      <i class="bi bi-person-plus-fill"></i> Create Trainer
-    </a>
-  {% elif is_my_team %}
-    <a href="{% url 'accounts:create_my_team_trainer' %}" class="btn btn-army d-flex align-items-center gap-2">
-      <i class="bi bi-person-plus-fill"></i> Create Trainer
-    </a>
+
+
   {% endif %}
 </div>
 

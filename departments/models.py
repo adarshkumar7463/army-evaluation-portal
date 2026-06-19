@@ -237,7 +237,7 @@ class Agniveer(models.Model):
     batch = models.CharField(max_length=30, blank=True, null=True)
     batch_no = models.CharField(max_length=10, choices=BATCH_NO_CHOICES, blank=True, null=True)
     company = models.CharField(max_length=20, choices=COMPANY_CHOICES, blank=True, null=True)
-    platoon = models.CharField(max_length=10, choices=PLATOON_CHOICES, blank=True, null=True)
+    platoon = models.CharField(max_length=10, blank=True, null=True)
     joining_date = models.DateField(blank=True, null=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -246,7 +246,7 @@ class Agniveer(models.Model):
     class Meta:
         verbose_name = 'Agniveer'
         verbose_name_plural = 'Agniveers'
-        ordering = ['enrollment_number']
+        ordering = ['-created_at', '-enrollment_number']
 
     def __str__(self):
         return f"{self.enrollment_number} - {self.get_full_name()}"
