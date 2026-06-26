@@ -20,9 +20,6 @@ class CustomUser(AbstractUser):
     ROLE_DEPT_B = 'dept_b'
     ROLE_DEPT_C = 'dept_c'
     ROLE_DEPT_D = 'dept_d'
-    ROLE_TRAINER_NCO = 'trainer_nco'
-    ROLE_TRAINER_JCO = 'trainer_jco'
-    ROLE_TRAINER_OFFICER = 'trainer_officer'
     ROLE_REGISTRATION = 'registration'
 
     BATTALION_1TB = '1TB'
@@ -39,6 +36,7 @@ class CustomUser(AbstractUser):
     TTS_TRADE_OPEM = 'OPEM'
     TTS_TRADE_OTHER = 'OTHER'
 
+
     TTS_TRADE_CHOICES = [
         (TTS_TRADE_DMV, 'DMV'),
         (TTS_TRADE_OPEM, 'OPEM'),
@@ -52,9 +50,6 @@ class CustomUser(AbstractUser):
         (ROLE_DEPT_B, 'TTS'),
         (ROLE_DEPT_C, 'CS'),
         (ROLE_DEPT_D, 'Clerk'),
-        (ROLE_TRAINER_NCO, 'Trainer - NCO'),
-        (ROLE_TRAINER_JCO, 'Trainer - JCO'),
-        (ROLE_TRAINER_OFFICER, 'Trainer - Officer'),
         (ROLE_REGISTRATION, 'Registration Office'),
     ]
 
@@ -66,30 +61,26 @@ class CustomUser(AbstractUser):
     ]
 
     PLATOON_CHOICES = [
-        ('P1', 'P1'),
-        ('P2', 'P2'),
-        ('P3', 'P3'),
-        ('P4', 'P4'),
-        ('P5', 'P5'),
-        ('P6', 'P6'),
-        ('P7', 'P7'),
-        ('P8', 'P8'),
-        ('P9', 'P9'),
+        ('Platoon 1', 'Platoon 1'),
+        ('Platoon 2', 'Platoon 2'),
+        ('Platoon 3', 'Platoon 3'),
+        ('Platoon 4', 'Platoon 4'),
     ]
 
     COMPANY_CHOICES = [
+        ('Tirah Company', 'Tirah Company'),
+        ('Megiddo Company', 'Megiddo Company'),
+        ('Ghuznee Company', 'Ghuznee Company'),
+        ('Maktila Company', 'Maktila Company'),
+        ('Cassino Company', 'Cassino Company'),
+        ('Pigris Company', 'Pigris Company'),
         ('Company A', 'Company A'),
         ('Company B', 'Company B'),
         ('Company C', 'Company C'),
-        ('Company D', 'Company D'),
-        ('Company E', 'Company E'),
-        ('Company F', 'Company F'),
-        ('Company G', 'Company G'),
-        ('Company H', 'Company H'),
-        ('Company I', 'Company I'),
+        
     ]
 
-    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default=ROLE_TRAINER_NCO)
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES)
     department = models.CharField(max_length=1, choices=DEPARTMENT_CHOICES, blank=True, null=True)
     battalion_unit = models.CharField(max_length=10, choices=BATTALION_CHOICES, blank=True, null=True)
     tts_trade = models.CharField(max_length=10, choices=TTS_TRADE_CHOICES, blank=True, null=True)
@@ -129,21 +120,6 @@ class CustomUser(AbstractUser):
     def is_department(self):
         return self.role in [self.ROLE_DEPT_A, self.ROLE_DEPT_B, self.ROLE_DEPT_C, self.ROLE_DEPT_D]
 
-    @property
-    def is_trainer(self):
-        return self.role in [self.ROLE_TRAINER_NCO, self.ROLE_TRAINER_JCO, self.ROLE_TRAINER_OFFICER]
-
-    @property
-    def is_nco(self):
-        return self.role == self.ROLE_TRAINER_NCO
-
-    @property
-    def is_jco(self):
-        return self.role == self.ROLE_TRAINER_JCO
-
-    @property
-    def is_officer(self):
-        return self.role == self.ROLE_TRAINER_OFFICER
 
     @property
     def is_registration_office(self):
@@ -179,8 +155,5 @@ class CustomUser(AbstractUser):
             self.ROLE_DEPT_B: 'info',
             self.ROLE_DEPT_C: 'success',
             self.ROLE_DEPT_D: 'secondary',
-            self.ROLE_TRAINER_NCO: 'dark',
-            self.ROLE_TRAINER_JCO: 'dark',
-            self.ROLE_TRAINER_OFFICER: 'dark',
         }
         return color_map.get(self.role, 'secondary')

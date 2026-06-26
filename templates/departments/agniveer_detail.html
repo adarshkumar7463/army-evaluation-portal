@@ -2105,7 +2105,7 @@
                     <td
                       style="text-align:center; font-weight: 700; color: #52B788; font-family: 'Rajdhani', sans-serif;"
                       data-total-col="{{ col }}">
-                      {{ col }}: <span class="val">{% if current_sheet %}{% with total=current_sheet.sub_event_results|get_item:col|get_item:'TOTAL POINT' %}{% if total is not None %}{{ total }}{% else %}{% if col == '1st Attempt' %}{{ current_sheet.get_nco_marks }}{% elif col == '2nd Attempt' %}{{ current_sheet.get_jco_marks }}{% else %}—{% endif %}{% endif %}{% endwith %}{% else %}—{% endif %}</span>
+                      {{ col }}: <span class="val">{% if current_sheet %}{% with total=current_sheet.sub_event_results|get_item:col|get_item:'TOTAL POINT' %}{% if total is not None %}{{ total }}{% else %}—{% endif %}{% endwith %}{% else %}—{% endif %}</span>
                     </td>
                     {% endfor %}
                   </tr>
@@ -2939,10 +2939,7 @@
                       {% if total is not None %}
                       {{ total }}
                       {% else %}
-                      {% if col == '1st Attempt' %}{{ current_sheet.get_nco_marks }}
-                      {% elif col == '2nd Attempt' %}{{ current_sheet.get_jco_marks }}
-                      {% elif col == '3rd Attempt' %}{{ current_sheet.get_officer_marks }}
-                      {% else %}—{% endif %}
+                      —
                       {% endif %}
                       {% endwith %}
                       {% else %}

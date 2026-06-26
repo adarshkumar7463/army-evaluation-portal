@@ -16,6 +16,7 @@ urlpatterns = [
     path('evaluation/', include('evaluation.urls', namespace='evaluation')),
     path('reports/', include('reports.urls', namespace='reports')),
     path('logs/', include('logs.urls', namespace='logs')),
+    path('chatbot/', include('chatbot.urls', namespace='chatbot')),
     
     # Offline Support URLs
     path('offline/', OfflinePageView.as_view(), name='offline_page'),

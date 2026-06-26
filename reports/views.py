@@ -165,19 +165,14 @@ class ReportDashboardView(AnyStaffMixin, View):
                     'evaluated_agniveers': counts['evaluated'],
                     'pass_count': counts['passed'],
                     'fail_count': counts['failed'],
-                    'total_trainers': CustomUser.objects.filter(
-                        role__in=[CustomUser.ROLE_TRAINER_NCO, CustomUser.ROLE_TRAINER_JCO, CustomUser.ROLE_TRAINER_OFFICER],
-                        department=dept_code
-                    ).count()
+                    'total_trainers': 0
                 }
             context['department_data'] = dept_data
             
             # Overall totals
             counts = pass_fail_counts_for_scope(user)
             context['total_agniveers'] = Agniveer.objects.count()
-            context['total_trainers'] = CustomUser.objects.filter(
-                role__in=[CustomUser.ROLE_TRAINER_NCO, CustomUser.ROLE_TRAINER_JCO, CustomUser.ROLE_TRAINER_OFFICER]
-            ).count()
+            context['total_trainers'] = 0
             context['evaluated_agniveers'] = counts['evaluated']
             context['pass_count'] = counts['passed']
             context['fail_count'] = counts['failed']
@@ -204,10 +199,7 @@ class ReportDashboardView(AnyStaffMixin, View):
             counts = pass_fail_counts_for_scope(user, dept)
             
             context['total_agniveers'] = agniveers.count()
-            context['total_trainers'] = CustomUser.objects.filter(
-                role__in=[CustomUser.ROLE_TRAINER_NCO, CustomUser.ROLE_TRAINER_JCO, CustomUser.ROLE_TRAINER_OFFICER],
-                department=dept
-            ).count()
+            context['total_trainers'] = 0
             context['evaluated_agniveers'] = counts['evaluated']
             context['pass_count'] = counts['passed']
             context['fail_count'] = counts['failed']
@@ -704,7 +696,7 @@ class ExportEvaluationsCSVView(AnyStaffMixin, View):
         writer = csv.writer(response)
         writer.writerow([
             'Enrollment No', 'Name', 'Department', 'Category', 'Test Type',
-            'NCO Marks', 'JCO Marks', 'Officer Marks', 'Total', 'Percentage', 'Result'
+            'Admin Marks', 'Total', 'Percentage', 'Result'
         ])
 
         for sheet in sheets:
@@ -714,9 +706,7 @@ class ExportEvaluationsCSVView(AnyStaffMixin, View):
                 DEPARTMENT_NAMES.get(sheet.department, sheet.department),
                 sheet.get_category_display(),
                 sheet.get_test_type_display(),
-                sheet.get_nco_marks(),
-                sheet.get_jco_marks(),
-                sheet.get_officer_marks(),
+                sheet.get_admin_marks(),
                 sheet.get_total_marks(),
                 f'{sheet.get_percentage()}%',
                 'Pass' if sheet.is_pass() else 'Fail',
@@ -906,9 +896,7 @@ class TestTypeResultsView(AnyStaffMixin, View):
         for s in sheets_qs:
             rows.append({
                 'agniveer': s.agniveer,
-                'nco': s.get_nco_marks(),
-                'jco': s.get_jco_marks(),
-                'officer': s.get_officer_marks(),
+                'admin': s.get_admin_marks(),
                 'total': s.get_total_marks(),
                 'percentage': s.get_percentage(),
                 'is_pass': s.is_pass(),
@@ -954,9 +942,7 @@ class DeptTestResultsView(AnyStaffMixin, View):
         for s in sheets_qs:
             rows.append({
                 'agniveer': s.agniveer,
-                'nco': s.get_nco_marks(),
-                'jco': s.get_jco_marks(),
-                'officer': s.get_officer_marks(),
+                'admin': s.get_admin_marks(),
                 'total': s.get_total_marks(),
                 'percentage': s.get_percentage(),
                 'is_pass': s.is_pass(),
@@ -2177,7 +2163,7 @@ class ExportPDFReportCardView(AnyStaffMixin, View):
                     return sheet
             return None
 
-        if request.user.is_trainer:
+        if not (request.user.is_commander or request.user.is_g_head or request.user.is_department or request.user.is_superuser):
             return HttpResponse("You don't have permission to export report cards.", status=403)
 
         # Distinct departments in evaluations that actually have records
@@ -2763,9 +2749,7 @@ class ExportCommanderDashboardPPTXView(CommanderOrGHeadMixin, View):
 
         # Key stats
         total_agniveers = Agniveer.objects.count()
-        total_trainers = CustomUser.objects.filter(
-            role__in=['trainer_nco', 'trainer_jco', 'trainer_officer']
-        ).count()
+        total_trainers = 0
         
         from evaluation.result_helpers import is_sheet_evaluated
         all_sheets = EvaluationSheet.objects.all().prefetch_related('marks')
@@ -2873,9 +2857,7 @@ class ExportGHeadDashboardPPTXView(CommanderOrGHeadMixin, View):
 
         # Key stats
         total_agniveers = Agniveer.objects.count()
-        total_trainers = CustomUser.objects.filter(
-            role__in=['trainer_nco', 'trainer_jco', 'trainer_officer']
-        ).count()
+        total_trainers = 0
         
         from evaluation.result_helpers import is_sheet_evaluated
         all_sheets = EvaluationSheet.objects.all().prefetch_related('marks')

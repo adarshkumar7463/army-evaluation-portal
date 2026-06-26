@@ -657,24 +657,21 @@
       </a>
       {% endif %}
 
-      <!-- My Team - Only for Department Heads -->
-      {% if is_department_head %}
-      <div class="nav-section-label">Team</div>
-      <a href="{% url 'accounts:my_team' %}" class="sidebar-link {% if 'my-team' in request.path %}active{% endif %}">
-        <i class="bi bi-people-fill"></i> My Team
-      </a>
-      {% endif %}
+
 
 
 
       <!-- Admin Section -->
-      {% if is_commander or is_g_head or is_department_head %}
+      {% if is_commander or is_g_head or is_department or is_department_head %}
       <div class="nav-section-label">Admin</div>
       {% if is_commander or is_g_head %}
       <a href="{% url 'accounts:user_list' %}" class="sidebar-link {% if 'users' in request.path %}active{% endif %}">
         <i class="bi bi-shield-fill-check"></i> Manage Users
       </a>
       {% endif %}
+      <a href="{% url 'chatbot:chatbot_home' %}" class="sidebar-link {% if 'chatbot' in request.path %}active{% endif %}">
+        <i class="bi bi-robot"></i> AI Chatbot
+      </a>
       <a href="{% url 'logs:activity_log' %}" class="sidebar-link {% if 'logs' in request.path %}active{% endif %}">
         <i class="bi bi-journal-text"></i> Logs
       </a>

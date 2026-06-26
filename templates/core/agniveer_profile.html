@@ -1,148 +1,502 @@
 {% extends 'base.html' %}
 {% load custom_filters %}
-{% block title %}My Profile – Army Portal{% endblock %}
-{% block page_title %}My Profile{% endblock %}
-{% block page_subtitle %}Account Settings{% endblock %}
+{% block title %}Agniveer Profile: {{ agniveer.name }} – Army Portal{% endblock %}
+{% block page_title %}Agniveer Profile{% endblock %}
+{% block page_subtitle %}Trainee Performance & Performance Analysis{% endblock %}
 
 {% block content %}
-<div class="row g-3">
-  <!-- Profile Card -->
-  <div class="col-xl-4">
+<div class="row g-4">
+  <!-- Profile details card (Left Column) -->
+  <div class="col-xl-4 col-lg-5">
     <div class="army-card">
-      <div class="army-card-body text-center" style="padding:32px 20px;">
-        {% if user.profile_photo %}
-        <img src="{{ user.profile_photo.url }}" alt="Profile" class="rounded-circle mb-3"
-          style="width:100px;height:100px;object-fit:cover;border:3px solid #1B4332;">
-        {% else %}
-        <div class="mx-auto mb-3"
-          style="width:100px;height:100px;border-radius:50%;background:linear-gradient(135deg,#1B4332,#40916C);display:flex;align-items:center;justify-content:center;font-family:Rajdhani,sans-serif;font-size:38px;font-weight:700;color:white;border:3px solid rgba(82,183,136,0.3);">
-          {{ user.first_name.0|upper|default:"U" }}{{ user.last_name.0|upper|default:"" }}
-        </div>
-        {% endif %}
-
-        <h5 style="font-family:Rajdhani,sans-serif;font-weight:700;font-size:22px;color:#E0E6F0;margin-bottom:4px;">
-          {{ user.get_full_name|default:user.username }}
-        </h5>
-        <div class="mb-3">
-          <span class="role-badge" style="background:rgba(27,67,50,0.4);color:#52B788;font-size:12px;padding:5px 14px;">
-            {{ user.get_role_display }}
+      <div class="army-card-body text-center p-4">
+        <!-- Trainee Photo / Initials -->
+        <div class="mb-4 position-relative d-inline-block">
+          {% if agniveer.photo %}
+          <img src="{{ agniveer.photo.url }}" alt="{{ agniveer.name }}" class="rounded-circle border border-3 border-army"
+            style="width: 130px; height: 130px; object-fit: cover; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+          {% else %}
+          <div class="mx-auto rounded-circle d-flex align-items-center justify-content-center border border-3"
+            style="width: 130px; height: 130px; background: linear-gradient(135deg, var(--army-green), var(--army-green-mid)); border-color: var(--army-olive) !important; box-shadow: 0 4px 15px rgba(0,0,0,0.3); font-family: 'Rajdhani', sans-serif; font-size: 48px; font-weight: 700; color: #FFFFFF;">
+            {{ agniveer.name.0|upper|default:"A" }}
+          </div>
+          {% endif %}
+          <span class="position-absolute bottom-0 end-0 badge bg-army border border-2 border-dark rounded-circle p-2" title="Trainee Status: {{ agniveer.get_status_display }}">
+            <i class="bi {% if agniveer.status == 'active' %}bi-check-circle-fill text-success{% else %}bi-info-circle-fill text-warning{% endif %}"></i>
           </span>
         </div>
 
-        {% if user.service_number %}
-        <div style="font-size:13px;color:#8B9BB4;margin-bottom:4px;">
-          <i class="bi bi-shield-fill me-2 text-army"></i>{{ user.service_number }}
+        <h4 class="mb-1" style="font-family: 'Rajdhani', sans-serif; font-weight: 700; color: var(--text-primary);">
+          {{ agniveer.name }}
+        </h4>
+        <div class="text-muted small mb-3">
+          Service No: <span class="fw-bold" style="color: var(--text-primary);">{{ agniveer.enrollment_number|default:agniveer.agniveer_no }}</span>
         </div>
-        {% endif %}
-        {% if agniveer %}
-          <!-- Reused one-screen Agniveer profile UI -->
-          <div class="row g-3">
-            <div class="col-xl-12">
-              <div class="army-card">
-                <div class="army-card-header">
-                  <h6 class="army-card-title"><i class="bi bi-person-lines-fill text-army"></i> Agniveer Profile & Results</h6>
-                </div>
-                <div class="army-card-body">
-                  {% with person=agniveer %}
-                  <div class="row g-3">
-                    <div class="col-12 mb-3">
-                      <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                          <h5 style="margin:0;font-family:Rajdhani,sans-serif;font-weight:700;color:#E0E6F0;">{{ person.get_full_name|default:person.enrollment_number|default:person.agniveer_no|default:'' }}</h5>
-                          <div style="font-size:13px;color:#8B9BB4;">Service No: {{ person.enrollment_number|default:person.agniveer_no|default:'—' }}</div>
-                        </div>
-                        <div class="text-end">
-                          <div style="font-size:13px;color:#8B9BB4;">Department</div>
-                          <div style="font-weight:700;color:#52B788;">{{ person.department|department_name|default:'—' }}</div>
-                        </div>
-                      </div>
-                    </div>
+        
+        <div class="d-flex justify-content-center gap-2 mb-4">
+          <span class="badge" style="background: rgba(212, 160, 23, 0.15); color: var(--army-gold-light); border: 1.5px solid rgba(212, 160, 23, 0.3); font-size: 11px;">
+            {{ agniveer.trade }}
+          </span>
+          {% if agniveer.bn_desp %}
+          <span class="badge" style="background: rgba(82, 183, 136, 0.15); color: var(--army-olive); border: 1.5px solid rgba(82, 183, 136, 0.3); font-size: 11px;">
+            {{ agniveer.bn_desp }}
+          </span>
+          {% endif %}
+        </div>
 
-                    <div class="col-md-6">
-                      <div class="army-card" style="padding:12px;">
-                        <h6 class="army-card-title" style="font-size:14px;">Summary</h6>
-                        <div class="army-card-body p-0">
-                          <ul class="list-unstyled mb-0" id="summary-stats">
-                            <li>Exams: <strong id="summary-exams">—</strong></li>
-                            <li>Average Score: <strong id="summary-avg">—</strong></li>
-                            <li>Best Exam: <strong id="summary-best">—</strong></li>
-                          </ul>
-                        </div>
-                      </div>
-                    </div>
+        <hr style="border-color: var(--border-color); margin: 20px 0;">
 
-                    <div class="col-md-6">
-                      <div class="army-card" style="padding:12px;">
-                        <h6 class="army-card-title" style="font-size:14px;">Marks Trend</h6>
-                        <div class="army-card-body p-0"><canvas id="trend-chart" height="120"></canvas></div>
-                      </div>
-                    </div>
-
-                    <div class="col-12">
-                      <div class="army-card">
-                        <div class="army-card-header"><h6 class="army-card-title">Exams & Evaluation Sheet</h6></div>
-                        <div class="army-card-body">
-                          <div class="mb-3 d-flex justify-content-between align-items-center">
-                            <div><small class="text-muted">All test fields are read-only.</small></div>
-                            <div><label class="form-label mb-0">Select Exam</label><select id="exam-select" class="form-select form-select-sm"></select></div>
-                          </div>
-                          <div id="exams-container">
-                            {% for ev in evaluations %}
-                              <div class="exam-row mb-3" data-department="{{ ev.department|default:'' }}" data-exam="{{ ev.test_type|default:'' }}" data-date="{{ ev.evaluation_date }}" data-total="{{ ev.total_marks }}" data-marks='{{ ev.data|escapejs }}'>
-                                <div class="p-3 border rounded" style="background:rgba(255,255,255,0.02);">
-                                  <div class="d-flex justify-content-between mb-2">
-                                    <div><strong>{{ ev.test_type_display|default:ev.test_type }}</strong><div class="text-muted" style="font-size:12px;">{{ ev.evaluation_date }}</div></div>
-                                    <div class="text-end"><div style="font-weight:700;color:#D4A017;">Total: {{ ev.total_marks }}</div><div style="font-size:12px;color:#8B9BB4;">{{ ev.percentage }}%</div></div>
-                                  </div>
-                                  <div class="row g-2" style="font-size:13px;">
-                                    {% if ev.data %}{% for key,value in ev.data.items %}
-                                    <div class="col-md-4"><div style="color:#8B9BB4;font-size:12px;">{{ key }}</div><div style="font-weight:700;color:#E0E6F0;">{{ value }}</div></div>
-                                    {% endfor %}{% else %}<div class="col-12 text-muted">No test fields available.</div>{% endif %}
-                                  </div>
-                                </div>
-                              </div>
-                            {% endfor %}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div class="col-12">
-                      <div class="army-card"><div class="army-card-header"><h6 class="army-card-title">Exam Details</h6></div><div class="army-card-body"><canvas id="marks-chart" height="140"></canvas></div></div>
-                    </div>
-                  </div>
-                  {% endwith %}
-                </div>
-              </div>
+        <!-- Profile Details List -->
+        <div class="text-start">
+          <h6 class="army-card-title mb-3" style="font-size: 14px;"><i class="bi bi-shield-fill text-army me-2"></i>Service Details</h6>
+          
+          <div class="row g-3 mb-3" style="font-size: 12px;">
+            <div class="col-6">
+              <span class="text-muted d-block" style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Father's Name</span>
+              <strong style="color: var(--text-primary);">{{ agniveer.father_name|default:"—" }}</strong>
+            </div>
+            <div class="col-6">
+              <span class="text-muted d-block" style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">DOR (Reporting)</span>
+              <strong style="color: var(--text-primary);">{{ agniveer.dor|date:"d M Y"|default:"—" }}</strong>
+            </div>
+            <div class="col-6">
+              <span class="text-muted d-block" style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">ARO / BRO</span>
+              <strong style="color: var(--text-primary);">{{ agniveer.aros_bros|default:"—" }}</strong>
+            </div>
+            <div class="col-6">
+              <span class="text-muted d-block" style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Rank</span>
+              <strong style="color: var(--text-primary);">{{ agniveer.rank|default:"Agniveer" }}</strong>
+            </div>
+            <div class="col-6">
+              <span class="text-muted d-block" style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Company</span>
+              <strong style="color: var(--text-primary);">{{ agniveer.company|default:"—" }}</strong>
+            </div>
+            <div class="col-6">
+              <span class="text-muted d-block" style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Platoon</span>
+              <strong style="color: var(--text-primary);">{{ agniveer.platoon|default:"—" }}</strong>
+            </div>
+            <div class="col-6">
+              <span class="text-muted d-block" style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Batch</span>
+              <strong style="color: var(--text-primary);">{{ agniveer.batch|default:agniveer.get_batch_no_display|default:"—" }}</strong>
+            </div>
+            <div class="col-6">
+              <span class="text-muted d-block" style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Edn Qualification</span>
+              <strong style="color: var(--text-primary);">{{ agniveer.edn_ql_enrollment|default:"—" }}</strong>
             </div>
           </div>
-        {% endif %}
 
-        {% endblock %}
+          <hr style="border-color: var(--border-color); margin: 20px 0;">
 
-        {% block extra_js %}
-        {% load static %}
-        <script src="{% static 'js/chart.umd.min.js' %}"></script>
-        <script>
-        (function(){
-          const trendLabels = {{ chart_trend_labels_json|default:'[]' }};
-          const trendData = {{ chart_trend_data_json|default:'[]' }};
-          const examDetails = {{ exam_details_json|default:'[]' }};
-          const examSelect = document.getElementById('exam-select');
-          const deptFilter = document.getElementById('dept-filter');
-          const summaryExams = document.getElementById('summary-exams');
-          const summaryAvg = document.getElementById('summary-avg');
-          const summaryBest = document.getElementById('summary-best');
+          <!-- Documents / Certificates Checklist -->
+          <h6 class="army-card-title mb-3" style="font-size: 14px;"><i class="bi bi-patch-check-fill text-army me-2"></i>Verified Documents</h6>
+          <div class="row g-2">
+            <div class="col-6 d-flex align-items-center mb-1">
+              <i class="bi {% if agniveer.afmsf_2a == 'Yes' %}bi-check-circle-fill text-success{% else %}bi-dash-circle text-muted{% endif %} me-2"></i>
+              <span style="font-size: 11px; color: {% if agniveer.afmsf_2a == 'Yes' %}var(--text-primary){% else %}var(--text-muted){% endif %};">AFMSF-2A</span>
+            </div>
+            <div class="col-6 d-flex align-items-center mb-1">
+              <i class="bi {% if agniveer.review_cert == 'Yes' %}bi-check-circle-fill text-success{% else %}bi-dash-circle text-muted{% endif %} me-2"></i>
+              <span style="font-size: 11px; color: {% if agniveer.review_cert == 'Yes' %}var(--text-primary){% else %}var(--text-muted){% endif %};">Review Cert</span>
+            </div>
+            <div class="col-6 d-flex align-items-center mb-1">
+              <i class="bi {% if agniveer.edn_cert == 'Yes' %}bi-check-circle-fill text-success{% else %}bi-dash-circle text-muted{% endif %} me-2"></i>
+              <span style="font-size: 11px; color: {% if agniveer.edn_cert == 'Yes' %}var(--text-primary){% else %}var(--text-muted){% endif %};">Education Cert</span>
+            </div>
+            <div class="col-6 d-flex align-items-center mb-1">
+              <i class="bi {% if agniveer.verification_roll == 'Yes' %}bi-check-circle-fill text-success{% else %}bi-dash-circle text-muted{% endif %} me-2"></i>
+              <span style="font-size: 11px; color: {% if agniveer.verification_roll == 'Yes' %}var(--text-primary){% else %}var(--text-muted){% endif %};">Verification Roll</span>
+            </div>
+            <div class="col-6 d-flex align-items-center mb-1">
+              <i class="bi {% if agniveer.character_cert == 'Yes' %}bi-check-circle-fill text-success{% else %}bi-dash-circle text-muted{% endif %} me-2"></i>
+              <span style="font-size: 11px; color: {% if agniveer.character_cert == 'Yes' %}var(--text-primary){% else %}var(--text-muted){% endif %};">Character Cert</span>
+            </div>
+            <div class="col-6 d-flex align-items-center mb-1">
+              <i class="bi {% if agniveer.unmarried_cert == 'Yes' %}bi-check-circle-fill text-success{% else %}bi-dash-circle text-muted{% endif %} me-2"></i>
+              <span style="font-size: 11px; color: {% if agniveer.unmarried_cert == 'Yes' %}var(--text-primary){% else %}var(--text-muted){% endif %};">Unmarried Cert</span>
+            </div>
+            <div class="col-6 d-flex align-items-center mb-1">
+              <i class="bi {% if agniveer.caste_cert == 'Yes' %}bi-check-circle-fill text-success{% else %}bi-dash-circle text-muted{% endif %} me-2"></i>
+              <span style="font-size: 11px; color: {% if agniveer.caste_cert == 'Yes' %}var(--text-primary){% else %}var(--text-muted){% endif %};">Caste Cert</span>
+            </div>
+            <div class="col-6 d-flex align-items-center mb-1">
+              <i class="bi {% if agniveer.domicile_cert == 'Yes' %}bi-check-circle-fill text-success{% else %}bi-dash-circle text-muted{% endif %} me-2"></i>
+              <span style="font-size: 11px; color: {% if agniveer.domicile_cert == 'Yes' %}var(--text-primary){% else %}var(--text-muted){% endif %};">Domicile Cert</span>
+            </div>
+            <div class="col-6 d-flex align-items-center mb-1">
+              <i class="bi {% if agniveer.willingness_cert == 'Yes' %}bi-check-circle-fill text-success{% else %}bi-dash-circle text-muted{% endif %} me-2"></i>
+              <span style="font-size: 11px; color: {% if agniveer.willingness_cert == 'Yes' %}var(--text-primary){% else %}var(--text-muted){% endif %};">Willingness Cert</span>
+            </div>
+            <div class="col-6 d-flex align-items-center mb-1">
+              <i class="bi {% if agniveer.ncc_cert == 'Yes' %}bi-check-circle-fill text-success{% else %}bi-dash-circle text-muted{% endif %} me-2"></i>
+              <span style="font-size: 11px; color: {% if agniveer.ncc_cert == 'Yes' %}var(--text-primary){% else %}var(--text-muted){% endif %};">NCC Cert</span>
+            </div>
+            <div class="col-6 d-flex align-items-center mb-1">
+              <i class="bi {% if agniveer.pan_card == 'Yes' %}bi-check-circle-fill text-success{% else %}bi-dash-circle text-muted{% endif %} me-2"></i>
+              <span style="font-size: 11px; color: {% if agniveer.pan_card == 'Yes' %}var(--text-primary){% else %}var(--text-muted){% endif %};">PAN Card</span>
+            </div>
+            <div class="col-6 d-flex align-items-center mb-1">
+              <i class="bi {% if agniveer.aadhar_card == 'Yes' %}bi-check-circle-fill text-success{% else %}bi-dash-circle text-muted{% endif %} me-2"></i>
+              <span style="font-size: 11px; color: {% if agniveer.aadhar_card == 'Yes' %}var(--text-primary){% else %}var(--text-muted){% endif %};">Aadhar Card</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-          function populateExamSelect(list) { if(!examSelect) return; examSelect.innerHTML=''; list.forEach((e,i)=>{const opt=document.createElement('option');opt.value=i;opt.text=e.name+(e.date?(' — '+e.date):'');examSelect.appendChild(opt);}); }
-          function computeSummary(list){ if(!summaryExams) return; const examsCount=list.length; const totals=list.map(e=>e.total||0); const avg=totals.length?(totals.reduce((a,b)=>a+b,0)/totals.length).toFixed(1):'—'; const bestIdx=totals.length?totals.indexOf(Math.max(...totals)):-1; summaryExams.textContent=examsCount; summaryAvg.textContent=avg; summaryBest.textContent=bestIdx>=0?list[bestIdx].name:'—'; }
+  <!-- Performance Summary & Charts (Right Column) -->
+  <div class="col-xl-8 col-lg-7">
+    <!-- Summary Cards -->
+    <div class="row g-3 mb-4">
+      <div class="col-md-3 col-sm-6">
+        <div class="army-card" style="padding: 16px; border-left: 4px solid var(--army-olive);">
+          <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Best Subject</div>
+          <div id="summary-best" style="font-family: 'Rajdhani', sans-serif; font-size: 24px; font-weight: 700; color: var(--text-primary); margin-top: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+            {{ stats_best_subject|default:"—" }}
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3 col-sm-6">
+        <div class="army-card" style="padding: 16px; border-left: 4px solid var(--army-gold);">
+          <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Total Marks</div>
+          <div id="summary-marks" style="font-family: 'Rajdhani', sans-serif; font-size: 24px; font-weight: 700; color: var(--text-primary); margin-top: 4px;">
+            {{ stats_total_marks|default:"—" }}
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3 col-sm-6">
+        <div class="army-card" style="padding: 16px; border-left: 4px solid #4FC3F7;">
+          <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Percentage</div>
+          <div id="summary-percentage" style="font-family: 'Rajdhani', sans-serif; font-size: 24px; font-weight: 700; color: var(--text-primary); margin-top: 4px;">
+            {{ stats_percentage|default:"—" }}
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3 col-sm-6">
+        <div class="army-card" style="padding: 16px; border-left: 4px solid #EC407A;">
+          <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Grade</div>
+          <div id="summary-grade" style="font-family: 'Rajdhani', sans-serif; font-size: 24px; font-weight: 700; color: var(--text-primary); margin-top: 4px;">
+            {{ stats_grade|default:"—" }}
+          </div>
+        </div>
+      </div>
+    </div>
 
-          populateExamSelect(examDetails); computeSummary(examDetails);
-          const trendCtx = document.getElementById('trend-chart')?.getContext('2d'); let trendChart=null; if(trendCtx){ trendChart=new Chart(trendCtx,{type:'line',data:{labels:trendLabels,datasets:[{label:'Total Marks',data:trendData,borderColor:'#52B788',backgroundColor:'rgba(82,183,136,0.2)',tension:0.3}]},options:{plugins:{legend:{display:false}},responsive:true,maintainAspectRatio:false}}); }
+    <!-- Exams & Performance Records card -->
+    <div class="army-card mb-4">
+      <div class="army-card-header d-flex justify-content-between align-items-center py-3">
+        <h6 class="army-card-title mb-0"><i class="bi bi-journal-check text-army me-2"></i>Exams & Performance Records</h6>
+        <div class="d-flex align-items-center gap-2">
+          {% if can_edit_evaluation %}
+          <a href="{% url 'departments:agniveer_detail' agniveer.id %}" class="btn btn-army btn-sm d-flex align-items-center gap-1" style="font-size: 11px; padding: 4px 10px;">
+            <i class="bi bi-pencil-square"></i>
+            <span>Go to Evaluation Sheet</span>
+          </a>
+          {% endif %}
+          <div>
+            <select id="exam-select" class="form-select form-select-sm" style="width: 180px; font-size: 11px;"></select>
+          </div>
+        </div>
+      </div>
+      <div class="army-card-body p-4">
+        <div id="exams-container">
+          {% if evaluations %}
+            {% for ev in evaluations %}
+              <div class="exam-row d-none" id="exam-row-{{ forloop.counter0 }}">
+                <div class="p-3 border rounded mb-3" style="background: rgba(255,255,255,0.01); border-color: var(--border-color) !important;">
+                  <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                      <h6 class="mb-0" style="font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 18px; color: var(--text-primary);">
+                        {{ ev.test_type_display|default:ev.test_type }}
+                      </h6>
+                      <small class="text-muted">Evaluated on {{ ev.evaluation_date }}</small>
+                    </div>
+                    <div class="text-end">
+                      <div style="font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 20px; color: var(--army-gold);">
+                        Score: {{ ev.total_marks }}
+                      </div>
+                      <div style="font-size: 11px; color: var(--army-olive);">
+                        {{ ev.percentage }}% Proficiency
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="row g-3" style="font-size: 13px;">
+                    {% if ev.data %}
+                      {% for key, value in ev.data.items %}
+                        <div class="col-md-4 col-sm-6">
+                          <div class="p-2 rounded" style="background: rgba(255,255,255,0.02);">
+                            <div style="color: var(--text-muted); font-size: 11px;">{{ key }}</div>
+                            <div class="fw-bold fs-6 mt-1" style="color: var(--text-primary);">{{ value }}</div>
+                          </div>
+                        </div>
+                      {% endfor %}
+                    {% else %}
+                      <div class="col-12 text-muted">No test fields available.</div>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+          {% else %}
+            <div class="text-center text-muted py-5">
+              <i class="bi bi-clipboard-x fs-1 d-block mb-2 opacity-50"></i>
+              No evaluation reports available for this trainee.
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
 
-          const marksCtx=document.getElementById('marks-chart')?.getContext('2d'); let marksChart=null; function showExam(idx){ const e=examDetails[idx]; if(!e||!marksCtx) return; const labels=Object.keys(e.data||{}); const data=labels.map(k=>parseFloat(e.data[k])||0); if(marksChart) marksChart.destroy(); marksChart=new Chart(marksCtx,{type:'bar',data:{labels,datasets:[{label:'Marks',data,backgroundColor:'#D4A017'}]},options:{plugins:{legend:{display:false}},responsive:true,maintainAspectRatio:false}}); }
+    <!-- selected exam marks bar chart -->
+    <div class="army-card mb-4" id="marks-chart-card">
+      <div class="army-card-header py-3">
+        <h6 class="army-card-title mb-0"><i class="bi bi-bar-chart-fill text-army me-2"></i>Selected Exam Breakdown</h6>
+      </div>
+      <div class="army-card-body p-4">
+        <div style="height: 220px; position: relative;">
+          <canvas id="marks-chart"></canvas>
+        </div>
+      </div>
+    </div>
 
-          if(examDetails.length) showExam(0); if(examSelect) examSelect.addEventListener('change',function(){showExam(parseInt(this.value));}); if(deptFilter){deptFilter.addEventListener('change',function(){const filtered=examDetails.filter(e=> this.value==='all' || e.department===this.value); populateExamSelect(filtered); computeSummary(filtered); if(trendChart){ trendChart.data.labels=filtered.map(e=>e.name+(e.date?(' - '+e.date):'')); trendChart.data.datasets[0].data=filtered.map(e=>e.total); trendChart.update(); } if(filtered.length) showExam(0); else { if(marksChart){marksChart.destroy();marksChart=null;} } }); }
-        })();
-        </script>
-        {% endblock %}
+    <!-- Category Performance Analytics Cards -->
+    <div class="row g-3">
+      <!-- Slicer Graph (Category Performance %) -->
+      <div class="col-md-6">
+        <div class="army-card h-100">
+          <div class="army-card-header py-3">
+            <h6 class="army-card-title mb-0"><i class="bi bi-bar-chart-steps text-army me-2"></i>Test Performance (Slicer)</h6>
+          </div>
+          <div class="army-card-body p-4">
+            <div style="height: 250px; position: relative;">
+              <canvas id="categorySlicerChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pie Chart (Category score distribution) -->
+      <div class="col-md-6">
+        <div class="army-card h-100">
+          <div class="army-card-header py-3">
+            <h6 class="army-card-title mb-0"><i class="bi bi-pie-chart-fill text-army me-2"></i>Test Score Distribution</h6>
+          </div>
+          <div class="army-card-body p-4">
+            <div style="height: 250px; position: relative;">
+              <canvas id="categoryPieChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% load static %}
+<script src="{% static 'js/chart.umd.min.js' %}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const examDetails = {{ exam_details_json|default:'[]' }};
+  const examSelect = document.getElementById('exam-select');
+  const marksChartCtx = document.getElementById('marks-chart')?.getContext('2d');
+  
+  let marksChart = null;
+
+  function populateExamSelect() {
+    if (!examSelect || !examDetails.length) return;
+    examSelect.innerHTML = '';
+    examDetails.forEach((e, idx) => {
+      const opt = document.createElement('option');
+      opt.value = idx;
+      opt.text = `${e.name} (${e.date})`;
+      examSelect.appendChild(opt);
+    });
+  }
+
+  function showExam(idx) {
+    const exam = examDetails[idx];
+    if (!exam) return;
+
+    // Toggle exam rows visibility
+    examDetails.forEach((_, i) => {
+      const row = document.getElementById(`exam-row-${i}`);
+      if (row) {
+        if (i === parseInt(idx)) {
+          row.classList.remove('d-none');
+        } else {
+          row.classList.add('d-none');
+        }
+      }
+    });
+
+    // Update the sub-event marks chart
+    if (marksChartCtx) {
+      const rawData = exam.data || {};
+      const labels = [];
+      const data = [];
+      
+      const excludeKeys = ['total', 'percentage', 'result', 'grading', 'status', 'remarks', 'convert', 'grand', 'round'];
+      
+      Object.keys(rawData).forEach(key => {
+        const lowerKey = key.toLowerCase();
+        const shouldExclude = excludeKeys.some(exclude => lowerKey.includes(exclude)) || ['marks', 'admin', 'nco', 'jco', 'officer'].includes(lowerKey);
+        if (!shouldExclude) {
+          labels.push(key);
+          data.push(parseFloat(rawData[key]) || 0);
+        }
+      });
+
+      if (marksChart) {
+        marksChart.destroy();
+      }
+
+      const isDark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+      const textColor = isDark ? '#E0E6F0' : '#1A2C3E';
+      const gridColor = isDark ? 'rgba(82, 183, 136, 0.1)' : 'rgba(27, 67, 50, 0.08)';
+
+      marksChart = new Chart(marksChartCtx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Marks Obtained',
+            data: data,
+            backgroundColor: 'rgba(212, 160, 23, 0.85)',
+            borderColor: '#D4A017',
+            borderWidth: 1.5,
+            borderRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            x: {
+              grid: { display: false },
+              ticks: { color: textColor, font: { family: 'Inter', size: 10 } }
+            },
+            y: {
+              grid: { color: gridColor },
+              ticks: { color: textColor, font: { family: 'Inter', size: 10 } },
+              beginAtZero: true
+            }
+          }
+        }
+      });
+    }
+  }
+
+  // Setup Exam Select Change Handler
+  if (examSelect) {
+    examSelect.addEventListener('change', function() {
+      showExam(this.value);
+    });
+  }
+
+  // Initialize Exam details and summary
+  if (examDetails.length) {
+    populateExamSelect();
+    showExam(0);
+  } else {
+    const marksCard = document.getElementById('marks-chart-card');
+    if (marksCard) marksCard.style.display = 'none';
+  }
+
+  // Setup Category Performance (Slicer Graph - Horizontal Bar Chart)
+  const categorySlicerCtx = document.getElementById('categorySlicerChart')?.getContext('2d');
+  if (categorySlicerCtx) {
+    const slicerLabels = {{ chart_slicer_labels_json|default:'[]' }};
+    const slicerData = {{ chart_slicer_data_json|default:'[]' }};
+
+    const isDark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+    const textColor = isDark ? '#E0E6F0' : '#1A2C3E';
+    const gridColor = isDark ? 'rgba(82, 183, 136, 0.1)' : 'rgba(27, 67, 50, 0.08)';
+
+    new Chart(categorySlicerCtx, {
+      type: 'bar',
+      data: {
+        labels: slicerLabels,
+        datasets: [{
+          label: 'Proficiency %',
+          data: slicerData,
+          backgroundColor: 'rgba(82, 183, 136, 0.85)',
+          borderColor: '#52B788',
+          borderWidth: 1.5,
+          borderRadius: 6
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false }
+        },
+        scales: {
+          x: {
+            grid: { color: gridColor },
+            ticks: { color: textColor, font: { family: 'Inter', size: 10 } },
+            min: 0,
+            max: 100
+          },
+          y: {
+            grid: { display: false },
+            ticks: { color: textColor, font: { family: 'Inter', size: 10 } }
+          }
+        }
+      }
+    });
+  }
+
+  // Setup Category Score Distribution (Pie/Doughnut Chart)
+  const categoryPieCtx = document.getElementById('categoryPieChart')?.getContext('2d');
+  if (categoryPieCtx) {
+    const pieLabels = {{ chart_pie_labels_json|default:'[]' }};
+    const pieData = {{ chart_pie_data_json|default:'[]' }};
+
+    const isDark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+    const textColor = isDark ? '#E0E6F0' : '#1A2C3E';
+
+    new Chart(categoryPieCtx, {
+      type: 'doughnut',
+      data: {
+        labels: pieLabels,
+        datasets: [{
+          data: pieData,
+          backgroundColor: [
+            'rgba(82, 183, 136, 0.85)',
+            'rgba(212, 160, 23, 0.85)',
+            'rgba(79, 195, 247, 0.85)',
+            'rgba(236, 64, 122, 0.85)',
+            'rgba(149, 117, 205, 0.85)',
+            'rgba(255, 138, 101, 0.85)'
+          ],
+          borderColor: isDark ? '#0F1629' : '#FFFFFF',
+          borderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'right',
+            labels: {
+              color: textColor,
+              font: { family: 'Inter', size: 10 }
+            }
+          }
+        }
+      }
+    });
+  }
+});
+</script>
+{% endblock %}
+

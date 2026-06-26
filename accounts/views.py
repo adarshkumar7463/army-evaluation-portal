@@ -18,7 +18,7 @@ from departments.models import Agniveer
 from evaluation.models import EvaluationSheet
 from .forms import (
     ArmyLoginForm, CreateGHeadForm,
-    CreateDepartmentUserForm, CreateTrainerForm, CreateRegistrationOfficeForm,
+    CreateDepartmentUserForm, CreateRegistrationOfficeForm,
     ProfileUpdateForm
 )
 from .mixins import CommanderRequiredMixin, CommanderOrGHeadMixin, CommanderOrDeptMixin
@@ -127,31 +127,64 @@ class ProfileView(LoginRequiredMixin, View):
         form = ProfileUpdateForm(instance=request.user)
         context = {'form': form}
 
-        # If an agniveer id is provided, render the agniveer profile + results (read-only)
+        # If an agniveer id is provided, render the agniveer profile + results
         agn_id = request.GET.get('agniveer')
         if agn_id:
             agn = get_object_or_404(Agniveer, pk=agn_id)
-            # Permission: only commanders, g-heads, department heads or superusers may view agniveer profiles here
-            allowed = getattr(request.user, 'is_commander', False) or getattr(request.user, 'is_g_head', False) or getattr(request.user, 'is_department', False) or request.user.is_superuser
+            # Permission: only commanders, g-heads, department heads, or superusers may view agniveer profiles here
+            allowed = (
+                getattr(request.user, 'is_commander', False) or 
+                getattr(request.user, 'is_g_head', False) or 
+                getattr(request.user, 'is_department', False) or 
+                request.user.is_superuser
+            )
             if not allowed:
                 messages.error(request, "You don't have permission to view this profile.")
                 return redirect('departments:agniveer_list')
+            
             # Prepare evaluations according to permission scope
-            sheets = EvaluationSheet.objects.filter(agniveer=agn, is_locked=True).order_by('-evaluation_date')
-            # Department heads see only their department's results
-            if getattr(request.user, 'is_department', False):
-                dept_code = request.user.department
+            sheets = EvaluationSheet.objects.filter(agniveer=agn).order_by('-evaluation_date')
+            
+            user = request.user
+            dept_code = user.get_department_code()
+            
+            if user.is_commander or user.is_g_head or user.is_superuser:
+                # Commander and G-head can see all test sections across all departments
+                pass
+            elif user.is_department:
+                # Filter by department
                 sheets = sheets.filter(department=dept_code)
+                
+                # Further filter by sub-department (trade / battalion unit)
+                if dept_code == 'B' and getattr(user, 'tts_trade', None):
+                    trade = user.tts_trade
+                    if trade == 'DMV':
+                        sheets = sheets.filter(test_type__startswith='DMV_')
+                    elif trade == 'OPEM':
+                        sheets = sheets.filter(test_type__startswith='OPEM_')
+                    else: # OTHER, TECHNICAL, TRADESMAN
+                        # Exclude DMV and OPEM sheets
+                        sheets = sheets.exclude(test_type__startswith='DMV_').exclude(test_type__startswith='OPEM_')
+                elif dept_code == 'A' and getattr(user, 'battalion_unit', None):
+                    if agn.bn_desp != user.battalion_unit:
+                        sheets = sheets.none()
+            else:
+                sheets = sheets.none()
+
+            # Reorder evaluations: final result sheets first, followed by other tests in date descending order
+            FINAL_RESULT_TESTS = {
+                'FINAL_RESULT', 'FINAL_MERIT', 'DMV_RESULT', 'OPEM_RESULT',
+                'OTHER_ASSESSMENT', 'CS_RESULT', 'CS_CLERK_RESULT', 'CLK_FINAL'
+            }
+            sheets = list(sheets)  # Convert QuerySet to list to sort
+            sheets.sort(
+                key=lambda s: 0 if s.test_type in FINAL_RESULT_TESTS else 1
+            )
 
             evals = []
             for s in sheets:
-                # Prepare display data: prefer sub_event_results, else breakdown by evaluator marks
-                data = s.sub_event_results or {
-                    'NCO': s.get_nco_marks(),
-                    'JCO': s.get_jco_marks(),
-                    'Officer': s.get_officer_marks(),
-                    'Admin': s.get_admin_marks(),
-                }
+                # Prepare display data: only show sub_event_results and do not fall back to evaluator marks
+                data = s.sub_event_results or {}
                 evals.append({
                     'test_type': s.test_type,
                     'test_type_display': s.get_test_type_display(),
@@ -177,10 +210,94 @@ class ProfileView(LoginRequiredMixin, View):
                     'department': e['department'],
                 })
 
+            # Check edit permission
+            can_edit = False
+            if user.is_department:
+                if dept_code == 'B' and getattr(user, 'tts_trade', None):
+                    if user.tts_trade == 'DMV' and agn.trade == 'DMV':
+                        can_edit = True
+                    elif user.tts_trade == 'OPEM' and agn.trade == 'OPEM':
+                        can_edit = True
+                    elif user.tts_trade in ['OTHER', 'TECHNICAL', 'TRADESMAN'] and agn.trade not in ['DMV', 'OPEM']:
+                        can_edit = True
+                elif dept_code == 'A' and getattr(user, 'battalion_unit', None):
+                    if agn.bn_desp == user.battalion_unit:
+                        can_edit = True
+                else:
+                    can_edit = True
+
+            # Group sheets by department-wise test types for charts
+            MAX_MARKS_MAP = {
+                # Dept A
+                'PPT': 100, 'BPET': 100, 'Firing': 100, 'DST': 160, 'MR_III': 150,
+                'BFC': 240, 'PDP': 50, 'FC_All': 90, 'CMK_SHEET': 20,
+                'WPN_HANDLING': 20, 'FINAL_MERIT': 130, 'FINAL_RESULT': 120,
+                # Dept B
+                'DMV_PRACTICAL': 50, 'DMV_DRIVING': 50, 'DMV_ASSESSMENT': 71, 'DMV_RESULT': 40,
+                'OPEM_PRACTICAL': 50, 'OPEM_MAINTENANCE': 50, 'OPEM_ASSESSMENT': 71, 'OPEM_RESULT': 40,
+                'OTHER_ASSESSMENT': 40, 'DMV_SCREEN_BOARD': 40, 'OPEM_SCREEN_BOARD': 40, 'OTHER_SCREEN_BOARD': 40,
+                # Dept C
+                'CS_ASSESSMENT': 86, 'CS_RESULT': 40, 'CS_CLERK_RESULT': 40,
+                # Dept D
+                'CLK_INITIAL': 125, 'CLK_WEEKLY_1': 150, 'CLK_WEEKLY_2': 275, 'CLK_FINAL': 40,
+            }
+            
+            # Compute top stats
+            best_test_name = "—"
+            max_pct = -1.0
+            obtained_sum = 0.0
+            max_sum = 0.0
+            
+            for s in sheets:
+                pct = float(s.get_percentage() or 0.0)
+                obtained = float(s.get_total_marks() or 0.0)
+                max_val = float(MAX_MARKS_MAP.get(s.test_type, 100.0))
+                
+                if pct > max_pct:
+                    max_pct = pct
+                    best_test_name = s.get_test_type_display()
+                
+                obtained_sum += obtained
+                max_sum += max_val
+
+            overall_percentage = (obtained_sum / max_sum * 100) if max_sum > 0 else 0.0
+            
+            from evaluation.result_helpers import get_grade
+            passing_pct = 40 if dept_code == 'A' else 50
+            overall_grade = get_grade(overall_percentage, passing_pct=passing_pct)
+
+            # Department-wise tests for Slicer and Pie charts
+            test_obtained = {}
+            test_percentages = {}
+            for s in sheets:
+                test_label = s.get_test_type_display()
+                if test_label not in test_obtained:
+                    obtained = s.get_total_marks() or 0.0
+                    max_val = MAX_MARKS_MAP.get(s.test_type, 100.0)
+                    pct = (float(obtained) / float(max_val) * 100) if max_val > 0 else 0.0
+                    
+                    test_obtained[test_label] = round(float(obtained), 1)
+                    test_percentages[test_label] = round(float(pct), 1)
+
+            pie_labels = list(test_obtained.keys())
+            pie_data = list(test_obtained.values())
+            
+            slicer_labels = list(test_percentages.keys())
+            slicer_data = list(test_percentages.values())
+
             context.update({
                 'chart_trend_labels_json': mark_safe(json.dumps(trend_labels)),
                 'chart_trend_data_json': mark_safe(json.dumps(trend_data)),
                 'exam_details_json': mark_safe(json.dumps(exam_details)),
+                'chart_pie_labels_json': mark_safe(json.dumps(pie_labels)),
+                'chart_pie_data_json': mark_safe(json.dumps(pie_data)),
+                'chart_slicer_labels_json': mark_safe(json.dumps(slicer_labels)),
+                'chart_slicer_data_json': mark_safe(json.dumps(slicer_data)),
+                'can_edit_evaluation': can_edit,
+                'stats_best_subject': best_test_name,
+                'stats_total_marks': f"{round(obtained_sum, 1)} / {round(max_sum, 1)}" if max_sum > 0 else "—",
+                'stats_percentage': f"{round(overall_percentage, 1)}%" if max_sum > 0 else "—",
+                'stats_grade': overall_grade,
             })
 
             # Departments list for filter (for ghead/commander)
@@ -219,8 +336,7 @@ class UserListView(CommanderOrGHeadMixin, ListView):
     def get_queryset(self):
         queryset = CustomUser.objects.exclude(role='commander').select_related('created_by')
         if self.request.user.is_g_head:
-            queryset = queryset.filter(role__in=['dept_a', 'dept_b', 'dept_c', 'dept_d',
-                                                'trainer_nco', 'trainer_jco', 'trainer_officer'])
+            queryset = queryset.filter(role__in=['dept_a', 'dept_b', 'dept_c', 'dept_d'])
         # Filter
         role_filter = self.request.GET.get('role')
         dept_filter = self.request.GET.get('department')
@@ -247,38 +363,6 @@ class UserListView(CommanderOrGHeadMixin, ListView):
         return ctx
 
 
-class MyTeamListView(CommanderOrDeptMixin, ListView):
-    model = CustomUser
-    template_name = 'accounts/user_list.html'
-    context_object_name = 'users'
-    paginate_by = 20
-
-    def get_queryset(self):
-        user = self.request.user
-        queryset = CustomUser.objects.filter(
-            role__in=['trainer_nco', 'trainer_jco', 'trainer_officer']
-        ).select_related('created_by')
-        
-        # Commanders and G-Heads see all trainers. Department heads only see their own.
-        if user.is_department:
-            dept = user.get_department_code()
-            queryset = queryset.filter(department=dept)
-        
-        search = self.request.GET.get('search')
-        if search:
-            queryset = queryset.filter(
-                Q(username__icontains=search) |
-                Q(first_name__icontains=search) |
-                Q(last_name__icontains=search) |
-                Q(service_number__icontains=search)
-            )
-        return queryset.order_by('-created_at')
-
-    def get_context_data(self, **kwargs):
-        ctx = super().get_context_data(**kwargs)
-        ctx['title'] = 'My Team'
-        ctx['is_my_team'] = True
-        return ctx
 
 
 class CreateGHeadView(CommanderRequiredMixin, CreateView):
@@ -321,32 +405,6 @@ class CreateDepartmentView(CommanderOrGHeadMixin, CreateView):
         return redirect('accounts:user_list')
 
 
-class CreateTrainerView(CommanderOrDeptMixin, CreateView):
-    model = CustomUser
-    form_class = CreateTrainerForm
-    template_name = 'accounts/create_user.html'
-
-    def get_context_data(self, **kwargs):
-        ctx = super().get_context_data(**kwargs)
-        ctx['title'] = 'Create Trainer'
-        ctx['role_label'] = 'Trainer'
-        if self.request.user.is_department:
-            ctx['department_code'] = self.request.user.get_department_code()
-        return ctx
-
-    def form_valid(self, form):
-        user = form.save(commit=False)
-        user.created_by = self.request.user
-        # Department trainers inherit the department
-        if self.request.user.is_department:
-            user.department = self.request.user.get_department_code()
-        user.save()
-        log_action(self.request.user, 'CREATE', f'Created Trainer: {user.username}', self.request)
-        messages.success(self.request, f"Trainer '{user.get_full_name()}' created successfully.")
-        
-        if self.request.user.is_department:
-            return redirect('accounts:my_team')
-        return redirect('accounts:user_list')
 
 
 class CreateRegistrationOfficeView(CommanderRequiredMixin, CreateView):
@@ -376,8 +434,8 @@ class ToggleUserActiveView(CommanderOrDeptMixin, View):
         # Permission check: Department heads can only toggle trainers in their department
         if request.user.is_department:
             if user.department != request.user.get_department_code():
-                messages.error(request, "You can only toggle trainers in your department.")
-                return redirect('accounts:my_team')
+                messages.error(request, "You can only toggle users in your department.")
+                return redirect('accounts:user_list')
         
         user.is_active = not user.is_active
         user.save(update_fields=['is_active'])

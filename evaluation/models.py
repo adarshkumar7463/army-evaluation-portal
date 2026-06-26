@@ -92,17 +92,6 @@ class EvaluationSheet(models.Model):
     def __str__(self):
         return f"{self.agniveer} - {self.get_test_type_display()}"
 
-    def get_nco_marks(self):
-        mark = self.marks.filter(evaluator_type='nco').first()
-        return mark.marks if mark else 0
-
-    def get_jco_marks(self):
-        mark = self.marks.filter(evaluator_type='jco').first()
-        return mark.marks if mark else 0
-
-    def get_officer_marks(self):
-        mark = self.marks.filter(evaluator_type='officer').first()
-        return mark.marks if mark else 0
 
     def get_admin_marks(self):
         mark = self.marks.filter(evaluator_type='admin').first()
@@ -172,11 +161,9 @@ class EvaluationSheet(models.Model):
                 
             return round(cmk_20 + basic_tac + trade_prof + wpn_handling_20)
 
-        # Admin marks supersede individual evaluator marks if present
+        # Admin marks represent the official marks for this sheet
         admin_mark = self.marks.filter(evaluator_type='admin').first()
-        if admin_mark is not None:
-            return admin_mark.marks
-        return self.get_nco_marks() + self.get_jco_marks() + self.get_officer_marks()
+        return admin_mark.marks if admin_mark is not None else 0
 
     def get_max_marks(self):
         if self.test_type in ['DMV_RESULT', 'OPEM_RESULT']:
@@ -238,7 +225,8 @@ class EvaluationSheet(models.Model):
         return self.get_percentage() >= passing_percentage
 
     def is_complete(self):
-        return self.marks.count() >= 3
+        # Completed when admin marks have been entered
+        return self.marks.filter(evaluator_type='admin').exists()
 
     def can_be_locked(self):
         return self.is_complete() and not self.is_locked
@@ -250,9 +238,6 @@ class Marks(models.Model):
     Max 20 marks per evaluator.
     """
     EVALUATOR_CHOICES = [
-        ('nco', 'NCO'),
-        ('jco', 'JCO'),
-        ('officer', 'Officer'),
         ('admin', 'Department Admin'),
     ]
 

@@ -259,8 +259,6 @@ class DashboardView(LoginRequiredMixin, View):
             return GHeadDashboard().get(request)
         elif user.is_department:
             return DepartmentDashboard().get(request)
-        elif user.is_trainer:
-            return TrainerDashboard().get(request)
         elif user.is_registration_office:
             return redirect('departments:agniveer_list')
         return render(request, 'core/dashboard.html', {})
@@ -270,7 +268,6 @@ class CommanderDashboard(LoginRequiredMixin, View):
     def get(self, request):
         # Key stats
         total_agniveers = Agniveer.objects.count()
-        total_trainers = CustomUser.objects.filter(role__in=['trainer_nco', 'trainer_jco', 'trainer_officer']).count()
         total_g_heads = CustomUser.objects.filter(role='g_head').count()
         total_depts = CustomUser.objects.filter(role__in=['dept_a', 'dept_b', 'dept_c', 'dept_d']).count()
 
@@ -427,7 +424,7 @@ class CommanderDashboard(LoginRequiredMixin, View):
         context = {
             'page_title': 'Commander Dashboard',
             'total_agniveers': total_agniveers,
-            'total_trainers': total_trainers,
+            'total_trainers': 0,
             'total_g_heads': total_g_heads,
             'total_depts': total_depts,
             'evaluated_agniveers': evaluated_agniveers,
@@ -481,7 +478,6 @@ class GHeadDashboard(LoginRequiredMixin, View):
         pass_count = len(passed_agniveers)
         fail_count = len(failed_agniveers)
         evaluated_agniveers = pass_count + fail_count
-        total_trainers = CustomUser.objects.filter(role__in=['trainer_nco', 'trainer_jco', 'trainer_officer']).count()
         evaluated_sheets_count = sum(1 for s in all_sheets if is_sheet_evaluated(s))
         completion_rate = (evaluated_sheets_count / max(total_agniveers * 28, 1)) * 100 if total_agniveers > 0 else 0
 
@@ -587,7 +583,7 @@ class GHeadDashboard(LoginRequiredMixin, View):
         context = {
             'page_title': 'G Head Dashboard',
             'total_agniveers': total_agniveers,
-            'total_trainers': total_trainers,
+            'total_trainers': 0,
             'evaluated_agniveers': evaluated_agniveers,
             'pass_count': pass_count,
             'fail_count': fail_count,
@@ -625,21 +621,15 @@ class DepartmentDashboard(LoginRequiredMixin, View):
         user = request.user
         dept = user.get_department_code()
         agniveers = Agniveer.objects.all()
-        trainers = CustomUser.objects.filter(
-            role__in=['trainer_nco', 'trainer_jco', 'trainer_officer'],
-            department=dept
-        )
 
         if user.is_battalion:
             if user.battalion_unit:
                 agniveers = agniveers.filter(get_bn_desp_q('bn_desp', user.battalion_unit))
-                trainers = trainers.filter(get_bn_desp_q('battalion_unit', user.battalion_unit))
             else:
                 battalion_units = get_bn_desp_list([choice[0] for choice in CustomUser.BATTALION_CHOICES])
                 agniveers = agniveers.filter(bn_desp__in=battalion_units)
         elif dept == 'B':
             if user.tts_trade:
-                trainers = trainers.filter(tts_trade=user.tts_trade)
                 if user.tts_trade == 'DMV':
                     agniveers = agniveers.filter(trade='DMV')
                 elif user.tts_trade == 'OPEM':
@@ -655,10 +645,8 @@ class DepartmentDashboard(LoginRequiredMixin, View):
 
         if hasattr(user, 'company') and user.company:
             agniveers = agniveers.filter(company=user.company)
-            trainers = trainers.filter(company=user.company)
         if hasattr(user, 'platoon') and user.platoon:
             agniveers = agniveers.filter(platoon=user.platoon)
-            trainers = trainers.filter(platoon=user.platoon)
 
         # Get department-specific config
         from evaluation.constants import get_dept_config
@@ -825,7 +813,7 @@ class DepartmentDashboard(LoginRequiredMixin, View):
             'sub_dept': sub_dept,
             'dept_name': dept_name,
             'total_agniveers': all_agniveers.count(),
-            'total_trainers': trainers.count(),
+            'total_trainers': 0,
             'evaluated_agniveers': evaluated_agniveers,
             'completion_rate': round(completion_rate, 1),
             'pass_count': pass_count,
@@ -848,55 +836,15 @@ class DepartmentDashboard(LoginRequiredMixin, View):
         # Add test types scoped to the specific user's sub-department
         # (e.g. DMV users only see DMV tests, OPEM only OPEM, Battalion only Battalion tests)
         from evaluation.constants import get_dept_config
-        user_config = get_dept_config(dept, user)
-        context['test_types'] = user_config.get('test_types', [])
+        if dept == 'B' and not getattr(user, 'tts_trade', None):
+            context['test_types'] = get_all_test_types_for_dept('B')
+        else:
+            user_config = get_dept_config(dept, user)
+            context['test_types'] = user_config.get('test_types', [])
         return render(request, 'core/department_dashboard_advanced.html', context)
 
 
-class TrainerDashboard(LoginRequiredMixin, View):
-    def get(self, request):
-        trainer = request.user
-        agniveers = Agniveer.objects.all()
-        dept = trainer.get_department_code()
 
-        if trainer.is_battalion:
-            if trainer.battalion_unit:
-                agniveers = agniveers.filter(get_bn_desp_q('bn_desp', trainer.battalion_unit))
-        elif dept == 'B':
-            if trainer.tts_trade:
-                if trainer.tts_trade == 'DMV':
-                    agniveers = agniveers.filter(trade='DMV')
-                elif trainer.tts_trade == 'OPEM':
-                    agniveers = agniveers.filter(trade='OPEM')
-                elif trainer.tts_trade == 'OTHER':
-                    agniveers = agniveers.exclude(trade__in=['DMV', 'OPEM'])
-        elif dept == 'D':
-            agniveers = agniveers.filter(trade__in=CLERK_TRADES)
-
-        if hasattr(trainer, 'company') and trainer.company:
-            agniveers = agniveers.filter(company=trainer.company)
-        if hasattr(trainer, 'platoon') and trainer.platoon:
-            agniveers = agniveers.filter(platoon=trainer.platoon)
-
-        # Evaluations done by this trainer
-        my_marks = Marks.objects.filter(evaluator=trainer).select_related('evaluation_sheet__agniveer')
-        if hasattr(trainer, 'company') and trainer.company:
-            my_marks = my_marks.filter(evaluation_sheet__agniveer__company=trainer.company)
-        if hasattr(trainer, 'platoon') and trainer.platoon:
-            my_marks = my_marks.filter(evaluation_sheet__agniveer__platoon=trainer.platoon)
-
-        page_title = f'{trainer.get_role_display()} Dashboard'
-        if hasattr(trainer, 'platoon') and trainer.platoon:
-            comp_str = f" {trainer.company}" if hasattr(trainer, 'company') and trainer.company else ""
-            page_title = f'{trainer.get_role_display()}{comp_str} {trainer.platoon} Dashboard'
-
-        context = {
-            'page_title': page_title,
-            'total_assigned': agniveers.count(),
-            'evaluations_done': my_marks.count(),
-            # 'assigned_agniveers' removed (trainer assignment deprecated)
-        }
-        return render(request, 'core/trainer_dashboard.html', context)
 
 
 class AgniveerSearchView(LoginRequiredMixin, View):

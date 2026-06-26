@@ -27,22 +27,25 @@
   <!-- Left Side: Role Info & Form Controls -->
   <div class="col-lg-4 d-flex flex-column gap-3">
     <!-- Role Info Panel -->
-    <div style="background: rgba(37, 111, 147, 0.08); border: 1px solid var(--portal-line); border-radius: 8px; padding: 14px 18px; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between;">
+    <div
+      style="background: rgba(37, 111, 147, 0.08); border: 1px solid var(--portal-line); border-radius: 8px; padding: 14px 18px; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between;">
       <div>
-        <div style="font-family: 'Rajdhani', sans-serif; font-size: 13px; font-weight: 700; color: var(--portal-accent); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">
+        <div
+          style="font-family: 'Rajdhani', sans-serif; font-size: 13px; font-weight: 700; color: var(--portal-accent); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">
           <i class="bi bi-info-circle-fill me-1"></i> Creating: {{ role_label }} Account
         </div>
         <div style="font-size: 11px; color: var(--portal-muted); line-height: 1.5;">
           {% if role_label == 'G Head' %}
-            G Department Head has access to all departments and can create department users, view all Agniveers and analytics.
+          G Department Head has access to all departments and can create department users, view all Agniveers and
+          analytics.
           {% elif role_label == 'Department' %}
-            Department users can manage their specific department — create Trainers and assign evaluations.
+          Department users can manage their specific department — create Trainers and assign evaluations.
           {% elif role_label == 'Trainer' %}
-            Trainers (NCO/JCO/Officer) can evaluate assigned Agniveers and submit marks (max 20 marks each).
+          Trainers (NCO/JCO/Officer) can evaluate assigned Agniveers and submit marks (max 20 marks each).
           {% endif %}
         </div>
       </div>
-      
+
       <div class="d-flex flex-column gap-2 mt-4">
         {% if is_department %}
         <a href="{% url 'accounts:my_team' %}" class="btn btn-army-outline w-100 py-2">
@@ -60,17 +63,20 @@
   <!-- Right Side: The Form fields (taking full space directly on the page, no cards) -->
   <div class="col-lg-8">
     <div style="background: transparent; border: none; padding: 0 10px;">
-      <form method="post" id="userForm" data-role-label="{{ role_label|default:'' }}" data-dept-code="{{ department_code|default:'' }}">
+      <form method="post" id="userForm" data-role-label="{{ role_label|default:'' }}"
+        data-dept-code="{{ department_code|default:'' }}">
         {% csrf_token %}
 
-        <div class="section-divider" style="margin-top: 0; margin-bottom: 12px; font-weight: 700; border-bottom: 1px solid var(--portal-line); padding-bottom: 4px; text-transform: uppercase;">
+        <div class="section-divider"
+          style="margin-top: 0; margin-bottom: 12px; font-weight: 700; border-bottom: 1px solid var(--portal-line); padding-bottom: 4px; text-transform: uppercase;">
           <i class="bi bi-person-fill"></i> Personal Details
         </div>
         <div class="row g-2 mb-3">
           <div class="col-md-4">
             <label class="form-label">First Name *</label>
             {{ form.first_name }}
-            {% if form.first_name.errors %}<div style="color:var(--portal-danger); font-size:10px; margin-top:2px;">{{ form.first_name.errors.0 }}</div>{% endif %}
+            {% if form.first_name.errors %}<div style="color:var(--portal-danger); font-size:10px; margin-top:2px;">{{
+              form.first_name.errors.0 }}</div>{% endif %}
           </div>
           <div class="col-md-4">
             <label class="form-label">Last Name *</label>
@@ -79,7 +85,8 @@
           <div class="col-md-4">
             <label class="form-label">Username *</label>
             {{ form.username }}
-            {% if form.username.errors %}<div style="color:var(--portal-danger); font-size:10px; margin-top:2px;">{{ form.username.errors.0 }}</div>{% endif %}
+            {% if form.username.errors %}<div style="color:var(--portal-danger); font-size:10px; margin-top:2px;">{{
+              form.username.errors.0 }}</div>{% endif %}
           </div>
           <div class="col-md-6">
             <label class="form-label">Email</label>
@@ -92,7 +99,8 @@
           <div class="col-md-6">
             <label class="form-label">Service Number</label>
             {{ form.service_number }}
-            {% if form.service_number.errors %}<div style="color:var(--portal-danger); font-size:10px; margin-top:2px;">{{ form.service_number.errors.0 }}</div>{% endif %}
+            {% if form.service_number.errors %}<div style="color:var(--portal-danger); font-size:10px; margin-top:2px;">
+              {{ form.service_number.errors.0 }}</div>{% endif %}
           </div>
           <div class="col-md-6">
             <label class="form-label">Rank</label>
@@ -101,7 +109,8 @@
         </div>
 
         {% if form.role or form.battalion_unit or form.tts_trade or form.platoon %}
-        <div class="section-divider" style="margin-bottom: 12px; font-weight: 700; border-bottom: 1px solid var(--portal-line); padding-bottom: 4px; text-transform: uppercase;">
+        <div class="section-divider"
+          style="margin-bottom: 12px; font-weight: 700; border-bottom: 1px solid var(--portal-line); padding-bottom: 4px; text-transform: uppercase;">
           <i class="bi bi-gear-fill"></i> Assignment Details
         </div>
         <div class="row g-2 mb-3">
@@ -111,12 +120,12 @@
             {{ form.role }}
           </div>
           {% endif %}
-          
+
           <div class="col-md-4" id="battalion_container" style="display:none;">
             <label class="form-label">Battalion Scope</label>
             {{ form.battalion_unit }}
           </div>
-          
+
           <div class="col-md-4" id="tts_container" style="display:none;">
             <label class="form-label">TTS Scope</label>
             {{ form.tts_trade }}
@@ -138,14 +147,16 @@
         </div>
         {% endif %}
 
-        <div class="section-divider" style="margin-bottom: 12px; font-weight: 700; border-bottom: 1px solid var(--portal-line); padding-bottom: 4px; text-transform: uppercase;">
+        <div class="section-divider"
+          style="margin-bottom: 12px; font-weight: 700; border-bottom: 1px solid var(--portal-line); padding-bottom: 4px; text-transform: uppercase;">
           <i class="bi bi-shield-lock-fill"></i> Security
         </div>
         <div class="row g-2 mb-3">
           <div class="col-md-6">
             <label class="form-label">Password *</label>
             {{ form.password }}
-            {% if form.password.errors %}<div style="color:var(--portal-danger); font-size:10px; margin-top:2px;">{{ form.password.errors.0 }}</div>{% endif %}
+            {% if form.password.errors %}<div style="color:var(--portal-danger); font-size:10px; margin-top:2px;">{{
+              form.password.errors.0 }}</div>{% endif %}
           </div>
           <div class="col-md-6">
             <label class="form-label">Confirm Password *</label>
@@ -178,7 +189,7 @@
 
 {% block extra_js %}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+  document.addEventListener('DOMContentLoaded', function () {
     const userForm = document.getElementById('userForm');
     const roleSelect = document.getElementById('id_role_select') || document.querySelector('[name="role"]');
     const bnContainer = document.getElementById('battalion_container');
@@ -188,115 +199,115 @@ document.addEventListener('DOMContentLoaded', function() {
     const bnSelect = document.getElementById('id_battalion_select');
     const companySelect = document.getElementById('id_company_select');
     const platoonSelect = document.getElementById('id_platoon_select');
-    
+
     const roleLabel = userForm.dataset.roleLabel;
     const deptCode = userForm.dataset.deptCode;
 
     function updateCompanyChoices() {
-        if (!companySelect) return;
-        const bnVal = bnSelect ? bnSelect.value : "";
-        const currentCompanyVal = companySelect.value;
-        
-        companySelect.innerHTML = '<option value="">--- All Companies / No Company ---</option>';
-        
-        let allowed = [];
-        if (bnVal === '1TB') {
-            allowed = ['Company A', 'Company B', 'Company C'];
-        } else if (bnVal === '2TB') {
-            allowed = ['Company D', 'Company E', 'Company F'];
-        } else if (bnVal === 'STB') {
-            allowed = ['Company G', 'Company H', 'Company I'];
-        } else {
-            allowed = ['Company A', 'Company B', 'Company C', 'Company D', 'Company E', 'Company F', 'Company G', 'Company H', 'Company I'];
+      if (!companySelect) return;
+      const bnVal = bnSelect ? bnSelect.value : "";
+      const currentCompanyVal = companySelect.value;
+
+      companySelect.innerHTML = '<option value="">--- All Companies / No Company ---</option>';
+
+      let allowed = [];
+      if (bnVal === '1TB') {
+        allowed = ['Company A', 'Company B', 'Company C'];
+      } else if (bnVal === '2TB') {
+        allowed = ['Company D', 'Company E', 'Company F'];
+      } else if (bnVal === 'STB') {
+        allowed = ['Company G', 'Company H', 'Company I'];
+      } else {
+        allowed = ['Company A', 'Company B', 'Company C', 'Company D', 'Company E', 'Company F', 'Company G', 'Company H', 'Company I'];
+      }
+
+      allowed.forEach(opt => {
+        const el = document.createElement('option');
+        el.value = opt;
+        el.textContent = opt;
+        if (opt === currentCompanyVal) {
+          el.selected = true;
         }
-        
-        allowed.forEach(opt => {
-            const el = document.createElement('option');
-            el.value = opt;
-            el.textContent = opt;
-            if (opt === currentCompanyVal) {
-                el.selected = true;
-            }
-            companySelect.appendChild(el);
-        });
-        updatePlatoonChoices();
+        companySelect.appendChild(el);
+      });
+      updatePlatoonChoices();
     }
 
     function updatePlatoonChoices() {
-        if (!platoonSelect) return;
-        const compVal = companySelect ? companySelect.value : "";
-        const currentPlatoonVal = platoonSelect.value;
-        
-        platoonSelect.innerHTML = '<option value="">--- All Platoons / No Platoon ---</option>';
-        
-        let allowed = [];
-        if (compVal === 'Company A' || compVal === 'Company D' || compVal === 'Company G') {
-            allowed = ['P1', 'P2', 'P3'];
-        } else if (compVal === 'Company B' || compVal === 'Company E' || compVal === 'Company H') {
-            allowed = ['P4', 'P5', 'P6'];
-        } else if (compVal === 'Company C' || compVal === 'Company F' || compVal === 'Company I') {
-            allowed = ['P7', 'P8', 'P9'];
-        } else {
-            allowed = ['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'P8', 'P9'];
+      if (!platoonSelect) return;
+      const compVal = companySelect ? companySelect.value : "";
+      const currentPlatoonVal = platoonSelect.value;
+
+      platoonSelect.innerHTML = '<option value="">--- All Platoons / No Platoon ---</option>';
+
+      let allowed = [];
+      if (compVal === 'Company A' || compVal === 'Company D' || compVal === 'Company G') {
+        allowed = ['P1', 'P2', 'P3'];
+      } else if (compVal === 'Company B' || compVal === 'Company E' || compVal === 'Company H') {
+        allowed = ['P4', 'P5', 'P6'];
+      } else if (compVal === 'Company C' || compVal === 'Company F' || compVal === 'Company I') {
+        allowed = ['P7', 'P8', 'P9'];
+      } else {
+        allowed = ['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'P8', 'P9'];
+      }
+
+      allowed.forEach(opt => {
+        const el = document.createElement('option');
+        el.value = opt;
+        el.textContent = opt;
+        if (opt === currentPlatoonVal) {
+          el.selected = true;
         }
-        
-        allowed.forEach(opt => {
-            const el = document.createElement('option');
-            el.value = opt;
-            el.textContent = opt;
-            if (opt === currentPlatoonVal) {
-                el.selected = true;
-            }
-            platoonSelect.appendChild(el);
-        });
+        platoonSelect.appendChild(el);
+      });
     }
 
     function updateVisibility() {
-        const role = roleSelect ? roleSelect.value : "";
-        
-        bnContainer.style.display = 'none';
-        ttsContainer.style.display = 'none';
-        if (companyContainer) companyContainer.style.display = 'none';
-        if (platoonContainer) platoonContainer.style.display = 'none';
+      const role = roleSelect ? roleSelect.value : "";
 
-        if (role === 'dept_a' || (roleLabel === 'Trainer' && role.startsWith('trainer_'))) {
-            bnContainer.style.display = 'block';
-        } 
-        
-        if (role === 'dept_b' || (roleLabel === 'Trainer' && role.startsWith('trainer_'))) {
-            ttsContainer.style.display = 'block';
-        }
+      bnContainer.style.display = 'none';
+      ttsContainer.style.display = 'none';
+      if (companyContainer) companyContainer.style.display = 'none';
+      if (platoonContainer) platoonContainer.style.display = 'none';
 
-        if (companyContainer && (role.startsWith('dept_') || role.startsWith('trainer_') || roleLabel === 'Trainer' || roleLabel === 'Department' || deptCode)) {
-            companyContainer.style.display = 'block';
-        }
+      if (role === 'dept_a') {
+        bnContainer.style.display = 'block';
+      }
 
-        if (platoonContainer && (role.startsWith('dept_') || role.startsWith('trainer_') || roleLabel === 'Trainer' || roleLabel === 'Department' || deptCode)) {
-            platoonContainer.style.display = 'block';
+      if (role === 'dept_b') {
+        ttsContainer.style.display = 'block';
+      }
+
+      if (companyContainer && (role.startsWith('dept_') || roleLabel === 'Department' || deptCode)) {
+        companyContainer.style.display = 'block';
+      }
+
+      if (platoonContainer && (role.startsWith('dept_') || roleLabel === 'Department' || deptCode)) {
+        platoonContainer.style.display = 'block';
+      }
+
+      if (deptCode) {
+        if (deptCode === 'A') {
+          bnContainer.style.display = 'block';
+          ttsContainer.style.display = 'none';
+        } else if (deptCode === 'B') {
+          ttsContainer.style.display = 'block';
+          bnContainer.style.display = 'none';
         }
-        
-        if (deptCode) {
-            if (deptCode === 'A') {
-                bnContainer.style.display = 'block';
-                ttsContainer.style.display = 'none';
-            } else if (deptCode === 'B') {
-                ttsContainer.style.display = 'block';
-                bnContainer.style.display = 'none';
-            }
-        }
-        updateCompanyChoices();
+      }
+      updateCompanyChoices();
     }
 
     if (roleSelect) {
-        roleSelect.addEventListener('change', updateVisibility);
+      roleSelect.addEventListener('change', updateVisibility);
     }
     if (bnSelect) {
-        bnSelect.addEventListener('change', updateCompanyChoices);
+      bnSelect.addEventListener('change', updateCompanyChoices);
     }
     if (companySelect) {
-        companySelect.addEventListener('change', updatePlatoonChoices);
+      companySelect.addEventListener('change', updatePlatoonChoices);
     }
     updateVisibility();
-});
+  });
 </script>
 {% endblock %}

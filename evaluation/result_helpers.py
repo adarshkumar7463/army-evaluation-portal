@@ -1,4 +1,4 @@
-ALL_BATTALION_UNITS_LIST = ['1TB', '2TB', '3TB', '4TB', '5TB', 'STB', '1 TB', '2 TB', '3 TB', '4 TB', '5 TB']
+ALL_BATTALION_UNITS_LIST = ['1TB', '2TB', 'STB']
 
 def get_bn_desp_list(unit):
     if not unit:

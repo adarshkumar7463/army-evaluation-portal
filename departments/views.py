@@ -428,16 +428,19 @@ class AgniveerListView(AnyStaffMixin, ListView):
         if platoon_param:
             queryset = queryset.filter(platoon=platoon_param)
 
-        if eval_filter and user.is_department:
-            from evaluation.constants import get_dept_config
+        if eval_filter and (user.is_department or user.is_commander or user.is_g_head):
             from evaluation.result_helpers import is_sheet_evaluated
-            config = get_dept_config(dept or 'A', user)
-            test_types = [test[0] for test in config['test_types']]
+            if user.is_department:
+                from evaluation.constants import get_dept_config
+                config = get_dept_config(dept or 'A', user)
+                test_types = [test[0] for test in config['test_types']]
 
-            all_dept_sheets = EvaluationSheet.objects.filter(
-                department=dept,
-                test_type__in=test_types,
-            ).prefetch_related('marks')
+                all_dept_sheets = EvaluationSheet.objects.filter(
+                    department=dept,
+                    test_type__in=test_types,
+                ).prefetch_related('marks')
+            else:
+                all_dept_sheets = EvaluationSheet.objects.all().prefetch_related('marks')
 
             evaluated_ids = {s.agniveer_id for s in all_dept_sheets if is_sheet_evaluated(s)}
 
@@ -495,7 +498,7 @@ class AgniveerListView(AnyStaffMixin, ListView):
                 ag.eval_total = total_test_types
                 ag.is_fully_evaluated = count >= total_test_types
 
-            ctx['eval_filter'] = self.request.GET.get('eval_status', '')
+        ctx['eval_filter'] = self.request.GET.get('eval_status', '')
 
         # TTS specific context
         if user.get_department_code() == 'B':

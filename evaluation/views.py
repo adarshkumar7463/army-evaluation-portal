@@ -16,9 +16,9 @@ from datetime import date
 
 from .models import EvaluationSheet, Marks
 from .result_helpers import build_department_result_row, get_grade
-from .forms import EvaluationSheetForm, MarksForm, EvaluationFilterForm, AgniveerEvaluationForm, SubEventEvaluationForm
+from .forms import EvaluationSheetForm, EvaluationFilterForm, AgniveerEvaluationForm, SubEventEvaluationForm
 from departments.models import Agniveer
-from accounts.mixins import AnyStaffMixin, CommanderOrDeptMixin, TrainerMixin
+from accounts.mixins import AnyStaffMixin, CommanderOrDeptMixin
 from logs.utils import log_action
 
 
@@ -95,7 +95,7 @@ class EvaluationListView(AnyStaffMixin, ListView):
         return ctx
 
 
-class EvaluationCreateView(TrainerMixin, View):
+class EvaluationCreateView(AnyStaffMixin, View):
     def get(self, request):
         messages.warning(request, "Evaluation creation is managed from each Agniveer profile. Please select an Agniveer and evaluate from their detail page.")
         return redirect('departments:agniveer_list')
@@ -109,12 +109,6 @@ class EvaluationDetailView(AnyStaffMixin, DetailView):
     template_name = 'evaluation/evaluation_detail.html'
     context_object_name = 'sheet'
 
-    def get(self, request, *args, **kwargs):
-        if request.user.is_trainer:
-            sheet = self.get_object()
-            return redirect('evaluation:marks_entry', pk=sheet.pk)
-        return super().get(request, *args, **kwargs)
-
     def get_queryset(self):
         queryset = super().get_queryset()
         user = self.request.user
@@ -125,9 +119,7 @@ class EvaluationDetailView(AnyStaffMixin, DetailView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         sheet = self.object
-        ctx['nco_marks'] = sheet.marks.filter(evaluator_type='nco').first()
-        ctx['jco_marks'] = sheet.marks.filter(evaluator_type='jco').first()
-        ctx['officer_marks'] = sheet.marks.filter(evaluator_type='officer').first()
+        ctx['admin_marks'] = sheet.marks.filter(evaluator_type='admin').first()
         ctx['total_marks'] = sheet.get_total_marks()
         ctx['percentage'] = sheet.get_percentage()
         ctx['is_pass'] = sheet.is_pass()
@@ -137,12 +129,6 @@ class EvaluationDetailView(AnyStaffMixin, DetailView):
 class AgniveerEvaluateView(AnyStaffMixin, View):
     template_name = 'evaluation/agniveer_evaluate.html'
 
-    def get_evaluator_type(self, user):
-        if user.is_nco: return 'nco'
-        elif user.is_jco: return 'jco'
-        elif user.is_officer: return 'officer'
-        return 'admin'
-
     def get(self, request, pk):
         from django.urls import reverse
         return redirect(reverse('departments:agniveer_detail', args=[pk]))
@@ -151,6 +137,7 @@ class AgniveerEvaluateView(AnyStaffMixin, View):
         agniveer = get_object_or_404(Agniveer, pk=pk)
         department = request.user.get_department_code()
         active_test = request.POST.get('active_test')
+        evaluator_type = 'admin'
         
         from .constants import get_dept_config
         config = get_dept_config(department, request.user)
@@ -761,24 +748,7 @@ class AgniveerEvaluateView(AnyStaffMixin, View):
                 
             evaluator_type = 'admin'
 
-        else:
-            evaluator_type = self.get_evaluator_type(request.user)
-            # Legacy NCO/JCO/Officer logic fallback
-            results = {}
-            for event in sub_events:
-                val = request.POST.get(event)
-                try:
-                    val_int = int(val) if val else 0
-                    # Max marks validation for DMV
-                    if active_test.startswith('DMV_'):
-                        max_limit = config.get('max_marks', {}).get(active_test, {}).get(event, 999)
-                        if val_int > max_limit:
-                            messages.warning(request, f"Value {val_int} for {event} exceeds max marks {max_limit}. Capped at limit.")
-                            val_int = max_limit
-                    results[event] = val_int
-                except ValueError:
-                    results[event] = 0
-            total_for_best = sum(filter(None, results.values()))
+
             
         remarks = request.POST.get('remarks', '')
 
@@ -800,17 +770,7 @@ class AgniveerEvaluateView(AnyStaffMixin, View):
             from django.urls import reverse
             return redirect(reverse('departments:agniveer_detail', args=[pk]) + f"?test={active_test}")
 
-        if (department == 'A' or 
-            active_test in ('DMV_RESULT', 'OPEM_RESULT', 'OPEM_ASSESSMENT', 'DMV_ASSESSMENT', 
-                            'OPEM_PRACTICAL', 'DMV_PRACTICAL', 'OPEM_MAINTENANCE', 'DMV_DRIVING',
-                            'OTHER_ASSESSMENT', 'DMV_SCREEN_BOARD', 'OPEM_SCREEN_BOARD', 'OTHER_SCREEN_BOARD') or 
-            (department == 'C' and active_test in ('CS_RESULT', 'CS_CLERK_RESULT', 'CS_ASSESSMENT')) or 
-            (department == 'D' and active_test.startswith('CLK_'))):
-            sheet.sub_event_results = results
-        else:
-            if not sheet.sub_event_results:
-                sheet.sub_event_results = {}
-            sheet.sub_event_results[evaluator_type] = results
+        sheet.sub_event_results = results
         sheet.remarks = remarks
         sheet.save()
 
@@ -861,131 +821,32 @@ class AgniveerEvaluateView(AnyStaffMixin, View):
         return redirect(reverse('departments:agniveer_detail', args=[pk]) + f"?test={active_test}")
 
 
-class MarksEntryView(TrainerMixin, View):
-    template_name = 'evaluation/marks_entry.html'
-
-    def get_evaluator_type(self, user):
-        if user.is_nco:
-            return 'nco'
-        elif user.is_jco:
-            return 'jco'
-        elif user.is_officer:
-            return 'officer'
-        return None
-
-    def get(self, request, pk):
-        sheet = get_object_or_404(EvaluationSheet, pk=pk)
-
-        if not request.user.is_trainer:
-            messages.error(request, "Only trainers can enter evaluation marks.")
-            return redirect('core:dashboard')
-
-        # Trainers CAN edit even if locked
-        evaluator_type = self.get_evaluator_type(request.user)
-        existing = sheet.marks.filter(evaluator_type=evaluator_type).first()
-        form = MarksForm(instance=existing) if existing else MarksForm()
-
-        # Get all marks for this sheet
-        nco_marks = sheet.marks.filter(evaluator_type='nco').first()
-        jco_marks = sheet.marks.filter(evaluator_type='jco').first()
-        officer_marks = sheet.marks.filter(evaluator_type='officer').first()
-
-        # Calculate total marks across all test types for this agniveer in this department
-        all_sheets = EvaluationSheet.objects.filter(agniveer=sheet.agniveer, department=sheet.department)
-        total_all_marks = sum(s.get_total_marks() for s in all_sheets)
-        
-        from .constants import get_dept_total_marks
-        max_marks = get_dept_total_marks(sheet.department)
-
-        return render(request, self.template_name, {
-            'sheet': sheet,
-            'form': form,
-            'evaluator_type': evaluator_type,
-            'existing': existing,
-            'nco_marks': nco_marks,
-            'jco_marks': jco_marks,
-            'officer_marks': officer_marks,
-            'total': sheet.get_total_marks(),
-            'total_all_marks': total_all_marks,
-            'max_marks': max_marks,
-            'can_admin_enter': False,
-        })
-
-    def post(self, request, pk):
-        sheet = get_object_or_404(EvaluationSheet, pk=pk)
-
-        if not request.user.is_trainer:
-            messages.error(request, "Only trainers can enter evaluation marks.")
-            return redirect('core:dashboard')
-
-        # Trainers CAN edit locked sheets
-        evaluator_type = self.get_evaluator_type(request.user)
-        if not evaluator_type:
-            messages.error(request, "Invalid evaluator type.")
-            return redirect('evaluation:marks_entry', pk=pk)
-
-        try:
-            marks_value = int(request.POST.get('marks', 0))
-            if marks_value < 0 or marks_value > 20:
-                raise ValueError
-        except (ValueError, TypeError):
-            messages.error(request, "Invalid marks value. Must be between 0 and 20.")
-            return redirect('evaluation:marks_entry', pk=pk)
-
-        remarks = request.POST.get('remarks', '')
-
-        marks_obj, created = Marks.objects.update_or_create(
-            evaluation_sheet=sheet,
-            evaluator_type=evaluator_type,
-            defaults={
-                'evaluator': request.user,
-                'marks': marks_value,
-                'remarks': remarks,
-            }
-        )
-
-        # AUTO-LOCK: Check if all 3 evaluators have submitted marks
-        all_marks_submitted = (
-            sheet.marks.filter(evaluator_type='nco').exists() and
-            sheet.marks.filter(evaluator_type='jco').exists() and
-            sheet.marks.filter(evaluator_type='officer').exists()
-        )
-        
-        if all_marks_submitted and not sheet.is_locked:
-            sheet.is_locked = True
-            sheet.locked_by = request.user
-            sheet.locked_at = timezone.now()
-            sheet.save()
-            messages.info(request, "✓ All evaluators have submitted marks. Sheet auto-locked.")
-
-        action_word = "submitted" if created else "updated"
-        log_action(
-            request.user, 'EVALUATE',
-            f'{evaluator_type.upper()} marks {action_word} for {sheet.agniveer}: {marks_value}/20',
-            request
-        )
-        messages.success(request, f"Marks {action_word} successfully: {marks_value}/20")
-        return redirect('evaluation:marks_entry', pk=pk)
 
 
 class LockSheetView(AnyStaffMixin, View):
     def post(self, request, pk):
         sheet = get_object_or_404(EvaluationSheet, pk=pk)
         
-        # Allow trainers, department heads, g_head, and commander to lock
-        if not (request.user.is_trainer or request.user.is_commander or request.user.is_g_head or request.user.is_department):
+        # Allow department heads, g_head, and commander to lock
+        if not (request.user.is_commander or request.user.is_g_head or request.user.is_department):
             messages.error(request, "You don't have permission to lock evaluation sheets.")
-            return redirect('evaluation:marks_entry', pk=pk)
+            return redirect('departments:agniveer_list')
 
         if sheet.is_locked:
             messages.warning(request, "This evaluation sheet is already locked.")
-            return redirect('evaluation:marks_entry', pk=pk)
+            referer = request.META.get('HTTP_REFERER')
+            if referer:
+                return redirect(referer)
+            return redirect('departments:agniveer_detail', pk=sheet.agniveer.pk)
 
-        # Check if all marks are entered (at least one evaluator has marks)
+        # Check if marks are entered
         has_marks = sheet.marks.exists()
         if not has_marks:
-            messages.error(request, "At least one evaluator must enter marks before locking.")
-            return redirect('evaluation:marks_entry', pk=pk)
+            messages.error(request, "Evaluation must have marks before locking.")
+            referer = request.META.get('HTTP_REFERER')
+            if referer:
+                return redirect(referer)
+            return redirect('departments:agniveer_detail', pk=sheet.agniveer.pk)
 
         sheet.is_locked = True
         sheet.locked_by = request.user
@@ -993,8 +854,11 @@ class LockSheetView(AnyStaffMixin, View):
         sheet.save(update_fields=['is_locked', 'locked_by', 'locked_at'])
 
         log_action(request.user, 'LOCK', f'Locked evaluation sheet #{sheet.pk} for {sheet.agniveer}', request)
-        messages.success(request, f"✓ Evaluation sheet locked. Total: {sheet.get_total_marks()}/60")
-        return redirect('evaluation:marks_entry', pk=pk)
+        messages.success(request, f"✓ Evaluation sheet locked. Total: {sheet.get_total_marks()}")
+        referer = request.META.get('HTTP_REFERER')
+        if referer:
+            return redirect(referer)
+        return redirect('departments:agniveer_detail', pk=sheet.agniveer.pk)
 
 
 class UnlockSheetView(AnyStaffMixin, View):
@@ -1004,11 +868,14 @@ class UnlockSheetView(AnyStaffMixin, View):
         # Only department heads, g_head, and commander can unlock
         if not (request.user.is_commander or request.user.is_g_head or request.user.is_department):
             messages.error(request, "Only Department Heads and above can unlock evaluation sheets.")
-            return redirect('evaluation:marks_entry', pk=pk)
+            return redirect('departments:agniveer_list')
 
         if not sheet.is_locked:
             messages.warning(request, "This evaluation sheet is not locked.")
-            return redirect('evaluation:marks_entry', pk=pk)
+            referer = request.META.get('HTTP_REFERER')
+            if referer:
+                return redirect(referer)
+            return redirect('departments:agniveer_detail', pk=sheet.agniveer.pk)
 
         sheet.is_locked = False
         sheet.locked_by = None
@@ -1017,7 +884,10 @@ class UnlockSheetView(AnyStaffMixin, View):
 
         log_action(request.user, 'UNLOCK', f'Unlocked evaluation sheet #{sheet.pk} for {sheet.agniveer}', request)
         messages.success(request, "✓ Evaluation sheet unlocked.")
-        return redirect('evaluation:marks_entry', pk=pk)
+        referer = request.META.get('HTTP_REFERER')
+        if referer:
+            return redirect(referer)
+        return redirect('departments:agniveer_detail', pk=sheet.agniveer.pk)
 
 
 def get_final_sheet_for_dept(all_sheets, dept, trade):
@@ -1090,10 +960,7 @@ class AgniveerReportCardView(AnyStaffMixin, View):
     def get(self, request, pk):
         agniveer = get_object_or_404(Agniveer, pk=pk)
         
-        # Check permissions
-        if request.user.is_trainer:
-            messages.error(request, "You don't have permission to view report cards.")
-            return redirect('core:dashboard')
+
         
         # Get evaluations
         evaluations = EvaluationSheet.objects.filter(

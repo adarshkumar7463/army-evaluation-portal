@@ -886,11 +886,13 @@ DEPT_CONFIG = {
     }
 }
 def get_dept_config(dept_code, user=None):
-    if dept_code == 'B' and user and hasattr(user, 'tts_trade'):
+    if dept_code == 'B' and user and getattr(user, 'tts_trade', None):
         trade = user.tts_trade
         sub_depts = DEPT_CONFIG['B'].get('sub_departments', {})
         if trade in sub_depts:
             return sub_depts[trade]
+        if 'OTHER' in sub_depts:
+            return sub_depts['OTHER']
     return DEPT_CONFIG.get(dept_code, DEPT_CONFIG['A'])
 
 def get_dept_total_marks(dept_code, user=None):

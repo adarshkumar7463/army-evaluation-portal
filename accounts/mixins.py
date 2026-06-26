@@ -35,9 +35,7 @@ class GHeadMixin(RoleRequiredMixin):
     allowed_roles = ['g_head']
 
 
-class TrainerMixin(RoleRequiredMixin):
-    """Trainers can access."""
-    allowed_roles = ['trainer_nco', 'trainer_jco', 'trainer_officer']
+
 
 
 class CommanderOrDeptMixin(RoleRequiredMixin):
@@ -50,7 +48,6 @@ class AnyStaffMixin(RoleRequiredMixin):
     allowed_roles = [
         'commander', 'g_head',
         'dept_a', 'dept_b', 'dept_c', 'dept_d',
-        'trainer_nco', 'trainer_jco', 'trainer_officer',
         'registration'
     ]
 

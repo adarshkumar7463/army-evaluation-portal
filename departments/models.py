@@ -68,10 +68,10 @@ COMPANY_CHOICES = [
     ('Maktila Company', 'Maktila Company'),
     ('Cassino Company', 'Cassino Company'),
     ('Pigris Company', 'Pigris Company'),
-    ('Company A', 'Company A'),
-    ('Company B', 'Company B'),
-    ('Company C', 'Company C'),
-]
+    ('Company A','Company A'),
+    ('Company B','Company B'),
+    ('Company C','Company C'),
+    ]
 
 
 def generate_enrollment_number():

@@ -22,7 +22,7 @@ class Command(BaseCommand):
     help = 'Setup Army Evaluation Portal with initial data'
 
     def handle(self, *args, **options):
-        self.stdout.write(self.style.SUCCESS('\n🪖 Setting up Army Evaluation Portal...\n'))
+        self.stdout.write(self.style.SUCCESS('\nSetting up Army Evaluation Portal...\n'))
 
         from accounts.models import CustomUser
         from departments.models import Agniveer
@@ -40,10 +40,10 @@ class Command(BaseCommand):
                 service_number='CMD001',
                 rank='General',
             )
-            self.stdout.write(self.style.SUCCESS('✅ Commander created: commander / Commander@123'))
+            self.stdout.write(self.style.SUCCESS('[OK] Commander created: commander / Commander@123'))
         else:
             commander = CustomUser.objects.filter(role='commander').first()
-            self.stdout.write('ℹ️  Commander already exists')
+            self.stdout.write('[INFO] Commander already exists')
 
         # ─── 2. G Head ───
         if not CustomUser.objects.filter(role='g_head').exists():
@@ -58,7 +58,7 @@ class Command(BaseCommand):
                 rank='Colonel',
                 created_by=commander,
             )
-            self.stdout.write(self.style.SUCCESS('✅ G Head created: ghead / GHead@123'))
+            self.stdout.write(self.style.SUCCESS('[OK] G Head created: ghead / GHead@123'))
         else:
             g_head = CustomUser.objects.filter(role='g_head').first()
 
@@ -83,34 +83,26 @@ class Command(BaseCommand):
             if created:
                 u.set_password('Dept@1234')
                 u.save()
-                self.stdout.write(self.style.SUCCESS(f'✅ {DEPARTMENT_NAMES.get(dept, dept)}: {uname} / Dept@1234'))
+                self.stdout.write(self.style.SUCCESS(f'[OK] {DEPARTMENT_NAMES.get(dept, dept)}: {uname} / Dept@1234'))
             dept_users[dept] = u
 
-        # ─── 4. Trainers ───
-        trainer_data = [
-            ('trainer_nco', 'ncoA', 'Hav.', 'NCO_A', 'A', 'NA001', 'Havildar'),
-            ('trainer_jco', 'jcoA', 'Nb Sub', 'JCO_A', 'A', 'JA001', 'Naib Subedar'),
-            ('trainer_officer', 'officerA', 'Lt.', 'Off_A', 'A', 'OA001', 'Lieutenant'),
-            ('trainer_nco', 'ncoB', 'Hav.', 'NCO_B', 'B', 'NB001', 'Havildar'),
-            ('trainer_jco', 'jcoB', 'Nb Sub', 'JCO_B', 'B', 'JB001', 'Naib Subedar'),
-            ('trainer_officer', 'officerB', 'Lt.', 'Off_B', 'B', 'OB001', 'Lieutenant'),
-        ]
-        trainers = {}
-        for role, uname, fname, lname, dept, sno, rank in trainer_data:
-            u, created = CustomUser.objects.get_or_create(
-                username=uname,
-                defaults={
-                    'first_name': fname, 'last_name': lname,
-                    'role': role, 'department': dept,
-                    'service_number': sno, 'rank': rank,
-                    'created_by': dept_users.get(dept, g_head),
-                }
+        # Create TTS sub-department user for "Other Trades" (ttsall)
+        if not CustomUser.objects.filter(username='ttsall').exists():
+            ttsall_user = CustomUser.objects.create_user(
+                username='ttsall',
+                password='Dept@1234',
+                first_name='Capt.',
+                last_name='TTSAll',
+                role='dept_b',
+                department='B',
+                tts_trade='OTHER',
+                service_number='DB002',
+                rank='Captain',
+                created_by=dept_users['B'],
             )
-            if created:
-                u.set_password('Trainer@123')
-                u.save()
-                self.stdout.write(self.style.SUCCESS(f'✅ Trainer: {uname} / Trainer@123'))
-            trainers.setdefault(dept, []).append(u)
+            self.stdout.write(self.style.SUCCESS('[OK] TTS All Trades Head created: ttsall / Dept@1234'))
+
+
 
         # ─── 5. Agniveers ───
         first_names = ['Arjun', 'Ravi', 'Suresh', 'Mohit', 'Deepak', 'Akash', 'Vikram', 'Rohit', 'Nikhil', 'Sanjay',
@@ -129,6 +121,15 @@ class Command(BaseCommand):
                     lname = random.choice(last_names)
                     dob = date(2002, random.randint(1,12), random.randint(1,28))
                     joining = date(2024, random.randint(1,6), random.randint(1,28))
+                    trade_val = 'Other'
+                    bn_val = None
+                    if dept == 'A':
+                        bn_val = random.choice(['1TB', '2TB', 'STB'])
+                    elif dept == 'B':
+                        trade_val = random.choice(['DMV', 'OPEM', 'Other'])
+                    elif dept == 'D':
+                        trade_val = 'CLK'
+
                     a = Agniveer.objects.create(
                         enrollment_number=enroll,
                         first_name=fname,
@@ -136,22 +137,21 @@ class Command(BaseCommand):
                         date_of_birth=dob,
                         gender=random.choice(['M', 'M', 'M', 'F']),
                         phone=f'98{random.randint(10000000,99999999)}',
-                        department=dept,
+                        bn_desp=bn_val,
+                        trade=trade_val,
                         batch=f'Batch 2024-{dept}',
                         joining_date=joining,
                         status='active',
                         registered_by=dept_user,
                     )
-                    # Assign trainers if available (guarded — field may be removed)
-                    if dept in trainers and hasattr(a, 'assigned_trainers'):
-                        a.assigned_trainers.set(trainers[dept])
+
                     created_agniveers[dept].append(a)
                     agniveer_count += 1
                 else:
                     existing = Agniveer.objects.get(enrollment_number=enroll)
                     created_agniveers[dept].append(existing)
 
-        self.stdout.write(self.style.SUCCESS(f'✅ {agniveer_count} Agniveers created'))
+        self.stdout.write(self.style.SUCCESS(f'[OK] {agniveer_count} Agniveers created'))
 
         # ─── 6. Evaluations ───
         test_types = ['physical', 'weapon', 'assessment', 'viva']
@@ -159,11 +159,6 @@ class Command(BaseCommand):
         eval_count = 0
 
         for dept, agniveers_list in created_agniveers.items():
-            dept_trainers = trainers.get(dept, [])
-            nco = next((t for t in dept_trainers if t.is_nco), None)
-            jco = next((t for t in dept_trainers if t.is_jco), None)
-            officer = next((t for t in dept_trainers if t.is_officer), None)
-
             for agniveer in agniveers_list[:5]:  # Evaluate first 5 per dept
                 for test_type in test_types:
                     if EvaluationSheet.objects.filter(agniveer=agniveer, test_type=test_type).exists():
@@ -176,37 +171,33 @@ class Command(BaseCommand):
                         evaluation_date=date.today() - timedelta(days=random.randint(1,30)),
                         created_by=dept_users.get(dept),
                     )
-                    # Add marks for all 3 evaluators
-                    for evaluator_type, evaluator in [('nco', nco), ('jco', jco), ('officer', officer)]:
-                        if evaluator:
-                            m = random.randint(10, 20)
-                            Marks.objects.create(
-                                evaluation_sheet=sheet,
-                                evaluator=evaluator,
-                                evaluator_type=evaluator_type,
-                                marks=m,
-                                remarks=f'Good performance in {test_type}',
-                            )
+                    # Add marks for admin evaluator
+                    m = random.randint(30, 50)
+                    Marks.objects.create(
+                        evaluation_sheet=sheet,
+                        evaluator=dept_users.get(dept),
+                        evaluator_type='admin',
+                        marks=m,
+                        remarks=f'Good performance in {test_type}',
+                    )
                     # Lock the sheet
-                    if sheet.can_be_locked():
-                        sheet.is_locked = True
-                        sheet.locked_by = dept_users.get(dept)
-                        sheet.locked_at = timezone.now()
-                        sheet.save()
+                    sheet.is_locked = True
+                    sheet.locked_by = dept_users.get(dept)
+                    sheet.locked_at = timezone.now()
+                    sheet.save()
                     eval_count += 1
 
-        self.stdout.write(self.style.SUCCESS(f'✅ {eval_count} Evaluation sheets created & locked'))
+        self.stdout.write(self.style.SUCCESS(f'[OK] {eval_count} Evaluation sheets created & locked'))
 
         self.stdout.write('\n' + '='*60)
-        self.stdout.write(self.style.SUCCESS('🎉 SETUP COMPLETE! Login credentials:'))
+        self.stdout.write(self.style.SUCCESS('SETUP COMPLETE! Login credentials:'))
         self.stdout.write('='*60)
         self.stdout.write(self.style.SUCCESS('Commander : commander    / Commander@123'))
         self.stdout.write(self.style.SUCCESS('G Head    : ghead        / GHead@123'))
         self.stdout.write(self.style.SUCCESS('Battalion : deptA        / Dept@1234'))
         self.stdout.write(self.style.SUCCESS('TTS       : deptB        / Dept@1234'))
+        self.stdout.write(self.style.SUCCESS('TTS All   : ttsall       / Dept@1234'))
         self.stdout.write(self.style.SUCCESS('CS        : deptC        / Dept@1234'))
         self.stdout.write(self.style.SUCCESS('Clerk     : deptD        / Dept@1234'))
-        self.stdout.write(self.style.SUCCESS('NCO-A     : ncoA         / Trainer@123'))
-        self.stdout.write(self.style.SUCCESS('JCO-A     : jcoA         / Trainer@123'))
-        self.stdout.write(self.style.SUCCESS('Officer-A : officerA     / Trainer@123'))
+
         self.stdout.write('='*60 + '\n')

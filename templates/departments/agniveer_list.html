@@ -327,9 +327,7 @@
           <th>Name</th>
           <th>BN DESP</th>
           <th>Platoon</th>
-          {% if request.GET.company %}
           <th>Company</th>
-          {% endif %}
           <th>Trade</th>
           {% if request.user.is_department %}
           <th style="text-align:center;">Eval Progress</th>
@@ -352,13 +350,8 @@
             {% if a.phone %}<div style="font-size:11px; color: var(--text-muted);">{{ a.phone }}</div>{% endif %}
           </td>
           <td>{{ a.bn_desp|default:"—" }}</td>
-          <td>
-            <div>{{ a.platoon|default:"—" }}</div>
-            {% if a.company %}<small class="text-muted d-block" style="font-size: 10px;">{{ a.company }}</small>{% endif %}
-          </td>
-          {% if request.GET.company %}
-          <td><span class="badge bg-success" style="font-size: 10px;">{{ a.company }}</span></td>
-          {% endif %}
+          <td>{{ a.platoon|default:"—" }}</td>
+          <td><span class="badge bg-success" style="font-size: 10px;">{{ a.company|default:"—" }}</span></td>
           <td>{{ a.trade|default:"—" }}</td>
           {% if request.user.is_department %}
           <td style="text-align:center;">

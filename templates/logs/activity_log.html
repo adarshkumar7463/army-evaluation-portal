@@ -33,6 +33,54 @@
     min-height: 30px !important;
     font-size: 11px !important;
   }
+  .action-tab {
+    display: block;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 10px 12px;
+    text-align: center;
+    transition: all var(--transition-speed) ease;
+    color: var(--text-primary);
+  }
+  .action-tab:hover {
+    border-color: var(--army-green-mid);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(82, 183, 136, 0.1);
+  }
+  .action-tab.active {
+    background: linear-gradient(135deg, var(--army-green), var(--army-green-light));
+    border-color: var(--army-gold);
+    box-shadow: 0 4px 15px rgba(27, 67, 50, 0.4);
+  }
+  .action-tab.active .tab-icon {
+    color: var(--army-gold-light) !important;
+  }
+  .action-tab.active .tab-count {
+    color: #FFFFFF !important;
+  }
+  .action-tab.active .tab-label {
+    color: rgba(255, 255, 255, 0.8) !important;
+  }
+  .tab-icon {
+    font-size: 16px;
+    color: var(--army-olive);
+    margin-bottom: 2px;
+  }
+  .tab-count {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.2;
+  }
+  .tab-label {
+    font-size: 9px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 2px;
+  }
 </style>
 {% endblock %}
 
@@ -41,8 +89,8 @@
 <div class="army-card mb-4">
   <div class="army-card-header">
     <h6 class="army-card-title"><i class="bi bi-funnel-fill text-army"></i> Filter Logs</h6>
-    <a href="{% url 'logs:export_logs' %}" class="btn btn-gold" style="padding:4px 12px;font-size:12px;">
-      <i class="bi bi-download"></i> Export CSV
+    <a href="{% url 'logs:export_logs' %}?{% for key, value in request.GET.items %}{{ key }}={{ value }}&{% endfor %}" class="btn btn-gold d-flex align-items-center gap-1" style="padding:4px 12px;font-size:12px;">
+      <i class="bi bi-file-earmark-spreadsheet-fill"></i> Export Excel
     </a>
   </div>
   <div class="army-card-body">
@@ -69,16 +117,52 @@
   </div>
 </div>
 
-<!-- Log Stats -->
-<div class="row g-3 mb-4">
-  {% for k,v in action_choices %}
-  <div class="col-6 col-md-3 col-xl-auto" style="flex:1;">
-    <div style="background:var(--card-bg);border:1px solid rgba(27,67,50,0.3);border-radius:10px;padding:14px;text-align:center;">
-      <div style="font-family:Rajdhani,sans-serif;font-size:18px;font-weight:700;color:#52B788;">
-        {{ logs|length }}
-      </div>
-      <div style="font-size:11px;color:#8B9BB4;text-transform:uppercase;letter-spacing:0.5px;">{{ v }}</div>
-    </div>
+<!-- Log Action Tabs -->
+<div class="row g-2 mb-4 overflow-auto flex-nowrap pb-2" style="-webkit-overflow-scrolling: touch;">
+  <!-- All Actions Tab -->
+  <div class="col-6 col-md-3 col-xl-auto" style="flex: 1; min-width: 120px;">
+    <a href="?{% for key, value in request.GET.items %}{% if key != 'action' and key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}"
+       class="action-tab {% if not request.GET.action %}active{% endif %}"
+       style="text-decoration: none;">
+       <div class="tab-card">
+         <div class="tab-icon"><i class="bi bi-grid-fill"></i></div>
+         <div class="tab-count">{{ total_count }}</div>
+         <div class="tab-label">All Actions</div>
+       </div>
+    </a>
+  </div>
+  
+  {% for k, v in action_choices %}
+  <div class="col-6 col-md-3 col-xl-auto" style="flex: 1; min-width: 120px;">
+    <a href="?action={{ k }}{% for key, value in request.GET.items %}{% if key != 'action' and key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}"
+       class="action-tab {% if request.GET.action == k %}active{% endif %}"
+       style="text-decoration: none;">
+       <div class="tab-card">
+         <div class="tab-icon">
+           {% if k == 'LOGIN' %}<i class="bi bi-box-arrow-in-right"></i>
+           {% elif k == 'LOGOUT' %}<i class="bi bi-box-arrow-right"></i>
+           {% elif k == 'CREATE' %}<i class="bi bi-plus-circle"></i>
+           {% elif k == 'UPDATE' %}<i class="bi bi-pencil"></i>
+           {% elif k == 'DELETE' %}<i class="bi bi-trash"></i>
+           {% elif k == 'VIEW' %}<i class="bi bi-eye"></i>
+           {% elif k == 'EXPORT' %}<i class="bi bi-download"></i>
+           {% elif k == 'EVALUATE' %}<i class="bi bi-clipboard2-check"></i>
+           {% else %}<i class="bi bi-journal-text"></i>{% endif %}
+         </div>
+         <div class="tab-count">
+           {% if k == 'LOGIN' %}{{ action_counts.LOGIN }}
+           {% elif k == 'LOGOUT' %}{{ action_counts.LOGOUT }}
+           {% elif k == 'CREATE' %}{{ action_counts.CREATE }}
+           {% elif k == 'UPDATE' %}{{ action_counts.UPDATE }}
+           {% elif k == 'DELETE' %}{{ action_counts.DELETE }}
+           {% elif k == 'VIEW' %}{{ action_counts.VIEW }}
+           {% elif k == 'EXPORT' %}{{ action_counts.EXPORT }}
+           {% elif k == 'EVALUATE' %}{{ action_counts.EVALUATE }}
+           {% else %}0{% endif %}
+         </div>
+         <div class="tab-label">{{ v }}</div>
+       </div>
+    </a>
   </div>
   {% endfor %}
 </div>
