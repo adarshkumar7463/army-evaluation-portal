@@ -19,7 +19,7 @@ from evaluation.models import EvaluationSheet
 from .forms import (
     ArmyLoginForm, CreateGHeadForm,
     CreateDepartmentUserForm, CreateRegistrationOfficeForm,
-    ProfileUpdateForm
+    ProfileUpdateForm, UserUpdateForm
 )
 from .mixins import CommanderRequiredMixin, CommanderOrGHeadMixin, CommanderOrDeptMixin
 from logs.utils import log_action
@@ -424,6 +424,49 @@ class CreateRegistrationOfficeView(CommanderRequiredMixin, CreateView):
         user.save()
         log_action(self.request.user, 'CREATE', f'Created Registration Office: {user.username}', self.request)
         messages.success(self.request, f"Registration Office user '{user.get_full_name()}' created successfully.")
+        return redirect('accounts:user_list')
+
+
+class UserUpdateView(CommanderOrDeptMixin, UpdateView):
+    model = CustomUser
+    form_class = UserUpdateForm
+    template_name = 'accounts/edit_user.html'
+    context_object_name = 'user_obj'
+
+    def get_queryset(self):
+        queryset = CustomUser.objects.exclude(role='commander')
+        if self.request.user.is_g_head:
+            queryset = queryset.filter(role__in=['dept_a', 'dept_b', 'dept_c', 'dept_d'])
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['title'] = f"Edit User - {self.object.username}"
+        return ctx
+
+    def form_valid(self, form):
+        user = form.save()
+        log_action(self.request.user, 'UPDATE', f'Updated User: {user.username}', self.request)
+        messages.success(self.request, f"User '{user.username}' updated successfully.")
+        return redirect('accounts:user_list')
+
+
+class UserDeleteView(CommanderOrDeptMixin, View):
+    def post(self, request, pk):
+        user = get_object_or_404(CustomUser, pk=pk)
+
+        if request.user.is_department and user.department != request.user.get_department_code():
+            messages.error(request, "You can only delete users in your department.")
+            return redirect('accounts:user_list')
+
+        if user.is_superuser or user.role == CustomUser.ROLE_COMMANDER:
+            messages.error(request, "This user cannot be deleted.")
+            return redirect('accounts:user_list')
+
+        username = user.username
+        user.delete()
+        log_action(request.user, 'DELETE', f'Deleted User: {username}', request)
+        messages.success(request, f"User '{username}' deleted successfully.")
         return redirect('accounts:user_list')
 
 

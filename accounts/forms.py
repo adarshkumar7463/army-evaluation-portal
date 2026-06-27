@@ -169,6 +169,69 @@ class CreateRegistrationOfficeForm(forms.ModelForm):
         return user
 
 
+class UserUpdateForm(forms.ModelForm):
+    class Meta:
+        model = CustomUser
+        fields = [
+            'first_name', 'last_name', 'username', 'email', 'service_number',
+            'rank', 'phone', 'role', 'battalion_unit', 'tts_trade', 'company', 'platoon'
+        ]
+        widgets = {
+            'first_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'last_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'username': forms.TextInput(attrs={'class': 'form-control'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),
+            'service_number': forms.TextInput(attrs={'class': 'form-control'}),
+            'rank': forms.TextInput(attrs={'class': 'form-control'}),
+            'phone': forms.TextInput(attrs={'class': 'form-control'}),
+            'role': forms.Select(attrs={'class': 'form-control'}),
+            'battalion_unit': forms.Select(attrs={'class': 'form-control'}),
+            'tts_trade': forms.Select(attrs={'class': 'form-control'}),
+            'company': forms.Select(attrs={'class': 'form-control'}),
+            'platoon': forms.Select(attrs={'class': 'form-control'}),
+        }
+
+    def clean(self):
+        cleaned_data = super().clean()
+        role = cleaned_data.get('role')
+        if role not in [CustomUser.ROLE_COMMANDER, CustomUser.ROLE_G_HEAD, CustomUser.ROLE_DEPT_A, CustomUser.ROLE_DEPT_B, CustomUser.ROLE_DEPT_C, CustomUser.ROLE_DEPT_D, CustomUser.ROLE_REGISTRATION]:
+            raise forms.ValidationError("Please select a valid role.")
+        return cleaned_data
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        role = self.cleaned_data.get('role')
+
+        if role in [CustomUser.ROLE_DEPT_A, CustomUser.ROLE_DEPT_B, CustomUser.ROLE_DEPT_C, CustomUser.ROLE_DEPT_D]:
+            department_map = {
+                CustomUser.ROLE_DEPT_A: 'A',
+                CustomUser.ROLE_DEPT_B: 'B',
+                CustomUser.ROLE_DEPT_C: 'C',
+                CustomUser.ROLE_DEPT_D: 'D',
+            }
+            user.department = department_map.get(role)
+        else:
+            user.department = None
+            user.battalion_unit = None
+            user.tts_trade = None
+            user.company = None
+            user.platoon = None
+
+        if role == CustomUser.ROLE_DEPT_A:
+            user.tts_trade = None
+        elif role == CustomUser.ROLE_DEPT_B:
+            user.battalion_unit = None
+        else:
+            if role != CustomUser.ROLE_DEPT_A:
+                user.battalion_unit = None
+            if role != CustomUser.ROLE_DEPT_B:
+                user.tts_trade = None
+
+        if commit:
+            user.save()
+        return user
+
+
 class ProfileUpdateForm(forms.ModelForm):
     class Meta:
         model = CustomUser

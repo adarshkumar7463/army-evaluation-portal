@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% block title %}{{ title }} – Army Portal{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+{% block page_subtitle %}Edit User Account{% endblock %}
+{% block body_class %}portal-ops-page{% endblock %}
+
+{% block extra_css %}
+<style>
+  .portal-ops-page .form-control,
+  .portal-ops-page .form-select {
+    min-height: 30px !important;
+    font-size: 11px !important;
+  }
+  .portal-ops-page .btn {
+    font-size: 10.5px !important;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="army-card">
+  <div class="army-card-header">
+    <h6 class="army-card-title"><i class="bi bi-pencil-square"></i> Edit User</h6>
+  </div>
+  <div class="army-card-body">
+    <form method="post">
+      {% csrf_token %}
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label">First Name</label>
+          {{ form.first_name }}
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Last Name</label>
+          {{ form.last_name }}
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Username</label>
+          {{ form.username }}
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Email</label>
+          {{ form.email }}
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Phone</label>
+          {{ form.phone }}
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Service Number</label>
+          {{ form.service_number }}
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Rank</label>
+          {{ form.rank }}
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Role</label>
+          {{ form.role }}
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Battalion Unit</label>
+          {{ form.battalion_unit }}
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">TTS Trade</label>
+          {{ form.tts_trade }}
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Company</label>
+          {{ form.company }}
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Platoon</label>
+          {{ form.platoon }}
+        </div>
+      </div>
+
+      {% if form.non_field_errors %}
+      <div class="alert alert-danger py-2 mt-3">
+        {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+      </div>
+      {% endif %}
+
+      <div class="d-flex justify-content-end gap-2 mt-4">
+        <a href="{% url 'accounts:user_list' %}" class="btn btn-army-outline">Cancel</a>
+        <button type="submit" class="btn btn-army">Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
