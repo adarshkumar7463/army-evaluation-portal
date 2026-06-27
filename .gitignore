@@ -13,12 +13,6 @@ env/
 .venv/
 
 
-media/
-staticfiles/
-
-# Django collected static files
-static/
-
 # ==========================================
 # Environment Variables
 # ==========================================

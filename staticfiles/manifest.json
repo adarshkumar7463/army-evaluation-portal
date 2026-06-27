@@ -1,0 +1,72 @@
+{
+  "name": "Army Evaluation Portal",
+  "short_name": "Army Portal",
+  "description": "Comprehensive Army Agniveer Evaluation Portal with Offline Support",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0F1419",
+  "theme_color": "#1a472a",
+  "icons": [
+    {
+      "src": "/static/images/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/static/images/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/static/images/icon-maskable-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "categories": ["productivity", "business"],
+  "screenshots": [
+    {
+      "src": "/static/images/screenshot-540x720.png",
+      "sizes": "540x720",
+      "type": "image/png",
+      "form_factor": "narrow"
+    },
+    {
+      "src": "/static/images/screenshot-1280x720.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "description": "View your dashboard",
+      "url": "/dashboard/?utm_source=pwa",
+      "icons": [{ "src": "/static/images/icon-96x96.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Evaluations",
+      "short_name": "Evaluations",
+      "description": "Manage evaluations",
+      "url": "/evaluations/?utm_source=pwa",
+      "icons": [{ "src": "/static/images/icon-96x96.png", "sizes": "96x96" }]
+    }
+  ],
+  "share_target": {
+    "action": "/share/",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url"
+    }
+  }
+}
