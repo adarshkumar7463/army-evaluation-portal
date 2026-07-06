@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en" data-bs-theme="dark">
 
@@ -6,10 +7,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <title>Login – Army Evaluation Portal</title>
   <!-- Local Bootstrap CSS -->
-  <link href="/static/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="../../static/css/bootstrap.min.css" rel="stylesheet" />
   <!-- Local Bootstrap Icons -->
-  <link href="/static/css/bootstrap-icons.css" rel="stylesheet" />
-  <link href="/static/css/portal-ui.css" rel="stylesheet" />
+  <link href="../../static/css/bootstrap-icons.css" rel="stylesheet" />
+  <link href="../../static/css/portal-ui.css" rel="stylesheet" />
+
   <style>
     * {
       margin: 0;
@@ -17,30 +19,73 @@
       box-sizing: border-box;
     }
 
-    body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    body.login-page-body {
+      font-family: 'Inter', sans-serif;
       min-height: 100vh;
-      background: linear-gradient(135deg, #0a0f1a 0%, #0c1220 100%);
+      background-color: #07111F !important;
       overflow: hidden;
       height: 100vh;
+      margin: 0;
+      padding: 0;
     }
 
-    /* Main Container - Fixed, No Scroll */
-    .login-container {
+    /* Unified Premium Background Image Backdrop */
+    .login-bg-backdrop {
+      position: absolute !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 100% !important;
+      height: 100% !important;
+      background: #07111F url('/static/images/login_bg.jpg') no-repeat center center !important;
+      background-size: 100% 100% !important;
+      z-index: 1 !important;
+      transition: filter 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.4s ease !important;
+    }
+
+    /* Blurred and dimmed background state */
+    .login-bg-backdrop.blurred {
+      filter: blur(15px) brightness(0.55) !important;
+      transform: scale(1.04) !important;
+    }
+
+    html[data-bs-theme="light"] .login-bg-backdrop {
+      background: #F4F8FC url('/static/images/login_bg.jpg') no-repeat center center !important;
+      background-size: 100% 100% !important;
+    }
+
+    html[data-bs-theme="light"] .login-bg-backdrop.blurred {
+      filter: blur(15px) brightness(0.8) !important;
+      transform: scale(1.04) !important;
+    }
+
+    /* Login Container Layout */
+    html body.login-page-body .login-container,
+    html[data-bs-theme="dark"] body.login-page-body .login-container,
+    html[data-bs-theme="light"] body.login-page-body .login-container {
       display: flex;
       flex-direction: column;
       height: 100vh;
       width: 100%;
       position: relative;
+      background: transparent !important;
     }
 
-    /* Top Bar - Horizontal Portal Options */
-    .portal-top-bar {
-      background: rgba(10, 15, 26, 0.8);
-      backdrop-filter: blur(10px);
-      padding: 15px 30px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-      z-index: 100;
+    /* Absolute positioning to prevent pushing background image down */
+    html body.login-page-body .portal-top-bar,
+    html[data-bs-theme="dark"] body.login-page-body .portal-top-bar,
+    html[data-bs-theme="light"] body.login-page-body .portal-top-bar {
+      position: absolute !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 100% !important;
+      background: transparent !important; /* Completely transparent background */
+      backdrop-filter: none !important; /* No blur overlay */
+      padding: 16px 30px !important; /* Raised vertical padding */
+      border-bottom: none !important; /* Removed top bar line */
+      z-index: 100 !important;
+      display: flex;
+      justify-content: center;
+      height: 65px !important;
     }
 
     .portal-buttons-wrapper {
@@ -52,381 +97,386 @@
     }
 
     .portal-option-btn {
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 40px;
-      padding: 10px 24px;
-      font-size: 13px;
-      font-weight: 600;
-      color: rgba(255, 255, 255, 0.7);
-      transition: all 0.3s ease;
+      background: rgba(0, 0, 0, 0.3) !important; /* Translucent dark to contrast directly on image */
+      border: 1px solid rgba(255, 255, 255, 0.25) !important; /* Premium thin white border */
+      border-radius: 8px !important;
+      padding: 8px 18px !important; /* Taller, wider buttons */
+      font-size: 12.5px !important; /* Slightly larger text */
+      font-weight: 500 !important;
+      color: rgba(255, 255, 255, 0.85) !important;
+      transition: all 0.25s ease !important;
       cursor: pointer;
       letter-spacing: 0.5px;
-      font-family: 'Rajdhani', sans-serif;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
-    .portal-option-btn i {
-      margin-right: 8px;
-      font-size: 14px;
+    .portal-option-btn svg {
+      width: 14px;
+      height: 14px;
     }
 
     .portal-option-btn:hover {
-      transform: translateY(-2px);
+      background: rgba(255, 255, 255, 0.08) !important;
+      border-color: rgba(255, 255, 255, 0.45) !important;
+      color: white !important;
+      transform: translateY(-1px) !important;
     }
 
-    .portal-option-btn.active {
-      background: linear-gradient(135deg, rgba(82, 183, 136, 0.3), rgba(27, 67, 50, 0.3));
-      border-color: #52B788;
-      color: #52B788;
-      box-shadow: 0 4px 15px rgba(82, 183, 136, 0.2);
+    .portal-option-btn.active svg {
+      fill: currentColor !important; /* Fill star and suitcase icons when active */
     }
 
-    /* Commander Theme */
+    /* Active button themes */
     .portal-option-btn[data-portal="commander"].active {
-      background: linear-gradient(135deg, rgba(255, 202, 40, 0.25), rgba(78, 52, 46, 0.3));
-      border-color: #1d0602;
-      color: #f72606;
+      background: rgba(245, 158, 11, 0.15) !important;
+      border-color: #F59E0B !important;
+      color: #FBBF24 !important;
+      box-shadow: 0 0 12px rgba(245, 158, 11, 0.35) !important;
     }
-
-    /* G-Head Theme */
     .portal-option-btn[data-portal="ghead"].active {
-      background: linear-gradient(135deg, rgba(100, 181, 246, 0.25), rgba(13, 71, 161, 0.3));
-      border-color: #64B5F6;
-      color: #64B5F6;
+      border-color: #3B82F6 !important;
+      color: #60A5FA !important;
+      background: rgba(59, 130, 246, 0.15) !important;
+      box-shadow: 0 0 10px rgba(59, 130, 246, 0.35) !important;
     }
-
-    /* Battalion Head Theme */
     .portal-option-btn[data-portal="dephead_a"].active {
-      background: linear-gradient(135deg, rgba(179, 157, 219, 0.25), rgba(49, 27, 146, 0.3));
-      border-color: #B39DDB;
-      color: #B39DDB;
+      border-color: #8B5CF6 !important;
+      color: #A78BFA !important;
+      background: rgba(139, 92, 246, 0.15) !important;
+      box-shadow: 0 0 10px rgba(139, 92, 246, 0.35) !important;
     }
-
-    /* TTS Head Theme */
     .portal-option-btn[data-portal="dephead_b"].active {
-      background: linear-gradient(135deg, rgba(79, 195, 247, 0.25), rgba(0, 77, 64, 0.3));
-      border-color: #4FC3F7;
-      color: #4FC3F7;
+      border-color: #06B6D4 !important;
+      color: #22D3EE !important;
+      background: rgba(6, 182, 212, 0.15) !important;
+      box-shadow: 0 0 10px rgba(6, 182, 212, 0.35) !important;
     }
-
-    /* CS Head Theme */
     .portal-option-btn[data-portal="dephead_c"].active {
-      background: linear-gradient(135deg, rgba(212, 160, 23, 0.25), rgba(184, 134, 11, 0.3));
-      border-color: #0e3603;
-      color: #2dea2a;
+      border-color: #10B981 !important;
+      color: #34D399 !important;
+      background: rgba(16, 185, 129, 0.15) !important;
+      box-shadow: 0 0 10px rgba(16, 185, 129, 0.35) !important;
     }
-
-    /* CTS/Clerk Head Theme */
     .portal-option-btn[data-portal="dephead_d"].active {
-      background: linear-gradient(135deg, rgba(156, 39, 176, 0.25), rgba(106, 27, 154, 0.3));
-      border-color: #5e016e;
-      color: #db9ce7;
+      border-color: #EC4899 !important;
+      color: #F472B6 !important;
+      background: rgba(236, 72, 153, 0.15) !important;
+      box-shadow: 0 0 10px rgba(236, 72, 153, 0.35) !important;
     }
-
-    /* Registration Clerk Theme */
     .portal-option-btn[data-portal="register_clerk"].active {
-      background: linear-gradient(135deg, rgba(255, 167, 38, 0.25), rgba(230, 81, 0, 0.3));
-      border-color: #FFA726;
-      color: #FFA726;
+      border-color: #F97316 !important;
+      color: #FB923C !important;
+      background: rgba(249, 115, 22, 0.15) !important;
+      box-shadow: 0 0 10px rgba(249, 115, 22, 0.35) !important;
     }
 
-    /* Main Content Area - Split Screen */
+    /* Main Content Area */
     .login-main-content {
-      display: flex;
-      flex: 1;
+      position: relative;
+      width: 100%;
+      height: 100vh;
       overflow: hidden;
+      z-index: 10 !important;
     }
 
-    /* Left Side - Image/Info Section */
+    /* Hide Info Section */
     .login-info-section {
-      flex: 1;
-      position: relative;
-      background: linear-gradient(135deg, #0a1a15 0%, #0a0f1a 100%);
-      overflow: hidden;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      display: none !important;
     }
 
-    .login-info-section::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: linear-gradient(135deg, rgba(27, 67, 50, 0.85) 0%, rgba(6, 10, 20, 0.9) 100%);
+    /* ── High specificity structural classes to prevent Bootstrap/portal-ui overrides ── */
+    html body.login-page-body .login-form-section #loginForm,
+    html body.login-page-body .login-form-section #loginFormContainer {
+      width: 100% !important;
+      display: block !important;
     }
 
-    .login-info-section::after {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='52' viewBox='0 0 60 52'%3E%3Cpath d='M30 0 L60 15 L60 37 L30 52 L0 37 L0 15Z' fill='none' stroke='rgba(82,183,136,0.06)' stroke-width='1'/%3E%3C/svg%3E");
-      background-size: 60px 52px;
-      pointer-events: none;
+    html body.login-page-body .login-form-section .form-group {
+      width: 100% !important;
+      margin-bottom: 10px !important;
+      display: block !important;
     }
 
-    .info-content {
-      position: relative;
-      z-index: 2;
-      padding: 50px;
-      color: white;
-      max-width: 500px;
+    html body.login-page-body .login-form-section .input-group-custom {
+      width: 100% !important;
+      position: relative !important;
+      display: block !important;
     }
 
-    .info-content h1 {
-      font-family: 'Rajdhani', sans-serif;
-      font-size: 36px;
-      font-weight: 700;
-      margin-bottom: 16px;
-      letter-spacing: 2px;
+    html body.login-page-body .login-form-section .form-control-custom {
+      width: 100% !important;
+      min-height: 38px !important;
+      border-radius: 8px !important;
+      padding: 8px 12px 8px 36px !important;
+      font-size: 12px !important;
+      transition: all 0.2s ease !important;
+      display: block !important;
     }
 
-    .info-content p {
-      font-size: 14px;
-      opacity: 0.8;
-      line-height: 1.6;
-      margin-bottom: 30px;
+    html body.login-page-body .login-form-section .input-icon-svg {
+      position: absolute !important;
+      left: 12px !important;
+      top: 50% !important;
+      transform: translateY(-50%) !important;
+      width: 14px !important;
+      height: 14px !important;
+      z-index: 5 !important;
     }
 
-    .feature-list {
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
+    /* Dynamic focus state border/shadow colors matching selected portal theme color */
+    html body.login-page-body .login-form-section .form-control-custom:focus {
+      border-color: var(--active-portal-color, #10B981) !important;
+      box-shadow: 0 0 8px var(--active-portal-glow, rgba(16, 185, 129, 0.25)) !important;
+      outline: none !important;
     }
 
-    .feature-item {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      font-size: 13px;
-      opacity: 0.9;
-    }
-
-    .feature-item i {
-      width: 32px;
-      height: 32px;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 16px;
-    }
-
-    /* Right Side - Login Form */
-    .login-form-section {
-      width: 420px;
-      background: rgba(15, 22, 41, 0.85);
-      backdrop-filter: blur(20px);
+    /* ── Premium Glassmorphic Modal Card & Parallel Transition Animations ── */
+    html body.login-page-body .login-form-section {
+      position: absolute !important;
+      left: 50% !important;
+      top: 58% !important; /* Centered modal vertically */
+      width: 370px !important;
+      height: auto !important;
+      border-radius: 16px !important;
       display: flex;
       flex-direction: column;
       justify-content: center;
-      padding: 40px;
-      border-left: 1px solid rgba(255, 255, 255, 0.08);
-      position: relative;
-      overflow-y: auto;
+      padding: 24px 20px 20px 20px !important;
+      margin: 0 !important;
+      z-index: 105 !important;
+
+      /* Animation properties: concurrently scaling/fading on activation */
+      opacity: 0 !important;
+      visibility: hidden !important;
+      transform: translate(-50%, -53%) scale(0.94) !important;
+      transition: opacity 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), 
+                  transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), 
+                  visibility 0.4s !important;
     }
+
+    /* Activated state */
+    html body.login-page-body .login-form-section.active {
+      opacity: 1 !important;
+      visibility: visible !important;
+      transform: translate(-50%, -50%) scale(1) !important;
+    }
+
+    /* Dark theme specific settings */
+    html[data-bs-theme="dark"] body.login-page-body .login-form-section {
+      background: rgba(10, 24, 20, 0.84) !important;
+      backdrop-filter: blur(25px) !important;
+      border: 1.5px solid rgba(82, 183, 136, 0.3) !important;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4), 0 0 20px rgba(82, 183, 136, 0.15) !important;
+      color: white !important;
+    }
+
+    html[data-bs-theme="dark"] body.login-page-body .form-title {
+      color: white !important;
+    }
+
+    html[data-bs-theme="dark"] body.login-page-body .form-subtitle {
+      color: rgba(255, 255, 255, 0.5) !important;
+    }
+
+    html[data-bs-theme="dark"] body.login-page-body .form-label {
+      color: rgba(255, 255, 255, 0.7) !important;
+    }
+
+    html[data-bs-theme="dark"] body.login-page-body .form-control-custom {
+      background: rgba(0, 0, 0, 0.45) !important;
+      border: 1px solid rgba(255, 255, 255, 0.12) !important;
+      color: white !important;
+    }
+
+    html[data-bs-theme="dark"] body.login-page-body .input-icon-svg {
+      color: rgba(255, 255, 255, 0.4) !important;
+    }
+
+    html[data-bs-theme="dark"] body.login-page-body .security-info p {
+      color: rgba(255, 255, 255, 0.35) !important;
+    }
+
+    /* Light theme specific settings */
+    html[data-bs-theme="light"] body.login-page-body .login-form-section {
+      background: rgba(255, 255, 255, 0.8) !important;
+      backdrop-filter: blur(25px) !important;
+      border: 1.5px solid rgba(212, 175, 55, 0.4) !important;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1), 0 0 20px rgba(212, 175, 55, 0.15) !important;
+      color: #0F241F !important;
+    }
+
+    html[data-bs-theme="light"] body.login-page-body .form-title {
+      color: #0F241F !important;
+      font-size: 17px !important;
+    }
+
+    html[data-bs-theme="light"] body.login-page-body .form-subtitle {
+      color: rgba(15, 36, 31, 0.7) !important;
+      font-size: 10.5px !important;
+    }
+
+    html[data-bs-theme="light"] body.login-page-body .form-label {
+      color: #0F241F !important;
+      font-size: 10px !important;
+    }
+
+    html[data-bs-theme="light"] body.login-page-body .form-control-custom {
+      background: #E1E1DA !important;
+      border: 1px solid rgba(0, 0, 0, 0.15) !important;
+      color: #0F241F !important;
+    }
+
+    html[data-bs-theme="light"] body.login-page-body .input-icon-svg {
+      color: rgba(15, 36, 31, 0.5) !important;
+    }
+
+    html[data-bs-theme="light"] body.login-page-body .security-info p {
+      color: rgba(15, 36, 31, 0.5) !important;
+    }
+
+    /* ── Dynamic Premium Button Theme styling gradients ── */
+    html body.login-page-body .login-form-section .btn-login {
+      width: 100% !important;
+      min-height: 38px !important;
+      padding: 8px !important;
+      font-size: 12.5px !important;
+      font-weight: 700 !important;
+      letter-spacing: 0.8px !important;
+      border-radius: 8px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      gap: 8px !important;
+      margin-top: 12px !important;
+      color: white !important;
+      transition: all 0.25s ease !important;
+    }
+
+    html body.login-page-body .login-form-section .btn-login:hover {
+      transform: translateY(-1px) !important;
+      box-shadow: 0 6px 18px var(--active-portal-glow, rgba(16, 185, 129, 0.35)) !important;
+    }
+
+    /* Button Gradients: Dark Mode */
+    html[data-bs-theme="dark"] .commander-theme { background: linear-gradient(135deg, #F59E0B, #D97706) !important; }
+    html[data-bs-theme="dark"] .ghead-theme { background: linear-gradient(135deg, #3B82F6, #1D4ED8) !important; }
+    html[data-bs-theme="dark"] .battalion-theme { background: linear-gradient(135deg, #8B5CF6, #6D28D9) !important; }
+    html[data-bs-theme="dark"] .tts-theme { background: linear-gradient(135deg, #06B6D4, #0891B2) !important; }
+    html[data-bs-theme="dark"] .ces-theme { background: linear-gradient(135deg, #10B981, #047857) !important; }
+    html[data-bs-theme="dark"] .cts-theme { background: linear-gradient(135deg, #EC4899, #BE185D) !important; }
+    html[data-bs-theme="dark"] .register-clerk-theme { background: linear-gradient(135deg, #F97316, #C2410C) !important; }
+
+    /* Button Solid Dark Colors: Light Mode for Contrast */
+    html[data-bs-theme="light"] .commander-theme { background: #B45309 !important; }
+    html[data-bs-theme="light"] .ghead-theme { background: #1E3A8A !important; }
+    html[data-bs-theme="light"] .battalion-theme { background: #5B21B6 !important; }
+    html[data-bs-theme="light"] .tts-theme { background: #083344 !important; }
+    html[data-bs-theme="light"] .ces-theme { background: #064E3B !important; }
+    html[data-bs-theme="light"] .cts-theme { background: #831843 !important; }
+    html[data-bs-theme="light"] .register-clerk-theme { background: #7C2D12 !important; }
 
     .form-header {
-      margin-bottom: 24px;
+      margin-bottom: 12px;
+      text-align: center;
+      position: relative;
     }
 
     .portal-icon {
-      width: 60px;
-      height: 60px;
-      background: rgba(82, 183, 136, 0.15);
-      border-radius: 20px;
+      width: 40px !important;
+      height: 40px !important;
+      background: rgba(82, 183, 136, 0.12) !important;
+      border: 1px solid rgba(82, 183, 136, 0.25) !important;
+      border-radius: 50% !important;
       display: flex;
       align-items: center;
       justify-content: center;
-      margin-bottom: 20px;
-    }
-
-    .portal-icon i {
-      font-size: 30px;
-      color: #52B788;
-    }
-
-    .form-title {
-      font-family: 'Rajdhani', sans-serif;
-      font-size: 28px;
-      font-weight: 700;
-      color: white;
       margin-bottom: 6px;
+      margin-left: auto;
+      margin-right: auto;
     }
 
-    .form-subtitle {
-      font-size: 12px;
-      color: rgba(255, 255, 255, 0.5);
-      line-height: 1.5;
+    .portal-icon svg {
+      width: 18px;
+      height: 18px;
     }
 
-    .form-group {
-      margin-bottom: 20px;
+    /* ── Close Button with managed margins ── */
+    .close-modal-btn {
+      position: absolute !important;
+      top: 12px !important; /* Managed margins from border curve */
+      right: 12px !important; /* Managed margins from border curve */
+      background: transparent !important;
+      border: none !important;
+      color: currentColor !important;
+      opacity: 0.45 !important;
+      cursor: pointer !important;
+      transition: opacity 0.2s ease, transform 0.2s ease !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      padding: 6px !important;
+      border-radius: 50% !important;
+      z-index: 10 !important;
     }
 
-    .form-label {
-      font-size: 11px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: rgba(255, 255, 255, 0.6);
-      margin-bottom: 8px;
-      display: block;
+    .close-modal-btn:hover {
+      opacity: 0.9 !important;
+      transform: scale(1.08) !important;
+      background: rgba(0, 0, 0, 0.06) !important;
     }
 
-    .input-group-custom {
-      position: relative;
-    }
-
-    .input-icon {
-      position: absolute;
-      left: 14px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: rgba(255, 255, 255, 0.4);
-      font-size: 16px;
-      z-index: 2;
-    }
-
-    .form-control-custom {
-      width: 100%;
-      background: rgba(255, 255, 255, 0.05) !important;
-      border: 1px solid rgba(255, 255, 255, 0.1) !important;
-      color: white !important;
-      border-radius: 12px !important;
-      padding: 12px 16px 12px 45px !important;
-      font-size: 14px !important;
-      transition: all 0.3s ease !important;
-    }
-
-    .form-control-custom:focus {
-      border-color: #52B788 !important;
-      box-shadow: 0 0 0 3px rgba(82, 183, 136, 0.15) !important;
-      outline: none !important;
+    html[data-bs-theme="dark"] .close-modal-btn:hover {
       background: rgba(255, 255, 255, 0.08) !important;
     }
 
-    .form-control-custom::placeholder {
-      color: rgba(255, 255, 255, 0.3) !important;
+    /* ── Premium Glassmorphic Alert Box Styling ── */
+    html body.login-page-body .alert-custom {
+      border-radius: 8px !important;
+      padding: 8px 12px !important;
+      font-size: 11px !important;
+      margin-bottom: 12px !important;
+      display: flex !important;
+      align-items: flex-start !important;
+      gap: 8px !important;
+      line-height: 1.4 !important;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
     }
 
-    .btn-login {
-      width: 100%;
-      padding: 12px;
-      background: linear-gradient(135deg, #1B4332, #2D6A4F);
-      color: white;
-      border: none;
-      border-radius: 12px;
-      font-family: 'Rajdhani', sans-serif;
-      font-size: 14px;
-      font-weight: 700;
-      letter-spacing: 1px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      margin-top: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
+    html[data-bs-theme="light"] body.login-page-body .alert-custom {
+      background: rgba(239, 68, 68, 0.08) !important;
+      border: 1px solid rgba(239, 68, 68, 0.25) !important;
+      color: #991B1B !important;
     }
 
-    .btn-login:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 10px 30px rgba(27, 67, 50, 0.4);
+    html[data-bs-theme="light"] body.login-page-body .alert-success {
+      background: rgba(16, 185, 129, 0.08) !important;
+      border: 1px solid rgba(16, 185, 129, 0.25) !important;
+      color: #065F46 !important;
     }
 
-    .btn-login:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-      transform: none;
+    html[data-bs-theme="dark"] body.login-page-body .alert-custom {
+      background: rgba(239, 68, 68, 0.15) !important;
+      border: 1px solid rgba(239, 68, 68, 0.4) !important;
+      color: #F87171 !important;
     }
 
-    /* Theme-specific button styles */
-    .btn-login.commander-theme {
-      background: linear-gradient(135deg, #4E342E, #5D4037);
-    }
-
-    .btn-login.ghead-theme {
-      background: linear-gradient(135deg, #0D47A1, #1565C0);
-    }
-
-    .btn-login.battalion-theme {
-      background: linear-gradient(135deg, #311B92, #4527A0);
-    }
-
-    .btn-login.tts-theme {
-      background: linear-gradient(135deg, #004D40, #00695C);
-    }
-
-    .btn-login.ces-theme {
-      background: linear-gradient(135deg, #1B5E20, #2E7D32);
-    }
-
-    .btn-login.cts-theme {
-      background: linear-gradient(135deg, #6A1B9A, #9C27B0);
-    }
-
-    .btn-login.register-clerk-theme {
-      background: linear-gradient(135deg, #E65100, #F57C00);
-    }
-
-    /* Django messages */
-    .alert-custom {
-      background: rgba(239, 83, 80, 0.1);
-      border: 1px solid rgba(239, 83, 80, 0.3);
-      border-radius: 12px;
-      color: #EF5350;
-      padding: 12px 16px;
-      font-size: 12px;
-      margin-bottom: 16px;
-      display: flex;
-      align-items: flex-start;
-      gap: 10px;
-      line-height: 1.5;
-    }
-
-    .alert-custom i {
-      flex-shrink: 0;
-      margin-top: 1px;
-    }
-
-    .alert-success {
-      background: rgba(82, 183, 136, 0.1);
-      border: 1px solid rgba(82, 183, 136, 0.3);
-      color: #52B788;
-    }
-
-    /* Selection Required Message */
-    .selection-required {
-      background: rgba(245, 158, 11, 0.15);
-      border: 1px solid rgba(245, 158, 11, 0.3);
-      border-radius: 12px;
-      color: #FBBF24;
-      padding: 12px 16px;
-      font-size: 12px;
-      margin-bottom: 20px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
+    html[data-bs-theme="dark"] body.login-page-body .alert-success {
+      background: rgba(16, 185, 129, 0.15) !important;
+      border: 1px solid rgba(16, 185, 129, 0.4) !important;
+      color: #34D399 !important;
     }
 
     .security-info {
-      margin-top: 24px;
-      padding-top: 16px;
-      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      margin-top: auto;
+      padding-top: 10px;
+      border-top: 1px solid rgba(0, 0, 0, 0.06);
       text-align: center;
     }
 
-    .security-info p {
-      font-size: 10px;
-      color: rgba(255, 255, 255, 0.35);
-      margin: 0;
+    html[data-bs-theme="dark"] .security-info {
+      border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
     }
 
     .security-info i {
@@ -434,65 +484,107 @@
       margin-right: 4px;
     }
 
-    /* Responsive */
-    @media (max-width: 900px) {
-      .login-info-section {
-        display: none;
-      }
-
-      .login-form-section {
-        width: 100%;
-      }
-
-      .portal-buttons-wrapper {
-        gap: 8px;
-      }
-
-      .portal-option-btn {
-        padding: 6px 14px;
-        font-size: 11px;
-      }
+    /* ── Marquee Footer styling ── */
+    .marquee-footer {
+      position: absolute !important;
+      bottom: 14px !important; /* Raised up for a clean bottom margin */
+      left: 0 !important;
+      width: 100% !important;
+      background: transparent !important; /* Transparent background */
+      border-top: none !important; /* No top border line */
+      z-index: 100 !important;
+      height: 30px !important;
+      display: flex !important;
+      align-items: center !important;
+      overflow: hidden !important;
     }
 
-    @media (max-width: 600px) {
-      .portal-option-btn {
-        padding: 5px 10px;
-        font-size: 10px;
-      }
+    .marquee-footer marquee {
+      font-size: 13.5px !important;
+      font-weight: 600 !important;
+      letter-spacing: 0.6px !important;
+      color: #FBBF24 !important; /* Golden/yellow text color */
+      margin: 0 !important;
+      padding: 0 !important;
+    }
 
-      .login-form-section {
-        padding: 30px 20px;
+    /* Responsive */
+    @media (max-width: 500px) {
+      html body.login-page-body .login-form-section,
+      html[data-bs-theme="dark"] body.login-page-body .login-form-section,
+      html[data-bs-theme="light"] body.login-page-body .login-form-section {
+        width: 90% !important;
+        padding: 20px 16px !important;
       }
     }
   </style>
+  <script>
+    // Set theme immediately to avoid layout flashing
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    document.documentElement.setAttribute('data-bs-theme', savedTheme);
+  </script>
 </head>
 
-<body>
+<body class="login-page-body">
 
   <div class="login-container">
+    <div class="login-bg-backdrop" id="bgBackdrop"></div>
     <!-- Top Bar - Horizontal Portal Options (Full Width) -->
     <div class="portal-top-bar">
       <div class="portal-buttons-wrapper">
         <button class="portal-option-btn" data-portal="commander" id="btn-commander">
-          <i class="bi bi-star-fill"></i> Commander
+          <svg class="icon-inline" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon
+              points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+          </svg> Commander
         </button>
         <button class="portal-option-btn" data-portal="ghead" id="btn-ghead">
-          <i class="bi bi-briefcase-fill"></i> G-Head
+          <svg class="icon-inline" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect width="20" height="14" x="2" y="7" rx="2" ry="2" />
+            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+          </svg> G-Head
         </button>
         <button class="portal-option-btn" data-portal="dephead_a" id="btn-dephead_a">
-          <i class="bi bi-shield"></i> Battalion
+          <svg class="icon-inline" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+          </svg> Battalion
         </button>
         <button class="portal-option-btn" data-portal="dephead_b" id="btn-dephead_b">
-          <i class="bi bi-tools"></i> TTS
+          <svg class="icon-inline" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path
+              d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
+          </svg> TTS
         </button>
         <button class="portal-option-btn" data-portal="dephead_c" id="btn-dephead_c">
-          <i class="bi bi-wifi"></i> CES
+          <svg class="icon-inline" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 13a10 10 0 0 1 14 0" />
+            <path d="M8.5 16.5a5 5 0 0 1 7 0" />
+            <path d="M2 10a15 15 0 0 1 20 0" />
+            <line x1="12" x2="12.01" y1="20" y2="20" />
+          </svg> CES
         </button>
         <button class="portal-option-btn" data-portal="dephead_d" id="btn-dephead_d">
-          <i class="bi bi-file-text"></i> CTS
+          <svg class="icon-inline" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
+            <path d="M14 2v4a2 2 0 0 0 2 2h4" />
+            <path d="M10 9H8" />
+            <path d="M16 13H8" />
+            <path d="M16 17H8" />
+          </svg> CTS
         </button>
         <button class="portal-option-btn" data-portal="register_clerk" id="btn-register_clerk">
-          <i class="bi bi-person-badge"></i> Registration Clerk
+          <svg class="icon-inline" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 18a2 2 0 0 0-2-2H9a2 2 0 0 0-2 2" />
+            <rect width="18" height="18" x="3" y="3" rx="2" />
+            <circle cx="12" cy="10" r="3" />
+          </svg> Registration Clerk
         </button>
       </div>
     </div>
@@ -527,9 +619,21 @@
 
       <!-- Right Side - Login Form -->
       <div class="login-form-section" id="loginFormSection">
+        <!-- Close Button to return back to pristine login background -->
+        <button type="button" class="close-modal-btn" id="closeModalBtn" aria-label="Close Portal">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
         <div class="form-header">
           <div class="portal-icon" id="portalIcon">
-            <i class="bi bi-shield-lock-fill"></i>
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+              stroke="#52B788" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+              <circle cx="12" cy="11" r="2" fill="#52B788" />
+              <path d="M12 13v3" stroke-width="2.5" />
+            </svg>
           </div>
           <div class="form-title" id="formTitle">Select a Portal</div>
           <div class="form-subtitle" id="formSubtitle">Please select your role from the top menu to continue</div>
@@ -539,15 +643,35 @@
         {% if messages %}
         {% for message in messages %}
         <div class="alert-custom {% if message.tags == 'success' %}alert-success{% endif %}">
-          <i
-            class="bi {% if message.tags == 'success' %}bi-check-circle-fill{% else %}bi-exclamation-triangle-fill{% endif %}"></i>
+          {% if message.tags == 'success' %}
+          <svg style="color: #10B981; flex-shrink: 0;" xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10" />
+            <path d="m9 12 2 2 4-4" />
+          </svg>
+          {% else %}
+          <svg style="color: #EF4444; flex-shrink: 0;" xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round">
+            <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+            <line x1="12" x2="12" y1="9" y2="13" />
+            <line x1="12" x2="12.01" y1="17" y2="17" />
+          </svg>
+          {% endif %}
           <span>{{ message }}</span>
         </div>
         {% endfor %}
         {% endif %}
 
         <div id="selectionRequiredMsg" class="selection-required" style="display:none;">
-          <i class="bi bi-info-circle-fill"></i>
+          <svg style="color: #FBBF24; flex-shrink: 0;" xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10" />
+            <path d="M12 16v-4" />
+            <path d="M12 8h.01" />
+          </svg>
           Please select your portal from the top menu to login
         </div>
 
@@ -559,7 +683,12 @@
             <div class="form-group">
               <label class="form-label">Username</label>
               <div class="input-group-custom">
-                <i class="bi bi-person-fill input-icon"></i>
+                <svg class="input-icon-svg" xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                  viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                  stroke-linejoin="round">
+                  <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
                 <input type="text" name="username" class="form-control-custom" placeholder="Enter username"
                   id="usernameInput" />
               </div>
@@ -568,32 +697,52 @@
             <div class="form-group">
               <label class="form-label">Password</label>
               <div class="input-group-custom">
-                <i class="bi bi-lock-fill input-icon"></i>
+                <svg class="input-icon-svg" xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                  viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                  stroke-linejoin="round">
+                  <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                </svg>
                 <input type="password" name="password" class="form-control-custom" placeholder="Enter password"
                   id="passwordInput" />
               </div>
             </div>
 
             <button type="submit" class="btn-login" id="loginBtn">
-              <i class="bi bi-box-arrow-in-right"></i> ACCESS PORTAL
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+                <polyline points="10 17 15 12 10 7" />
+                <line x1="15" x2="3" y1="12" y2="12" />
+              </svg> ACCESS PORTAL
             </button>
           </form>
 
           <div class="security-info">
-            <p>
-              <i class="bi bi-shield-lock-fill"></i>
-              Secured with 256-bit encryption · Session-based authentication<br>
-              Unauthorized access is monitored
+            <p style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+              <svg style="color: #22C55E;" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
+                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              </svg>
+              <span>Secured with 256-bit encryption · Session-based authentication<br>Unauthorized access is
+                monitored</span>
             </p>
           </div>
         </div>
       </div>
     </div>
+    <!-- Marquee Footer aligned with theme -->
+    <div class="marquee-footer">
+      <marquee behavior="scroll" direction="left" scrollamount="4">
+        Powered by Slog Solutions Pvt. Ltd. and BEG & Centre
+      </marquee>
+    </div>
   </div>
 
   <!-- Local Bootstrap JS -->
-  <script src="/static/js/bootstrap.bundle.min.js"></script>
-  <script src="/static/js/portal-ui.js"></script>
+  <script src="../../static/js/bootstrap.bundle.min.js"></script>
+  <script src="../../static/js/portal-ui.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function () {
       const portalBtns = document.querySelectorAll('.portal-option-btn');
@@ -602,6 +751,7 @@
       const formSubtitle = document.getElementById('formSubtitle');
       const portalIcon = document.getElementById('portalIcon');
       const loginFormContainer = document.getElementById('loginFormContainer');
+      const loginFormSection = document.getElementById('loginFormSection');
       const selectionRequiredMsg = document.getElementById('selectionRequiredMsg');
       const loginBtn = document.getElementById('loginBtn');
       const usernameInput = document.getElementById('usernameInput');
@@ -614,70 +764,82 @@
         commander: {
           title: 'Commander Login',
           subtitle: 'Restricted to: Commander only',
-          icon: 'bi-star-fill',
-          iconColor: '#f72606',
-          iconBg: 'rgba(247, 38, 6, 0.15)',
+          iconSvg: `<svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,
+          iconBg: 'rgba(245, 158, 11, 0.15)',
           btnClass: 'commander-theme',
+          themeColor: '#F59E0B',
+          glowColor: 'rgba(245, 158, 11, 0.3)'
         },
         ghead: {
           title: 'G-Head Login',
           subtitle: 'Restricted to: G Department Head only',
-          icon: 'bi-briefcase-fill',
-          iconColor: '#64B5F6',
+          iconSvg: `<svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>`,
           iconBg: 'rgba(100, 181, 246, 0.15)',
           btnClass: 'ghead-theme',
+          themeColor: '#3B82F6',
+          glowColor: 'rgba(59, 130, 246, 0.3)'
         },
         dephead_a: {
           title: 'Battalion Portal Login',
           subtitle: 'Restricted to: Battalion Head · 1TB · 2TB · STB (all platoon levels)',
-          icon: 'bi-shield',
-          iconColor: '#B39DDB',
-          iconBg: 'rgba(179, 157, 219, 0.15)',
+          iconSvg: `<svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`,
+          iconBg: 'rgba(139, 92, 246, 0.15)',
           btnClass: 'battalion-theme',
+          themeColor: '#8B5CF6',
+          glowColor: 'rgba(139, 92, 246, 0.3)'
         },
         dephead_b: {
           title: 'TTS Portal Login',
           subtitle: 'Restricted to: TTS Head · OPEM · DMV · Other Trades (all TTS levels)',
-          icon: 'bi-tools',
-          iconColor: '#4FC3F7',
-          iconBg: 'rgba(79, 195, 247, 0.15)',
+          iconSvg: `<svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#06B6D4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>`,
+          iconBg: 'rgba(6, 182, 212, 0.15)',
           btnClass: 'tts-theme',
+          themeColor: '#06B6D4',
+          glowColor: 'rgba(6, 182, 212, 0.3)'
         },
         dephead_c: {
           title: 'CES Portal Login',
           subtitle: 'Restricted to: CES / CS Head and CES department users',
-          icon: 'bi-wifi',
-          iconColor: '#2dea2a',
-          iconBg: 'rgba(45, 234, 42, 0.12)',
+          iconSvg: `<svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13a10 10 0 0 1 14 0"/><path d="M8.5 16.5a5 5 0 0 1 7 0"/><path d="M2 10a15 15 0 0 1 20 0"/><line x1="12" x2="12.01" y1="20" y2="20"/></svg>`,
+          iconBg: 'rgba(16, 185, 129, 0.12)',
           btnClass: 'ces-theme',
+          themeColor: '#10B981',
+          glowColor: 'rgba(16, 185, 129, 0.3)'
         },
         dephead_d: {
           title: 'CTS Portal Login',
           subtitle: 'Restricted to: CTS / Clerk Head and CTS department users',
-          icon: 'bi-file-text',
-          iconColor: '#db9ce7',
-          iconBg: 'rgba(219, 156, 231, 0.15)',
+          iconSvg: `<svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#EC4899" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>`,
+          iconBg: 'rgba(236, 72, 153, 0.15)',
           btnClass: 'cts-theme',
+          themeColor: '#EC4899',
+          glowColor: 'rgba(236, 72, 153, 0.3)'
         },
         register_clerk: {
           title: 'Registration Clerk Login',
           subtitle: 'Restricted to: Registration Office / Registration Clerk users',
-          icon: 'bi-person-badge',
-          iconColor: '#FFA726',
+          iconSvg: `<svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#F97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 18a2 2 0 0 0-2-2H9a2 2 0 0 0-2 2"/><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="12" cy="10" r="3"/></svg>`,
           iconBg: 'rgba(255, 167, 38, 0.15)',
           btnClass: 'register-clerk-theme',
+          themeColor: '#F97316',
+          glowColor: 'rgba(249, 115, 22, 0.3)'
         },
       };
+
+      const bgBackdrop = document.getElementById('bgBackdrop');
 
       function updatePortalTheme(portalType) {
         const theme = portalThemes[portalType];
         if (!theme) return;
 
+        // Show the active HTML card container with animations
+        loginFormSection.classList.add('active');
+
         // Update form header
         formTitle.textContent = theme.title;
         formSubtitle.textContent = theme.subtitle;
         portalIcon.style.background = theme.iconBg;
-        portalIcon.innerHTML = `<i class="bi ${theme.icon}" style="color: ${theme.iconColor}; font-size: 32px;"></i>`;
+        portalIcon.innerHTML = theme.iconSvg;
 
         // Update login button class
         loginBtn.className = 'btn-login ' + theme.btnClass;
@@ -701,6 +863,22 @@
         selectionRequiredMsg.style.display = 'none';
 
         selectedPortal = portalType;
+
+        // Dynamic theme customization (morph border and shadow glows to theme color)
+        const activeTheme = document.documentElement.getAttribute('data-bs-theme') || 'dark';
+        loginFormSection.style.setProperty('--active-portal-color', theme.themeColor, 'important');
+        loginFormSection.style.setProperty('--active-portal-glow', theme.glowColor, 'important');
+
+        if (activeTheme === 'light') {
+          loginFormSection.style.setProperty('border-color', theme.themeColor, 'important');
+          loginFormSection.style.setProperty('box-shadow', `0 10px 30px rgba(0, 0, 0, 0.12), 0 0 20px ${theme.glowColor}`, 'important');
+        } else {
+          loginFormSection.style.setProperty('border-color', theme.themeColor, 'important');
+          loginFormSection.style.setProperty('box-shadow', `0 10px 30px rgba(0, 0, 0, 0.45), 0 0 25px ${theme.glowColor}`, 'important');
+        }
+
+        // Apply background blur and dimming
+        bgBackdrop.classList.add('blurred');
       }
 
       // Clear alert messages when clicking any portal buttons or focusing on credentials fields
@@ -720,6 +898,19 @@
       usernameInput.addEventListener('focus', clearMessages);
       passwordInput.addEventListener('focus', clearMessages);
 
+      // Close button modal click handler
+      const closeModalBtn = document.getElementById('closeModalBtn');
+      closeModalBtn.addEventListener('click', function () {
+        // Deselect active top bar buttons
+        portalBtns.forEach(btn => btn.classList.remove('active'));
+        
+        // Hide modal and remove blur
+        loginFormSection.classList.remove('active');
+        bgBackdrop.classList.remove('blurred');
+        selectedPortal = null;
+        portalTypeInput.value = '';
+      });
+
       // Form validation — prevent submission if no portal selected
       const loginForm = document.getElementById('loginForm');
       loginForm.addEventListener('submit', function (e) {
@@ -732,16 +923,14 @@
       });
 
       // ── Restore portal state after a failed login (Django re-renders page) ──
-      // Django passes `selected_portal` from the view on validation failures
       const djangoPortal = "{{ selected_portal|default:'' }}";
       if (djangoPortal && portalThemes[djangoPortal]) {
         updatePortalTheme(djangoPortal);
+        bgBackdrop.classList.add('blurred');
       } else {
-        // No portal pre-selected — show selection prompt
-        usernameInput.disabled = true;
-        passwordInput.disabled = true;
-        loginBtn.disabled = true;
-        selectionRequiredMsg.style.display = 'flex';
+        // Hide the HTML form card on initial load so the user sees the mockup's printed card layout in the background image
+        loginFormSection.classList.remove('active');
+        bgBackdrop.classList.remove('blurred');
       }
     });
   </script>
