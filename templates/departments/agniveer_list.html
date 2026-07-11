@@ -101,7 +101,7 @@
   }
   
   .filter-select {
-    background: rgba(15, 22, 41, 0.8);
+    background: rgba(16, 23, 20, 0.95);
     border: 1px solid var(--border-color);
     border-radius: 8px;
     padding: 8px 12px;
@@ -117,7 +117,7 @@
   }
   
   .search-wrapper input.search-input {
-    background: rgba(15, 22, 41, 0.8);
+    background: rgba(16, 23, 20, 0.95);
     border: 1px solid var(--border-color);
     border-radius: 8px;
     padding: 8px 12px 8px 34px !important;
@@ -164,6 +164,21 @@
     background: rgba(212, 160, 23, 0.25);
     border-color: #D4A017;
     color: #D4A017;
+  }
+
+  .filter-select option {
+    background-color: var(--card-bg) !important;
+    color: var(--text-primary) !important;
+    font-family: 'Rajdhani', sans-serif !important;
+    font-weight: 600 !important;
+  }
+  [data-bs-theme="light"] .filter-select option {
+    background-color: #ffffff !important;
+    color: #1B4332 !important;
+  }
+  [data-bs-theme="dark"] .filter-select option {
+    background-color: #070B09 !important;
+    color: #edf4f1 !important;
   }
 </style>
 {% endblock %}

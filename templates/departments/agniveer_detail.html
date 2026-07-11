@@ -5,6 +5,7 @@
 {% block page_subtitle %}{% endblock %}
 {% block header_extra %}{% endblock %}
 {% block body_class %}portal-evaluation-page{% endblock %}
+{% block page_header %}{% endblock %}
 
 {% block content %}
 <style>
@@ -54,8 +55,39 @@
 
   .evaluation-workspace .eval-tab-btn {
     min-width: 120px;
-    padding: 6px 10px !important;
+    padding: 8px 12px !important;
     font-size: 11px !important;
+    border: 1px solid var(--border-color) !important;
+    border-bottom: none !important;
+    border-radius: 8px 8px 0 0 !important;
+    background: rgba(27, 67, 50, 0.05) !important;
+    color: var(--text-muted) !important;
+    font-family: 'Rajdhani', sans-serif !important;
+    font-weight: 700 !important;
+    white-space: nowrap !important;
+    transition: all 0.3s ease !important;
+  }
+
+  .evaluation-workspace .eval-tab-btn.active {
+    background: var(--army-green) !important;
+    color: var(--army-gold) !important;
+    border-color: var(--border-color) !important;
+    box-shadow: 0 -4px 10px rgba(27, 67, 50, 0.06) !important;
+  }
+
+  .evaluation-workspace .eval-tab-btn:hover:not(.active) {
+    background: rgba(82, 183, 136, 0.12) !important;
+    color: var(--army-green-light) !important;
+  }
+
+  [data-bs-theme="dark"] .evaluation-workspace .eval-tab-btn {
+    background: rgba(255, 255, 255, 0.02) !important;
+    color: var(--text-muted) !important;
+  }
+
+  [data-bs-theme="dark"] .evaluation-workspace .eval-tab-btn.active {
+    background: var(--army-green) !important;
+    color: var(--army-gold) !important;
   }
 
   .evaluation-workspace .army-table th {
@@ -119,12 +151,12 @@
   /* Evaluation sheet source styling: fixed action footer and unified section layout */
   .evaluation-workspace>.army-card {
     max-height: calc(100vh - 30px) !important;
-    background: linear-gradient(180deg, var(--card-bg), rgba(220, 238, 248, 0.92)) !important;
+    background: linear-gradient(180deg, var(--card-bg), rgba(234, 240, 236, 0.92)) !important;
     border: 1px solid var(--border-color) !important;
   }
 
   [data-bs-theme="dark"] .evaluation-workspace>.army-card {
-    background: linear-gradient(180deg, var(--card-bg), rgba(31, 42, 50, 0.94)) !important;
+    background: linear-gradient(180deg, var(--card-bg), rgba(16, 23, 20, 0.94)) !important;
   }
 
   .evaluation-workspace .tab-content {
@@ -133,12 +165,12 @@
     min-height: 0 !important;
     overflow: hidden !important;
     padding: 10px 12px 0 !important;
-    background: rgba(225, 242, 250, 0.94) !important;
+    background: rgba(234, 240, 236, 0.94) !important;
     border-color: var(--border-color) !important;
   }
 
   [data-bs-theme="dark"] .evaluation-workspace .tab-content {
-    background: rgba(37, 48, 57, 0.92) !important;
+    background: rgba(20, 27, 24, 0.95) !important;
   }
 
   .test-tab-pane[style*="display: block"] {
@@ -171,11 +203,11 @@
     overflow: auto !important;
     border: 1px solid var(--border-color) !important;
     border-radius: 10px !important;
-    background: rgba(217, 236, 246, 0.85) !important;
+    background: rgba(240, 245, 242, 0.85) !important;
   }
 
   [data-bs-theme="dark"] .test-tab-pane .table-responsive {
-    background: rgba(43, 56, 66, 0.88) !important;
+    background: rgba(27, 36, 31, 0.88) !important;
   }
 
   .evaluation-workspace .army-table {
@@ -188,8 +220,8 @@
     position: sticky;
     top: 0;
     z-index: 5;
-    background: linear-gradient(90deg, #a9d5ec, #b9e4ef) !important;
-    color: #0a5f8f !important;
+    background: linear-gradient(90deg, var(--army-green-light), var(--army-green)) !important;
+    color: #ffffff !important;
     padding: 8px 10px !important;
     font-size: 10px !important;
     text-transform: uppercase;
@@ -197,18 +229,18 @@
   }
 
   [data-bs-theme="dark"] .evaluation-workspace .army-table thead th {
-    background: linear-gradient(90deg, rgba(139, 215, 183, 0.18), rgba(133, 205, 224, 0.12)) !important;
-    color: var(--army-olive) !important;
+    background: linear-gradient(90deg, rgba(82, 183, 136, 0.18), rgba(212, 160, 23, 0.12)) !important;
+    color: var(--army-gold) !important;
   }
 
   .evaluation-workspace .army-table td {
     padding: 8px 10px !important;
     font-size: 11px !important;
-    border-color: rgba(15, 95, 135, 0.16) !important;
+    border-color: rgba(82, 183, 136, 0.16) !important;
   }
 
   .evaluation-workspace .army-table tbody tr:hover {
-    background: rgba(31, 149, 207, 0.12) !important;
+    background: rgba(82, 183, 136, 0.12) !important;
   }
 
   .evaluation-workspace .marks-input,
@@ -216,9 +248,9 @@
   .evaluation-workspace input[type="number"] {
     width: 64px !important;
     height: 32px !important;
-    background: rgba(248, 252, 255, 0.92) !important;
+    background: #ffffff !important;
     color: var(--text-primary) !important;
-    border: 1px solid rgba(15, 95, 135, 0.22) !important;
+    border: 1px solid rgba(82, 183, 136, 0.22) !important;
     border-radius: 7px !important;
     font-size: 11px !important;
     font-weight: 700 !important;
@@ -228,7 +260,7 @@
   [data-bs-theme="dark"] .evaluation-workspace .marks-input,
   [data-bs-theme="dark"] .evaluation-workspace .bn-input,
   [data-bs-theme="dark"] .evaluation-workspace input[type="number"] {
-    background: rgba(47, 61, 71, 0.95) !important;
+    background: rgba(27, 36, 31, 0.95) !important;
     color: var(--text-primary) !important;
     border-color: rgba(149, 183, 169, 0.22) !important;
   }
@@ -256,7 +288,7 @@
     box-shadow: 0 0 0 3px rgba(79, 209, 161, 0.12) !important;
   }
   [data-bs-theme="dark"] .grade-txt-select {
-    background: rgba(47, 61, 71, 0.95) !important;
+    background: rgba(27, 36, 31, 0.95) !important;
     color: var(--text-primary) !important;
     border-color: rgba(149, 183, 169, 0.22) !important;
   }
@@ -268,8 +300,8 @@
   .evaluation-workspace .marks-input:focus,
   .evaluation-workspace .bn-input:focus,
   .evaluation-workspace input[type="number"]:focus {
-    border-color: #168fc7 !important;
-    box-shadow: 0 0 0 3px rgba(22, 143, 199, 0.16) !important;
+    border-color: var(--army-green-light) !important;
+    box-shadow: 0 0 0 3px rgba(45, 106, 79, 0.16) !important;
   }
 
   .evaluation-sticky-footer {
@@ -284,15 +316,15 @@
     gap: 10px !important;
     margin: 10px -12px 0 !important;
     padding: 10px 12px !important;
-    background: rgba(225, 242, 250, 0.96) !important;
+    background: #EAF0EC !important;
     border-top: 1px solid var(--border-color) !important;
     border-radius: 0 0 10px 10px !important;
-    box-shadow: 0 -10px 24px rgba(14, 72, 104, 0.1) !important;
+    box-shadow: 0 -10px 24px rgba(27, 67, 50, 0.08) !important;
     z-index: 8 !important;
   }
 
   [data-bs-theme="dark"] .evaluation-sticky-footer {
-    background: rgba(37, 48, 57, 0.96) !important;
+    background: rgba(16, 23, 20, 0.96) !important;
   }
 
   .evaluation-sticky-footer>.d-flex {
@@ -311,14 +343,14 @@
     min-width: 0 !important;
     height: 42px !important;
     padding: 7px 10px !important;
-    background: rgba(248, 252, 255, 0.78) !important;
-    border: 1px solid rgba(15, 95, 135, 0.16) !important;
+    background: #ffffff !important;
+    border: 1px solid rgba(82, 183, 136, 0.16) !important;
     border-radius: 8px !important;
     align-items: flex-start !important;
   }
 
   [data-bs-theme="dark"] .compact-score-card {
-    background: rgba(47, 61, 71, 0.78) !important;
+    background: rgba(27, 36, 31, 0.78) !important;
   }
 
   .compact-score-card .card-label {
@@ -360,31 +392,35 @@
   [id*="tab-CLK_"] .army-card {
     height: 100% !important;
     min-height: 0 !important;
-    background: rgba(217, 236, 246, 0.85) !important;
-    border: 1px solid rgba(15, 95, 135, 0.2) !important;
-    box-shadow: 0 10px 24px rgba(14, 72, 104, 0.1) !important;
+    background: rgba(240, 245, 242, 0.85) !important;
+    border: 1px solid rgba(82, 183, 136, 0.2) !important;
+    box-shadow: 0 10px 24px rgba(27, 67, 50, 0.08) !important;
   }
 
   [data-bs-theme="dark"] [id*="tab-CLK_"] .army-card {
-    background: rgba(43, 56, 66, 0.88) !important;
+    background: rgba(27, 36, 31, 0.88) !important;
     border-color: rgba(149, 183, 169, 0.18) !important;
   }
 
   [id*="tab-CLK_"] .army-card-header {
     padding: 9px 11px !important;
-    background: linear-gradient(90deg, #a9d5ec, #b9e4ef) !important;
-    border-bottom: 1px solid rgba(15, 95, 135, 0.16) !important;
+    background: linear-gradient(90deg, var(--army-green-light), var(--army-green)) !important;
+    border-bottom: 1px solid var(--border-color) !important;
   }
 
   [data-bs-theme="dark"] [id*="tab-CLK_"] .army-card-header {
-    background: linear-gradient(90deg, rgba(139, 215, 183, 0.18), rgba(133, 205, 224, 0.12)) !important;
+    background: linear-gradient(90deg, rgba(82, 183, 136, 0.18), rgba(212, 160, 23, 0.12)) !important;
   }
 
   [id*="tab-CLK_"] .army-card-title {
-    color: var(--army-olive) !important;
+    color: #ffffff !important;
     font-size: 11px !important;
     letter-spacing: 0.6px !important;
     text-transform: uppercase !important;
+  }
+
+  [data-bs-theme="dark"] [id*="tab-CLK_"] .army-card-title {
+    color: var(--army-gold) !important;
   }
 
   [id*="tab-CLK_"] .army-card-body {
@@ -449,6 +485,27 @@
     .evaluation-sticky-footer .btn-army {
       width: 100% !important;
     }
+  }
+
+  .form-select option,
+  .grade-txt-select option,
+  select option {
+    background-color: var(--card-bg) !important;
+    color: var(--text-primary) !important;
+    font-family: 'Rajdhani', sans-serif !important;
+    font-weight: 600 !important;
+  }
+  [data-bs-theme="light"] .form-select option,
+  [data-bs-theme="light"] .grade-txt-select option,
+  [data-bs-theme="light"] select option {
+    background-color: #ffffff !important;
+    color: #1B4332 !important;
+  }
+  [data-bs-theme="dark"] .form-select option,
+  [data-bs-theme="dark"] .grade-txt-select option,
+  [data-bs-theme="dark"] select option {
+    background-color: #070B09 !important;
+    color: #edf4f1 !important;
   }
 </style>
 <div class="row g-3">
@@ -573,7 +630,7 @@
           <!-- Theme Toggle inside Evaluation Sheet -->
           <button id="themeToggleSheet" title="Toggle Light/Dark Mode"
             style="background: rgba(82, 183, 136, 0.1); border: 1px solid rgba(82, 183, 136, 0.3); width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #52B788; transition: all 0.2s; cursor: pointer;"
-            onclick="document.getElementById('themeToggle').click()">
+            onclick="toggleTheme()">
             <i class="bi bi-sun-fill" style="font-size: 14px;"></i>
           </button>
         </div>
@@ -581,17 +638,15 @@
 
       <!-- Result Sheets Tabs -->
       <div class="eval-tabs mt-3"
-        style="border-bottom: 1px solid rgba(82, 183, 136, 0.2); overflow-x: auto; display: flex; gap: 8px;">
+        style="border-bottom: 1px solid var(--border-color); overflow-x: auto; display: flex; gap: 8px;">
         {% for code, name in test_type_choices %}
-        <button class="eval-tab-btn {% if forloop.first %}active{% endif %}" onclick="showTab('{{ code }}')"
-          style="padding: 10px 15px; border: 1px solid rgba(82, 183, 136, 0.2); border-bottom: none; border-radius: 8px 8px 0 0; background: rgba(15, 20, 25, 0.6); color: #8B9BB4; font-family: 'Rajdhani', sans-serif; font-weight: 600; white-space: nowrap; transition: all 0.3s ease;">
+        <button class="eval-tab-btn {% if forloop.first %}active{% endif %}" onclick="showTab('{{ code }}')">
           {{ name }}
         </button>
         {% endfor %}
       </div>
 
-      <div class="tab-content"
-        style="background: rgba(15, 20, 25, 0.8); border: 1px solid rgba(82, 183, 136, 0.2); border-top: none; border-radius: 0 0 12px 12px; padding: 10px 20px 20px 20px;">
+      <div class="tab-content" style="border: 1px solid var(--border-color); border-top: none; border-radius: 0 0 12px 12px; padding: 10px 20px 20px 20px;">
         {% for code, name in test_type_choices %}
         <div id="tab-{{ code }}" class="test-tab-pane"
           style="display: {% if forloop.first %}block{% else %}none{% endif %};">
@@ -3375,8 +3430,8 @@
     // Deactivate all buttons
     document.querySelectorAll('.eval-tab-btn').forEach(el => {
       el.classList.remove('active');
-      el.style.background = 'rgba(15, 20, 25, 0.6)';
-      el.style.color = '#8B9BB4';
+      el.style.background = '';
+      el.style.color = '';
     });
 
     // Show active tab
@@ -3395,8 +3450,8 @@
     const btn = Array.from(document.querySelectorAll('.eval-tab-btn')).find(el => el.textContent.trim() === testCode);
     if (btn) {
       btn.classList.add('active');
-      btn.style.background = '#1B4332';
-      btn.style.color = '#52B788';
+      btn.style.background = '';
+      btn.style.color = '';
     }
   }
 
@@ -3410,8 +3465,8 @@
     } else {
       const activeBtn = document.querySelector('.eval-tab-btn.active');
       if (activeBtn) {
-        activeBtn.style.background = '#1B4332';
-        activeBtn.style.color = '#52B788';
+        activeBtn.style.background = '';
+        activeBtn.style.color = '';
       }
     }
 

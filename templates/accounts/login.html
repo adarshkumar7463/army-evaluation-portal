@@ -22,7 +22,7 @@
     body.login-page-body {
       font-family: 'Inter', sans-serif;
       min-height: 100vh;
-      background-color: #07111F !important;
+      background-color: #070B09 !important;
       overflow: hidden;
       height: 100vh;
       margin: 0;
@@ -36,7 +36,7 @@
       left: 0 !important;
       width: 100% !important;
       height: 100% !important;
-      background: #07111F url('/static/images/login_bg.jpg') no-repeat center center !important;
+      background: #070B09 url('/static/images/login_bg.jpg') no-repeat center center !important;
       background-size: 100% 100% !important;
       z-index: 1 !important;
       transition: filter 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.4s ease !important;
@@ -49,7 +49,7 @@
     }
 
     html[data-bs-theme="light"] .login-bg-backdrop {
-      background: #F4F8FC url('/static/images/login_bg.jpg') no-repeat center center !important;
+      background: #EAF0EC url('/static/images/login_bg.jpg') no-repeat center center !important;
       background-size: 100% 100% !important;
     }
 
@@ -517,6 +517,86 @@
         padding: 20px 16px !important;
       }
     }
+
+    /* Full-Screen Modern Page Loader with Spinner */
+    .page-transition-overlay {
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      background: #070B09 !important;
+      z-index: 99999 !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      flex-direction: column !important;
+      opacity: 1 !important;
+      pointer-events: auto !important;
+      transition: opacity 0.35s ease-out !important;
+    }
+    
+    html[data-bs-theme="light"] .page-transition-overlay {
+      background: #EAF0EC !important;
+    }
+    
+    .page-transition-overlay.fade-out {
+      opacity: 0 !important;
+      pointer-events: none !important;
+    }
+    
+    .transition-spinner-wrap {
+      position: relative !important;
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: center !important;
+      justify-content: center !important;
+      gap: 20px !important;
+    }
+    
+    .transition-spinner-logo {
+      width: 68px !important;
+      height: 68px !important;
+      animation: logo-spin 1.8s cubic-bezier(0.77, 0, 0.175, 1) infinite !important;
+    }
+    
+    .transition-spinner-ring {
+      position: absolute !important;
+      top: -12px !important;
+      left: 50% !important;
+      transform: translateX(-50%) !important;
+      width: 92px !important;
+      height: 92px !important;
+      border: 3px solid transparent !important;
+      border-top-color: var(--army-gold) !important;
+      border-bottom-color: var(--army-olive) !important;
+      border-radius: 50% !important;
+      animation: ring-spin 1.2s linear infinite !important;
+    }
+    
+    .transition-loading-text {
+      font-family: 'Rajdhani', sans-serif !important;
+      font-size: 12px !important;
+      font-weight: 800 !important;
+      letter-spacing: 3px !important;
+      color: #ffffff !important;
+      text-transform: uppercase !important;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.15) !important;
+    }
+    
+    html[data-bs-theme="light"] .transition-loading-text {
+      color: #1A2C3E !important;
+    }
+    
+    @keyframes logo-spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    @keyframes ring-spin {
+      0% { transform: translateX(-50%) rotate(0deg); }
+      100% { transform: translateX(-50%) rotate(-360deg); }
+    }
   </style>
   <script>
     // Set theme immediately to avoid layout flashing
@@ -526,6 +606,13 @@
 </head>
 
 <body class="login-page-body">
+  <div class="page-transition-overlay" id="pageTransitionOverlay">
+    <div class="transition-spinner-wrap">
+      <img src="{% static 'images/logo.svg' %}" class="transition-spinner-logo" alt="" />
+      <div class="transition-spinner-ring"></div>
+      <div class="transition-loading-text">LOADING SYSTEM</div>
+    </div>
+  </div>
 
   <div class="login-container">
     <div class="login-bg-backdrop" id="bgBackdrop"></div>
@@ -920,7 +1007,21 @@
           loginFormContainer.style.display = 'none';
           return false;
         }
+        
+        // Fade in transition overlay on submit
+        const loader = document.getElementById('pageTransitionOverlay');
+        if (loader) {
+          loader.classList.remove('fade-out');
+        }
       });
+
+      // Fade out transition overlay on page load
+      const loader = document.getElementById('pageTransitionOverlay');
+      if (loader) {
+        setTimeout(() => {
+          loader.classList.add('fade-out');
+        }, 600); // Match base.html premium load delay
+      }
 
       // ── Restore portal state after a failed login (Django re-renders page) ──
       const djangoPortal = "{{ selected_portal|default:'' }}";

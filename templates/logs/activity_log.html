@@ -81,6 +81,24 @@
     letter-spacing: 0.5px;
     margin-top: 2px;
   }
+
+  .form-control option,
+  select option {
+    background-color: var(--card-bg) !important;
+    color: var(--text-primary) !important;
+    font-family: 'Rajdhani', sans-serif !important;
+    font-weight: 600 !important;
+  }
+  [data-bs-theme="light"] .form-control option,
+  [data-bs-theme="light"] select option {
+    background-color: #ffffff !important;
+    color: #1B4332 !important;
+  }
+  [data-bs-theme="dark"] .form-control option,
+  [data-bs-theme="dark"] select option {
+    background-color: #070B09 !important;
+    color: #edf4f1 !important;
+  }
 </style>
 {% endblock %}
 

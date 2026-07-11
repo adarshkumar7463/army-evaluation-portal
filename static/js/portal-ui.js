@@ -166,25 +166,32 @@
   function initSidebarToggle() {
     const isCollapsible = document.body.classList.contains('portal-collapsible-sidebar');
     const expandBtn = document.getElementById('sidebarExpandBtn');
+    const brand = document.querySelector('.sidebar-brand');
     const savedExpanded = localStorage.getItem('portal-sidebar-expanded') === 'true';
     document.body.classList.toggle('sidebar-expanded', !isCollapsible || savedExpanded);
 
-    if (expandBtn) {
-      const syncLabel = () => {
-        const expanded = document.body.classList.contains('sidebar-expanded');
-        expandBtn.hidden = !isCollapsible;
+    const toggleSidebarFn = () => {
+      if (!document.body.classList.contains('portal-collapsible-sidebar')) return;
+      const expanded = !document.body.classList.contains('sidebar-expanded');
+      document.body.classList.toggle('sidebar-expanded', expanded);
+      localStorage.setItem('portal-sidebar-expanded', String(expanded));
+      if (expandBtn) {
         expandBtn.setAttribute('title', expanded ? 'Collapse navigation' : 'Expand navigation');
         expandBtn.setAttribute('aria-label', expanded ? 'Collapse navigation' : 'Expand navigation');
-      };
+      }
+    };
 
-      expandBtn.addEventListener('click', () => {
-        if (!document.body.classList.contains('portal-collapsible-sidebar')) return;
-        const expanded = !document.body.classList.contains('sidebar-expanded');
-        document.body.classList.toggle('sidebar-expanded', expanded);
-        localStorage.setItem('portal-sidebar-expanded', String(expanded));
-        syncLabel();
+    if (brand) {
+      brand.style.cursor = 'pointer';
+      brand.addEventListener('click', (e) => {
+        if (e.target.closest('#sidebarExpandBtn')) return;
+        toggleSidebarFn();
       });
-      syncLabel();
+    }
+
+    if (expandBtn) {
+      expandBtn.style.display = 'none';
+      expandBtn.addEventListener('click', toggleSidebarFn);
     }
   }
 

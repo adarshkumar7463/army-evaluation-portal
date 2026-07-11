@@ -608,6 +608,182 @@
     [data-bs-theme="light"] .army-table tbody tr:hover {
       background: rgba(45, 106, 79, 0.04);
     }
+
+    /* Center Watermark Rotating Animation */
+    .portal-background-watermark {
+      position: fixed !important;
+      top: 50% !important;
+      left: 55% !important;
+      /* Slightly offset to visually center next to sidebar */
+      transform: translate(-50%, -50%) !important;
+      width: 480px !important;
+      height: 480px !important;
+      pointer-events: none !important;
+      z-index: -10 !important;
+      opacity: 0.08 !important;
+      animation: watermark-slow-rotate 45s linear infinite, watermark-pulse 8s ease-in-out infinite alternate !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+    }
+
+    .portal-background-watermark img {
+      width: 100% !important;
+      height: 100% !important;
+      filter: grayscale(1) invert(0) !important;
+    }
+
+    [data-bs-theme="dark"] .portal-background-watermark img {
+      filter: grayscale(1) invert(1) !important;
+    }
+
+    @keyframes watermark-slow-rotate {
+      0% {
+        transform: translate(-50%, -50%) rotate(0deg);
+      }
+
+      100% {
+        transform: translate(-50%, -50%) rotate(360deg);
+      }
+    }
+
+    @keyframes watermark-pulse {
+      0% {
+        transform: translate(-50%, -50%) scale(0.92);
+        opacity: 0.05;
+      }
+
+      100% {
+        transform: translate(-50%, -50%) scale(1.08);
+        opacity: 0.10;
+      }
+    }
+
+    /* Full-Screen Modern Page Loader with Spinner */
+    .page-transition-overlay {
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      background: var(--bg-dark) !important;
+      z-index: 99999 !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      flex-direction: column !important;
+      opacity: 1 !important;
+      pointer-events: auto !important;
+      transition: opacity 0.35s ease-out !important;
+    }
+
+    html[data-bs-theme="light"] .page-transition-overlay {
+      background: #EAF0EC !important;
+    }
+
+    .page-transition-overlay.fade-out {
+      opacity: 0 !important;
+      pointer-events: none !important;
+    }
+
+    .transition-spinner-wrap {
+      position: relative !important;
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: center !important;
+      justify-content: center !important;
+      gap: 20px !important;
+    }
+
+    .transition-spinner-logo {
+      width: 68px !important;
+      height: 68px !important;
+      animation: logo-spin 1.8s cubic-bezier(0.77, 0, 0.175, 1) infinite !important;
+    }
+
+    .transition-spinner-ring {
+      position: absolute !important;
+      top: -12px !important;
+      left: 50% !important;
+      transform: translateX(-50%) !important;
+      width: 92px !important;
+      height: 92px !important;
+      border: 3px solid transparent !important;
+      border-top-color: var(--army-gold) !important;
+      border-bottom-color: var(--army-olive) !important;
+      border-radius: 50% !important;
+      animation: ring-spin 1.2s linear infinite !important;
+    }
+
+    .transition-loading-text {
+      font-family: 'Rajdhani', sans-serif !important;
+      font-size: 12px !important;
+      font-weight: 800 !important;
+      letter-spacing: 3px !important;
+      color: var(--text-primary) !important;
+      text-transform: uppercase !important;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.15) !important;
+    }
+
+    @keyframes logo-spin {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    @keyframes ring-spin {
+      0% {
+        transform: translateX(-50%) rotate(0deg);
+      }
+
+      100% {
+        transform: translateX(-50%) rotate(-360deg);
+      }
+    }
+
+    /* Fixed Footer Marquee Ticker */
+    .portal-footer-ticker {
+      position: fixed !important;
+      bottom: 0 !important;
+      left: 0 !important;
+      right: 0 !important;
+      z-index: 1040 !important;
+      margin: 0 !important;
+      border-radius: 0 !important;
+      background: rgba(27, 67, 50, 0.95) !important;
+      backdrop-filter: blur(8px) !important;
+      border-top: 1px solid rgba(82, 183, 136, 0.25) !important;
+      color: #52B788 !important;
+      font-weight: 700 !important;
+      font-family: 'Rajdhani', sans-serif !important;
+      font-size: 11px !important;
+      letter-spacing: 1.5px !important;
+      padding: 6px 20px !important;
+      display: block !important;
+      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3) !important;
+      text-transform: uppercase !important;
+      transition: left 0.2s ease !important;
+    }
+
+    [data-bs-theme="light"] .portal-footer-ticker {
+      background: rgba(234, 240, 236, 0.95) !important;
+      border-top: 1px solid rgba(45, 106, 79, 0.25) !important;
+      color: #1B4332 !important;
+    }
+
+    @media (min-width: 992px) {
+      .portal-footer-ticker {
+        left: 188px !important;
+      }
+
+      body.portal-collapsible-sidebar:not(.sidebar-expanded) .portal-footer-ticker {
+        left: 56px !important;
+      }
+    }
   </style>
   <link href="{% static 'css/portal-ui.css' %}" rel="stylesheet" />
   {% block extra_css %}{% endblock %}
@@ -615,23 +791,41 @@
 </head>
 
 <body class="{% block body_class %}{% endblock %}">
+  <div class="page-transition-overlay" id="pageTransitionOverlay">
+    <div class="transition-spinner-wrap">
+      <img src="{% static 'images/logo.svg' %}" class="transition-spinner-logo" alt="" />
+      <div class="transition-spinner-ring"></div>
+      <div class="transition-loading-text">LOADING SYSTEM</div>
+    </div>
+  </div>
+  <div class="portal-background-watermark">
+    <img src="{% static 'images/logo.svg' %}" alt="" />
+  </div>
 
   <!-- Sidebar Overlay (mobile) -->
   <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 
   <!-- Sidebar -->
   <aside class="sidebar" id="sidebar">
-    <button type="button" class="sidebar-expand-btn" id="sidebarExpandBtn" title="Expand navigation"
-      aria-label="Expand navigation">
-      <i class="bi bi-layout-sidebar-inset"></i>
-    </button>
-    <div class="sidebar-brand">
-      <div class="sidebar-brand-icon">
-        <i class="bi bi-shield"></i>
+    <div class="sidebar-brand"
+      style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px 10px; border-bottom: 1px solid var(--border-color); height: auto !important; min-height: 140px; position: relative;">
+      <button type="button" class="sidebar-expand-btn" id="sidebarExpandBtn" title="Expand navigation"
+        aria-label="Expand navigation">
+        <i class="bi bi-chevron-left"></i>
+      </button>
+      <div class="sidebar-brand-logo-container"
+        style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; margin-bottom: 2px;">
+        <img src="{% static 'images/logo.svg' %}" alt="Corps of Engineers Crest"
+          style="width: 56px; height: 56px; filter: drop-shadow(0 2px 6px rgba(0,0,0,0.45));" />
       </div>
-      <div class="sidebar-brand-text">
-        G-Branch Evaluation
-        <span>Army Management System</span>
+      <div class="sidebar-brand-text"
+        style="margin-top: 4px; font-family: 'Rajdhani', sans-serif; font-weight: 700; text-align: center; width: 100%;">
+        <div style="font-size: 18px; color: #ffffff; letter-spacing: 1px; text-transform: uppercase; line-height: 1.2;">
+          BEG & CENTRE</div>
+        <div
+          style="font-size: 14px; color: #A8BDB5; letter-spacing: 1.5px; text-transform: uppercase; margin-top: 2px;">
+          ROORKEE</div>
+        <div style="color: #D4A017; font-size: 11px; margin-top: 6px; letter-spacing: 2px;">★ ★ ★ ★ ★</div>
       </div>
     </div>
 
@@ -669,7 +863,8 @@
         <i class="bi bi-shield-fill-check"></i> Manage Users
       </a>
       {% endif %}
-      <a href="{% url 'chatbot:chatbot_home' %}" class="sidebar-link {% if 'chatbot' in request.path %}active{% endif %}">
+      <a href="{% url 'chatbot:chatbot_home' %}"
+        class="sidebar-link {% if 'chatbot' in request.path %}active{% endif %}">
         <i class="bi bi-robot"></i> AI Chatbot
       </a>
       <a href="{% url 'logs:activity_log' %}" class="sidebar-link {% if 'logs' in request.path %}active{% endif %}">
@@ -678,12 +873,14 @@
       {% endif %}
     </nav>
 
-    <div class="sidebar-footer">
-      <a href="{% url 'accounts:logout' %}" class="sidebar-link" style="color:#EF5350; padding: 8px 18px;">
-        <i class="bi bi-box-arrow-right"></i> Logout
+    <div class="sidebar-footer"
+      style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 12px 10px; border-top: 1px solid var(--border-color); width: 100%;">
+      <a href="{% url 'accounts:logout' %}" class="sidebar-link"
+        style="color: #EF5350 !important; font-weight: 700; font-family: 'Rajdhani', sans-serif; text-transform: uppercase; letter-spacing: 1px; display: flex !important; align-items: center; justify-content: center; gap: 8px; width: 100%; text-align: center; background: rgba(239, 83, 80, 0.08) !important; border: 1px dashed rgba(239, 83, 80, 0.25) !important; padding: 8px 12px; margin: 0 0 8px 0; border-radius: 8px; text-decoration: none;">
+        <i class="bi bi-box-arrow-right" style="color: #EF5350 !important; font-size: 13px;"></i> Logout
       </a>
       <div
-        style="padding: 8px 0; font-size: 8px; color:var(--text-muted); text-align:center; opacity: 0.7; letter-spacing: 0.5px; text-transform: uppercase;">
+        style="font-size: 8px; color: var(--text-muted); text-align: center; opacity: 2.0; letter-spacing: 0.5px; text-transform: uppercase; width: 100%;">
         v1.0 · Secure System
       </div>
     </div>
@@ -693,39 +890,86 @@
   <!-- Main Wrapper -->
   <div class="main-wrapper">
 
+    {% block page_header %}
     <!-- Page Header -->
-    <div class="page-header">
-      <div class="page-header-left">
-        <button class="btn btn-outline-army d-lg-none sidebar-toggle" onclick="toggleSidebar()">
-          <i class="bi bi-list fs-4"></i>
+    <div class="page-header"
+      style="padding: 10px 0 !important; margin: -10px 0 16px 0 !important; background: transparent !important; border-bottom: 1px solid var(--border-color) !important; display: flex !important; align-items: center !important; justify-content: space-between !important; min-height: 52px !important; box-shadow: none !important;">
+      <div class="page-header-left d-flex align-items-center gap-3">
+        <button class="btn btn-outline-army d-lg-none sidebar-toggle" onclick="toggleSidebar()"
+          style="padding: 4px 8px !important;">
+          <i class="bi bi-list fs-5"></i>
         </button>
-        <h1 class="page-title">{% block page_title %}{% endblock %}</h1>
-        <div class="page-subtitle">{% block page_subtitle %}{% endblock %}</div>
+        <div class="d-flex flex-column justify-content-center">
+          <h1
+            style="font-family: 'Rajdhani', sans-serif; font-size: 18px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin: 0; color: var(--text-primary) !important;">
+            {% block page_title %}{% endblock %}
+            <span style="color: var(--army-gold); letter-spacing: 1px;">★ ★ ★</span>
+          </h1>
+          <div
+            style="font-size: 10px; font-weight: 700; color: var(--text-muted) !important; text-transform: uppercase; display: flex; align-items: center; gap: 6px; margin-top: 1px;">
+            <span>INTEGRATED SOLDIER ASSESSMENT SYSTEM</span>
+          </div>
+        </div>
       </div>
 
-      <div class="page-header-right">
-        {% block header_actions %}{% endblock %}
-        <button id="themeToggle" class="theme-toggle" title="Toggle Light/Dark Mode">
+      <div class="page-header-right d-flex align-items-center gap-3">
+        <!-- Live Status Badge -->
+        <div class="d-none d-xl-flex align-items-center gap-2 px-2.5 py-1 rounded"
+          style="background: rgba(82, 183, 136, 0.08); border: 1px solid rgba(82, 183, 136, 0.2); font-size: 9px; line-height: 1; height: 28px !important; align-items: center !important;">
+          <span style="color: #52B788; font-weight: 700; display: flex; align-items: center; gap: 4px;">
+            <span class="status-dot"
+              style="width: 5px; height: 5px; background: #52B788; border-radius: 50%; display: inline-block; box-shadow: 0 0 6px #52B788;"></span>
+            LIVE STATUS
+          </span>
+          <span style="color: var(--text-muted); font-weight: 600;">All Systems Operational</span>
+        </div>
+
+        <!-- DateTime Badge -->
+        <div class="d-none d-md-flex align-items-center gap-2 px-2.5 py-1 rounded"
+          style="background: rgba(212, 160, 23, 0.08); border: 1px solid rgba(212, 160, 23, 0.2); font-size: 9px; line-height: 1; height: 28px !important; align-items: center !important;">
+          <i class="bi bi-calendar3" style="color: var(--army-gold); font-size: 10px;"></i>
+          <span id="live-date" style="color: var(--text-primary); font-weight: 700;">{% now "d M Y" %}</span>
+          <span id="live-time" style="color: var(--text-muted); font-weight: 600;">{% now "l - g:i:s A" %}</span>
+        </div>
+
+        <!-- Notifications Bell -->
+        <div
+          style="position: relative; cursor: pointer; color: var(--text-primary); font-size: 15px; display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 8px; border: 1px solid var(--border-color); background: rgba(255, 255, 255, 0.03);">
+          <i class="bi bi-bell-fill" style="color: var(--army-gold);"></i>
+          <span
+            style="position: absolute; top: -3px; right: -3px; background: #EF5350; color: white; font-size: 7px; font-weight: 800; width: 11px; height: 11px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 4px rgba(239, 83, 80, 0.4);">2</span>
+        </div>
+
+        <!-- Theme Toggle -->
+        <button id="themeToggle" class="theme-toggle" title="Toggle Light/Dark Mode"
+          style="width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 12px; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-color); color: var(--text-primary); cursor: pointer;">
           <i class="bi bi-sun-fill" style="font-size: 12px;"></i>
         </button>
 
+        {% block header_actions %}{% endblock %}
+
         {% if user.is_authenticated %}
-        <a href="{% url 'accounts:profile' %}" class="user-profile-card">
-          <div class="user-profile-info">
-            <div class="user-profile-name">
+        <a href="{% url 'accounts:profile' %}" class="user-profile-card"
+          style="border: none !important; background: transparent !important; padding: 0 !important; display: flex; align-items: center; gap: 8px; text-decoration: none;">
+          <div class="user-profile-info" style="text-align: right;">
+            <div class="user-profile-name"
+              style="font-size: 10.5px; font-weight: 700; color: var(--text-primary); line-height: 1.2;">
               {% if user.first_name %}{{ user.first_name }} {{ user.last_name }}{% else %}{{ user.username }}{% endif %}
             </div>
-            <div class="user-profile-role">
+            <div class="user-profile-role"
+              style="font-size: 8px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 1px;">
               {{ user.get_role_display }}
             </div>
           </div>
-          <div class="user-profile-avatar">
+          <div class="user-profile-avatar"
+            style="width: 28px; height: 28px; background: var(--army-green); border-radius: 50% !important; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: #ffffff; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);">
             {{ user.first_name.0|upper }}{{ user.last_name.0|upper }}
           </div>
         </a>
         {% endif %}
       </div>
     </div>
+    {% endblock %}
 
     <!-- Messages -->
     {% if messages %}
@@ -784,12 +1028,16 @@
 
     function updateThemeIcon(theme) {
       const toggleBtn = document.getElementById('themeToggle');
+      const toggleSheetBtn = document.getElementById('themeToggleSheet');
+      const iconHtml = theme === 'light'
+        ? '<i class="bi bi-moon-fill" style="font-size: 12px;"></i>'
+        : '<i class="bi bi-sun-fill" style="font-size: 12px;"></i>';
+
       if (toggleBtn) {
-        if (theme === 'light') {
-          toggleBtn.innerHTML = '<i class="bi bi-moon-fill" style="font-size: 12px;"></i>';
-        } else {
-          toggleBtn.innerHTML = '<i class="bi bi-sun-fill" style="font-size: 12px;"></i>';
-        }
+        toggleBtn.innerHTML = iconHtml;
+      }
+      if (toggleSheetBtn) {
+        toggleSheetBtn.innerHTML = iconHtml.replace('font-size: 12px;', 'font-size: 14px;');
       }
     }
 
@@ -805,10 +1053,90 @@
     document.getElementById('themeToggle')?.addEventListener('click', toggleTheme);
     initTheme();
 
+    function updateLiveClock() {
+      const now = new Date();
+      const day = now.getDate();
+      const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      const month = months[now.getMonth()];
+      const year = now.getFullYear();
+      const dateString = `${day} ${month} ${year}`;
+
+      const weekdays = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+      const weekday = weekdays[now.getDay()];
+
+      let hours = now.getHours();
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      hours = hours % 12;
+      hours = hours ? hours : 12;
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const seconds = String(now.getSeconds()).padStart(2, '0');
+      const timeString = `${weekday} - ${hours}:${minutes}:${seconds} ${ampm}`;
+
+      const dateEl = document.getElementById('live-date');
+      const timeEl = document.getElementById('live-time');
+      if (dateEl) dateEl.textContent = dateString;
+      if (timeEl) timeEl.textContent = timeString;
+    }
+    updateLiveClock();
+    setInterval(updateLiveClock, 1000);
+
     Chart.defaults.color = getComputedStyle(document.documentElement).getPropertyValue('--text-primary') || '#20342E';
     Chart.defaults.borderColor = 'rgba(38, 84, 70, 0.18)';
     Chart.defaults.font.family = "'Inter', sans-serif";
+
+    // Fade out overlay on page load with delay to showcase rotating spinner logo
+    window.addEventListener('DOMContentLoaded', () => {
+      const loader = document.getElementById('pageTransitionOverlay');
+      if (loader) {
+        setTimeout(() => {
+          loader.classList.add('fade-out');
+        }, 600); // Premium delay to allow smooth rotation sequence
+      }
+    });
+
+    // Fade in overlay on navigation click
+    document.addEventListener('click', function (e) {
+      const link = e.target.closest('a');
+      if (!link) return;
+
+      const href = link.getAttribute('href');
+      if (!href || href.startsWith('#') || href.startsWith('javascript:') || link.getAttribute('target') === '_blank') {
+        return;
+      }
+
+      // Bypass transition effect completely for any download, export or presentation options
+      const isDownload = link.hasAttribute('download') ||
+        link.classList.contains('download-btn') ||
+        link.classList.contains('rc-btn') ||
+        href.toLowerCase().includes('download') ||
+        href.toLowerCase().includes('export') ||
+        href.toLowerCase().includes('pdf') ||
+        href.toLowerCase().includes('csv') ||
+        href.toLowerCase().includes('excel') ||
+        href.toLowerCase().endsWith('.pptx') ||
+        href.toLowerCase().endsWith('.xlsx') ||
+        href.toLowerCase().endsWith('.pdf') ||
+        link.closest('[title*="Download"]') ||
+        link.closest('[title*="Presentation"]');
+      if (isDownload) {
+        return;
+      }
+
+      e.preventDefault();
+      const loader = document.getElementById('pageTransitionOverlay');
+      if (loader) {
+        loader.classList.remove('fade-out');
+      }
+      setTimeout(() => {
+        window.location.href = href;
+      }, 350);
+    });
   </script>
+
+  <!-- Fixed Footer Marquee -->
+  <marquee class="portal-footer-ticker" scrollamount="4">
+    BEG & CENTRE , Roorkee Integrated soldier assessment system
+  </marquee>
 
   <script src="{% static 'js/portal-ui.js' %}"></script>
   {% block extra_js %}{% endblock %}

@@ -123,46 +123,46 @@
 
   /* Per-card colour themes */
   .metric-card.mc-agniveers {
-    background: #E8F7FF !important;
-    border-color: #BEE9FF !important;
+    background: var(--card-bg) !important;
+    border-color: var(--border-color) !important;
   }
-  .metric-card.mc-agniveers::before { background: #4FC3F7; }
-  .metric-card.mc-agniveers .metric-value { color: #0288D1; }
-  .metric-card.mc-agniveers .counter-bar  { background: #4FC3F7; }
-  .metric-card.mc-agniveers:hover { border-color:#4FC3F7 !important; box-shadow:0 10px 28px rgba(79,195,247,0.12); }
+  .metric-card.mc-agniveers::before { background: var(--army-green-light); }
+  .metric-card.mc-agniveers .metric-value { color: var(--army-green-light); }
+  .metric-card.mc-agniveers .counter-bar  { background: var(--army-green-light); height: 3px; }
+  .metric-card.mc-agniveers:hover { border-color:var(--army-green-light) !important; box-shadow:0 10px 28px rgba(45,106,79,0.12); }
 
   .metric-card.mc-passed {
-    background: #E9FBF0 !important;
-    border-color: #DFF6E6 !important;
+    background: var(--card-bg) !important;
+    border-color: var(--border-color) !important;
   }
-  .metric-card.mc-passed::before { background: #52B788; }
+  .metric-card.mc-passed::before { background: #4CAF50; }
   .metric-card.mc-passed .metric-value { color: #2E7D32; }
-  .metric-card.mc-passed .counter-bar  { background: #52B788; }
+  .metric-card.mc-passed .counter-bar  { background: #4CAF50; height: 3px; }
   .metric-card.mc-passed:hover { border-color:#52B788 !important; box-shadow:0 10px 28px rgba(82,183,136,0.12); }
 
   .metric-card.mc-failed {
-    background: #FFF0F0 !important;
-    border-color: #FFD6D6 !important;
+    background: var(--card-bg) !important;
+    border-color: var(--border-color) !important;
   }
   .metric-card.mc-failed::before { background: #EF5350; }
   .metric-card.mc-failed .metric-value { color: #C62828; }
-  .metric-card.mc-failed .counter-bar  { background: #EF5350; }
+  .metric-card.mc-failed .counter-bar  { background: #EF5350; height: 3px; }
   .metric-card.mc-failed:hover { border-color:#EF5350 !important; box-shadow:0 10px 28px rgba(239,83,80,0.12); }
 
   .metric-card.mc-trainers {
-    background: #FFF8E1 !important;
-    border-color: #FFECB3 !important;
+    background: var(--card-bg) !important;
+    border-color: var(--border-color) !important;
   }
-  .metric-card.mc-trainers::before { background: #D4A017; }
-  .metric-card.mc-trainers .metric-value { color: #F57F17; }
-  .metric-card.mc-trainers .counter-bar  { background: #D4A017; }
-  .metric-card.mc-trainers:hover { border-color:#D4A017 !important; box-shadow:0 10px 28px rgba(212,160,23,0.12); }
+  .metric-card.mc-trainers::before { background: var(--army-gold); }
+  .metric-card.mc-trainers .metric-value { color: var(--army-gold); }
+  .metric-card.mc-trainers .counter-bar  { background: var(--army-gold); height: 3px; }
+  .metric-card.mc-trainers:hover { border-color:var(--army-gold) !important; box-shadow:0 10px 28px rgba(212,160,23,0.12); }
 
   /* dark-mode value overrides */
-  [data-bs-theme="dark"] .metric-card.mc-agniveers .metric-value { color: #4FC3F7; }
-  [data-bs-theme="dark"] .metric-card.mc-passed    .metric-value { color: #52B788; }
-  [data-bs-theme="dark"] .metric-card.mc-failed    .metric-value { color: #EF5350; }
-  [data-bs-theme="dark"] .metric-card.mc-trainers  .metric-value { color: #D4A017; }
+  [data-bs-theme="dark"] .metric-card.mc-agniveers .metric-value { color: #52B788; }
+  [data-bs-theme="dark"] .metric-card.mc-passed    .metric-value { color: #81C784; }
+  [data-bs-theme="dark"] .metric-card.mc-failed    .metric-value { color: #E57373; }
+  [data-bs-theme="dark"] .metric-card.mc-trainers  .metric-value { color: var(--army-gold-light); }
 
   /* Download hint badge inside metric cards */
   .metric-dl-hint {
@@ -721,8 +721,8 @@
 {% endblock %}
 
 {% block header_actions %}
-<a href="{% url 'reports:export_department_pptx' dept=dept %}" class="btn btn-army d-flex align-items-center gap-2" style="padding: 6px 14px; font-weight: 600; font-size:11px;">
-  <i class="bi bi-file-earmark-ppt-fill fs-6"></i> Download Presentation (PPTX)
+<a href="{% url 'reports:export_department_pptx' dept=dept %}" class="btn btn-army d-flex align-items-center justify-content-center" title="Download Presentation (PPTX)" style="width: 28px !important; height: 28px !important; padding: 0 !important; border-radius: 8px !important; min-width: 28px !important;">
+  <i class="bi bi-file-earmark-ppt-fill" style="font-size: 13px; margin: 0;"></i>
 </a>
 {% endblock %}
 
@@ -1078,9 +1078,9 @@
 
   function chartColors() {
     return {
-      grid  : isDark() ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.06)',
-      tick  : isDark() ? '#8B9BB4'                : '#6b7a8d',
-      border: isDark() ? '#1a2236'                : '#ffffff',
+      grid  : isDark() ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
+      tick  : isDark() ? '#ffffff'                : '#1B4332',
+      border: isDark() ? '#070B09'                : '#ffffff',
     };
   }
 
